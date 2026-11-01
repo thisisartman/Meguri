@@ -3,6 +3,7 @@
 ## 2026-11-01: Design round started
 - Product ID card and the scope of the main-screens design round recorded in PROGRESS.md.
 - M0 test build also checked on the Galaxy S23 (Android 16): installs, logs a crash, exports logs.
+- Notes on four comparable apps (two manhole-card apps, Ekitag, Stamp Quest) in `docs/design/comparables.md`.
 
 ## 2026-11-01: M0 project setup (0.0.1)
 - App builds and installs on the Poco: a test copy ("Collectibles (dev)") and the real app side by side.
