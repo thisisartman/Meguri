@@ -1,0 +1,27 @@
+# Gradle and build output
+.gradle/
+build/
+**/build/
+.kotlin/
+captures/
+*.apk
+*.aab
+output-metadata.json
+
+# Local configuration and signing (never committed)
+local.properties
+keystore.properties
+*.jks
+*.keystore
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
+
+# Claude worktrees
+.claude/
+
+# Logs
+*.log
