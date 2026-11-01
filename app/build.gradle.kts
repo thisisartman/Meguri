@@ -103,16 +103,16 @@ dependencies {
 }
 
 // Copies the built APKs to build/dist as collectibles-<dev|release>-v<version>-<yyyymmdd-hhmm>.apk.
-val stamp: String = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
 listOf("debug" to "dev", "release" to "release").forEach { (type, label) ->
     val cap = type.replaceFirstChar { it.uppercase() }
-    // A plain local string: the rename lambda must not reach back into the build script,
-    // or the configuration cache cannot store the task.
-    val apkName = "collectibles-$label-v$appVersionName-$stamp.apk"
+    // Only local strings here: the rename lambda must not reach back into the build script,
+    // or the configuration cache cannot store the task. The time is read inside the lambda,
+    // so it is taken when the copy runs, not frozen in the cached configuration.
+    val prefix = "collectibles-$label-v$appVersionName-"
     tasks.register<Copy>("dist$cap") {
         dependsOn("assemble$cap")
         from(layout.buildDirectory.dir("outputs/apk/$type")) { include("*.apk") }
         into(layout.buildDirectory.dir("dist"))
-        rename { apkName }
+        rename { prefix + SimpleDateFormat("yyyyMMdd-HHmm").format(Date()) + ".apk" }
     }
 }
