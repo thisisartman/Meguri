@@ -6,6 +6,7 @@
 - Notes on four comparable apps (two manhole-card apps, Ekitag, Stamp Quest) in `docs/design/comparables.md`.
 - Design brief: the four collection types in their own terms, the real tasks ranked, and a one-line thesis (`docs/design/brief.md`).
 - v1 checklist: marking cards already owned in one pass.
+- Design round 1 page drawn (what the app opens on, a stamp book per line, how collected items look); outside the repo in `Design/`.
 
 ## 2026-11-01: M0 project setup (0.0.1)
 - App builds and installs on the Poco: a test copy ("Collectibles (dev)") and the real app side by side.
