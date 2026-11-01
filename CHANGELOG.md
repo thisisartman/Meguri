@@ -5,6 +5,7 @@
 - No internet permission; Android backup and device-to-device transfer switched off.
 - Errors and crashes are saved on the phone; "Logs" screen with "Export logs".
 - Release builds signed with a dedicated key kept outside the repo.
+- Built APK file names now carry the time of each build (they were stuck at the first build's time).
 
 ## 2026-11-01: Spec v4, geofencing first
 - Alerts: Google geofencing in the background, Trip mode as fallback for trains and no-signal areas (the Poco has real Play Services, not microG).
