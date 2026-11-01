@@ -7,6 +7,8 @@
 - Design brief: the four collection types in their own terms, the real tasks ranked, and a one-line thesis (`docs/design/brief.md`).
 - v1 checklist: marking cards already owned in one pass.
 - Design round 1 page drawn (what the app opens on, a stamp book per line, how collected items look); outside the repo in `Design/`.
+- Round 1 decided: nearest items on top with the collection below, a stamp-book page per line, your photo or a filled seal for collected items.
+- Design round 2 page drawn (getting around without a tab bar, language modes, the words).
 
 ## 2026-11-01: M0 project setup (0.0.1)
 - App builds and installs on the Poco: a test copy ("Collectibles (dev)") and the real app side by side.
