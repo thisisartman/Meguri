@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-01: Design round started
+- Product ID card and the scope of the main-screens design round recorded in PROGRESS.md.
+
 ## 2026-11-01: M0 project setup (0.0.1)
 - App builds and installs on the Poco: a test copy ("Collectibles (dev)") and the real app side by side.
 - No internet permission; Android backup and device-to-device transfer switched off.
