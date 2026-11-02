@@ -77,6 +77,21 @@ class CatalogTest {
     }
 
     @Test
+    fun tripCatalogueParsesCompletely() {
+        val text = javaClass.classLoader!!.getResource("trip-joetsu-niigata.csv")!!.readText()
+        val parsed = Csv.parseWithHeader(text).map { CatalogRow.from(it) }
+        assertTrue(parsed.all { it.isSuccess })
+        val rows = parsed.map { it.getOrThrow() }
+        assertEquals(41, rows.size)
+        val stations = rows.filter { it.lineId == "JR_JOETSU" }.sortedBy { it.lineSeq }
+        assertEquals((1..35).toList(), stations.map { it.lineSeq })
+        assertEquals("浦佐駅", stations[26].nameJa)
+        assertEquals(6, rows.count { it.type == ItemType.MANHOLE_CARD })
+        assertEquals(rows.size, rows.map { it.catalogKey }.toSet().size)
+        assertTrue(rows.all { it.lat != null && it.lng != null })
+    }
+
+    @Test
     fun searchFoldsMacronsAndLongVowels() {
         assertEquals(foldForSearch("Jōetsu"), foldForSearch("joetsu"))
         assertEquals(foldForSearch("Jouetsu"), foldForSearch("JOETSU"))

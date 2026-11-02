@@ -200,7 +200,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                 Column(Modifier.clickable { nav.openItem(r.item.id) }, horizontalAlignment = Alignment.CenterHorizontally) {
                     Box(contentAlignment = Alignment.Center) { Mark(r, 72.dp) }
                     Spacer(Modifier.height(4.dp))
-                    Text(r.item.displayName(ja).removeSuffix("駅"), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (r.collected) {
                         Text(r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     }
