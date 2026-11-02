@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_nearby">近く</string>
+    <string name="nav_book">コレクション</string>
+    <string name="nav_more">その他</string>
+
+    <string name="nearby_title">近く</string>
+    <string name="nearby_still_to_get">未取得・近い順</string>
+    <string name="nearby_my_book">コレクション</string>
+    <string name="nearby_location_off">位置情報オフ・最近の項目を表示</string>
+    <string name="nearby_from_fix">%1$s時点の現在地から</string>
+    <string name="nearby_from_now">現在地から</string>
+    <string name="nearby_nothing_left">この近くに未取得はありません</string>
+    <string name="nearby_empty_book">まだ記録がありません。＋をタップして最初の記録を。</string>
+    <string name="nearby_allow_location">位置情報を許可</string>
+
+    <string name="type_manhole">マンホールカード</string>
+    <string name="type_manhole_plural">マンホールカード</string>
+    <string name="type_goshuin">御朱印</string>
+    <string name="type_eki">駅スタンプ</string>
+    <string name="type_eki_plural">駅スタンプ</string>
+    <string name="type_ekitag">エキタグ</string>
+
+    <string name="got_it">取得</string>
+    <string name="got_it_again">もう一度取得</string>
+    <string name="photo">写真</string>
+    <string name="undo">元に戻す</string>
+    <string name="logged">%1$sを記録・%2$s</string>
+    <string name="had_before_app">アプリ以前から所持</string>
+    <string name="last">最近: %1$s</string>
+    <string name="count">%1$d / %2$d</string>
+    <string name="km">%1$s km</string>
+    <string name="m">%1$d m</string>
+
+    <string name="book_title">コレクション</string>
+    <string name="book_other_stations">その他の駅</string>
+    <string name="book_no_prefecture">都道府県なし</string>
+    <string name="book_mark_owned">所持済みをまとめて登録</string>
+    <string name="book_mark_done">%1$d件をアプリ以前から所持として登録</string>
+    <string name="book_marked">%1$d件を登録</string>
+    <string name="cancel">キャンセル</string>
+
+    <string name="item_your_record">記録</string>
+    <string name="item_where">入手場所</string>
+    <string name="item_handed_out_at">配布場所</string>
+    <string name="item_hours">配布時間</string>
+    <string name="item_office">授与所</string>
+    <string name="item_office_hours">受付時間</string>
+    <string name="item_station">駅</string>
+    <string name="item_stamp_location">設置場所</string>
+    <string name="item_phone">電話</string>
+    <string name="item_distance">距離</string>
+    <string name="item_open_maps">地図で開く</string>
+    <string name="item_wave">第%1$s弾・%2$s</string>
+    <string name="item_no_finds">未取得</string>
+    <string name="item_add_photo">写真を追加</string>
+    <string name="item_remove_before_app">「アプリ以前から所持」を取り消す</string>
+    <string name="item_found_at">%1$s・%2$s</string>
+    <string name="item_no_position">位置なし</string>
+
+    <string name="log_title">記録する</string>
+    <string name="log_search">名前・コードで検索</string>
+    <string name="log_near_you">近く</string>
+    <string name="log_recent">最近</string>
+    <string name="log_not_in_list">リストにない場合</string>
+    <string name="log_not_in_list_sub">御朱印・スタンプ・カードを新しく追加して記録</string>
+    <string name="log_new">新規</string>
+    <string name="new_title">新しい項目</string>
+    <string name="new_type">種類</string>
+    <string name="new_name_ja">名前（日本語）</string>
+    <string name="new_name_romaji">名前（ローマ字・任意）</string>
+    <string name="new_save">保存して記録</string>
+
+    <string name="more_title">その他</string>
+    <string name="more_language">言語</string>
+    <string name="more_english">English</string>
+    <string name="more_japanese">日本語</string>
+    <string name="more_backup">今すぐバックアップ</string>
+    <string name="more_backup_sub">すべての記録を選んだファイルに保存します。写真はギャラリーに残ります。</string>
+    <string name="more_backup_done">バックアップ完了: 記録%1$d件、項目%2$d件</string>
+    <string name="more_backup_failed">バックアップを保存できませんでした</string>
+    <string name="more_import">カタログを読み込む（CSV）</string>
+    <string name="more_import_sub">項目と路線を追加・更新します。記録は削除されません。</string>
+    <string name="more_import_done">カタログ: 追加%1$d件、更新%2$d件、路線%3$d件</string>
+    <string name="more_import_failed">カタログを読み込めませんでした: %1$s</string>
+    <string name="more_logs">ログ</string>
+    <string name="more_about">このアプリについて</string>
+    <string name="more_about_sub">バージョン%1$s・オフラインで動作・データはこの端末にのみ保存</string>
+</resources>

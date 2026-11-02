@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="nav_nearby">Nearby</string>
+    <string name="nav_book">My book</string>
+    <string name="nav_more">More</string>
+
+    <string name="nearby_title">Nearby</string>
+    <string name="nearby_still_to_get">Still to get, nearest first</string>
+    <string name="nearby_my_book">My book</string>
+    <string name="nearby_location_off">Location off · showing recent items</string>
+    <string name="nearby_from_fix">From your position at %1$s</string>
+    <string name="nearby_from_now">From your position now</string>
+    <string name="nearby_nothing_left">Nothing left to get near here</string>
+    <string name="nearby_empty_book">Nothing logged yet. Tap + to log your first find.</string>
+    <string name="nearby_allow_location">Allow location</string>
+
+    <string name="type_manhole">Manhole card</string>
+    <string name="type_manhole_plural">Manhole cards</string>
+    <string name="type_goshuin">Goshuin</string>
+    <string name="type_eki">Eki stamp</string>
+    <string name="type_eki_plural">Eki stamps</string>
+    <string name="type_ekitag">Ekitag</string>
+
+    <string name="got_it">Got it</string>
+    <string name="got_it_again">Got it again</string>
+    <string name="photo">Photo</string>
+    <string name="undo">Undo</string>
+    <string name="logged">Logged %1$s · %2$s</string>
+    <string name="had_before_app">had before the app</string>
+    <string name="last">Last: %1$s</string>
+    <string name="count">%1$d / %2$d</string>
+    <string name="km">%1$s km</string>
+    <string name="m">%1$d m</string>
+
+    <string name="book_title">My book</string>
+    <string name="book_other_stations">Other stations</string>
+    <string name="book_no_prefecture">No prefecture</string>
+    <string name="book_mark_owned">Mark ones I already have</string>
+    <string name="book_mark_done">Mark %1$d as had before the app</string>
+    <string name="book_marked">Marked %1$d</string>
+    <string name="cancel">Cancel</string>
+
+    <string name="item_your_record">Your record</string>
+    <string name="item_where">Where to get it</string>
+    <string name="item_handed_out_at">Handed out at</string>
+    <string name="item_hours">Hours</string>
+    <string name="item_office">Shrine or temple office</string>
+    <string name="item_office_hours">Office hours</string>
+    <string name="item_station">Station</string>
+    <string name="item_stamp_location">Stamp location</string>
+    <string name="item_phone">Phone</string>
+    <string name="item_distance">Distance</string>
+    <string name="item_open_maps">Open in Maps</string>
+    <string name="item_wave">Wave %1$s · %2$s</string>
+    <string name="item_no_finds">Not collected yet</string>
+    <string name="item_add_photo">Add a photo</string>
+    <string name="item_remove_before_app">Remove \"had before the app\"</string>
+    <string name="item_found_at">%1$s · %2$s</string>
+    <string name="item_no_position">no position</string>
+
+    <string name="log_title">Log a find</string>
+    <string name="log_search">Search name or code</string>
+    <string name="log_near_you">Near you</string>
+    <string name="log_recent">Recent</string>
+    <string name="log_not_in_list">Not in the list?</string>
+    <string name="log_not_in_list_sub">Add a new goshuin, stamp or card here, with this find</string>
+    <string name="log_new">New</string>
+    <string name="new_title">New item</string>
+    <string name="new_type">Type</string>
+    <string name="new_name_ja">Name in Japanese</string>
+    <string name="new_name_romaji">Name in romaji (optional)</string>
+    <string name="new_save">Save and log</string>
+
+    <string name="more_title">More</string>
+    <string name="more_language">Language</string>
+    <string name="more_english">English</string>
+    <string name="more_japanese">日本語</string>
+    <string name="more_backup">Back up now</string>
+    <string name="more_backup_sub">Saves all finds to a file you choose. Photos stay in the gallery.</string>
+    <string name="more_backup_done">Backup saved: %1$d finds, %2$d items</string>
+    <string name="more_backup_failed">Couldn\'t save the backup</string>
+    <string name="more_import">Load catalogue (CSV)</string>
+    <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
+    <string name="more_import_done">Catalogue: %1$d added, %2$d updated, %3$d lines</string>
+    <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
+    <string name="more_logs">Logs</string>
+    <string name="more_about">About</string>
+    <string name="more_about_sub">Version %1$s · works offline · your data stays on this phone</string>
+</resources>

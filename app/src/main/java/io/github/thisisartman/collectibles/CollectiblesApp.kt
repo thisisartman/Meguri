@@ -5,6 +5,7 @@ import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
 import io.github.thisisartman.collectibles.debug.CrashLogger
 import io.github.thisisartman.collectibles.debug.FileLog
+import io.github.thisisartman.collectibles.ui.AppLanguage
 import javax.inject.Inject
 
 @HiltAndroidApp
@@ -14,6 +15,7 @@ class CollectiblesApp : Application() {
     override fun onCreate() {
         super.onCreate()
         CrashLogger.install(log)
+        AppLanguage.ensureDefault(this)
         log.i(
             "App",
             "Start ${BuildConfig.APPLICATION_ID} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · " +

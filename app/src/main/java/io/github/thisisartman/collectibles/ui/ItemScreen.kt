@@ -1,0 +1,197 @@
+package io.github.thisisartman.collectibles.ui
+
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.thisisartman.collectibles.R
+import io.github.thisisartman.collectibles.data.FindWithPhotos
+import io.github.thisisartman.collectibles.data.Item
+import io.github.thisisartman.collectibles.data.ItemType
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
+    val ja = isJapanese()
+    val row by remember(itemId) { vm.itemRow(itemId) }.collectAsStateWithLifecycle(null)
+    val finds by remember(itemId) { vm.finds(itemId) }.collectAsStateWithLifecycle(emptyList())
+    val photo = LocalPhoto.current
+    val r = row
+
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            title = { Text(r?.item?.type?.let { stringResource(it.label()) } ?: "") },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
+        )
+        if (r == null) return@Column
+        val item = r.item
+        val name = item.displayName(ja)
+        LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
+            if (r.collected) {
+                // Have it: your mark large, your record, then the facts
+                item {
+                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Mark(r, 140.dp)
+                    }
+                }
+                item { NameBlock(item, ja) }
+                item { SectionTitle(stringResource(R.string.item_your_record)) }
+                items(finds, key = { it.find.id }) { f -> FindCard(f, ja, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }) }
+                item { SectionTitle(stringResource(R.string.item_where)) }
+                item { Facts(item, vm.distanceTo(r)) }
+            } else {
+                // Still to get: facts first
+                item {
+                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Mark(r, 56.dp)
+                        Spacer(Modifier.width(14.dp))
+                        Column { NameText(item, ja) }
+                    }
+                }
+                item { SectionTitle(stringResource(R.string.item_where)) }
+                item { Facts(item, vm.distanceTo(r)) }
+                item {
+                    Text(
+                        stringResource(R.string.item_no_finds),
+                        Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            OutlinedButton(
+                onClick = {
+                    val latest = finds.firstOrNull { !it.find.beforeApp }?.find?.id
+                    if (latest != null) photo.capture(latest) else vm.gotIt(r, name) { id -> photo.capture(id) }
+                },
+                modifier = Modifier.weight(1f),
+            ) { Text(stringResource(R.string.photo)) }
+            if (r.collected) {
+                OutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it_again)) }
+            } else {
+                Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NameBlock(item: Item, ja: Boolean) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { NameText(item, ja) }
+}
+
+@Composable
+private fun NameText(item: Item, ja: Boolean) {
+    Text(item.displayName(ja), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    item.secondaryName(ja)?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    val sub = listOfNotNull(item.code, item.prefecture, item.municipality?.takeIf { it != item.nameJa }).joinToString(" · ")
+    if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    if (item.series != null) {
+        Text(stringResource(R.string.item_wave, item.series, item.releaseDate.orEmpty()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun Facts(item: Item, meters: Double?) {
+    val context = LocalContext.current
+    val (placeLabel, hoursLabel) = when (item.type) {
+        ItemType.MANHOLE_CARD -> R.string.item_handed_out_at to R.string.item_hours
+        ItemType.GOSHUIN -> R.string.item_office to R.string.item_office_hours
+        ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
+    }
+    Column(Modifier.fillMaxWidth()) {
+        Fact(stringResource(placeLabel), listOfNotNull(item.placeName, item.address).joinToString("\n"))
+        Fact(stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
+        Fact(stringResource(R.string.item_phone), item.placePhone.orEmpty())
+        if (item.lat != null && item.lng != null) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.item_distance), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(distanceText(meters) ?: "-", style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"))
+                }
+                TextButton(onClick = {
+                    val uri = Uri.parse("geo:${item.lat},${item.lng}?q=${item.lat},${item.lng}(${Uri.encode(item.placeName ?: item.nameJa)})")
+                    runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+                }) { Text(stringResource(R.string.item_open_maps)) }
+            }
+        }
+        item.notes?.let { Fact("", it) }
+    }
+}
+
+@Composable
+private fun Fact(label: String, value: String) {
+    if (value.isBlank()) return
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)) {
+        if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+    HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+@Composable
+private fun FindCard(f: FindWithPhotos, ja: Boolean, onRemoveBeforeApp: () -> Unit) {
+    Card(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
+        shape = RoundedCornerShape(12.dp),
+    ) {
+        Column(Modifier.padding(12.dp)) {
+            val a = f.find
+            if (a.beforeApp) {
+                Text(stringResource(R.string.had_before_app), style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = onRemoveBeforeApp, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                    Text(stringResource(R.string.item_remove_before_app))
+                }
+            } else {
+                val whenText = a.acquiredAt?.let { formatDateTime(it, ja) } ?: ""
+                val whereText = if (a.lat != null && a.lng != null) String.format(java.util.Locale.US, "%.5f, %.5f", a.lat, a.lng) else stringResource(R.string.item_no_position)
+                Text(stringResource(R.string.item_found_at, whenText, whereText), style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"))
+                a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+            }
+            if (f.photos.isNotEmpty()) {
+                Spacer(Modifier.height(8.dp))
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    items(f.photos.sortedBy { it.createdAt }, key = { it.id }) { p -> PhotoThumb(p.contentUri, 88.dp) }
+                }
+            }
+        }
+    }
+}
