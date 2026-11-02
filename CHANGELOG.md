@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-02: Design complete
+- Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.
+- Language: an app-level switch; in English mode names are in romaji everywhere, with the Japanese on the item page.
+- Build spec written: `docs/DESIGN.md`, with colours checked against the backgrounds they really sit on, one rule for a missing GPS fix, place labels per type, and a list of what M1 must still check on the phones.
+
+## 2026-11-01: Design round started
+- Product ID card and the scope of the main-screens design round recorded in PROGRESS.md.
+- M0 test build also checked on the Galaxy S23 (Android 16): installs, logs a crash, exports logs.
+- Notes on four comparable apps (two manhole-card apps, Ekitag, Stamp Quest) in `docs/design/comparables.md`.
+- Design brief: the four collection types in their own terms, the real tasks ranked, and a one-line thesis (`docs/design/brief.md`).
+- v1 checklist: marking cards already owned in one pass.
+- Design round 1 page drawn (what the app opens on, a stamp book per line, how collected items look); outside the repo in `Design/`.
+- Round 1 decided: nearest items on top with the collection below, a stamp-book page per line, your photo or a filled seal for collected items.
+- Design round 2 page drawn (getting around without a tab bar, language modes, the words).
+- Round 2 decided: a bottom bar "Nearby · My book · More"; English or Japanese with a switch.
+- Design round 3 page drawn (one item's page, logging with "+").
+- Design round 4 page drawn (what colour means, how names are set), with colours checked for contrast and colour-blind reading in light and dark.
+- Round 3 decided: the item page changes with whether you have it; "+" opens a search with the nearest items already listed. All layout decisions are now made; colours and fonts are next.
+
 ## 2026-11-01: M0 project setup (0.0.1)
 - App builds and installs on the Poco: a test copy ("Collectibles (dev)") and the real app side by side.
 - No internet permission; Android backup and device-to-device transfer switched off.
