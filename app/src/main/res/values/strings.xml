@@ -30,7 +30,7 @@
     <string name="last">Last: %1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
-    <string name="m">%1$d m</string>
+    <string name="m">%1$s m</string>
 
     <string name="book_title">My book</string>
     <string name="book_other_stations">Other stations</string>
@@ -81,7 +81,7 @@
     <string name="more_backup_failed">Couldn\'t save the backup</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
-    <string name="more_import_done">Catalogue: %1$d added, %2$d updated, %3$d lines</string>
+    <string name="more_import_done">Catalogue: %1$d added, %2$d updated · railway lines: %3$d</string>
     <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
     <string name="more_logs">Logs</string>
     <string name="more_about">About</string>

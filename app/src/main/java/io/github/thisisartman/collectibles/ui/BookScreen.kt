@@ -178,6 +178,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
+            windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             title = {
                 Column {
                     Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)

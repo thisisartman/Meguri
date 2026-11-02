@@ -55,6 +55,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
+            windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             title = { Text(r?.item?.type?.let { stringResource(it.label()) } ?: "") },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
         )

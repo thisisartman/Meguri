@@ -30,39 +30,55 @@ object CameraCapture {
     }
 
     /** Reads the fingerprint of a photo the camera just wrote; null if it is empty or gone. */
+    /**
+     * Reads the fingerprint of a photo the camera just wrote; null only if the file is really empty
+     * or gone. The size is read from the file itself: MediaStore's SIZE column is filled in later
+     * and reads 0 right after the camera returns, which must never count as "empty".
+     */
     fun describe(resolver: ContentResolver, uri: Uri): PhotoInfo? {
+        val size = fileSize(resolver, uri) ?: return null
+        if (size <= 0L) return null
         val cols = arrayOf(
             MediaStore.Images.Media._ID, MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.RELATIVE_PATH,
-            MediaStore.Images.Media.SIZE, MediaStore.Images.Media.DATE_TAKEN,
+            MediaStore.Images.Media.DATE_TAKEN,
         )
         resolver.query(uri, cols, null, null, null)?.use { c ->
             if (!c.moveToFirst()) return null
-            val size = c.getLong(3)
-            if (size <= 0L) return null
             return PhotoInfo(
                 uri = uri.toString(),
                 mediastoreId = c.getLong(0),
                 displayName = c.getString(1),
                 relativePath = c.getString(2),
                 sizeBytes = size,
-                takenAt = c.getLong(4).takeIf { it > 0 } ?: System.currentTimeMillis(),
+                takenAt = c.getLong(3).takeIf { it > 0 } ?: System.currentTimeMillis(),
             )
         }
         return null
     }
 
-    fun discard(resolver: ContentResolver, uri: Uri) {
-        runCatching { resolver.delete(uri, null, null) }
+    /** Size of the file behind [uri] from the file itself; null if it cannot be opened. */
+    fun fileSize(resolver: ContentResolver, uri: Uri): Long? =
+        runCatching { resolver.openFileDescriptor(uri, "r")?.use { it.statSize } }.getOrNull()
+
+    /** Deletes our gallery row only if its file is really empty (or unreadable). */
+    fun discardIfEmpty(resolver: ContentResolver, uri: Uri) {
+        val size = fileSize(resolver, uri)
+        if (size == null || size <= 0L) runCatching { resolver.delete(uri, null, null) }
     }
 
-    /** Start-up clean-up: our own empty rows left by a camera that was killed (FR-9b). */
+    /**
+     * Start-up clean-up (FR-9b): our own rows that are really empty, left by a camera that was killed.
+     * Each candidate is checked on the file, never trusted from the SIZE column alone.
+     */
     fun cleanEmptyRows(resolver: ContentResolver) {
         runCatching {
-            resolver.delete(
-                MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
-                "${MediaStore.Images.Media.RELATIVE_PATH} = ? AND ${MediaStore.Images.Media.SIZE} = 0",
-                arrayOf(RELATIVE_PATH),
-            )
+            val base = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
+            resolver.query(
+                base, arrayOf(MediaStore.Images.Media._ID),
+                "${MediaStore.Images.Media.RELATIVE_PATH} = ? AND ${MediaStore.Images.Media.SIZE} = 0", arrayOf(RELATIVE_PATH), null,
+            )?.use { c ->
+                while (c.moveToNext()) discardIfEmpty(resolver, android.content.ContentUris.withAppendedId(base, c.getLong(0)))
+            }
         }
     }
 }
