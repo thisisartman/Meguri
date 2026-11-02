@@ -27,8 +27,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,7 +81,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
-                LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                // An undone find comes back at the front; keyed items would otherwise keep it scrolled off the left edge
+                val strip = rememberLazyListState()
+                var lastSize by remember { mutableIntStateOf(nearest.size) }
+                LaunchedEffect(nearest.firstOrNull()?.row?.item?.id, nearest.size) {
+                    if (nearest.size > lastSize) strip.animateScrollToItem(0)
+                    lastSize = nearest.size
+                }
+                LazyRow(state = strip, contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(nearest.take(25), key = { it.row.item.id }) { r ->
                         val name = r.row.item.displayName(ja)
                         NearTile(

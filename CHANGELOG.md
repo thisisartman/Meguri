@@ -8,6 +8,7 @@
 - Back up all finds to a file; load a catalogue from a CSV file.
 - English or Japanese, chosen in the app.
 - Fixed before release: photos taken in the app were deleted right after capture; Nearby crashed for items under 1 km.
+- After an Undo, the nearest list scrolls back so the item is in view again; railway lines in "My book" no longer repeat "Eki stamps".
 
 ## 2026-11-02: Design complete
 - Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.

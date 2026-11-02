@@ -89,7 +89,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 item(key = "h:e") { GroupHeader(ItemType.EKI_STAMP, stringResource(R.string.type_eki_plural), null) }
                 items(ekiSummaries, key = { "e:" + it.key }) { s ->
                     val name = lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
-                    SummaryCard(s, summaryTitle(s, name), onClick = { nav.openLine(s.lineId.orEmpty()) })
+                    // The group header already says "Eki stamps"; the card names only the line
+                    SummaryCard(s, name ?: s.lineId ?: stringResource(R.string.book_other_stations), onClick = { nav.openLine(s.lineId.orEmpty()) })
                 }
             }
             // Goshuin
