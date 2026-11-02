@@ -1,38 +1,55 @@
-"""Build the trip catalogue CSV: JR Joetsu Line stations (OpenStreetMap) plus the Niigata manhole cards read so far."""
+"""Build the trip catalogue CSV: JR Joetsu, Yahiko, Echigo and Shin'etsu Line stations (OpenStreetMap) plus the Niigata manhole cards."""
 import csv, json, sys
 
-stations = json.load(open(sys.argv[1], encoding="utf-8"))
-out = sys.argv[2]
+stations = json.load(open(sys.argv[1], encoding="utf-8")) | json.load(open(sys.argv[2], encoding="utf-8"))
+out = sys.argv[3]
 ORDER = ["高崎", "高崎問屋町", "井野", "新前橋", "群馬総社", "八木原", "渋川", "敷島", "津久田", "岩本", "沼田", "後閑",
          "上牧", "水上", "湯檜曽", "土合", "土樽", "越後中里", "岩原スキー場前", "越後湯沢", "石打", "大沢",
          "上越国際スキー場前", "塩沢", "六日町", "五日町", "浦佐", "八色", "小出", "越後堀之内", "北堀之内",
          "越後川口", "小千谷", "越後滝谷", "宮内"]
 GUNMA = set(ORDER[:16])
+LINES = [
+    ("JR_JOETSU", "上越線", "Joetsu Line", ORDER),
+    ("JR_YAHIKO", "弥彦線", "Yahiko Line", ["弥彦", "矢作", "吉田", "西燕", "燕", "燕三条", "北三条", "東三条"]),
+    ("JR_ECHIGO", "越後線", "Echigo Line",
+     ["柏崎", "東柏崎", "西中通", "荒浜", "刈羽", "西山", "礼拝", "石地", "小木ノ城", "出雲崎", "妙法寺", "小島谷", "桐原", "寺泊", "分水",
+      "粟生津", "南吉田", "吉田", "北吉田", "岩室", "巻", "越後曽根", "越後赤塚", "内野西が丘", "内野", "新潟大学前", "寺尾", "小針", "青山",
+      "関屋", "白山", "新潟"]),
+    ("JR_SHINETSU", "信越本線", "Shin'etsu Line",
+     ["宮内", "長岡", "北長岡", "押切", "見附", "帯織", "東光寺", "三条", "東三条", "保内", "加茂", "羽生田", "田上", "矢代田", "古津", "新津",
+      "さつき野", "荻川", "亀田", "越後石山", "新潟"]),
+]
 
 cols = ["type", "catalog_key", "code", "name_ja", "name_romaji", "series", "release_date", "prefecture", "municipality",
         "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url",
         "line_id", "line_name_ja", "line_name_romaji", "line_seq"]
 rows = []
-for seq, n in enumerate(ORDER, 1):
-    s = stations[n]
-    rows.append({
-        "type": "EKI_STAMP", "name_ja": n + "駅", "name_romaji": f"{s['en']} Station",
-        "prefecture": "群馬県" if n in GUNMA else "新潟県", "place_name": n + "駅",
-        "lat": f"{s['lat']:.6f}", "lng": f"{s['lng']:.6f}",
-        "notes": "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked.",
-        "source_url": "https://www.openstreetmap.org",
-        "line_id": "JR_JOETSU", "line_name_ja": "上越線", "line_name_romaji": "Joetsu Line", "line_seq": seq,
-    })
+for line_id, line_ja, line_ro, names in LINES:
+    for seq, n in enumerate(names, 1):
+        s = stations[n]
+        rows.append({
+            "type": "EKI_STAMP", "name_ja": n + "駅", "name_romaji": f"{s['en']} Station",
+            "prefecture": "群馬県" if n in GUNMA else "新潟県", "place_name": n + "駅",
+            "lat": f"{s['lat']:.6f}", "lng": f"{s['lng']:.6f}",
+            "notes": "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked.",
+            "source_url": "https://www.openstreetmap.org",
+            "line_id": line_id, "line_name_ja": line_ja, "line_name_romaji": line_ro, "line_seq": seq,
+        })
 
 def dms(d, m, s):
     return round(d + m / 60 + s / 3600, 6)
 
-# Read from Manhole Card Navi / Manhole Card Map on 2026-11-02 (personal use). Positions are the manhole
-# printed on the card, not yet the hand-out place, except where the place is known to be next to it.
+# Read from Manhole Card Navi / Manhole Card Map on 2026-11-02 (personal use). 15-202-A001's position is the manhole
+# printed on the card, next to its hand-out place.
 cards = [
-    ("15-000-A001", "新潟県（流域下水道）", "Niigata-ken (Ryuiki Gesuido)", "06", "2017/12/09", "新潟県", None, dms(37, 56, 2.8), dms(139, 7, 40.9), None, None, None, None),
-    ("15-100-A001", "新潟市", "Niigata-shi", "01", "2016/04/01", "新潟県", "新潟市", dms(37, 54, 49.2), dms(139, 3, 42.8), None, None, None, None),
-    ("15-100-B001", "新潟市", "Niigata-shi", "06", "2017/12/09", "新潟県", "新潟市", dms(37, 47, 57.0), dms(139, 7, 18.7), None, None, None, None),
+    # Hand-out places from the Niigata prefecture and city pages read 2026-11-03; positions are the buildings from OpenStreetMap.
+    ("15-000-A001", "新潟県（流域下水道）", "Niigata-ken (Ryuiki Gesuido)", "06", "2017/12/09", "新潟県", None, 37.951155, 139.124041,
+     "新潟県下水道公社（新潟浄化センター管理棟 2階事務室）", "新潟市東区下山3丁目680番地", "025-271-1151",
+     "平日 9:00～17:00／土日祝・年末年始 10:00～15:00（土日祝・年末年始は予約が必要）"),
+    ("15-100-A001", "新潟市", "Niigata-shi", "01", "2016/04/01", "新潟県", "新潟市", 37.922414, 139.045026,
+     "新潟古町まちみなと情報館", "新潟市中央区古町通七番町995番地7", "025-378-4101", "10:00～17:00（水曜、年末年始を除く。営業日は施設に確認）"),
+    ("15-100-B001", "新潟市", "Niigata-shi", "06", "2017/12/09", "新潟県", "新潟市", 37.801767, 139.141835,
+     "新津鉄道資料館", "新潟市秋葉区新津東町2-5-6", "0250-24-5700", "9:30～17:00（火曜（祝日なら翌日）、年末年始を除く）"),
     ("15-202-A001", "長岡市", "Nagaoka-shi", "07", "2018/04/28", "新潟県", "長岡市", dms(37, 26, 50.1), dms(138, 51, 4.0),
      "ながおか市民協働センター", "長岡市大手通1-4-10 シティホールプラザアオーレ長岡 西棟3階", "0258-39-2020", "8:30～21:00（12/29～1/3を除く）"),
     # B, C, G and Tsubame E: hand-out places from the cities' pages read 2026-11-03; positions are the
@@ -52,7 +69,6 @@ for code, ja, ro, wave, date, pref, muni, lat, lng, place, addr, phone, hours in
         "type": "MANHOLE_CARD", "code": code, "name_ja": f"{ja} {code[-4:]}", "name_romaji": f"{ro} {code[-4:]}",
         "series": wave, "release_date": date, "prefecture": pref, "municipality": muni,
         "place_name": place, "address": addr, "place_phone": phone, "lat": lat, "lng": lng, "hours_text": hours,
-        "notes": None if place else "Position is the manhole on the card; hand-out place not checked yet.",
     })
 
 with open(out, "w", encoding="utf-8", newline="") as f:
