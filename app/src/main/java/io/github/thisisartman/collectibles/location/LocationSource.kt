@@ -1,0 +1,82 @@
+package io.github.thisisartman.collectibles.location
+
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import android.os.CancellationSignal
+import androidx.core.content.ContextCompat
+import androidx.core.location.LocationManagerCompat
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
+import java.util.concurrent.Executors
+import javax.inject.Inject
+import javax.inject.Singleton
+import kotlin.coroutines.resume
+
+/** A position and when it was taken. */
+data class Fix(val lat: Double, val lng: Double, val accuracyM: Float?, val timeMs: Long)
+
+/**
+ * GPS through Android's own LocationManager (works offline, no Play Services). Never blocks a log:
+ * callers save first and fill the position in when [currentOrRecent] returns.
+ */
+@Singleton
+class LocationSource @Inject constructor(@ApplicationContext private val context: Context) {
+    private val lm = context.getSystemService(LocationManager::class.java)
+    private val executor = Executors.newSingleThreadExecutor()
+
+    fun hasPermission(): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    /** Newest last-known position from any provider, or null. */
+    @SuppressLint("MissingPermission")
+    fun lastKnown(): Fix? {
+        if (!hasPermission() || lm == null) return null
+        return lm.allProviders.mapNotNull { runCatching { lm.getLastKnownLocation(it) }.getOrNull() }
+            .maxByOrNull { it.time }?.toFix()
+    }
+
+    /** A fresh GPS fix within [timeoutMs], else a last-known fix no older than [maxAgeMs], else null. */
+    suspend fun currentOrRecent(timeoutMs: Long = 20_000, maxAgeMs: Long = 120_000): Fix? {
+        val fresh = current(timeoutMs)
+        if (fresh != null) return fresh
+        val last = lastKnown() ?: return null
+        return last.takeIf { System.currentTimeMillis() - it.timeMs <= maxAgeMs }
+    }
+
+    @SuppressLint("MissingPermission")
+    suspend fun current(timeoutMs: Long = 20_000): Fix? {
+        if (!hasPermission() || lm == null) return null
+        val provider = when {
+            lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+            lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+            else -> return null
+        }
+        return withTimeoutOrNull(timeoutMs) {
+            suspendCancellableCoroutine { cont ->
+                val signal = CancellationSignal()
+                cont.invokeOnCancellation { signal.cancel() }
+                LocationManagerCompat.getCurrentLocation(lm, provider, signal, executor) { loc: Location? ->
+                    if (cont.isActive) cont.resume(loc?.toFix())
+                }
+            }
+        }
+    }
+
+    private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else null, time)
+}
+
+/** Great-circle distance in metres. */
+fun distanceM(aLat: Double, aLng: Double, bLat: Double, bLng: Double): Double {
+    val r = 6_371_000.0
+    val dLat = Math.toRadians(bLat - aLat)
+    val dLng = Math.toRadians(bLng - aLng)
+    val h = Math.sin(dLat / 2).let { it * it } +
+        Math.cos(Math.toRadians(aLat)) * Math.cos(Math.toRadians(bLat)) * Math.sin(dLng / 2).let { it * it }
+    return 2 * r * Math.asin(Math.sqrt(h))
+}

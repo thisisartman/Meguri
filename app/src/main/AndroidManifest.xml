@@ -7,6 +7,10 @@
         android:name="android.permission.INTERNET"
         tools:node="remove" />
 
+    <!-- Position of each find and distances to items; foreground only, no background location. -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
     <application
         android:name=".CollectiblesApp"
         android:allowBackup="false"
