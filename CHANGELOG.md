@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-02: Design complete
+- Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.
+- Language: an app-level switch; in English mode names are in romaji everywhere, with the Japanese on the item page.
+- Build spec written: `docs/DESIGN.md`.
+
 ## 2026-11-01: Design round started
 - Product ID card and the scope of the main-screens design round recorded in PROGRESS.md.
 - M0 test build also checked on the Galaxy S23 (Android 16): installs, logs a crash, exports logs.
