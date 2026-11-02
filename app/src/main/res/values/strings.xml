@@ -82,6 +82,7 @@
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
     <string name="more_import_done">Catalogue: %1$d added, %2$d updated · railway lines: %3$d</string>
+    <string name="more_import_none">No catalogue rows found in that file. Is it the catalogue CSV?</string>
     <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
     <string name="more_logs">Logs</string>
     <string name="more_about">About</string>

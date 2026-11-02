@@ -61,7 +61,7 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val msg = runCatching { vm.io.importCatalog(uri) }
-                .map { context.getString(R.string.more_import_done, it.added, it.updated, it.lines) }
+                .map { if (it.added + it.updated == 0) context.getString(R.string.more_import_none) else context.getString(R.string.more_import_done, it.added, it.updated, it.lines) }
                 .getOrElse { vm.log.e("Catalog", "Import failed", it); context.getString(R.string.more_import_failed, it.message ?: "") }
             scope.launch { snackbar.showSnackbar(msg) }
         }
