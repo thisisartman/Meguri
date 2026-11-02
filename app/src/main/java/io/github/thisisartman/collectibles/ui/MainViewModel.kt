@@ -114,6 +114,8 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { repo.attachPhoto(findId, info) }
     }
 
+    fun retryPosition(findId: String) = repo.retryPosition(findId)
+
     fun markBeforeApp(ids: Set<String>, onDone: (Int) -> Unit) {
         viewModelScope.launch { onDone(repo.markBeforeApp(ids)) }
     }

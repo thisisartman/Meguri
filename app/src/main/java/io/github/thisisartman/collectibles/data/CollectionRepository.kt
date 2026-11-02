@@ -47,6 +47,22 @@ class CollectionRepository @Inject constructor(
         return id
     }
 
+    /**
+     * Another try at a find's position once the camera has closed: Android stops a "while using the app"
+     * location request while the camera is in front. Keeps a position the find already has.
+     */
+    fun retryPosition(findId: String) {
+        scope.launch {
+            val fix = location.currentOrRecent()
+            if (fix != null) {
+                dao.setFindLocation(findId, fix.lat, fix.lng, fix.accuracyM)
+                log.i("Log", "Position after the camera for find $findId")
+            } else {
+                log.w("Log", "No position after the camera for find $findId")
+            }
+        }
+    }
+
     /** Undo: removes the find (and its photo links; the photos stay in the gallery). */
     suspend fun undoFind(findId: String) {
         dao.deleteFind(findId)

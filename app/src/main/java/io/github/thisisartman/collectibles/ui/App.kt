@@ -79,6 +79,7 @@ fun App() {
         val uri = Uri.parse(p.substringAfter('|'))
         val info = if (ok) CameraCapture.describe(resolver, uri) else null
         if (info != null) vm.attachPhoto(findId, info) else CameraCapture.discardIfEmpty(resolver, uri)
+        vm.retryPosition(findId)
     }
     val photo = remember {
         PhotoLauncher { findId ->
