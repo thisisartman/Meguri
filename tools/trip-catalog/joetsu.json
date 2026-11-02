@@ -1,0 +1,247 @@
+{
+ "八色": {
+  "lat": 37.191982,
+  "lng": 138.9351497,
+  "en": "Yairo",
+  "operator": null,
+  "railway": "station"
+ },
+ "五日町": {
+  "lat": 37.1195584,
+  "lng": 138.9080616,
+  "en": "Itsukamachi",
+  "operator": null,
+  "railway": "station"
+ },
+ "上越国際スキー場前": {
+  "lat": 37.0288622,
+  "lng": 138.8284212,
+  "en": "Joetsu-Kokusai-Ski-jo-mae",
+  "operator": null,
+  "railway": "station"
+ },
+ "北堀之内": {
+  "lat": 37.2557054,
+  "lng": 138.8964258,
+  "en": "Kita-Horinouchi",
+  "operator": null,
+  "railway": "station"
+ },
+ "越後堀之内": {
+  "lat": 37.2390504,
+  "lng": 138.9278948,
+  "en": "Echigo-Horinouchi",
+  "operator": null,
+  "railway": "station"
+ },
+ "越後滝谷": {
+  "lat": 37.3691078,
+  "lng": 138.8350129,
+  "en": "Echigo-Takiya",
+  "operator": null,
+  "railway": "station"
+ },
+ "小千谷": {
+  "lat": 37.3098255,
+  "lng": 138.8133463,
+  "en": "Ojiya",
+  "operator": null,
+  "railway": "station"
+ },
+ "越後中里": {
+  "lat": 36.909711,
+  "lng": 138.8484487,
+  "en": "Echigo-Nakazato",
+  "operator": null,
+  "railway": "station"
+ },
+ "後閑": {
+  "lat": 36.6792548,
+  "lng": 139.0004095,
+  "en": "Gokan",
+  "operator": null,
+  "railway": "station"
+ },
+ "大沢": {
+  "lat": 37.0213756,
+  "lng": 138.8213997,
+  "en": "Osawa",
+  "operator": null,
+  "railway": "station"
+ },
+ "土樽": {
+  "lat": 36.8747483,
+  "lng": 138.8622042,
+  "en": "Tsuchitaru",
+  "operator": null,
+  "railway": "station"
+ },
+ "井野": {
+  "lat": 36.3570841,
+  "lng": 139.0230179,
+  "en": "Ino",
+  "operator": "東日本旅客鉄道株式会社",
+  "railway": "station"
+ },
+ "高崎問屋町": {
+  "lat": 36.3460208,
+  "lng": 139.0170836,
+  "en": "Takasakitonyamachi",
+  "operator": "東日本旅客鉄道株式会社",
+  "railway": "station"
+ },
+ "高崎": {
+  "lat": 36.3208614,
+  "lng": 139.0122633,
+  "en": "Takasaki",
+  "operator": "東日本旅客鉄道",
+  "railway": "station"
+ },
+ "敷島": {
+  "lat": 36.5383023,
+  "lng": 139.0338283,
+  "en": "Shikishima",
+  "operator": null,
+  "railway": "station"
+ },
+ "津久田": {
+  "lat": 36.5611315,
+  "lng": 139.0428322,
+  "en": "Tsukuda",
+  "operator": null,
+  "railway": "station"
+ },
+ "岩本": {
+  "lat": 36.6030256,
+  "lng": 139.0471049,
+  "en": "Iwamoto",
+  "operator": null,
+  "railway": "station"
+ },
+ "土合": {
+  "lat": 36.8304169,
+  "lng": 138.964686,
+  "en": "Doai",
+  "operator": null,
+  "railway": "station"
+ },
+ "越後川口": {
+  "lat": 37.2729129,
+  "lng": 138.8619611,
+  "en": "Echigo-Kawaguchi",
+  "operator": null,
+  "railway": "station"
+ },
+ "越後湯沢": {
+  "lat": 36.9358784,
+  "lng": 138.8094233,
+  "en": "Echigo-Yuzawa",
+  "operator": null,
+  "railway": "station"
+ },
+ "群馬総社": {
+  "lat": 36.4155807,
+  "lng": 139.0322835,
+  "en": "Gumma-Soja",
+  "operator": null,
+  "railway": "station"
+ },
+ "小出": {
+  "lat": 37.2332881,
+  "lng": 138.9534902,
+  "en": "Koide",
+  "operator": null,
+  "railway": "station"
+ },
+ "六日町": {
+  "lat": 37.0672136,
+  "lng": 138.8757265,
+  "en": "Muikamachi",
+  "operator": null,
+  "railway": "station"
+ },
+ "沼田": {
+  "lat": 36.6424053,
+  "lng": 139.0356609,
+  "en": "Numata",
+  "operator": null,
+  "railway": "station"
+ },
+ "渋川": {
+  "lat": 36.4906867,
+  "lng": 139.0085523,
+  "en": "Shibukawa",
+  "operator": "東日本旅客鉄道",
+  "railway": "station"
+ },
+ "新前橋": {
+  "lat": 36.3789954,
+  "lng": 139.0468295,
+  "en": "Shim-Maebashi",
+  "operator": "東日本旅客鉄道株式会社",
+  "railway": "station"
+ },
+ "浦佐": {
+  "lat": 37.1672238,
+  "lng": 138.9228409,
+  "en": "Urasa",
+  "operator": null,
+  "railway": "station"
+ },
+ "八木原": {
+  "lat": 36.4636616,
+  "lng": 139.0192174,
+  "en": "Yagihara",
+  "operator": null,
+  "railway": "station"
+ },
+ "湯檜曽": {
+  "lat": 36.8027175,
+  "lng": 138.9865728,
+  "en": "Yubiso",
+  "operator": null,
+  "railway": "station"
+ },
+ "宮内": {
+  "lat": 37.4220724,
+  "lng": 138.8400378,
+  "en": "Miyauchi",
+  "operator": null,
+  "railway": "station"
+ },
+ "塩沢": {
+  "lat": 37.041563,
+  "lng": 138.8484348,
+  "en": "Shiozawa",
+  "operator": null,
+  "railway": "station"
+ },
+ "石打": {
+  "lat": 36.9893095,
+  "lng": 138.8040912,
+  "en": "Ishiuchi",
+  "operator": null,
+  "railway": "station"
+ },
+ "岩原スキー場前": {
+  "lat": 36.9242628,
+  "lng": 138.8397525,
+  "en": "Iwappara-Ski-jo-mae",
+  "operator": null,
+  "railway": "station"
+ },
+ "水上": {
+  "lat": 36.7786288,
+  "lng": 138.9689907,
+  "en": "Minakami",
+  "operator": "東日本旅客鉄道株式会社",
+  "railway": "station"
+ },
+ "上牧": {
+  "lat": 36.7354492,
+  "lng": 138.9845462,
+  "en": "Kamimoku",
+  "operator": null,
+  "railway": "station"
+ }
+}
