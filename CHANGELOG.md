@@ -3,7 +3,7 @@
 ## 2026-11-02: Design complete
 - Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.
 - Language: an app-level switch; in English mode names are in romaji everywhere, with the Japanese on the item page.
-- Build spec written: `docs/DESIGN.md`.
+- Build spec written: `docs/DESIGN.md`, with colours checked against the backgrounds they really sit on, one rule for a missing GPS fix, place labels per type, and a list of what M1 must still check on the phones.
 
 ## 2026-11-01: Design round started
 - Product ID card and the scope of the main-screens design round recorded in PROGRESS.md.
