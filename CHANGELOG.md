@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03: Trip build (in progress)
+- Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
+- "Nearby": the nearest things you still need, and your collections with progress.
+- "My book": manhole cards by prefecture, eki stamps as a stamp book per railway line, goshuin; mark the ones you already have in one go.
+- Add a goshuin, stamp or card that isn't in the list, together with its find.
+- Back up all finds to a file; load a catalogue from a CSV file.
+- English or Japanese, chosen in the app.
+
 ## 2026-11-02: Design complete
 - Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.
 - Language: an app-level switch; in English mode names are in romaji everywhere, with the Japanese on the item page.

@@ -61,7 +61,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     var marking by rememberSaveable { mutableStateOf(false) }
     var selected by remember { mutableStateOf(setOf<String>()) }
     val scope = rememberCoroutineScope()
-    val markedText = stringResource(R.string.book_marked, selected.size)
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -111,7 +111,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             Button(
                 onClick = {
                     val ids = selected
-                    vm.markBeforeApp(ids) { n -> scope.launch { snackbar.showSnackbar(markedText.replace(ids.size.toString(), n.toString())) } }
+                    vm.markBeforeApp(ids) { n -> scope.launch { snackbar.showSnackbar(context.getString(R.string.book_marked, n)) } }
                     marking = false
                     selected = emptySet()
                 },
