@@ -11,7 +11,7 @@
 - Trip catalogue: Nagaoka's new water-supply card (G) and Tsubame's fifth card (E), with where to get them and opening hours.
 - After an Undo, the nearest list scrolls back so the item is in view again; railway lines in "My book" no longer repeat "Eki stamps".
 - Trip catalogue: Yahiko, Echigo and Shin'etsu Line stamp books added; Niigata City's two cards and the prefecture card now show where to get them, with hours and phone numbers.
-- A find logged with a photo tries again for its position when the camera closes (fix awaiting its check on the phone).
+- A find logged with a photo tries again for its position when the camera closes; before this, photo finds lost their position.
 
 ## 2026-11-02: Design complete
 - Round 4 decided: one colour per type (indigo manhole cards, vermilion goshuin, teal eki stamps), the phone's normal typeface.
