@@ -74,7 +74,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->
                 item(key = "h:m:$pref") {
-                    GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + " · " + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }, "${list.count { it.collected }} / ${list.size}")
+                    GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + " · " + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) }, "${list.count { it.collected }} / ${list.size}")
                 }
                 items(list, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
@@ -116,7 +116,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     selected = emptySet()
                 },
                 enabled = selected.isNotEmpty(),
-                modifier = Modifier.fillMaxWidth().padding(12.dp),
+                // Keep clear of the + button in the bottom-right corner.
+                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 88.dp, top = 12.dp, bottom = 12.dp),
             ) { Text(stringResource(R.string.book_mark_done, selected.size)) }
         }
     }

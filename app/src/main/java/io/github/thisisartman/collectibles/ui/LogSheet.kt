@@ -3,6 +3,7 @@ package io.github.thisisartman.collectibles.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -136,7 +137,7 @@ fun NewItemDialog(initialName: String, onDismiss: () -> Unit, onSave: (ItemType,
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.new_type), style = MaterialTheme.typography.labelLarge)
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MANHOLE_CARD).forEach { t ->
                         FilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label()), maxLines = 1) })
                     }
