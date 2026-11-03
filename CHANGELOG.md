@@ -7,6 +7,7 @@
 - Stamp books show how far each station still to get is, and mark the nearest.
 - Manhole cards are named by town and design where the city publishes it (the five Nagaoka cards in the catalogue, Tsubame's new card).
 - Large text: the next item's distance on Nearby stays visible, and stamp books use two columns so station names are not split.
+- Notes on how this design round went are kept in the progress tracker, for improving the design process.
 - Far from every collection (at home, say), "Nearby" lists all of them instead of an empty "Around here". With large text, "Call" moves under "Directions" instead of being squeezed.
 
 ## 2026-11-03: Run-through fixes (#36)
