@@ -108,4 +108,50 @@ interface CollectionDao {
 
     @Query("SELECT * FROM line_station ORDER BY line_id, seq")
     suspend fun allLineStations(): List<LineStation>
+
+    // Restore
+    @Query("SELECT COUNT(*) FROM acquisition")
+    suspend fun findTotal(): Int
+
+    @Query("SELECT COUNT(*) FROM photo")
+    suspend fun photoTotal(): Int
+
+    @Query("SELECT COUNT(*) FROM line")
+    suspend fun lineCount(): Int
+
+    @Query("DELETE FROM photo")
+    suspend fun deleteAllPhotos()
+
+    @Query("DELETE FROM acquisition")
+    suspend fun deleteAllFinds()
+
+    @Query("DELETE FROM line_station")
+    suspend fun deleteAllLineStations()
+
+    @Query("DELETE FROM line")
+    suspend fun deleteAllLines()
+
+    @Query("DELETE FROM item")
+    suspend fun deleteAllItems()
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertItems(items: List<Item>)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertFinds(finds: List<Acquisition>)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertPhotos(photos: List<Photo>)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLines(lines: List<Line>)
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertLineStations(ls: List<LineStation>)
+
+    @Query("UPDATE photo SET content_uri = :uri, mediastore_id = :mediastoreId, missing = :missing WHERE id = :id")
+    suspend fun setPhotoLink(id: String, uri: String, mediastoreId: Long, missing: Boolean)
+
+    @Query("UPDATE photo SET missing = :missing WHERE id = :id")
+    suspend fun setPhotoMissing(id: String, missing: Boolean)
 }

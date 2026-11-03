@@ -1,13 +1,18 @@
 package io.github.thisisartman.collectibles.data
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.room.withTransaction
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.thisisartman.collectibles.BuildConfig
 import io.github.thisisartman.collectibles.debug.FileLog
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.OutputStream
 import java.util.UUID
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -25,6 +30,9 @@ class CatalogAndBackup @Inject constructor(
 ) {
     private val dao = db.dao()
 
+    /** Held by anything that reads or replaces the whole database, so they never overlap. */
+    val lock = Mutex()
+
     /** Adds or updates items by catalogue key; never deletes an item or a find. */
     suspend fun importCatalog(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
@@ -33,9 +41,14 @@ class CatalogAndBackup @Inject constructor(
 
     suspend fun importCatalogText(text: String): ImportResult {
         val maps = Csv.parseWithHeader(text)
+        return lock.withLock { importRows(maps) }
+    }
+
+    private suspend fun importRows(maps: List<Map<String, String>>): ImportResult {
         var added = 0
         var updated = 0
         val lineIds = mutableSetOf<String>()
+        val seen = mutableSetOf<String>()
         val skipped = mutableListOf<String>()
         val now = System.currentTimeMillis()
         db.withTransaction {
@@ -44,7 +57,8 @@ class CatalogAndBackup @Inject constructor(
                 val existing = dao.itemByCatalogKey(row.catalogKey)
                 val item = row.toItem(existing, UUID.randomUUID().toString(), now)
                 dao.upsertItem(item)
-                if (existing == null) added++ else updated++
+                // A station on two lines is two rows of one item: count the item once.
+                if (seen.add(row.catalogKey)) { if (existing == null) added++ else updated++ }
                 if (row.lineId != null && row.lineSeq != null) {
                     dao.upsertLine(Line(row.lineId, row.lineNameJa ?: row.lineId, row.lineNameRomaji))
                     dao.upsertLineStation(LineStation(row.lineId, item.id, row.lineSeq))
@@ -61,19 +75,24 @@ class CatalogAndBackup @Inject constructor(
      * Photos are not included; they stay in the gallery and are relinked by their fingerprint.
      */
     suspend fun exportBackup(uri: Uri): BackupResult = withContext(Dispatchers.IO) {
-        val items = dao.allItems()
-        val finds = dao.allFinds()
-        val photos = dao.allPhotos()
-        val lines = dao.allLines()
-        val ls = dao.allLineStations()
-        db.openHelper.writableDatabase.query("PRAGMA wal_checkpoint(FULL)").use { it.moveToFirst() }
-        val dbFile = context.getDatabasePath(CollectiblesDb.NAME)
-        context.contentResolver.openOutputStream(uri)!!.use { out ->
-            ZipOutputStream(out).use { zip ->
+        val result = context.contentResolver.openOutputStream(uri, "wt")!!.use { writeBackupLocked(it) }
+        log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos to $uri")
+        result
+    }
+
+    suspend fun writeBackupLocked(out: OutputStream): BackupResult = lock.withLock { writeBackup(out) }
+
+    /** Caller holds [lock]. */
+    suspend fun writeBackup(out: OutputStream): BackupResult = withContext(Dispatchers.IO) {
+        val snapshot = File(context.noBackupFilesDir, "export-${UUID.randomUUID()}.db")
+        try {
+            val rows = snapshotDatabase(snapshot)
+            val (items, finds, photos, lines, ls) = rows
+            ZipOutputStream(out).let { zip ->
                 fun text(name: String, body: String) {
                     zip.putNextEntry(ZipEntry(name)); zip.write(body.toByteArray(Charsets.UTF_8)); zip.closeEntry()
                 }
-                zip.putNextEntry(ZipEntry(CollectiblesDb.NAME)); dbFile.inputStream().use { it.copyTo(zip) }; zip.closeEntry()
+                zip.putNextEntry(ZipEntry(CollectiblesDb.NAME)); snapshot.inputStream().use { it.copyTo(zip) }; zip.closeEntry()
                 text("items.csv", itemsCsv(items))
                 text("finds.csv", findsCsv(finds, items.associateBy { it.id }))
                 text("photos.csv", photosCsv(photos))
@@ -82,12 +101,45 @@ class CatalogAndBackup @Inject constructor(
                     val byLine = lines.associateBy { it.id }
                     ls.forEach { s -> append(Csv.line(s.lineId, byLine[s.lineId]?.nameJa, byLine[s.lineId]?.nameRomaji, s.itemId, s.seq)) }
                 })
-                text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":1,"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size}}""")
+                text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":${CollectiblesDb.VERSION},"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size}}""")
+                zip.finish()
+                zip.flush()
+            }
+            BackupResult(finds.size, items.size, photos.size)
+        } finally {
+            listOf("", "-wal", "-shm", "-journal").forEach { File(snapshot.path + it).delete() }
+        }
+    }
+
+    /**
+     * Copies the database with every write included. A transaction holds off writers, so the file and
+     * its write-ahead log can be copied together however busy the app is, and the CSV rows read in the
+     * same transaction match the copy. The log is then merged into the copy, leaving one complete file.
+     */
+    private suspend fun snapshotDatabase(target: File): Snapshot {
+        val dbFile = context.getDatabasePath(db.openHelper.databaseName!!)
+        val wal = File(dbFile.path + "-wal")
+        val targetWal = File(target.path + "-wal")
+        val rows = db.withTransaction {
+            dbFile.inputStream().use { input -> target.outputStream().use { input.copyTo(it) } }
+            if (wal.exists() && wal.length() > 0L) wal.inputStream().use { input -> targetWal.outputStream().use { input.copyTo(it) } }
+            Snapshot(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations())
+        }
+        SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
+            copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { c ->
+                check(c.moveToFirst() && c.getInt(0) == 0) { "Could not merge the write-ahead log into the backup" }
             }
         }
-        log.i("Backup", "Exported ${finds.size} finds, ${items.size} items, ${photos.size} photos to $uri")
-        BackupResult(finds.size, items.size, photos.size)
+        return rows
     }
+
+    private data class Snapshot(
+        val items: List<Item>,
+        val finds: List<Acquisition>,
+        val photos: List<Photo>,
+        val lines: List<Line>,
+        val lineStations: List<LineStation>,
+    )
 
     companion object {
         fun itemsCsv(items: List<Item>) = buildString {

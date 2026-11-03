@@ -94,6 +94,9 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
+    implementation(libs.androidx.work.runtime)
+    implementation(libs.androidx.documentfile)
+
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.androidx.hilt.navigation.compose)
@@ -101,6 +104,8 @@ dependencies {
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.core)
 }
 
 // Copies the built APKs to build/dist as collectibles-<dev|release>-v<version>-<yyyymmdd-hhmm>.apk.

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,7 +18,7 @@ import javax.inject.Singleton
  */
 @Database(
     entities = [Item::class, Acquisition::class, Photo::class, Line::class, LineStation::class],
-    version = 1,
+    version = CollectiblesDb.VERSION,
     exportSchema = true,
 )
 abstract class CollectiblesDb : RoomDatabase() {
@@ -25,6 +26,10 @@ abstract class CollectiblesDb : RoomDatabase() {
 
     companion object {
         const val NAME = "collectibles.db"
+        const val VERSION = 1
+
+        /** Used by the app and by restore, so an older backup migrates the same way the app does. */
+        val MIGRATIONS = emptyArray<Migration>()
     }
 }
 
@@ -34,7 +39,7 @@ object DbModule {
     @Provides
     @Singleton
     fun db(@ApplicationContext context: Context): CollectiblesDb =
-        Room.databaseBuilder(context, CollectiblesDb::class.java, CollectiblesDb.NAME).build()
+        Room.databaseBuilder(context, CollectiblesDb::class.java, CollectiblesDb.NAME).addMigrations(*CollectiblesDb.MIGRATIONS).build()
 
     @Provides
     fun dao(db: CollectiblesDb): CollectionDao = db.dao()
