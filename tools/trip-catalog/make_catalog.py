@@ -42,6 +42,31 @@ def dms(d, m, s):
 
 # Read from Manhole Card Navi / Manhole Card Map on 2026-11-02 (personal use). 15-202-A001's position is the manhole
 # printed on the card, next to its hand-out place.
+# Round 5, C2: a card is named town + design where the city publishes the design, else town + code.
+# Only cards: their catalogue key is the code, so renaming updates them in place. Never rename a station or
+# goshuin (their key is name_ja; a new name would make a new item and strand its finds).
+# Nagaoka: designs from https://www.city.nagaoka.niigata.jp/kurashi/cate05/gesui/mhcard.html (#01 to #07) and the
+# water-supply page; the page does not print codes, so A to G follow the page order (release waves 7, 13, 14, 22, 29
+# rise in that order, and B's and C's hand-out places match ナッちゃん's and the Albirex card's).
+# Tsubame E: the city's press release of 2026-07-07 (fifth card, design for the merger's 20th anniversary).
+DESIGNS = {
+    "15-202-A001": ("火焔土器", "Kaen doki"),
+    "15-202-B001": ("ナッちゃん", "Nat-chan"),
+    "15-202-C001": ("新潟アルビレックスBB", "Albirex BB"),
+    "15-202-F001": ("長岡の四季", "Four seasons"),
+    "15-202-G001": ("水道通水100周年", "Water supply 100 years"),
+    "15-213-E001": ("合併20周年", "20 years as one city"),
+}
+
+
+def card_names(code, ja, ro):
+    d = DESIGNS.get(code)
+    if d is None:
+        return f"{ja} {code[-4:]}", f"{ro} {code[-4:]}"
+    town = ro.removesuffix("-shi").removesuffix("-ku")
+    return f"{ja} {d[0]}", f"{town} · {d[1]}"
+
+
 cards = [
     # Hand-out places from the Niigata prefecture and city pages read 2026-11-03; positions are the buildings from OpenStreetMap.
     ("15-000-A001", "新潟県（流域下水道）", "Niigata-ken (Ryuiki Gesuido)", "06", "2017/12/09", "新潟県", None, 37.951155, 139.124041,
@@ -67,7 +92,7 @@ cards = [
 ]
 for code, ja, ro, wave, date, pref, muni, lat, lng, place, addr, phone, hours in cards:
     rows.append({
-        "type": "MANHOLE_CARD", "code": code, "name_ja": f"{ja} {code[-4:]}", "name_romaji": f"{ro} {code[-4:]}",
+        "type": "MANHOLE_CARD", "code": code, "name_ja": card_names(code, ja, ro)[0], "name_romaji": card_names(code, ja, ro)[1],
         "series": wave, "release_date": date, "prefecture": pref, "municipality": muni,
         "place_name": place, "address": addr, "place_phone": phone, "lat": lat, "lng": lng, "hours_text": hours,
     })
@@ -96,7 +121,7 @@ owned = [
 ]
 for code, ja, ro, wave, pref, muni in owned:
     rows.append({
-        "type": "MANHOLE_CARD", "code": code, "name_ja": f"{ja} {code[-4:]}", "name_romaji": f"{ro} {code[-4:]}",
+        "type": "MANHOLE_CARD", "code": code, "name_ja": card_names(code, ja, ro)[0], "name_romaji": card_names(code, ja, ro)[1],
         "series": wave, "prefecture": pref, "municipality": muni,
     })
 rows.append({

@@ -66,6 +66,7 @@ fun NavHostController.openTab(route: String) = navigate(route) {
     restoreState = true
 }
 fun NavHostController.openMore() = openTab(MORE)
+fun NavHostController.openBook() = openTab(BOOK)
 
 @Composable
 fun App() {

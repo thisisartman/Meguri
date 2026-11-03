@@ -57,6 +57,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
+    val around by vm.aroundHere.collectAsStateWithLifecycle()
     val photo = LocalPhoto.current
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp)) {
@@ -109,7 +110,13 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 }
             }
         }
-        item { SectionTitle(stringResource(R.string.nearby_my_book)) }
+        // Round 5, A2: with a position, only collections with something to get nearby; the rest on one line
+        item {
+            SectionTitle(
+                if (around.located) stringResource(R.string.nearby_around_here, (MainViewModel.AROUND_RADIUS_M / 1000).toInt())
+                else stringResource(R.string.nearby_my_book)
+            )
+        }
         if (summaries.isEmpty()) {
             item {
                 Text(
@@ -120,12 +127,30 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 )
             }
         }
-        items(summaries, key = { it.key }) { s ->
-            val title = summaryTitle(s, lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa })
-            SummaryCard(s, title, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.navigate("book") })
+        items(around.near, key = { it.summary.key }) { a ->
+            val s = a.summary
+            val title = summaryTitle(s, lineName(lines, s.lineId, ja))
+            SummaryCard(s, title, next = a.next, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() })
+        }
+        if (around.elsewhere.isNotEmpty()) {
+            item {
+                val list = around.elsewhere.map { s ->
+                    summaryTitle(s, lineName(lines, s.lineId, ja)) + " " +
+                        (if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString())
+                }.joinToString(" · ")
+                Text(
+                    stringResource(R.string.nearby_elsewhere, list),
+                    Modifier.fillMaxWidth().clickable { nav.openBook() }.padding(horizontal = 16.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
+
+private fun lineName(lines: List<io.github.thisisartman.collectibles.data.Line>, lineId: String?, ja: Boolean): String? =
+    lines.firstOrNull { it.id == lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
 
 @Composable
 fun SectionTitle(text: String) {
@@ -190,7 +215,7 @@ fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
 }
 
 @Composable
-fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
+fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onClick: () -> Unit) {
     val ja = isJapanese()
     val color = LocalTypeColors.current.of(s.type)
     Card(
@@ -208,6 +233,17 @@ fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
                     style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
                 )
             }
+            // Around here: what to get next in this collection, and how far
+            next?.let { n ->
+                Text(
+                    stringResource(R.string.nearby_next, n.row.item.displayName(ja), distanceText(n.meters).orEmpty()),
+                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 14.dp, top = 2.dp),
+                )
+            }
             if (s.total != null && s.total > 0) {
                 LinearProgressIndicator(
                     progress = { s.collected.toFloat() / s.total },
@@ -221,7 +257,7 @@ fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
             } else {
                 Spacer(Modifier.height(6.dp))
             }
-            s.last?.let { last ->
+            s.last?.takeIf { next == null }?.let { last ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Mark(last, 26.dp)
                     Spacer(Modifier.width(8.dp))

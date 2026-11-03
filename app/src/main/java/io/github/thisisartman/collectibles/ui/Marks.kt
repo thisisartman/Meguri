@@ -66,15 +66,17 @@ fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, mod
 }
 
 @Composable
-fun EmptySlot(size: Dp, modifier: Modifier = Modifier) {
+fun EmptySlot(size: Dp, modifier: Modifier = Modifier, strong: Boolean = false) {
     val dash = LocalTypeColors.current.dash
+    // strong: the nearest slot still to get in a stamp book, a solid darker ring (round 5, E2)
+    val ink = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
     Canvas(modifier.size(size)) {
-        val w = 2.dp.toPx()
+        val w = (if (strong) 3 else 2).dp.toPx()
         drawCircle(
-            color = dash,
+            color = if (strong) ink else dash,
             radius = (this.size.minDimension - w) / 2,
             center = Offset(this.size.width / 2, this.size.height / 2),
-            style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
+            style = Stroke(width = w, pathEffect = if (strong) null else PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
         )
     }
 }

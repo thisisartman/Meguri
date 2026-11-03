@@ -69,6 +69,17 @@
     <string name="item_remove_confirm_title">コレクションから外しますか？</string>
     <string name="item_remove_confirm_text">%1$sは未取得に戻ります。</string>
     <string name="item_remove_confirm">外す</string>
+    <string name="nearby_around_here">近く・%1$d km以内</string>
+    <string name="nearby_next">次: %1$s・%2$s</string>
+    <string name="nearby_elsewhere">その他の地域: %1$s</string>
+    <string name="item_directions">経路・%1$s</string>
+    <string name="item_directions_plain">経路</string>
+    <string name="item_call">電話</string>
+    <string name="item_on_lines">%1$s</string>
+    <string name="item_remove_find">この記録を削除</string>
+    <string name="item_remove_find_title">この記録を削除しますか？</string>
+    <string name="item_remove_find_text">%1$sの記録を削除します。写真はギャラリーに残ります。</string>
+    <string name="line_nearest">最寄りの未取得: %1$s・%2$s</string>
 
     <string name="log_title">記録する</string>
     <string name="log_search">名前・コードで検索</string>

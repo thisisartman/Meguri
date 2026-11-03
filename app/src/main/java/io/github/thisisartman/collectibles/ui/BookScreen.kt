@@ -91,8 +91,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 items(list, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
-                        onOpen = { nav.openItem(r.item.id) },
-                        onGotIt = { vm.gotIt(r, r.item.displayName(ja)) })
+                        onOpen = { nav.openItem(r.item.id) })
                 }
             }
             // Eki stamps: one row per line (opens the stamp book), then other stations
@@ -112,8 +111,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
-                        onOpen = { nav.openItem(r.item.id) },
-                        onGotIt = { vm.gotIt(r, r.item.displayName(ja)) })
+                        onOpen = { nav.openItem(r.item.id) })
                 }
             }
             if (rows.isEmpty()) {
@@ -151,7 +149,7 @@ fun GroupHeader(type: ItemType, title: String, count: String?) {
 @Composable
 fun ItemListRow(
     r: ItemRow, ja: Boolean, meters: Double?, marking: Boolean, checked: Boolean,
-    onToggle: () -> Unit, onOpen: () -> Unit, onGotIt: () -> Unit,
+    onToggle: () -> Unit, onOpen: () -> Unit,
 ) {
     val canMark = marking && !r.collected
     Row(
@@ -170,7 +168,7 @@ fun ItemListRow(
             ).joinToString(" · ")
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (!marking && !r.collected) OutlinedButton(onClick = onGotIt, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)) { Text(stringResource(R.string.got_it)) }
+        // Round 5, B2: the book is for looking; logging happens on Nearby, the item page and +
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
@@ -191,6 +189,9 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
         ls.filter { it.lineId == lineId }.sortedBy { it.seq }.mapNotNull { byId[it.itemId] }
     }
     val title = line?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa } ?: stringResource(R.string.book_other_stations)
+    // Round 5, E2: how far each station still to get is, and which one is nearest
+    val dist = stations.associate { it.item.id to vm.distanceTo(it) }
+    val nearest = stations.filter { !it.collected && dist[it.item.id] != null }.minByOrNull { dist[it.item.id]!! }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -202,6 +203,13 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                         stringResource(R.string.type_eki_plural) + " · " + stringResource(R.string.count, stations.count { it.collected }, stations.size),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    nearest?.let { n ->
+                        Text(
+                            stringResource(R.string.line_nearest, n.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"), distanceText(dist[n.item.id]).orEmpty()),
+                            style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
@@ -215,11 +223,20 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
         ) {
             items(stations, key = { it.item.id }) { r ->
                 Column(Modifier.clickable { nav.openItem(r.item.id) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(contentAlignment = Alignment.Center) { Mark(r, 72.dp) }
+                    val isNearest = r.item.id == nearest?.item?.id
+                    Box(contentAlignment = Alignment.Center) { if (isNearest) EmptySlot(72.dp, strong = true) else Mark(r, 72.dp) }
                     Spacer(Modifier.height(4.dp))
-                    Text(r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"),
+                        style = MaterialTheme.typography.bodySmall, fontWeight = if (isNearest) FontWeight.Bold else null,
+                        textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    )
                     if (r.collected) {
                         Text(r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    } else {
+                        distanceText(dist[r.item.id])?.let {
+                            Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        }
                     }
                 }
             }
