@@ -6,7 +6,9 @@
 - Optional weekly backup to a folder you pick, keeping the last 4.
 - After a restore, photos are matched to their finds again; a photo with two equal matches is marked missing rather than guessed.
 - Loading a catalogue counts a station on two lines once.
-- Testing: 19 unit tests pass; the 15 device tests have not run yet (the Predator's emulator crashes on boot, so they run on the Legion's).
+- Backups no longer wait for a quiet moment, so one can't fail because the app is busy.
+- Removing "had before the app" from an item is now written to the log.
+- Testing: 19 unit tests pass; 13 of the 15 device tests passed on the Legion's emulator, and the fixes for the other 2 are waiting on a rerun.
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
