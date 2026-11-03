@@ -11,6 +11,7 @@
 - Trip catalogue: Nagaoka's new water-supply card (G) and Tsubame's fifth card (E), with where to get them and opening hours.
 - After an Undo, the nearest list scrolls back so the item is in view again; railway lines in "My book" no longer repeat "Eki stamps".
 - Trip catalogue: Yahiko, Echigo and Shin'etsu Line stamp books added; Niigata City's two cards and the prefecture card now show where to get them, with hours and phone numbers.
+- The app is now called Meguri (巡り, going round a circuit).
 - Long names on Nearby cards wrap onto a second line instead of being cut off.
 - Catalogue: the other cards already in the collection (Sado, Kashiwazaki, Nagaoka F, Tokyo) and the Gotokuji goshuin.
 - A find logged with a photo tries again for its position when the camera closes; before this, photo finds lost their position.

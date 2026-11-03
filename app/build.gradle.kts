@@ -32,7 +32,7 @@ android {
         versionCode = 1
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        manifestPlaceholders["appLabel"] = "Collectibles"
+        manifestPlaceholders["appLabel"] = "Meguri"
         ndk { abiFilters += "arm64-v8a" }
     }
 
@@ -51,7 +51,7 @@ android {
         debug {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
-            manifestPlaceholders["appLabel"] = "Collectibles (dev)"
+            manifestPlaceholders["appLabel"] = "Meguri (dev)"
         }
         release {
             isMinifyEnabled = true
