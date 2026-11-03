@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-11-03: Run-through fixes (#36)
+- With no catalogue loaded, "Nearby" says so and offers to load one, instead of "Nothing left to get near here".
+- Right after allowing location, "Nearby" says it is finding your position instead of "Location off".
+- Large text: the distance on "Nearby" and in the "+" list stays visible, "My book" keeps its title on one line, and seal labels fit.
+- In English, an item's page shows the prefecture in English and dates as 2026-07-31; your record says "place saved" with a Map button instead of coordinates.
+- "Mark ones I already have": the button asks you to choose first, and the + button is hidden meanwhile.
+- Back arrows are named for screen readers. Station notes are written for you, with the map credit.
+
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
 - "Nearby": the nearest things you still need, and your collections with progress.

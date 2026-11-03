@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Where distances are measured from, and whether it is live. */
-data class Here(val fix: Fix?, val live: Boolean)
+data class Here(val fix: Fix?, val live: Boolean, val searching: Boolean = false)
 
 data class Ranked(val row: ItemRow, val meters: Double?)
 
@@ -80,8 +80,11 @@ class MainViewModel @Inject constructor(
     fun refreshPosition() {
         if (!location.hasPermission()) return
         location.lastKnown()?.let { _here.value = Here(it, false) }
+        // With permission but no fix yet, say so rather than "Location off"
+        if (_here.value.fix == null) _here.value = _here.value.copy(searching = true)
         viewModelScope.launch {
-            location.current()?.let { _here.value = Here(it, true) }
+            val fix = location.current()
+            _here.value = if (fix != null) Here(fix, true) else _here.value.copy(searching = false)
         }
     }
 

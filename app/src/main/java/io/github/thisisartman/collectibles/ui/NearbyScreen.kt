@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,6 +56,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
     val nearest by vm.nearest.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
+    val rows by vm.rows.collectAsStateWithLifecycle()
     val photo = LocalPhoto.current
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp)) {
@@ -63,23 +65,29 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.headlineMedium)
                 val fix = here.fix
                 val where = when {
+                    fix == null && here.searching -> stringResource(R.string.nearby_finding)
                     fix == null -> stringResource(R.string.nearby_location_off)
                     here.live -> stringResource(R.string.nearby_from_now)
                     else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
                 }
                 Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (fix == null) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
+                if (fix == null && !here.searching) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
             }
         }
         item { SectionTitle(stringResource(R.string.nearby_still_to_get)) }
         item {
             if (nearest.isEmpty()) {
-                Text(
-                    stringResource(R.string.nearby_nothing_left),
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // No catalogue yet is not the same as having everything
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        stringResource(if (rows.isEmpty()) R.string.nearby_no_catalogue else R.string.nearby_all_done),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (rows.isEmpty()) {
+                        TextButton(onClick = { nav.openMore() },contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_load_catalogue)) }
+                    }
+                }
             } else {
                 // An undone find comes back at the front; keyed items would otherwise keep it scrolled off the left edge
                 val strip = rememberLazyListState()
@@ -154,14 +162,18 @@ fun distanceText(meters: Double?): String? = meters?.let { val (res, v) = format
 
 @Composable
 private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> Unit, onGotIt: () -> Unit, onPhoto: () -> Unit) {
+    // Wider with large text, so the name and distance still fit
+    val width = 150.dp * LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
     Card(
-        Modifier.width(150.dp).clickable(onClick = onOpen),
+        Modifier.width(width).clickable(onClick = onOpen),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(10.dp)) {
             Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            TypeChip(row.item.type, distanceText(meters))
+            TypeChip(row.item.type)
+            // Distance on its own line: it is what the tile is for, and it must not be the part that gets cut
+            Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
             Spacer(Modifier.height(8.dp))
             Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
             OutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
@@ -190,7 +202,7 @@ fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TypeDot(s.type)
                 Spacer(Modifier.width(6.dp))
-                Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
                     if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
                     style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),

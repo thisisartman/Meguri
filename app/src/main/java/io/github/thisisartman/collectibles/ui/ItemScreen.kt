@@ -30,8 +30,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -57,7 +61,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             title = { Text(r?.item?.type?.let { stringResource(it.label()) } ?: "") },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
         if (r == null) return@Column
         val item = r.item
@@ -122,10 +126,16 @@ private fun NameBlock(item: Item, ja: Boolean) {
 private fun NameText(item: Item, ja: Boolean) {
     Text(item.displayName(ja), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
     item.secondaryName(ja)?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    val sub = listOfNotNull(item.code, item.prefecture, item.municipality?.takeIf { it != item.nameJa }).joinToString(" · ")
+    // English mode: prefecture in romaji; the town has no romaji in the catalogue and is already in the name, so it is left out
+    val sub = listOfNotNull(
+        item.code,
+        item.prefecture?.let { prefectureName(it, ja) },
+        item.municipality?.takeIf { ja && it != item.nameJa },
+    ).joinToString(" · ")
     if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     if (item.series != null) {
-        Text(stringResource(R.string.item_wave, item.series, item.releaseDate.orEmpty()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val date = item.releaseDate.orEmpty().let { if (ja) it else it.replace('/', '-') }
+        Text(stringResource(R.string.item_wave, item.series, date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -138,7 +148,8 @@ private fun Facts(item: Item, meters: Double?) {
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
     }
     Column(Modifier.fillMaxWidth()) {
-        Fact(stringResource(placeLabel), listOfNotNull(item.placeName, item.address).joinToString("\n"))
+        // A station's place is the station itself: repeating its Japanese name adds nothing (and breaks English mode)
+        Fact(stringResource(placeLabel), listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.address).joinToString("\n"))
         Fact(stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
         Fact(stringResource(R.string.item_phone), item.placePhone.orEmpty())
         if (item.lat != null && item.lng != null) {
@@ -167,6 +178,9 @@ private fun Fact(label: String, value: String) {
     HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }
 
+/** How long after a find its missing position counts as "still being found". */
+private const val POSITION_WAIT_MS = 2 * 60 * 1000L
+
 @Composable
 private fun FindCard(f: FindWithPhotos, ja: Boolean, onRemoveBeforeApp: () -> Unit) {
     Card(
@@ -183,8 +197,25 @@ private fun FindCard(f: FindWithPhotos, ja: Boolean, onRemoveBeforeApp: () -> Un
                 }
             } else {
                 val whenText = a.acquiredAt?.let { formatDateTime(it, ja) } ?: ""
-                val whereText = if (a.lat != null && a.lng != null) String.format(java.util.Locale.US, "%.5f, %.5f", a.lat, a.lng) else stringResource(R.string.item_no_position)
-                Text(stringResource(R.string.item_found_at, whenText, whereText), style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"))
+                // The position is filled in after the find is saved; for a while it is pending, not missing
+                var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+                LaunchedEffect(a.id, a.lat) {
+                    while (a.lat == null && now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS) { delay(5_000); now = System.currentTimeMillis() }
+                }
+                val whereText = when {
+                    a.lat != null && a.lng != null -> stringResource(R.string.item_position_saved)
+                    now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS -> stringResource(R.string.item_finding_position)
+                    else -> stringResource(R.string.item_no_position)
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(stringResource(R.string.item_found_at, whenText, whereText), style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f))
+                    if (a.lat != null && a.lng != null) {
+                        val context = LocalContext.current
+                        TextButton(onClick = {
+                            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${a.lat},${a.lng}?q=${a.lat},${a.lng}"))) }
+                        }) { Text(stringResource(R.string.item_find_map)) }
+                    }
+                }
                 a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
             }
             if (f.photos.isNotEmpty()) {

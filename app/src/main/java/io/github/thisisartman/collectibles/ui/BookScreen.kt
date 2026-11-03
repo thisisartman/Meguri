@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +55,7 @@ import io.github.thisisartman.collectibles.data.ItemType
 import kotlinx.coroutines.launch
 
 @Composable
-fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHostState) {
+fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHostState, onMarkingChange: (Boolean) -> Unit = {}) {
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
@@ -62,12 +64,22 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     var selected by remember { mutableStateOf(setOf<String>()) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(marking) { onMarkingChange(marking) }
+    DisposableEffect(Unit) { onDispose { onMarkingChange(false) } }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            if (marking) TextButton(onClick = { marking = false; selected = emptySet() }) { Text(stringResource(R.string.cancel)) }
-            else TextButton(onClick = { marking = true }) { Text(stringResource(R.string.book_mark_owned)) }
+        // The title never wraps; the action takes what is left and wraps instead (large text)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false)
+            Spacer(Modifier.width(8.dp))
+            val action = if (marking) R.string.cancel else R.string.book_mark_owned
+            TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false)) {
+                Text(stringResource(action), textAlign = TextAlign.End)
+            }
         }
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 96.dp)) {
             // Manhole cards by prefecture
@@ -117,9 +129,11 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     selected = emptySet()
                 },
                 enabled = selected.isNotEmpty(),
-                // Keep clear of the + button in the bottom-right corner.
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 88.dp, top = 12.dp, bottom = 12.dp),
-            ) { Text(stringResource(R.string.book_mark_done, selected.size)) }
+                // The + button is hidden while marking, so this can take the full width
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+            ) {
+                Text(if (selected.isEmpty()) stringResource(R.string.book_mark_choose) else stringResource(R.string.book_mark_done, selected.size))
+            }
         }
     }
 }
@@ -190,7 +204,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                     )
                 }
             },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
         LazyVerticalGrid(
             columns = GridCells.Fixed(3),

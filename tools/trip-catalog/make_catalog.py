@@ -31,7 +31,8 @@ for line_id, line_ja, line_ro, names in LINES:
             "type": "EKI_STAMP", "name_ja": n + "駅", "name_romaji": f"{s['en']} Station",
             "prefecture": "群馬県" if n in GUNMA else "新潟県", "place_name": n + "駅",
             "lat": f"{s['lat']:.6f}", "lng": f"{s['lng']:.6f}",
-            "notes": "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked.",
+            # Shown on the item page: written for the person using the app; the credit is required by the ODbL
+            "notes": "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.",
             "source_url": "https://www.openstreetmap.org",
             "line_id": line_id, "line_name_ja": line_ja, "line_name_romaji": line_ro, "line_seq": seq,
         })

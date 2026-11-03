@@ -57,6 +57,15 @@
     <string name="item_remove_before_app">Remove \"had before the app\"</string>
     <string name="item_found_at">%1$s · %2$s</string>
     <string name="item_no_position">no position</string>
+    <string name="back">Back</string>
+    <string name="nearby_finding">Finding your position…</string>
+    <string name="nearby_no_catalogue">No catalogue loaded yet.</string>
+    <string name="nearby_load_catalogue">Load a catalogue</string>
+    <string name="nearby_all_done">You have everything in your catalogue.</string>
+    <string name="book_mark_choose">Choose the ones you already have</string>
+    <string name="item_finding_position">finding position…</string>
+    <string name="item_position_saved">place saved</string>
+    <string name="item_find_map">Map</string>
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>

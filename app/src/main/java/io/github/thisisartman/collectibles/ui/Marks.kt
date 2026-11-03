@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -55,7 +56,8 @@ fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, mod
         Text(
             label,
             color = LocalTypeColors.current.onSeal,
-            fontSize = (size.value * 0.28f).coerceIn(8f, 18f).sp,
+            // Sized to the seal, not to the phone's text size: the seal does not grow, so its label must not either
+            fontSize = with(LocalDensity.current) { (size * 0.28f).coerceIn(8.dp, 18.dp).toSp() },
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Clip,
