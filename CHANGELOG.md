@@ -7,6 +7,7 @@
 - In English, an item's page shows the prefecture in English and dates as 2026-07-31; your record says "place saved" with a Map button instead of coordinates.
 - "Mark ones I already have": the button asks you to choose first, and the + button is hidden meanwhile.
 - Back arrows are named for screen readers. Station notes are written for you, with the map credit.
+- Checked on the Poco in the test copy: empty start, loading the catalogue, Nearby from a real position.
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
