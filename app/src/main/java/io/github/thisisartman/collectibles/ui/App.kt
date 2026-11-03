@@ -60,6 +60,13 @@ private const val MORE = "more"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
+fun NavHostController.openTab(route: String) = navigate(route) {
+    popUpTo(NEARBY) { saveState = true }
+    launchSingleTop = true
+    restoreState = true
+}
+fun NavHostController.openMore() = openTab(MORE)
+fun NavHostController.openBook() = openTab(BOOK)
 
 @Composable
 fun App() {
@@ -69,6 +76,7 @@ fun App() {
     val resolver = context.contentResolver
     val snackbar = remember { SnackbarHostState() }
     var showLog by rememberSaveable { mutableStateOf(false) }
+    var bookMarking by remember { mutableStateOf(false) }
 
     // Pending camera capture "findId|uri", kept across process death while the camera is open (FR-9b).
     var pending by rememberSaveable { mutableStateOf<String?>(null) }
@@ -116,7 +124,8 @@ fun App() {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbar) },
             floatingActionButton = {
-                if (route == null || route == NEARBY || route == BOOK) {
+                // Hidden while marking owned cards: the mark button takes the bottom of the screen
+                if (route == null || route == NEARBY || (route == BOOK && !bookMarking)) {
                     FloatingActionButton(
                         onClick = { showLog = true },
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -134,13 +143,7 @@ fun App() {
                         ).forEach { (r, label, icon) ->
                             NavigationBarItem(
                                 selected = (route ?: NEARBY) == r,
-                                onClick = {
-                                    nav.navigate(r) {
-                                        popUpTo(NEARBY) { saveState = true }
-                                        launchSingleTop = true
-                                        restoreState = true
-                                    }
-                                },
+                                onClick = { nav.openTab(r) },
                                 icon = { Icon(icon, contentDescription = null) },
                                 label = { Text(stringResource(label)) },
                             )
@@ -151,7 +154,7 @@ fun App() {
         ) { padding ->
             NavHost(nav, startDestination = NEARBY, modifier = Modifier.padding(padding)) {
                 composable(NEARBY) { NearbyScreen(vm, nav, onAllowLocation = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }) }
-                composable(BOOK) { BookScreen(vm, nav, snackbar) }
+                composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
                 composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
                 composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                     ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })

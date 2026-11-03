@@ -32,6 +32,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,6 +52,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
     var query by rememberSaveable { mutableStateOf("") }
     var newOpen by rememberSaveable { mutableStateOf(false) }
     val sheet = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val largeText = LocalDensity.current.fontScale > 1.3f
 
     val results: List<Ranked> = if (query.isBlank()) {
         nearest.take(12)
@@ -79,16 +81,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
             LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
                 items(results, key = { it.row.item.id }) { r ->
                     val name = r.row.item.displayName(ja)
-                    Row(
-                        Modifier.fillMaxWidth().clickable { onOpenItem(r.row.item.id) }.padding(horizontal = 16.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Mark(r.row, 30.dp)
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            TypeChip(r.row.item.type, listOfNotNull(r.row.item.code, distanceText(r.meters)).joinToString(" · ").ifEmpty { null })
-                        }
+                    val buttons: @Composable () -> Unit = {
                         Button(onClick = { vm.gotIt(r.row, name); onDismiss() }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.got_it))
                         }
@@ -96,6 +89,20 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                         OutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.photo))
                         }
+                    }
+                    Column(Modifier.fillMaxWidth().clickable { onOpenItem(r.row.item.id) }.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Mark(r.row, 30.dp)
+                            Spacer(Modifier.width(10.dp))
+                            Column(Modifier.weight(1f)) {
+                                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = if (largeText) 2 else 1, overflow = TextOverflow.Ellipsis)
+                                // Distance first: it is the part that must survive when the line is cut
+                                TypeChip(r.row.item.type, listOfNotNull(distanceText(r.meters), r.row.item.code).joinToString(" · ").ifEmpty { null })
+                            }
+                            if (!largeText) buttons()
+                        }
+                        // Large text: the buttons get their own line instead of squeezing the name
+                        if (largeText) Row(Modifier.padding(start = 40.dp, top = 6.dp)) { buttons() }
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }

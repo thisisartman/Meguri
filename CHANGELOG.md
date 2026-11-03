@@ -1,5 +1,25 @@
 # Changelog
 
+## 2026-11-03: Trip day (#36, round 5)
+- "Nearby" lists the collections with something to get within 30 km, nearest first, each with what to get next; the rest fold into one line.
+- An item's page leads with "Directions" (with the distance) and "Call"; a station says which lines it is on; hours come before the address.
+- "My book" rows open the item instead of logging it; a find can be removed on the item page, after a confirm.
+- Stamp books show how far each station still to get is, and mark the nearest.
+- Manhole cards are named by town and design where the city publishes it (the five Nagaoka cards in the catalogue, Tsubame's new card).
+- Large text: the next item's distance on Nearby stays visible, and stamp books use two columns so station names are not split.
+- Notes on how this design round went are kept in the progress tracker, for improving the design process.
+- Far from every collection (at home, say), "Nearby" lists all of them instead of an empty "Around here". With large text, "Call" moves under "Directions" instead of being squeezed.
+
+## 2026-11-03: Run-through fixes (#36)
+- With no catalogue loaded, "Nearby" says so and offers to load one, instead of "Nothing left to get near here".
+- Right after allowing location, "Nearby" says it is finding your position instead of "Location off".
+- Large text: the distance on "Nearby" and in the "+" list stays visible, "My book" keeps its title on one line, and seal labels fit.
+- In English, an item's page shows the prefecture in English and dates as 2026-07-31; your record says "place saved" with a Map button instead of coordinates.
+- "Mark ones I already have": the button asks you to choose first, and the + button is hidden meanwhile.
+- Back arrows are named for screen readers. Station notes are written for you, with the map credit.
+- Checked on the Poco in the test copy: empty start, loading the catalogue, Nearby from a real position.
+- Removing a "had before the app" mark now asks first; it used to happen on one tap with no way back.
+
 ## 2026-11-03: Restore and weekly backup (in progress, device tests pass, not yet on a phone)
 - Restore from a backup file, with a copy of your current data saved to Downloads first; a damaged or newer backup is refused and nothing changes.
 - Backups now confirm every write is included before copying the database.

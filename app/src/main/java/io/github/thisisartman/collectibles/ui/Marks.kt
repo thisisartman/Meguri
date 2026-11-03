@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -55,7 +56,8 @@ fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, mod
         Text(
             label,
             color = LocalTypeColors.current.onSeal,
-            fontSize = (size.value * 0.28f).coerceIn(8f, 18f).sp,
+            // Sized to the seal, not to the phone's text size: the seal does not grow, so its label must not either
+            fontSize = with(LocalDensity.current) { (size * 0.28f).coerceIn(8.dp, 18.dp).toSp() },
             fontWeight = FontWeight.Bold,
             maxLines = 1,
             overflow = TextOverflow.Clip,
@@ -64,15 +66,17 @@ fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, mod
 }
 
 @Composable
-fun EmptySlot(size: Dp, modifier: Modifier = Modifier) {
+fun EmptySlot(size: Dp, modifier: Modifier = Modifier, strong: Boolean = false) {
     val dash = LocalTypeColors.current.dash
+    // strong: the nearest slot still to get in a stamp book, a solid darker ring (round 5, E2)
+    val ink = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
     Canvas(modifier.size(size)) {
-        val w = 2.dp.toPx()
+        val w = (if (strong) 3 else 2).dp.toPx()
         drawCircle(
-            color = dash,
+            color = if (strong) ink else dash,
             radius = (this.size.minDimension - w) / 2,
             center = Offset(this.size.width / 2, this.size.height / 2),
-            style = Stroke(width = w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
+            style = Stroke(width = w, pathEffect = if (strong) null else PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
         )
     }
 }

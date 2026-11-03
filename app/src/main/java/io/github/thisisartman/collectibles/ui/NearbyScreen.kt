@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -55,6 +56,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
     val nearest by vm.nearest.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
+    val rows by vm.rows.collectAsStateWithLifecycle()
+    val around by vm.aroundHere.collectAsStateWithLifecycle()
     val photo = LocalPhoto.current
 
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp)) {
@@ -63,23 +66,29 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.headlineMedium)
                 val fix = here.fix
                 val where = when {
+                    fix == null && here.searching -> stringResource(R.string.nearby_finding)
                     fix == null -> stringResource(R.string.nearby_location_off)
                     here.live -> stringResource(R.string.nearby_from_now)
                     else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
                 }
                 Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (fix == null) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
+                if (fix == null && !here.searching) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
             }
         }
         item { SectionTitle(stringResource(R.string.nearby_still_to_get)) }
         item {
             if (nearest.isEmpty()) {
-                Text(
-                    stringResource(R.string.nearby_nothing_left),
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                // No catalogue yet is not the same as having everything
+                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    Text(
+                        stringResource(if (rows.isEmpty()) R.string.nearby_no_catalogue else R.string.nearby_all_done),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    if (rows.isEmpty()) {
+                        TextButton(onClick = { nav.openMore() },contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_load_catalogue)) }
+                    }
+                }
             } else {
                 // An undone find comes back at the front; keyed items would otherwise keep it scrolled off the left edge
                 val strip = rememberLazyListState()
@@ -101,7 +110,13 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 }
             }
         }
-        item { SectionTitle(stringResource(R.string.nearby_my_book)) }
+        // Round 5, A2: with a position, only collections with something to get nearby; the rest on one line
+        item {
+            SectionTitle(
+                if (around.located) stringResource(R.string.nearby_around_here, (MainViewModel.AROUND_RADIUS_M / 1000).toInt())
+                else stringResource(R.string.nearby_my_book)
+            )
+        }
         if (summaries.isEmpty()) {
             item {
                 Text(
@@ -112,12 +127,30 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                 )
             }
         }
-        items(summaries, key = { it.key }) { s ->
-            val title = summaryTitle(s, lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa })
-            SummaryCard(s, title, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.navigate("book") })
+        items(around.near, key = { it.summary.key }) { a ->
+            val s = a.summary
+            val title = summaryTitle(s, lineName(lines, s.lineId, ja))
+            SummaryCard(s, title, next = a.next, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() })
+        }
+        if (around.elsewhere.isNotEmpty()) {
+            item {
+                val list = around.elsewhere.map { s ->
+                    summaryTitle(s, lineName(lines, s.lineId, ja)) + " " +
+                        (if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString())
+                }.joinToString(" · ")
+                Text(
+                    stringResource(R.string.nearby_elsewhere, list),
+                    Modifier.fillMaxWidth().clickable { nav.openBook() }.padding(horizontal = 16.dp, vertical = 12.dp),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
+
+private fun lineName(lines: List<io.github.thisisartman.collectibles.data.Line>, lineId: String?, ja: Boolean): String? =
+    lines.firstOrNull { it.id == lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
 
 @Composable
 fun SectionTitle(text: String) {
@@ -154,14 +187,18 @@ fun distanceText(meters: Double?): String? = meters?.let { val (res, v) = format
 
 @Composable
 private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> Unit, onGotIt: () -> Unit, onPhoto: () -> Unit) {
+    // Wider with large text, so the name and distance still fit
+    val width = 150.dp * LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
     Card(
-        Modifier.width(150.dp).clickable(onClick = onOpen),
+        Modifier.width(width).clickable(onClick = onOpen),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(10.dp)) {
             Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            TypeChip(row.item.type, distanceText(meters))
+            TypeChip(row.item.type)
+            // Distance on its own line: it is what the tile is for, and it must not be the part that gets cut
+            Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
             Spacer(Modifier.height(8.dp))
             Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
             OutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
@@ -178,7 +215,7 @@ fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
 }
 
 @Composable
-fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
+fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onClick: () -> Unit) {
     val ja = isJapanese()
     val color = LocalTypeColors.current.of(s.type)
     Card(
@@ -190,10 +227,22 @@ fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 TypeDot(s.type)
                 Spacer(Modifier.width(6.dp))
-                Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(
                     if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
                     style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                )
+            }
+            // Around here: what to get next in this collection, and how far
+            next?.let { n ->
+                Text(
+                    stringResource(R.string.nearby_next, n.row.item.displayName(ja), distanceText(n.meters).orEmpty()),
+                    style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    // Two lines, so the distance at the end survives long design names and large text
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(start = 14.dp, top = 2.dp),
                 )
             }
             if (s.total != null && s.total > 0) {
@@ -209,7 +258,7 @@ fun SummaryCard(s: CollectionSummary, title: String, onClick: () -> Unit) {
             } else {
                 Spacer(Modifier.height(6.dp))
             }
-            s.last?.let { last ->
+            s.last?.takeIf { next == null }?.let { last ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Mark(last, 26.dp)
                     Spacer(Modifier.width(8.dp))

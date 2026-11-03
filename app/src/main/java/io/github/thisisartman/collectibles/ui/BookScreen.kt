@@ -32,6 +32,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,7 +55,7 @@ import io.github.thisisartman.collectibles.data.ItemType
 import kotlinx.coroutines.launch
 
 @Composable
-fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHostState) {
+fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHostState, onMarkingChange: (Boolean) -> Unit = {}) {
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
@@ -62,12 +64,22 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     var selected by remember { mutableStateOf(setOf<String>()) }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(marking) { onMarkingChange(marking) }
+    DisposableEffect(Unit) { onDispose { onMarkingChange(false) } }
 
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-            if (marking) TextButton(onClick = { marking = false; selected = emptySet() }) { Text(stringResource(R.string.cancel)) }
-            else TextButton(onClick = { marking = true }) { Text(stringResource(R.string.book_mark_owned)) }
+        // The title never wraps; the action takes what is left and wraps instead (large text)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false)
+            Spacer(Modifier.width(8.dp))
+            val action = if (marking) R.string.cancel else R.string.book_mark_owned
+            TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false)) {
+                Text(stringResource(action), textAlign = TextAlign.End)
+            }
         }
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 96.dp)) {
             // Manhole cards by prefecture
@@ -79,8 +91,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 items(list, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
-                        onOpen = { nav.openItem(r.item.id) },
-                        onGotIt = { vm.gotIt(r, r.item.displayName(ja)) })
+                        onOpen = { nav.openItem(r.item.id) })
                 }
             }
             // Eki stamps: one row per line (opens the stamp book), then other stations
@@ -100,8 +111,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
-                        onOpen = { nav.openItem(r.item.id) },
-                        onGotIt = { vm.gotIt(r, r.item.displayName(ja)) })
+                        onOpen = { nav.openItem(r.item.id) })
                 }
             }
             if (rows.isEmpty()) {
@@ -117,9 +127,11 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     selected = emptySet()
                 },
                 enabled = selected.isNotEmpty(),
-                // Keep clear of the + button in the bottom-right corner.
-                modifier = Modifier.fillMaxWidth().padding(start = 12.dp, end = 88.dp, top = 12.dp, bottom = 12.dp),
-            ) { Text(stringResource(R.string.book_mark_done, selected.size)) }
+                // The + button is hidden while marking, so this can take the full width
+                modifier = Modifier.fillMaxWidth().padding(12.dp),
+            ) {
+                Text(if (selected.isEmpty()) stringResource(R.string.book_mark_choose) else stringResource(R.string.book_mark_done, selected.size))
+            }
         }
     }
 }
@@ -137,7 +149,7 @@ fun GroupHeader(type: ItemType, title: String, count: String?) {
 @Composable
 fun ItemListRow(
     r: ItemRow, ja: Boolean, meters: Double?, marking: Boolean, checked: Boolean,
-    onToggle: () -> Unit, onOpen: () -> Unit, onGotIt: () -> Unit,
+    onToggle: () -> Unit, onOpen: () -> Unit,
 ) {
     val canMark = marking && !r.collected
     Row(
@@ -156,7 +168,7 @@ fun ItemListRow(
             ).joinToString(" · ")
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (!marking && !r.collected) OutlinedButton(onClick = onGotIt, contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp)) { Text(stringResource(R.string.got_it)) }
+        // Round 5, B2: the book is for looking; logging happens on Nearby, the item page and +
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
@@ -177,6 +189,9 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
         ls.filter { it.lineId == lineId }.sortedBy { it.seq }.mapNotNull { byId[it.itemId] }
     }
     val title = line?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa } ?: stringResource(R.string.book_other_stations)
+    // Round 5, E2: how far each station still to get is, and which one is nearest
+    val dist = stations.associate { it.item.id to vm.distanceTo(it) }
+    val nearest = stations.filter { !it.collected && dist[it.item.id] != null }.minByOrNull { dist[it.item.id]!! }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -188,12 +203,20 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                         stringResource(R.string.type_eki_plural) + " · " + stringResource(R.string.count, stations.count { it.collected }, stations.size),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                    nearest?.let { n ->
+                        Text(
+                            stringResource(R.string.line_nearest, n.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"), distanceText(dist[n.item.id]).orEmpty()),
+                            style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             },
-            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            // Two columns with large text, so station names wrap between words, not inside them
+            columns = GridCells.Fixed(if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 2 else 3),
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -201,11 +224,20 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
         ) {
             items(stations, key = { it.item.id }) { r ->
                 Column(Modifier.clickable { nav.openItem(r.item.id) }, horizontalAlignment = Alignment.CenterHorizontally) {
-                    Box(contentAlignment = Alignment.Center) { Mark(r, 72.dp) }
+                    val isNearest = r.item.id == nearest?.item?.id
+                    Box(contentAlignment = Alignment.Center) { if (isNearest) EmptySlot(72.dp, strong = true) else Mark(r, 72.dp) }
                     Spacer(Modifier.height(4.dp))
-                    Text(r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"), style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"),
+                        style = MaterialTheme.typography.bodySmall, fontWeight = if (isNearest) FontWeight.Bold else null,
+                        textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
+                    )
                     if (r.collected) {
                         Text(r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    } else {
+                        distanceText(dist[r.item.id])?.let {
+                            Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        }
                     }
                 }
             }

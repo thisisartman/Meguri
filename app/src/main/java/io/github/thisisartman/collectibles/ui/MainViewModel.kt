@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /** Where distances are measured from, and whether it is live. */
-data class Here(val fix: Fix?, val live: Boolean)
+data class Here(val fix: Fix?, val live: Boolean, val searching: Boolean = false)
 
 data class Ranked(val row: ItemRow, val meters: Double?)
 
@@ -36,7 +36,14 @@ data class CollectionSummary(
     val total: Int?,
     val last: ItemRow?,
     val lineId: String? = null,
+    val memberIds: Set<String> = emptySet(),
 )
+
+/** A collection with its nearest item still to get, for "Around here" on Nearby. */
+data class Around(val summary: CollectionSummary, val next: Ranked?)
+
+/** Nearby's lower half: collections with something to get within the radius, nearest first, and the rest. */
+data class AroundHere(val near: List<Around>, val elsewhere: List<CollectionSummary>, val located: Boolean)
 
 /** A snackbar message with an optional undo. */
 data class Logged(val findId: String, val name: String, val atMs: Long)
@@ -74,14 +81,21 @@ class MainViewModel @Inject constructor(
         summarise(r, l, ls)
     }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    val aroundHere: StateFlow<AroundHere> = combine(summaries, nearest, here) { s, n, h ->
+        splitAroundHere(s, n, located = h.fix != null)
+    }.stateIn(viewModelScope, SharingStarted.Eagerly, AroundHere(emptyList(), emptyList(), false))
+
     fun itemRow(id: String) = repo.itemRow(id)
     fun finds(itemId: String) = repo.finds(itemId)
 
     fun refreshPosition() {
         if (!location.hasPermission()) return
         location.lastKnown()?.let { _here.value = Here(it, false) }
+        // With permission but no fix yet, say so rather than "Location off"
+        if (_here.value.fix == null) _here.value = _here.value.copy(searching = true)
         viewModelScope.launch {
-            location.current()?.let { _here.value = Here(it, true) }
+            val fix = location.current()
+            _here.value = if (fix != null) Here(fix, true) else _here.value.copy(searching = false)
         }
     }
 
@@ -104,6 +118,11 @@ class MainViewModel @Inject constructor(
     fun undo(findId: String) {
         viewModelScope.launch { repo.undoFind(findId) }
         _logged.value = null
+    }
+
+    /** "Remove this find" on the item page, after its confirm: the same removal as Undo. */
+    fun removeFind(findId: String) {
+        viewModelScope.launch { repo.undoFind(findId) }
     }
 
     fun clearLogged() {
@@ -139,7 +158,7 @@ class MainViewModel @Inject constructor(
 
             rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }
                 .toSortedMap().forEach { (pref, list) ->
-                    out += CollectionSummary("m:$pref", ItemType.MANHOLE_CARD, pref, list.count { it.collected }, list.size, last(list))
+                    out += CollectionSummary("m:$pref", ItemType.MANHOLE_CARD, pref, list.count { it.collected }, list.size, last(list), memberIds = list.ids())
                 }
 
             val byId = rows.associateBy { it.item.id }
@@ -148,15 +167,34 @@ class MainViewModel @Inject constructor(
                 val stations = ls.filter { it.lineId == line.id }.sortedBy { it.seq }.mapNotNull { byId[it.itemId] }
                 onLine += stations.map { it.item.id }
                 if (stations.isNotEmpty()) {
-                    out += CollectionSummary("l:${line.id}", ItemType.EKI_STAMP, line.id, stations.count { it.collected }, stations.size, last(stations), lineId = line.id)
+                    out += CollectionSummary("l:${line.id}", ItemType.EKI_STAMP, line.id, stations.count { it.collected }, stations.size, last(stations), lineId = line.id, memberIds = stations.ids())
                 }
             }
             val other = rows.filter { it.item.type == ItemType.EKI_STAMP && it.item.id !in onLine }
-            if (other.isNotEmpty()) out += CollectionSummary("l:", ItemType.EKI_STAMP, "", other.count { it.collected }, null, last(other))
+            if (other.isNotEmpty()) out += CollectionSummary("l:", ItemType.EKI_STAMP, "", other.count { it.collected }, null, last(other), memberIds = other.ids())
 
             val goshuin = rows.filter { it.item.type == ItemType.GOSHUIN }
-            if (goshuin.isNotEmpty()) out += CollectionSummary("g", ItemType.GOSHUIN, "", goshuin.count { it.collected }, null, last(goshuin))
+            if (goshuin.isNotEmpty()) out += CollectionSummary("g", ItemType.GOSHUIN, "", goshuin.count { it.collected }, null, last(goshuin), memberIds = goshuin.ids())
             return out
+        }
+
+        private fun List<ItemRow>.ids() = mapTo(mutableSetOf()) { it.item.id }
+
+        /** How far "Around here" reaches (round 5, A2). */
+        const val AROUND_RADIUS_M = 30_000.0
+
+        /**
+         * Splits the collections for Nearby (round 5, A2): those with an item still to get within [radiusM],
+         * ordered by that item's distance, and the rest. Without a position nothing can be "around here",
+         * so every collection is listed as before.
+         */
+        fun splitAroundHere(summaries: List<CollectionSummary>, nearest: List<Ranked>, located: Boolean, radiusM: Double = AROUND_RADIUS_M): AroundHere {
+            if (!located) return AroundHere(summaries.map { Around(it, null) }, emptyList(), located = false)
+            val withNext = summaries.map { s -> Around(s, nearest.firstOrNull { it.row.item.id in s.memberIds && it.meters != null }) }
+            val (near, far) = withNext.partition { (it.next?.meters ?: Double.MAX_VALUE) <= radiusM }
+            // Far from every collection (at home in Tokyo, say): an empty "Around here" helps nobody, so list them all
+            if (near.isEmpty()) return AroundHere(summaries.map { Around(it, null) }, emptyList(), located = false)
+            return AroundHere(near.sortedBy { it.next?.meters }, far.map { it.summary }, located = true)
         }
     }
 }
