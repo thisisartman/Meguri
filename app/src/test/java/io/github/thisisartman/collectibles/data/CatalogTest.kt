@@ -103,6 +103,12 @@ class CatalogTest {
         val none = MainViewModel.splitAroundHere(s, nearest, located = false)
         assertEquals(s.size, none.near.size)
         assertTrue(none.elsewhere.isEmpty())
+
+        // Far from everything: the same full list, not an empty "Around here"
+        val farAway = MainViewModel.splitAroundHere(s, nearest.map { it.copy(meters = 300_000.0) }, located = true)
+        assertEquals(s.size, farAway.near.size)
+        assertTrue(farAway.elsewhere.isEmpty())
+        assertTrue(!farAway.located)
     }
 
     @Test

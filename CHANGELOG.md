@@ -5,7 +5,9 @@
 - An item's page leads with "Directions" (with the distance) and "Call"; a station says which lines it is on; hours come before the address.
 - "My book" rows open the item instead of logging it; a find can be removed on the item page, after a confirm.
 - Stamp books show how far each station still to get is, and mark the nearest.
-- Manhole cards are named by town and design where the city publishes it (Nagaoka's seven, Tsubame's new card).
+- Manhole cards are named by town and design where the city publishes it (the five Nagaoka cards in the catalogue, Tsubame's new card).
+- Large text: the next item's distance on Nearby stays visible, and stamp books use two columns so station names are not split.
+- Far from every collection (at home, say), "Nearby" lists all of them instead of an empty "Around here". With large text, "Call" moves under "Directions" instead of being squeezed.
 
 ## 2026-11-03: Run-through fixes (#36)
 - With no catalogue loaded, "Nearby" says so and offers to load one, instead of "Nothing left to get near here".

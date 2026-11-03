@@ -46,8 +46,9 @@ def dms(d, m, s):
 # Only cards: their catalogue key is the code, so renaming updates them in place. Never rename a station or
 # goshuin (their key is name_ja; a new name would make a new item and strand its finds).
 # Nagaoka: designs from https://www.city.nagaoka.niigata.jp/kurashi/cate05/gesui/mhcard.html (#01 to #07) and the
-# water-supply page; the page does not print codes, so A to G follow the page order (release waves 7, 13, 14, 22, 29
-# rise in that order, and B's and C's hand-out places match ナッちゃん's and the Albirex card's).
+# water-supply page. That page prints no codes. A search on 2026-11-03 tied D001 to かわぐっち, E001 to あぶらげんしん and
+# F001 to 長岡の四季 (released April 2024 as the city's sixth card), matching the page's positions 4 to 6, so A to C are
+# positions 1 to 3 and G is the seventh (2026, water supply). Not checked card by card for A, B, C and G.
 # Tsubame E: the city's press release of 2026-07-07 (fifth card, design for the merger's 20th anniversary).
 DESIGNS = {
     "15-202-A001": ("火焔土器", "Kaen doki"),

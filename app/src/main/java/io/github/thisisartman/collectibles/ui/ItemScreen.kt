@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -145,7 +146,12 @@ private fun Actions(item: Item, meters: Double?) {
     val hasPlace = item.lat != null && item.lng != null
     val phone = item.placePhone?.takeIf { it.isNotBlank() }
     if (!hasPlace && phone == null) return
-    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // FlowRow: with large text, Call moves to its own line instead of being squeezed beside Directions
+    FlowRow(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
         if (hasPlace) {
             FilledTonalButton(onClick = {
                 val uri = Uri.parse("geo:${item.lat},${item.lng}?q=${item.lat},${item.lng}(${Uri.encode(item.placeName ?: item.nameJa)})")

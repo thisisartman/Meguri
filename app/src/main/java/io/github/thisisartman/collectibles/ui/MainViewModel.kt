@@ -192,6 +192,8 @@ class MainViewModel @Inject constructor(
             if (!located) return AroundHere(summaries.map { Around(it, null) }, emptyList(), located = false)
             val withNext = summaries.map { s -> Around(s, nearest.firstOrNull { it.row.item.id in s.memberIds && it.meters != null }) }
             val (near, far) = withNext.partition { (it.next?.meters ?: Double.MAX_VALUE) <= radiusM }
+            // Far from every collection (at home in Tokyo, say): an empty "Around here" helps nobody, so list them all
+            if (near.isEmpty()) return AroundHere(summaries.map { Around(it, null) }, emptyList(), located = false)
             return AroundHere(near.sortedBy { it.next?.meters }, far.map { it.summary }, located = true)
         }
     }
