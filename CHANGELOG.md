@@ -20,7 +20,7 @@
 - Checked on the Poco in the test copy: empty start, loading the catalogue, Nearby from a real position.
 - Removing a "had before the app" mark now asks first; it used to happen on one tap with no way back.
 
-## 2026-11-03: Restore and weekly backup (merged into the working branch; not yet on the real app)
+## 2026-11-03: Restore and weekly backup (on the real app since 2026-11-03)
 - Restore from a backup file, with a copy of your current data saved to Downloads first; a damaged or newer backup is refused and nothing changes.
 - Backups now confirm every write is included before copying the database.
 - Optional weekly backup to a folder you pick, keeping the last 4.
@@ -30,7 +30,7 @@
 - Removing "had before the app" from an item is now written to the log.
 - About credits OpenStreetMap for the station positions.
 - Weekly backup writes its first file once and shows the last backup date as soon as it finishes; the folder picker starts in Documents; Restore is shown in red.
-- Testing: 21 unit tests pass. All 15 device tests pass on the Legion's Android 14 emulator, and restoring a real backup and pruning old ones were checked by hand there. On the Poco's dev app, a real backup restored correctly and a photo came back after an uninstall and reinstall. Weekly backup and the release build have not been on a phone yet.
+- Testing: 21 unit tests pass. All 15 device tests pass on the Legion's Android 14 emulator, and restoring a real backup and pruning old ones were checked by hand there. On the Poco's dev app, a real backup restored correctly and a photo came back after an uninstall and reinstall. The release build is on the Poco; weekly backup is off there until a folder is picked, so it has only run on the emulator.
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
