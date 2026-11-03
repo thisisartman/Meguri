@@ -239,7 +239,8 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                     stringResource(R.string.nearby_next, n.row.item.displayName(ja), distanceText(n.meters).orEmpty()),
                     style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
+                    // Two lines, so the distance at the end survives long design names and large text
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(start = 14.dp, top = 2.dp),
                 )

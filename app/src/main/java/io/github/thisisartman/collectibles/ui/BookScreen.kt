@@ -215,7 +215,8 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
         LazyVerticalGrid(
-            columns = GridCells.Fixed(3),
+            // Two columns with large text, so station names wrap between words, not inside them
+            columns = GridCells.Fixed(if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 2 else 3),
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

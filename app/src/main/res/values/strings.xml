@@ -79,7 +79,7 @@
     <string name="item_remove_find">Remove this find</string>
     <string name="item_remove_find_title">Remove this find?</string>
     <string name="item_remove_find_text">The find from %1$s is removed. Photos stay in the gallery.</string>
-    <string name="line_nearest">Nearest still to get: %1$s · %2$s</string>
+    <string name="line_nearest">Nearest still to get: %2$s · %1$s</string>
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
