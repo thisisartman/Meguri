@@ -3,6 +3,11 @@ package io.github.thisisartman.collectibles
 import android.app.Application
 import android.os.Build
 import dagger.hilt.android.HiltAndroidApp
+import io.github.thisisartman.collectibles.data.AutoBackup
+import io.github.thisisartman.collectibles.data.BackupRestore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import io.github.thisisartman.collectibles.debug.CrashLogger
 import io.github.thisisartman.collectibles.debug.FileLog
 import io.github.thisisartman.collectibles.ui.AppLanguage
@@ -11,6 +16,8 @@ import javax.inject.Inject
 @HiltAndroidApp
 class CollectiblesApp : Application() {
     @Inject lateinit var log: FileLog
+    @Inject lateinit var restore: BackupRestore
+    @Inject lateinit var autoBackup: AutoBackup
 
     override fun onCreate() {
         super.onCreate()
@@ -21,5 +28,9 @@ class CollectiblesApp : Application() {
             "Start ${BuildConfig.APPLICATION_ID} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · " +
                 "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})",
         )
+        autoBackup.catchUpIfOverdue()
+        CoroutineScope(Dispatchers.IO).launch {
+            runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
+        }
     }
 }
