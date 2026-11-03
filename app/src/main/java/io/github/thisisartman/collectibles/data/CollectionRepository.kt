@@ -107,7 +107,11 @@ class CollectionRepository @Inject constructor(
     }
 
     /** Removes only "had before the app" finds of an item; real finds stay. */
-    suspend fun unmarkBeforeApp(itemId: String): Int = dao.deleteBeforeAppFinds(itemId)
+    suspend fun unmarkBeforeApp(itemId: String): Int {
+        val removed = dao.deleteBeforeAppFinds(itemId)
+        log.i("Log", "Removed had-before-the-app from item $itemId: $removed finds")
+        return removed
+    }
 
     suspend fun attachPhoto(findId: String, photo: PhotoInfo) {
         dao.insertPhoto(
