@@ -205,7 +205,7 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         val autoSub = when {
             !autoOn -> stringResource(R.string.more_auto_sub_off)
             autoFailed -> stringResource(R.string.more_auto_sub_failed)
-            else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(it))) }
+            else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it))) }
                 ?: stringResource(R.string.more_auto_sub_on)
         }
         MoreRow(stringResource(R.string.more_auto), autoSub) {
