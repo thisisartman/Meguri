@@ -41,6 +41,8 @@ class BackupRestoreTest {
     private val safety = mutableListOf<String>()
 
     @Before fun setUp() {
+        // Shared with other tests: a restore leaves "photos to find" set until the gallery can be read.
+        context.getSharedPreferences("backup", Context.MODE_PRIVATE).edit().clear().commit()
         work = File(context.cacheDir, "t-${UUID.randomUUID()}").apply { mkdirs() }
         db = Room.databaseBuilder(context, CollectiblesDb::class.java, name).build()
         val log = FileLog(work)

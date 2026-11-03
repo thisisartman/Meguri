@@ -1,14 +1,13 @@
 package io.github.thisisartman.collectibles.data
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import android.net.Uri
 import androidx.room.withTransaction
-import androidx.sqlite.db.SimpleSQLiteQuery
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.thisisartman.collectibles.BuildConfig
 import io.github.thisisartman.collectibles.debug.FileLog
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -108,31 +107,30 @@ class CatalogAndBackup @Inject constructor(
             }
             BackupResult(finds.size, items.size, photos.size)
         } finally {
-            snapshot.delete()
+            listOf("", "-wal", "-shm", "-journal").forEach { File(snapshot.path + it).delete() }
         }
     }
 
     /**
-     * Copies the database file with every write included. The checkpoint must finish and the write-ahead
-     * log must be empty, checked inside a transaction so no write can start during the copy. The CSV
-     * rows are read in the same transaction, so they match the copy.
+     * Copies the database with every write included. A transaction holds off writers, so the file and
+     * its write-ahead log can be copied together however busy the app is, and the CSV rows read in the
+     * same transaction match the copy. The log is then merged into the copy, leaving one complete file.
      */
     private suspend fun snapshotDatabase(target: File): Snapshot {
         val dbFile = context.getDatabasePath(db.openHelper.databaseName!!)
         val wal = File(dbFile.path + "-wal")
-        repeat(SNAPSHOT_TRIES) { attempt ->
-            val busy = db.query(SimpleSQLiteQuery("PRAGMA wal_checkpoint(TRUNCATE)")).use { it.moveToFirst(); it.getInt(0) }
-            if (busy == 0) {
-                val rows = db.withTransaction {
-                    if (wal.exists() && wal.length() > 0L) return@withTransaction null
-                    dbFile.inputStream().use { input -> target.outputStream().use { input.copyTo(it) } }
-                    Snapshot(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations())
-                }
-                if (rows != null) return rows
-            }
-            delay(100L * (attempt + 1))
+        val targetWal = File(target.path + "-wal")
+        val rows = db.withTransaction {
+            dbFile.inputStream().use { input -> target.outputStream().use { input.copyTo(it) } }
+            if (wal.exists() && wal.length() > 0L) wal.inputStream().use { input -> targetWal.outputStream().use { input.copyTo(it) } }
+            Snapshot(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations())
         }
-        error("Database stayed busy; no backup written")
+        SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
+            copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { c ->
+                check(c.moveToFirst() && c.getInt(0) == 0) { "Could not merge the write-ahead log into the backup" }
+            }
+        }
+        return rows
     }
 
     private data class Snapshot(
@@ -144,8 +142,6 @@ class CatalogAndBackup @Inject constructor(
     )
 
     companion object {
-        private const val SNAPSHOT_TRIES = 8
-
         fun itemsCsv(items: List<Item>) = buildString {
             append(Csv.line("id", "type", "catalog_key", "code", "name_ja", "name_romaji", "series", "release_date", "prefecture", "municipality",
                 "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url", "origin", "created_at", "updated_at"))
