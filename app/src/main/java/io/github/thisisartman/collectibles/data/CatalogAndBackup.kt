@@ -49,6 +49,7 @@ class CatalogAndBackup @Inject constructor(
         var added = 0
         var updated = 0
         val lineIds = mutableSetOf<String>()
+        val seen = mutableSetOf<String>()
         val skipped = mutableListOf<String>()
         val now = System.currentTimeMillis()
         db.withTransaction {
@@ -57,7 +58,8 @@ class CatalogAndBackup @Inject constructor(
                 val existing = dao.itemByCatalogKey(row.catalogKey)
                 val item = row.toItem(existing, UUID.randomUUID().toString(), now)
                 dao.upsertItem(item)
-                if (existing == null) added++ else updated++
+                // A station on two lines is two rows of one item: count the item once.
+                if (seen.add(row.catalogKey)) { if (existing == null) added++ else updated++ }
                 if (row.lineId != null && row.lineSeq != null) {
                     dao.upsertLine(Line(row.lineId, row.lineNameJa ?: row.lineId, row.lineNameRomaji))
                     dao.upsertLineStation(LineStation(row.lineId, item.id, row.lineSeq))

@@ -112,7 +112,7 @@ class BackupRestoreTest {
         }
     }
 
-    @Test fun exportThenInspectCountsEverything() = runBlocking {
+    @Test fun exportThenInspectCountsEverything() = runBlocking<Unit> {
         seed()
         val info = restore.inspect(Uri.fromFile(export()))
         assertEquals(2, info.items)
@@ -124,7 +124,7 @@ class BackupRestoreTest {
         restore.discard(info)
     }
 
-    @Test fun exportIncludesWritesStillInTheWal() = runBlocking {
+    @Test fun exportIncludesWritesStillInTheWal() = runBlocking<Unit> {
         seed()
         repeat(50) { db.dao().insertItem(item("w$it")) }
         val info = restore.inspect(Uri.fromFile(export()))
@@ -132,7 +132,7 @@ class BackupRestoreTest {
         restore.discard(info)
     }
 
-    @Test fun exportWhileWritingIsAlwaysConsistent() = runBlocking {
+    @Test fun exportWhileWritingIsAlwaysConsistent() = runBlocking<Unit> {
         seed()
         val writer = async(Dispatchers.IO) {
             var n = 0
@@ -154,7 +154,7 @@ class BackupRestoreTest {
         Unit
     }
 
-    @Test fun restoreBringsBackEveryFieldAndRemovesNewerRows() = runBlocking {
+    @Test fun restoreBringsBackEveryFieldAndRemovesNewerRows() = runBlocking<Unit> {
         seed()
         val before = AllRowsSnapshot.of(db)
         val file = export()
@@ -169,7 +169,7 @@ class BackupRestoreTest {
         assertEquals(2, result.finds)
     }
 
-    @Test fun safetyCopyIsWrittenBeforeReplacingAndHoldsTheOldData() = runBlocking {
+    @Test fun safetyCopyIsWrittenBeforeReplacingAndHoldsTheOldData() = runBlocking<Unit> {
         seed()
         val file = export()
         db.dao().insertItem(item("only-in-safety-copy"))
@@ -188,7 +188,7 @@ class BackupRestoreTest {
         restore.discard(info)
     }
 
-    @Test fun restoreIntoEmptyAppMakesNoSafetyCopy() = runBlocking {
+    @Test fun restoreIntoEmptyAppMakesNoSafetyCopy() = runBlocking<Unit> {
         seed()
         val file = export()
         db.clearAllTables()
@@ -197,7 +197,7 @@ class BackupRestoreTest {
         assertEquals(2, db.dao().findTotal())
     }
 
-    @Test fun safetyCopyProtectsUserItemsWithoutFinds() = runBlocking {
+    @Test fun safetyCopyProtectsUserItemsWithoutFinds() = runBlocking<Unit> {
         db.dao().insertItem(item("x"))
         val file = export()
         db.dao().insertItem(item("user-only"))
@@ -206,7 +206,7 @@ class BackupRestoreTest {
         safety += result.safetyCopy!!
     }
 
-    @Test fun failedCopyRollsBackLeavingEverything() = runBlocking {
+    @Test fun failedCopyRollsBackLeavingEverything() = runBlocking<Unit> {
         seed()
         val before = AllRowsSnapshot.of(db)
         val broken = AllRows(
@@ -218,7 +218,7 @@ class BackupRestoreTest {
         assertEquals(before, AllRowsSnapshot.of(db))
     }
 
-    @Test fun refusesFilesThatAreNotBackups() = runBlocking {
+    @Test fun refusesFilesThatAreNotBackups() = runBlocking<Unit> {
         seed()
         val before = AllRowsSnapshot.of(db)
         val garbage = zipFile().apply { writeBytes(ByteArray(4096) { it.toByte() }) }
@@ -234,7 +234,7 @@ class BackupRestoreTest {
         assertEquals(before, AllRowsSnapshot.of(db))
     }
 
-    @Test fun refusesADatabaseDamagedInTheMiddle() = runBlocking {
+    @Test fun refusesADatabaseDamagedInTheMiddle() = runBlocking<Unit> {
         seed()
         repeat(200) { db.dao().insertItem(item("d$it")) }
         val damaged = withEditedDb(export()) { f ->
@@ -246,13 +246,13 @@ class BackupRestoreTest {
         assertThrows(BackupError::class.java) { runBlocking { restore.inspect(Uri.fromFile(damaged)) } }
     }
 
-    @Test fun refusesABackupFromANewerSchema() = runBlocking {
+    @Test fun refusesABackupFromANewerSchema() = runBlocking<Unit> {
         seed()
         val newer = withEditedDb(export()) { sql(it, "PRAGMA user_version = ${CollectiblesDb.VERSION + 1}") }
         assertBackupRefused(newer, BackupError.NewerVersion::class.java)
     }
 
-    @Test fun refusesBrokenLinksBetweenRows() = runBlocking {
+    @Test fun refusesBrokenLinksBetweenRows() = runBlocking<Unit> {
         seed()
         val broken = withEditedDb(export()) {
             sql(it, "PRAGMA foreign_keys = OFF", "DELETE FROM item WHERE id = 'a1'")
@@ -260,14 +260,14 @@ class BackupRestoreTest {
         assertBackupRefused(broken, BackupError.Damaged::class.java)
     }
 
-    @Test fun emptyBackupInspectsAsZeroFindsSoTheScreenCanWarn() = runBlocking {
+    @Test fun emptyBackupInspectsAsZeroFindsSoTheScreenCanWarn() = runBlocking<Unit> {
         val info = restore.inspect(Uri.fromFile(export()))
         assertEquals(0, info.finds)
         assertFalse(restore.relinkPending)
         restore.discard(info)
     }
 
-    @Test fun repeatedExportRestoreKeepsTheDataIdentical() = runBlocking {
+    @Test fun repeatedExportRestoreKeepsTheDataIdentical() = runBlocking<Unit> {
         seed()
         val before = AllRowsSnapshot.of(db)
         repeat(3) {
@@ -277,7 +277,7 @@ class BackupRestoreTest {
         }
     }
 
-    @Test fun inspectLeavesNoTemporaryFilesWhenRefused() = runBlocking {
+    @Test fun inspectLeavesNoTemporaryFilesWhenRefused() = runBlocking<Unit> {
         val garbage = zipFile().apply { writeBytes(ByteArray(100)) }
         val count = { context.noBackupFilesDir.list()?.count { it.startsWith("restore-") } ?: 0 }
         val start = count()
