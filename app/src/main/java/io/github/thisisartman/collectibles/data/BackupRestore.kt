@@ -244,7 +244,9 @@ class BackupRestore @Inject constructor(
             runCatching { resolver.delete(uri, null, null) }
             throw e
         }
-        return name
+        // Android may have renamed it if the name was taken: report the name it really has.
+        return resolver.query(uri, arrayOf(MediaStore.Downloads.DISPLAY_NAME), null, null, null)
+            ?.use { c -> if (c.moveToFirst()) c.getString(0) else null } ?: name
     }
 
     val relinkPending: Boolean get() = prefs.getBoolean(KEY_RELINK, false)

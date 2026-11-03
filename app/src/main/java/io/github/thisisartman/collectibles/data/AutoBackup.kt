@@ -2,6 +2,7 @@ package io.github.thisisartman.collectibles.data
 
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import androidx.work.CoroutineWorker
@@ -42,6 +43,17 @@ class AutoBackup @Inject constructor(
     val lastSuccessMs: Long? get() = prefs.getLong(KEY_LAST, 0L).takeIf { it > 0 }
     val lastFailed: Boolean get() = prefs.getBoolean(KEY_FAILED, false)
 
+    /** Calls [onChange] when the folder or the last result changes. Returns the listener, to pass to [stopListening]. */
+    fun listen(onChange: () -> Unit): SharedPreferences.OnSharedPreferenceChangeListener {
+        val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> onChange() }
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+        return listener
+    }
+
+    fun stopListening(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+    }
+
     fun enable(tree: Uri) {
         context.contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         folder?.takeIf { it != tree }?.let { old ->
@@ -50,7 +62,8 @@ class AutoBackup @Inject constructor(
         prefs.edit().putString(KEY_FOLDER, tree.toString()).putBoolean(KEY_FAILED, false).apply()
         work.enqueueUniquePeriodicWork(
             WORK_WEEKLY, ExistingPeriodicWorkPolicy.UPDATE,
-            PeriodicWorkRequestBuilder<AutoBackupWorker>(7, TimeUnit.DAYS).build(),
+            // The first backup is the one-off below; starting this now as well would write two.
+            PeriodicWorkRequestBuilder<AutoBackupWorker>(7, TimeUnit.DAYS).setInitialDelay(7, TimeUnit.DAYS).build(),
         )
         runNow()
     }

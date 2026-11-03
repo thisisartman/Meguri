@@ -14,7 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import android.provider.DocumentsContract
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.getValue
@@ -139,6 +142,12 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         if (uri != null) { vm.auto.enable(uri); autoTick++ }
     }
 
+    // The worker runs in the background: redraw the status line when it finishes.
+    DisposableEffect(Unit) {
+        val listener = vm.auto.listen { autoTick++ }
+        onDispose { vm.auto.stopListening(listener) }
+    }
+
     pendingRestore?.let { p ->
         RestoreDialog(
             p,
@@ -162,7 +171,7 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
             },
             dismissButton = {
                 Row {
-                    TextButton(onClick = { autoDialog = false; pickFolder.launch(null) }) { Text(stringResource(R.string.more_auto_change)) }
+                    TextButton(onClick = { autoDialog = false; pickFolder.launch(STARTING_FOLDER) }) { Text(stringResource(R.string.more_auto_change)) }
                     TextButton(onClick = { autoDialog = false; vm.auto.disable(); autoTick++ }) { Text(stringResource(R.string.more_auto_off)) }
                 }
             },
@@ -191,14 +200,16 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
             }
         }
         val autoOn = remember(autoTick) { vm.auto.folder != null }
+        val autoLast = remember(autoTick) { vm.auto.lastSuccessMs }
+        val autoFailed = remember(autoTick) { vm.auto.lastFailed }
         val autoSub = when {
             !autoOn -> stringResource(R.string.more_auto_sub_off)
-            vm.auto.lastFailed -> stringResource(R.string.more_auto_sub_failed)
-            else -> vm.auto.lastSuccessMs?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(it))) }
+            autoFailed -> stringResource(R.string.more_auto_sub_failed)
+            else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(it))) }
                 ?: stringResource(R.string.more_auto_sub_on)
         }
         MoreRow(stringResource(R.string.more_auto), autoSub) {
-            if (autoOn) autoDialog = true else pickFolder.launch(null)
+            if (autoOn) autoDialog = true else pickFolder.launch(STARTING_FOLDER)
         }
         MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
             openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
@@ -207,6 +218,9 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}
     }
 }
+
+/** The picker's storage root is refused by Android, so open it somewhere it accepts. */
+private val STARTING_FOLDER = DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Documents")
 
 private class PendingRestore(val info: BackupInfo, val now: CurrentCounts)
 
@@ -227,7 +241,11 @@ private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: ()
             }
         },
         confirmButton = {
-            TextButton(onClick = { if (wipes && !sure) sure = true else onConfirm() }) {
+            // It replaces everything, so it doesn't look like Cancel.
+            TextButton(
+                onClick = { if (wipes && !sure) sure = true else onConfirm() },
+                colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
+            ) {
                 Text(stringResource(if (wipes && !sure) R.string.more_restore_continue else R.string.more_restore_confirm))
             }
         },

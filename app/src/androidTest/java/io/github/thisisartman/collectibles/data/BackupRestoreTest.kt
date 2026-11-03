@@ -38,7 +38,6 @@ class BackupRestoreTest {
     private lateinit var io: CatalogAndBackup
     private lateinit var restore: BackupRestore
     private lateinit var work: File
-    private val safety = mutableListOf<String>()
 
     @Before fun setUp() {
         // Shared with other tests: a restore leaves "photos to find" set until the gallery can be read.
@@ -54,12 +53,11 @@ class BackupRestoreTest {
         db.close()
         context.deleteDatabase(name)
         work.deleteRecursively()
-        safety.forEach { n ->
-            context.contentResolver.delete(
-                MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
-                "${MediaStore.Downloads.DISPLAY_NAME} = ?", arrayOf(n),
-            )
-        }
+        // Safety copies from every test, however Android renamed them. Only this app's own files can match.
+        context.contentResolver.delete(
+            MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
+            "${MediaStore.Downloads.DISPLAY_NAME} LIKE 'collectibles-pre-restore-%'", null,
+        )
     }
 
     private fun item(id: String, code: String? = id) =
@@ -164,7 +162,6 @@ class BackupRestoreTest {
         db.dao().insertFind(Acquisition(id = "laterf", itemId = "later", acquiredAt = 5, via = Via.MANUAL, createdAt = 5))
 
         val result = restore.restore(restore.inspect(Uri.fromFile(file)))
-        result.safetyCopy?.let { safety += it }
 
         assertEquals(before, AllRowsSnapshot.of(db))
         assertNull(db.dao().item("later"))
@@ -177,7 +174,6 @@ class BackupRestoreTest {
         db.dao().insertItem(item("only-in-safety-copy"))
         val result = restore.restore(restore.inspect(Uri.fromFile(file)))
         val copy = assertNotNull(result.safetyCopy).let { result.safetyCopy!! }
-        safety += copy
         val uri = context.contentResolver.query(
             MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), arrayOf(MediaStore.Downloads._ID),
             "${MediaStore.Downloads.DISPLAY_NAME} = ?", arrayOf(copy), null,
@@ -205,7 +201,6 @@ class BackupRestoreTest {
         db.dao().insertItem(item("user-only"))
         val result = restore.restore(restore.inspect(Uri.fromFile(file)))
         assertNotNull(result.safetyCopy)
-        safety += result.safetyCopy!!
     }
 
     @Test fun failedCopyRollsBackLeavingEverything() = runBlocking<Unit> {
@@ -273,8 +268,7 @@ class BackupRestoreTest {
         seed()
         val before = AllRowsSnapshot.of(db)
         repeat(3) {
-            val r = restore.restore(restore.inspect(Uri.fromFile(export())))
-            r.safetyCopy?.let { safety += it }
+            restore.restore(restore.inspect(Uri.fromFile(export())))
             assertEquals(before, AllRowsSnapshot.of(db))
         }
     }

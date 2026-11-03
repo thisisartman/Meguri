@@ -9,7 +9,8 @@
 - Backups no longer wait for a quiet moment, so one can't fail because the app is busy.
 - Removing "had before the app" from an item is now written to the log.
 - About credits OpenStreetMap for the station positions.
-- Testing: 19 unit tests and all 15 device tests pass, on the Legion's Android 14 emulator. Not yet tried by hand or on a phone.
+- Weekly backup writes its first file once and shows the last backup date as soon as it finishes; the folder picker starts in Documents; Restore is shown in red.
+- Testing: 21 unit tests pass. All 15 device tests passed on the Legion's Android 14 emulator before these last fixes, and restoring a real backup by hand matched. Not yet on a phone.
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
