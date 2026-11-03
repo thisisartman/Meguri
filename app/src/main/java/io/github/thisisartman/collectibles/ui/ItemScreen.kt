@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -33,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
@@ -76,7 +78,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 }
                 item { NameBlock(item, ja) }
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
-                items(finds, key = { it.find.id }) { f -> FindCard(f, ja, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }) }
+                items(finds, key = { it.find.id }) { f -> FindCard(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }) }
                 item { SectionTitle(stringResource(R.string.item_where)) }
                 item { Facts(item, vm.distanceTo(r)) }
             } else {
@@ -182,7 +184,18 @@ private fun Fact(label: String, value: String) {
 private const val POSITION_WAIT_MS = 2 * 60 * 1000L
 
 @Composable
-private fun FindCard(f: FindWithPhotos, ja: Boolean, onRemoveBeforeApp: () -> Unit) {
+private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit) {
+    // Removing a "had before the app" mark has no Undo and no other record, so it asks first
+    var confirmRemove by remember { mutableStateOf(false) }
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(stringResource(R.string.item_remove_confirm_title)) },
+            text = { Text(stringResource(R.string.item_remove_confirm_text, name)) },
+            confirmButton = { TextButton(onClick = { confirmRemove = false; onRemoveBeforeApp() }) { Text(stringResource(R.string.item_remove_confirm)) } },
+            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     Card(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
@@ -192,7 +205,7 @@ private fun FindCard(f: FindWithPhotos, ja: Boolean, onRemoveBeforeApp: () -> Un
             val a = f.find
             if (a.beforeApp) {
                 Text(stringResource(R.string.had_before_app), style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = onRemoveBeforeApp, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                TextButton(onClick = { confirmRemove = true }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
                     Text(stringResource(R.string.item_remove_before_app))
                 }
             } else {

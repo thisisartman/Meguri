@@ -66,6 +66,9 @@
     <string name="item_finding_position">位置を取得中…</string>
     <string name="item_position_saved">位置を記録済み</string>
     <string name="item_find_map">地図</string>
+    <string name="item_remove_confirm_title">コレクションから外しますか？</string>
+    <string name="item_remove_confirm_text">%1$sは未取得に戻ります。</string>
+    <string name="item_remove_confirm">外す</string>
 
     <string name="log_title">記録する</string>
     <string name="log_search">名前・コードで検索</string>

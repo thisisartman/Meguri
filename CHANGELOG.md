@@ -8,6 +8,7 @@
 - "Mark ones I already have": the button asks you to choose first, and the + button is hidden meanwhile.
 - Back arrows are named for screen readers. Station notes are written for you, with the map credit.
 - Checked on the Poco in the test copy: empty start, loading the catalogue, Nearby from a real position.
+- Removing a "had before the app" mark now asks first; it used to happen on one tap with no way back.
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.

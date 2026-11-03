@@ -66,6 +66,9 @@
     <string name="item_finding_position">finding position…</string>
     <string name="item_position_saved">place saved</string>
     <string name="item_find_map">Map</string>
+    <string name="item_remove_confirm_title">Remove from your collection?</string>
+    <string name="item_remove_confirm_text">%1$s will count as not collected again.</string>
+    <string name="item_remove_confirm">Remove</string>
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
