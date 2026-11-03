@@ -5,7 +5,8 @@
 - Backups now confirm every write is included before copying the database.
 - Optional weekly backup to a folder you pick, keeping the last 4.
 - After a restore, photos are matched to their finds again; a photo with two equal matches is marked missing rather than guessed.
-- Testing: 19 unit tests pass; the 15 device tests are waiting on an emulator, as the Predator's crashes on boot.
+- Loading a catalogue counts a station on two lines once.
+- Testing: 19 unit tests pass; the 15 device tests have not run yet (the Predator's emulator crashes on boot, so they run on the Legion's).
 
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
