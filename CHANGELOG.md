@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-03: Restore and weekly backup (in progress, not yet tested on a device)
+- Restore from a backup file, with a copy of your current data saved to Downloads first; a damaged or newer backup is refused and nothing changes.
+- Backups now confirm every write is included before copying the database.
+- Optional weekly backup to a folder you pick, keeping the last 4.
+
 ## 2026-11-03: Trip build (in progress)
 - Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo from the phone's camera.
 - "Nearby": the nearest things you still need, and your collections with progress.
