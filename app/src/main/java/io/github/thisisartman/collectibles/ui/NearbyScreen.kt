@@ -160,7 +160,7 @@ private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> 
         shape = RoundedCornerShape(12.dp),
     ) {
         Column(Modifier.padding(10.dp)) {
-            Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.height(40.dp))
+            Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
             TypeChip(row.item.type, distanceText(meters))
             Spacer(Modifier.height(8.dp))
             Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }

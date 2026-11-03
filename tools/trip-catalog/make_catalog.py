@@ -71,6 +71,37 @@ for code, ja, ro, wave, date, pref, muni, lat, lng, place, addr, phone, hours in
         "place_name": place, "address": addr, "place_phone": phone, "lat": lat, "lng": lng, "hours_text": hours,
     })
 
+# Cards the owner already has that are not trip goals: no position or hand-out place, so they stay off Nearby.
+# Codes matched by the coordinates printed on the owner's cards (video, 2026-11-03) against Eki kara Manhole's list.
+owned = [
+    ("15-202-F001", "長岡市", "Nagaoka-shi", "22", "新潟県", "長岡市"),
+    ("15-205-A001", "柏崎市", "Kashiwazaki-shi", "09", "新潟県", "柏崎市"),
+    ("15-205-B001", "柏崎市", "Kashiwazaki-shi", "13", "新潟県", "柏崎市"),
+    ("15-224-A001", "佐渡市", "Sado-shi", "21", "新潟県", "佐渡市"),
+    ("15-224-B001", "佐渡市", "Sado-shi", "22", "新潟県", "佐渡市"),
+    ("15-224-D001", "佐渡市", "Sado-shi", "24", "新潟県", "佐渡市"),
+    ("15-224-F001", "佐渡市", "Sado-shi", "26", "新潟県", "佐渡市"),
+    ("15-224-G001", "佐渡市", "Sado-shi", "27", "新潟県", "佐渡市"),
+    ("15-224-H001", "佐渡市", "Sado-shi", "28", "新潟県", "佐渡市"),
+    ("13-100-C001", "東京23区", "Tokyo 23-ku", "05", "東京都", None),
+    ("13-100-D001", "東京23区", "Tokyo 23-ku", "05", "東京都", None),
+    ("13-100-L101", "東京23区", "Tokyo 23-ku", "24", "東京都", None),
+    ("13-100-N001", "東京23区", "Tokyo 23-ku", "14", "東京都", None),
+    ("13-100-O001", "新宿区", "Shinjuku-ku", "15", "東京都", "新宿区"),
+    ("13-100-X001", "葛飾区", "Katsushika-ku", "15", "東京都", "葛飾区"),
+    ("13-100-Y001", "江戸川区", "Edogawa-ku", "15", "東京都", "江戸川区"),
+    ("13-219-A001", "狛江市", "Komae-shi", "06", "東京都", "狛江市"),
+    ("13-219-B001", "狛江市", "Komae-shi", "15", "東京都", "狛江市"),
+]
+for code, ja, ro, wave, pref, muni in owned:
+    rows.append({
+        "type": "MANHOLE_CARD", "code": code, "name_ja": f"{ja} {code[-4:]}", "name_romaji": f"{ro} {code[-4:]}",
+        "series": wave, "prefecture": pref, "municipality": muni,
+    })
+rows.append({
+    "type": "GOSHUIN", "name_ja": "豪徳寺", "name_romaji": "Gotokuji", "prefecture": "東京都", "municipality": "世田谷区",
+})
+
 with open(out, "w", encoding="utf-8", newline="") as f:
     w = csv.DictWriter(f, fieldnames=cols)
     w.writeheader()
