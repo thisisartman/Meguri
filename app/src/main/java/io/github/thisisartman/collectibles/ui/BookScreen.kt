@@ -1,6 +1,9 @@
 package io.github.thisisartman.collectibles.ui
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -152,11 +155,17 @@ fun ItemListRow(
     onToggle: () -> Unit, onOpen: () -> Unit,
 ) {
     val canMark = marking && !r.collected
+    val rowAction = if (canMark) {
+        Modifier.toggleable(value = checked, role = Role.Checkbox, onValueChange = { onToggle() })
+    } else {
+        Modifier.clickable(onClick = onOpen)
+    }
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = if (canMark) onToggle else onOpen).padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().then(rowAction).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (marking) Checkbox(checked = checked || r.collected, onCheckedChange = if (canMark) { _ -> onToggle() } else null, enabled = canMark)
+        // The row handles the tap; the box only shows the state
+        if (marking) Checkbox(checked = checked || r.collected, onCheckedChange = null, enabled = canMark, modifier = Modifier.padding(end = 12.dp))
         Mark(r, 36.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

@@ -30,6 +30,7 @@
     <string name="last">最近: %1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
+    <string name="here">ここ</string>
     <string name="m">%1$s m</string>
 
     <string name="book_title">コレクション</string>

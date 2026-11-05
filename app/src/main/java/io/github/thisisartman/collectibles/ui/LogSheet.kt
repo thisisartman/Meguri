@@ -82,11 +82,11 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                 items(results, key = { it.row.item.id }) { r ->
                     val name = r.row.item.displayName(ja)
                     val buttons: @Composable () -> Unit = {
-                        Button(onClick = { vm.gotIt(r.row, name); onDismiss() }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
+                        Button(onClick = { vm.gotIt(r.row, name); onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.got_it))
                         }
                         Spacer(Modifier.width(6.dp))
-                        OutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
+                        OutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.photo))
                         }
                     }
@@ -106,15 +106,16 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                     }
                     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                 }
-                item {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.log_not_in_list), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-                            Text(stringResource(R.string.log_not_in_list_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        OutlinedButton(onClick = { newOpen = true }) { Text(stringResource(R.string.log_new)) }
-                    }
+            }
+            // Pinned under the list: at a shrine that isn't in the catalogue, this is the way in
+            HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+            Row(Modifier.fillMaxWidth().clickable { newOpen = true }.padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.log_not_in_list), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.log_not_in_list_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                Spacer(Modifier.width(8.dp))
+                OutlinedButton(onClick = { newOpen = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.log_new)) }
             }
         }
     }
