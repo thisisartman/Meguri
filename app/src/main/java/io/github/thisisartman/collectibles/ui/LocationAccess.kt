@@ -14,6 +14,9 @@ object LocationAccess {
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
+    fun hasPrecise(context: Context): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
     fun systemOn(context: Context): Boolean =
         context.getSystemService(android.location.LocationManager::class.java)?.let { androidx.core.location.LocationManagerCompat.isLocationEnabled(it) } ?: false
 

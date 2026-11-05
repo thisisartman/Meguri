@@ -77,7 +77,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                     fix == null -> stringResource(R.string.nearby_no_position)
                     here.live -> stringResource(R.string.nearby_from_now)
                     else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
-                }
+                }.let { if (fix != null && !LocationAccess.hasPrecise(ctx)) it + sep() + stringResource(R.string.nearby_approximate) else it }
                 Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (fix == null && !here.searching) {
                     val label = when {
@@ -86,11 +86,21 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                         !systemOn -> R.string.nearby_turn_on_location
                         else -> R.string.nearby_try_again
                     }
-                    TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(label)) }
+                    Spacer(Modifier.height(6.dp))
+                    InkOutlinedButton(onClick = onAllowLocation) { Text(stringResource(label)) }
                 }
             }
         }
-        item { SectionTitle(stringResource(R.string.nearby_still_to_get)) }
+        item { SectionTitle(stringResource(if (here.fix != null) R.string.nearby_still_to_get else R.string.nearby_still_to_get_no_fix)) }
+        nearest.firstOrNull()?.meters?.takeIf { it > MainViewModel.AROUND_RADIUS_M }?.let { far ->
+            item {
+                Text(
+                    stringResource(R.string.nearby_all_far, (MainViewModel.AROUND_RADIUS_M / 1000).toInt(), distanceText(far).orEmpty()),
+                    Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         item {
             if (nearest.isEmpty()) {
                 // No catalogue yet is not the same as having everything

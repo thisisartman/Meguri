@@ -7,6 +7,9 @@
 
     <string name="nearby_title">Nearby</string>
     <string name="nearby_still_to_get">Still to get, nearest first</string>
+    <string name="nearby_still_to_get_no_fix">Still to get</string>
+    <string name="nearby_all_far">Nothing to get within %1$d km; the nearest is %2$s away.</string>
+    <string name="nearby_approximate">approximate</string>
     <string name="nearby_my_book">My book</string>
     <string name="nearby_location_off">Location is switched off · showing recent items</string>
     <string name="nearby_location_not_allowed">Location not allowed · showing recent items</string>
@@ -94,7 +97,7 @@
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
-    <string name="log_near_you">Near you</string>
+    <string name="log_near_you">Nearest first</string>
     <string name="log_recent">Recent</string>
     <string name="log_not_in_list">Not in the list?</string>
     <string name="log_nothing_yet">Nothing to suggest yet. Add what you got with New below.</string>

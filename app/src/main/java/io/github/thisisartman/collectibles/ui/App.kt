@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
@@ -202,18 +204,21 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                 }
             },
         ) { padding ->
-            NavHost(nav, startDestination = NEARBY, modifier = Modifier.padding(padding)) {
-                composable(NEARBY) { NearbyScreen(vm, nav, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
-                composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
-                composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
-                composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                    ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
+            // Landscape and wide screens: content keeps a readable width, centred (overnight review round 10)
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
+                NavHost(nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
+                    composable(NEARBY) { NearbyScreen(vm, nav, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
+                    composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
+                    composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
+                    composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
+                        ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
+                    }
+                    composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
+                        val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
+                        LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
+                    }
+                    composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
                 }
-                composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                    val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
-                    LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
-                }
-                composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
             }
         }
         if (showLog) {

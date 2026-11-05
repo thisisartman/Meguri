@@ -6,6 +6,9 @@
     <string name="nav_more">その他</string>
 
     <string name="nearby_title">近く</string>
+    <string name="nearby_still_to_get_no_fix">未取得</string>
+    <string name="nearby_all_far">%1$d km以内に未取得はありません。最寄りは%2$s先です。</string>
+    <string name="nearby_approximate">おおよその位置</string>
     <string name="nearby_still_to_get">未取得・近い順</string>
     <string name="nearby_my_book">コレクション</string>
     <string name="nearby_location_off">位置情報がオフです・最近の項目を表示</string>
@@ -94,7 +97,7 @@
 
     <string name="log_title">記録する</string>
     <string name="log_search">名前・コードで検索</string>
-    <string name="log_near_you">近く</string>
+    <string name="log_near_you">近い順</string>
     <string name="log_recent">最近</string>
     <string name="log_nothing_yet">まだ候補がありません。下の「新規」で追加してください。</string>
     <string name="new_needs_name">名前を入力すると保存できます。</string>
