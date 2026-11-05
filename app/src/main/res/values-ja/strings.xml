@@ -8,11 +8,16 @@
     <string name="nearby_title">近く</string>
     <string name="nearby_still_to_get">未取得・近い順</string>
     <string name="nearby_my_book">コレクション</string>
-    <string name="nearby_location_off">位置情報オフ・最近の項目を表示</string>
+    <string name="nearby_location_off">位置情報がオフです・最近の項目を表示</string>
+    <string name="nearby_location_not_allowed">位置情報が許可されていません・最近の項目を表示</string>
+    <string name="nearby_no_position">現在地がまだ取れません・最近の項目を表示</string>
+    <string name="nearby_try_again">もう一度試す</string>
     <string name="nearby_from_fix">%1$s時点の現在地から</string>
     <string name="nearby_from_now">現在地から</string>
     <string name="nearby_nothing_left">この近くに未取得はありません</string>
     <string name="nearby_empty_book">まだ記録がありません。＋をタップして最初の記録を。</string>
+    <string name="nearby_allow_in_settings">設定で位置情報を許可</string>
+    <string name="nearby_turn_on_location">位置情報をオンにする</string>
     <string name="nearby_allow_location">位置情報を許可</string>
 
     <string name="type_manhole">マンホールカード</string>
@@ -34,6 +39,9 @@
     <string name="here">ここ</string>
     <string name="m">%1$s m</string>
 
+    <string name="book_fold">たたむ</string>
+    <string name="book_unfold">開く</string>
+    <string name="complete">コンプリート</string>
     <string name="book_title">コレクション</string>
     <string name="book_other_stations">その他の駅</string>
     <string name="book_no_prefecture">都道府県なし</string>

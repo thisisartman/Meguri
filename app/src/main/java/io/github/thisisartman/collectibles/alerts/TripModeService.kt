@@ -82,8 +82,11 @@ class TripModeService : Service() {
         val m = lm ?: return
         intervalMs = ms
         m.removeUpdates(listener)
-        val providers = listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER).filter { runCatching { m.isProviderEnabled(it) }.getOrDefault(false) }
-        providers.forEach { m.requestLocationUpdates(it, ms, 0f, listener, Looper.getMainLooper()) }
+        val fine = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val candidates = if (fine) listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+        else listOfNotNull(if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) LocationManager.FUSED_PROVIDER else null, LocationManager.NETWORK_PROVIDER)
+        val providers = candidates.filter { runCatching { m.isProviderEnabled(it) }.getOrDefault(false) }.take(if (fine) 2 else 1)
+        providers.forEach { runCatching { m.requestLocationUpdates(it, ms, 0f, listener, Looper.getMainLooper()) } }
         if (providers.isEmpty()) log.w("Trip", "No location provider is on")
     }
 

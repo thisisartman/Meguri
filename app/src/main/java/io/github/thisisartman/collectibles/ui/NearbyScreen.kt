@@ -52,7 +52,7 @@ import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.data.Origin
 
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val nearest by vm.nearest.collectAsStateWithLifecycle()
@@ -67,14 +67,27 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
             Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)) {
                 Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.headlineMedium)
                 val fix = here.fix
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val allowed = LocationAccess.has(ctx)
+                val systemOn = LocationAccess.systemOn(ctx)
                 val where = when {
                     fix == null && here.searching -> stringResource(R.string.nearby_finding)
-                    fix == null -> stringResource(R.string.nearby_location_off)
+                    fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
+                    fix == null && !systemOn -> stringResource(R.string.nearby_location_off)
+                    fix == null -> stringResource(R.string.nearby_no_position)
                     here.live -> stringResource(R.string.nearby_from_now)
                     else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
                 }
                 Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (fix == null && !here.searching) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
+                if (fix == null && !here.searching) {
+                    val label = when {
+                        !allowed && locationBlocked -> R.string.nearby_allow_in_settings
+                        !allowed -> R.string.nearby_allow_location
+                        !systemOn -> R.string.nearby_turn_on_location
+                        else -> R.string.nearby_try_again
+                    }
+                    TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(label)) }
+                }
             }
         }
         item { SectionTitle(stringResource(R.string.nearby_still_to_get)) }
@@ -155,9 +168,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text(
+                    CountText(
                         if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        complete = s.total != null && s.total > 0 && s.collected == s.total,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -245,9 +259,10 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                 TypeDot(s.type)
                 Spacer(Modifier.width(6.dp))
                 Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(
+                CountText(
                     if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
-                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    complete = s.total != null && s.total > 0 && s.collected == s.total,
+                    style = MaterialTheme.typography.titleSmall,
                 )
             }
             // Around here: what to get next in this collection, and how far

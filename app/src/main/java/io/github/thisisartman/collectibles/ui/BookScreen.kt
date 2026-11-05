@@ -1,6 +1,10 @@
 package io.github.thisisartman.collectibles.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.toggleable
@@ -86,14 +90,23 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 Text(stringResource(action), textAlign = TextAlign.End)
             }
         }
+        // Sections fold on a tap, so a long book stays easy to get around (overnight review round 8)
+        var folded by remember { mutableStateOf(setOf<String>()) }
+        fun isOpen(key: String) = marking || key !in folded
+        fun toggle(key: String) { folded = if (key in folded) folded - key else folded + key }
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 96.dp)) {
             // Manhole cards by prefecture
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->
-                stickyHeader(key = "h:m:$pref") {
-                    GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + sep() + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) }, "${list.count { it.collected }} / ${list.size}")
+                val key = "h:m:$pref"
+                val got = list.count { it.collected }
+                stickyHeader(key = key) {
+                    GroupHeader(
+                        ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + sep() + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) },
+                        "$got / ${list.size}", complete = got == list.size, open = isOpen(key), onToggle = if (marking) null else ({ toggle(key) }),
+                    )
                 }
-                items(list, key = { it.item.id }) { r ->
+                if (isOpen(key)) items(list, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
                         onOpen = { nav.openItem(r.item.id) })
@@ -112,8 +125,10 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Goshuin
             val goshuin = rows.filter { it.item.type == ItemType.GOSHUIN }
             if (goshuin.isNotEmpty()) {
-                stickyHeader(key = "h:g") { GroupHeader(ItemType.GOSHUIN, stringResource(R.string.type_goshuin), goshuin.count { it.collected }.toString()) }
-                items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
+                stickyHeader(key = "h:g") {
+                    GroupHeader(ItemType.GOSHUIN, stringResource(R.string.type_goshuin), goshuin.count { it.collected }.toString(), open = isOpen("h:g"), onToggle = if (marking) null else ({ toggle("h:g") }))
+                }
+                if (isOpen("h:g")) items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
                         onOpen = { nav.openItem(r.item.id) })
@@ -142,16 +157,41 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
 }
 
 @Composable
-fun GroupHeader(type: ItemType, title: String, count: String?) {
+fun GroupHeader(
+    type: ItemType, title: String, count: String?,
+    complete: Boolean = false, open: Boolean = true, onToggle: (() -> Unit)? = null,
+) {
     // Pinned while its rows scroll, so it needs the page colour behind it
+    val tap = if (onToggle != null) Modifier.clickable(onClick = onToggle).heightIn(min = 48.dp) else Modifier
     Row(
-        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 6.dp),
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).then(tap).padding(start = 16.dp, end = 8.dp, top = 16.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TypeDot(type)
         Spacer(Modifier.width(6.dp))
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-        if (count != null) Text(count, style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"))
+        if (count != null) CountText(count, complete, MaterialTheme.typography.titleSmall)
+        if (onToggle != null) {
+            Icon(
+                if (open) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                contentDescription = stringResource(if (open) R.string.book_fold else R.string.book_unfold),
+                modifier = Modifier.padding(start = 4.dp),
+            )
+        } else {
+            Spacer(Modifier.width(8.dp))
+        }
+    }
+}
+
+/** A count such as "2 / 2", with a check in front when the collection is complete. */
+@Composable
+fun CountText(text: String, complete: Boolean, style: androidx.compose.ui.text.TextStyle, color: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Unspecified) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        if (complete) {
+            Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.complete), modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(4.dp))
+        }
+        Text(text, style = style.copy(fontFeatureSettings = "tnum"), color = color)
     }
 }
 

@@ -100,12 +100,34 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         }
     }
 
-    val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.refreshPosition() }
+    // After two refusals Android stops showing its prompt, so "Allow location" must open Settings instead (round 9)
+    val activity = androidx.activity.compose.LocalActivity.current
+    val locationPrefs = remember { context.getSharedPreferences("location", android.content.Context.MODE_PRIVATE) }
+    var locationBlocked by remember { mutableStateOf(locationPrefs.getBoolean("blocked", false)) }
+    val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        val granted = result.values.any { it }
+        val canAskAgain = activity?.let { androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION) } ?: true
+        locationBlocked = !granted && !canAskAgain && !LocationAccess.has(context)
+        locationPrefs.edit().putBoolean("blocked", locationBlocked).apply()
+        vm.refreshPosition()
+    }
+    val onAllowLocation: () -> Unit = {
+        when {
+            // Allowed and switched on, but no position yet: ask again
+            LocationAccess.has(context) && LocationAccess.systemOn(context) -> vm.refreshPosition()
+            // Allowed, but the phone's location is switched off
+            LocationAccess.has(context) -> LocationAccess.openLocationSettings(context)
+            locationBlocked -> LocationAccess.openAppSettings(context)
+            else -> askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
     LaunchedEffect(Unit) {
         CameraCapture.cleanEmptyRows(resolver)
         askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
     LifecycleResumeEffect(Unit) {
+        // Back from Settings with location allowed: the blocked note no longer applies
+        if (LocationAccess.has(context) && locationBlocked) { locationBlocked = false; locationPrefs.edit().putBoolean("blocked", false).apply() }
         vm.refreshPosition()
         onPauseOrDispose { }
     }
@@ -181,7 +203,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             },
         ) { padding ->
             NavHost(nav, startDestination = NEARBY, modifier = Modifier.padding(padding)) {
-                composable(NEARBY) { NearbyScreen(vm, nav, onAllowLocation = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }) }
+                composable(NEARBY) { NearbyScreen(vm, nav, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                 composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
                 composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
                 composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {

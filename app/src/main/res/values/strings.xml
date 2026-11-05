@@ -8,12 +8,17 @@
     <string name="nearby_title">Nearby</string>
     <string name="nearby_still_to_get">Still to get, nearest first</string>
     <string name="nearby_my_book">My book</string>
-    <string name="nearby_location_off">Location off · showing recent items</string>
+    <string name="nearby_location_off">Location is switched off · showing recent items</string>
+    <string name="nearby_location_not_allowed">Location not allowed · showing recent items</string>
+    <string name="nearby_no_position">No position yet · showing recent items</string>
+    <string name="nearby_try_again">Try again</string>
     <string name="nearby_from_fix">From your position at %1$s</string>
     <string name="nearby_from_now">From your position now</string>
     <string name="nearby_nothing_left">Nothing left to get near here</string>
     <string name="nearby_empty_book">Nothing logged yet. Tap + to log your first find.</string>
     <string name="nearby_allow_location">Allow location</string>
+    <string name="nearby_allow_in_settings">Allow location in Settings</string>
+    <string name="nearby_turn_on_location">Turn on location</string>
 
     <string name="type_manhole">Manhole card</string>
     <string name="type_manhole_plural">Manhole cards</string>
@@ -35,6 +40,9 @@
     <string name="here">here</string>
 
     <string name="book_title">My book</string>
+    <string name="book_fold">Fold</string>
+    <string name="book_unfold">Unfold</string>
+    <string name="complete">Complete</string>
     <string name="book_other_stations">Other stations</string>
     <string name="book_no_prefecture">No prefecture</string>
     <string name="book_mark_owned">Mark ones I already have</string>
