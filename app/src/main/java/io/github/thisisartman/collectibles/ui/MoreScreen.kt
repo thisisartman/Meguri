@@ -189,8 +189,8 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
 
         SectionTitle(stringResource(R.string.more_language))
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) }, modifier = Modifier.heightIn(min = 48.dp))
-            FilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) }, modifier = Modifier.heightIn(min = 48.dp))
+            InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
+            InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
         }
         HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
@@ -223,7 +223,6 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
             openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
         }
-        HorizontalDivider(Modifier.padding(top = 4.dp), color = MaterialTheme.colorScheme.outlineVariant)
         AlertsSection()
         MoreRow(stringResource(R.string.more_logs), null, onLogs)
         MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}

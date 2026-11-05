@@ -91,7 +91,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->
                 stickyHeader(key = "h:m:$pref") {
-                    GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + " · " + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) }, "${list.count { it.collected }} / ${list.size}")
+                    GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + sep() + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) }, "${list.count { it.collected }} / ${list.size}")
                 }
                 items(list, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
@@ -175,12 +175,12 @@ fun ItemListRow(
         Mark(r, 36.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(r.item.displayName(ja), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(r.item.displayName(ja), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val sub = listOfNotNull(
                 r.item.code,
                 distanceText(meters),
                 if (r.collected) (r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app)) else null,
-            ).joinToString(" · ")
+            ).joinToString(sep())
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         // Round 5, B2: the book is for looking; logging happens on Nearby, the item page and +
@@ -215,7 +215,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                 Column {
                     Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        stringResource(R.string.type_eki_plural) + " · " + stringResource(R.string.count, stations.count { it.collected }, stations.size),
+                        stringResource(R.string.type_eki_plural) + sep() + stringResource(R.string.count, stations.count { it.collected }, stations.size),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     nearest?.let { n ->

@@ -85,7 +85,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 // Have it: your mark large, your record, then the facts
                 item {
                     Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Mark(r, 140.dp)
+                        // With large text the seal gives way, so your record still starts on the first screen
+                        Mark(r, if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 100.dp else 140.dp)
                     }
                 }
                 item { NameBlock(item, ja, lineNames) }
@@ -190,7 +191,7 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
         item.code,
         item.prefecture?.let { prefectureName(it, ja) },
         item.municipality?.takeIf { ja && it != item.nameJa },
-    ).joinToString(" · ")
+    ).joinToString(sep())
     if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     if (item.series != null) {
         val date = item.releaseDate?.takeIf { it.isNotBlank() }?.let { if (ja) it else it.replace('/', '-') }

@@ -103,7 +103,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                             Column(Modifier.weight(1f)) {
                                 Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 // Distance first: it is the part that must survive when the line is cut
-                                TypeChip(r.row.item.type, listOfNotNull(distanceText(r.meters), r.row.item.code).joinToString(" · ").ifEmpty { null })
+                                TypeChip(r.row.item.type, listOfNotNull(distanceText(r.meters), r.row.item.code).joinToString(sep()).ifEmpty { null })
                             }
                             if (!largeText) buttons()
                         }
@@ -121,7 +121,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                     Text(stringResource(R.string.log_not_in_list_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.width(8.dp))
-                InkOutlinedButton(onClick = { newOpen = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.log_new)) }
+                InkOutlinedButton(onClick = { newOpen = true }) { Text(stringResource(R.string.log_new)) }
             }
         }
     }
@@ -153,7 +153,7 @@ fun NewItemDialog(initialName: String, onDismiss: () -> Unit, onSave: (ItemType,
                 Text(stringResource(R.string.new_type), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MANHOLE_CARD).forEach { t ->
-                        FilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label()), maxLines = 1) }, leadingIcon = { TypeDot(t) }, modifier = Modifier.heightIn(min = 48.dp))
+                        InkFilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label()), maxLines = 1) }, leadingIcon = { TypeDot(t) })
                     }
                 }
                 OutlinedTextField(value = nameJa, onValueChange = { nameJa = it }, label = { Text(stringResource(R.string.new_name_ja)) }, singleLine = true)

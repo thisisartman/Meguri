@@ -5,6 +5,10 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.Modifier
@@ -26,6 +30,10 @@ private val Light = lightColorScheme(
     primary = Color(0xFF1D1D1F), onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFFE6E1D8), onPrimaryContainer = Color(0xFF1D1D1F),
     secondaryContainer = Color(0xFFE6E1D8), onSecondaryContainer = Color(0xFF1D1D1F),
+    secondary = Color(0xFF1D1D1F), onSecondary = Color(0xFFFFFFFF),
+    tertiary = Color(0xFF1D1D1F), onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFE6E1D8), onTertiaryContainer = Color(0xFF1D1D1F),
+    inversePrimary = Color(0xFFECECEF),
     background = Color(0xFFFBF8F3), onBackground = Color(0xFF1D1D1F),
     surface = Color(0xFFFBF8F3), onSurface = Color(0xFF1D1D1F),
     surfaceVariant = Color(0xFFEFE9DF), onSurfaceVariant = Color(0xFF66666B),
@@ -39,6 +47,10 @@ private val Dark = darkColorScheme(
     primary = Color(0xFFECECEF), onPrimary = Color(0xFF16161A),
     primaryContainer = Color(0xFF33333A), onPrimaryContainer = Color(0xFFECECEF),
     secondaryContainer = Color(0xFF33333A), onSecondaryContainer = Color(0xFFECECEF),
+    secondary = Color(0xFFECECEF), onSecondary = Color(0xFF16161A),
+    tertiary = Color(0xFFECECEF), onTertiary = Color(0xFF16161A),
+    tertiaryContainer = Color(0xFF33333A), onTertiaryContainer = Color(0xFFECECEF),
+    inversePrimary = Color(0xFF1D1D1F),
     background = Color(0xFF16161A), onBackground = Color(0xFFECECEF),
     surface = Color(0xFF16161A), onSurface = Color(0xFFECECEF),
     surfaceVariant = Color(0xFF33333A), onSurfaceVariant = Color(0xFFA3A3AB),
@@ -83,6 +95,42 @@ fun InkOutlinedButton(
     colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
     contentPadding = contentPadding,
     content = content,
+)
+
+/**
+ * The app's filter chip. Material's unselected border is the divider colour (about 1.4:1) and the selected state
+ * shows by fill alone (overnight review round 6). Here the border is the outline colour, the selected chip gets an
+ * ink border and a check, and the target is 48 dp. [leadingIcon] (a type dot) stays beside the check.
+ */
+@Composable
+fun InkFilterChip(
+    selected: Boolean,
+    onClick: () -> Unit,
+    label: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    leadingIcon: (@Composable () -> Unit)? = null,
+) = androidx.compose.material3.FilterChip(
+    selected = selected,
+    onClick = onClick,
+    label = label,
+    modifier = modifier.heightIn(min = 48.dp),
+    leadingIcon = if (selected) {
+        {
+            androidx.compose.foundation.layout.Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Filled.Check, contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
+                if (leadingIcon != null) { androidx.compose.foundation.layout.Spacer(Modifier.width(4.dp)); leadingIcon() }
+            }
+        }
+    } else leadingIcon,
+    border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
+        enabled = true, selected = selected,
+        borderColor = MaterialTheme.colorScheme.outline,
+        selectedBorderColor = MaterialTheme.colorScheme.onSurface,
+        borderWidth = 1.dp, selectedBorderWidth = 1.dp,
+    ),
 )
 
 @Composable

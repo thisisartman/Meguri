@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="sep">"・"</string>
     <string name="nav_nearby">近く</string>
     <string name="nav_book">コレクション</string>
     <string name="nav_more">その他</string>

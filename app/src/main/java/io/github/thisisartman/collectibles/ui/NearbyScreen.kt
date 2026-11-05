@@ -225,9 +225,9 @@ private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> 
 
 @Composable
 fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
-    s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + " · " + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
-    s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + " · " + (lineName ?: s.lineId)
-    s.type == ItemType.EKI_STAMP -> stringResource(R.string.type_eki_plural) + " · " + stringResource(R.string.book_other_stations)
+    s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + sep() + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
+    s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + sep() + (lineName ?: s.lineId)
+    s.type == ItemType.EKI_STAMP -> stringResource(R.string.type_eki_plural) + sep() + stringResource(R.string.book_other_stations)
     else -> stringResource(s.type.label())
 }
 
@@ -281,7 +281,7 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                     Spacer(Modifier.width(8.dp))
                     val whenText = if (last.lastAt != null) formatDate(last.lastAt, ja) else stringResource(R.string.had_before_app)
                     Text(
-                        stringResource(R.string.last, last.item.displayName(ja) + " · " + whenText),
+                        stringResource(R.string.last, last.item.displayName(ja) + sep() + whenText),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

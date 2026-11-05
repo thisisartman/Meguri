@@ -58,6 +58,10 @@ fun countsText(res: android.content.res.Resources, finds: Int, items: Int, photo
         photos?.let { res.getQuantityString(R.plurals.photos, it, it) },
     ).joinToString(res.getString(R.string.count_sep))
 
+/** The separator between parts of a line: " · " in English, "・" in Japanese. */
+@androidx.compose.runtime.Composable
+fun sep(): String = androidx.compose.ui.res.stringResource(R.string.sep)
+
 fun formatDate(ms: Long, japanese: Boolean): String =
     SimpleDateFormat(if (japanese) "yyyy/MM/dd" else "yyyy-MM-dd", Locale.US).format(Date(ms))
 

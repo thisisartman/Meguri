@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="sep">" · "</string>
     <string name="nav_nearby">Nearby</string>
     <string name="nav_book">My book</string>
     <string name="nav_more">More</string>

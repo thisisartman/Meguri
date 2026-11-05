@@ -185,7 +185,7 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     val radius = remember(tick) { s.radiusM }
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         AlertSettings.RADIUS_CHOICES.forEach { r ->
-            FilterChip(
+            InkFilterChip(
                 selected = radius == r,
                 onClick = { s.radiusM = r; vm.geofences.refreshInBackground(); tick++ },
                 label = { Text(distanceText(r.toDouble()).orEmpty()) },
@@ -199,12 +199,11 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf(ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin, ItemType.EKI_STAMP to R.string.type_eki_plural)
             .forEach { (t, label) ->
-                FilterChip(
+                InkFilterChip(
                     selected = t in types,
                     onClick = { s.types = if (t in types) types - t else types + t; vm.geofences.refreshInBackground(); tick++ },
                     label = { Text(stringResource(label)) },
                     leadingIcon = { TypeDot(t) },
-                    modifier = Modifier.heightIn(min = 48.dp),
                 )
             }
     }
