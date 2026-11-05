@@ -99,7 +99,13 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    private var lastGotIt: Pair<String, Long>? = null
+
     fun gotIt(row: ItemRow, name: String, onLogged: (String) -> Unit = {}) {
+        // A double tap must not log the same find twice (overnight review round 13)
+        val now = android.os.SystemClock.elapsedRealtime()
+        if (isRepeatTap(lastGotIt, row.item.id, now)) return
+        lastGotIt = row.item.id to now
         viewModelScope.launch {
             val id = repo.logFind(row.item.id, Via.MANUAL)
             emit(Logged(id, name, System.currentTimeMillis()))
@@ -177,6 +183,12 @@ class MainViewModel @Inject constructor(
     }
 
     companion object {
+        /** How long a second Got it on the same item counts as the same tap. */
+        const val REPEAT_TAP_MS = 2_000L
+
+        fun isRepeatTap(last: Pair<String, Long>?, itemId: String, nowMs: Long): Boolean =
+            last != null && last.first == itemId && nowMs - last.second < REPEAT_TAP_MS
+
         fun summarise(rows: List<ItemRow>, lines: List<Line>, ls: List<LineStation>): List<CollectionSummary> {
             val out = mutableListOf<CollectionSummary>()
             fun last(list: List<ItemRow>) = list.filter { it.collected }

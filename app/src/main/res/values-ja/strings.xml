@@ -30,6 +30,11 @@
     <string name="type_eki_plural">駅スタンプ</string>
     <string name="type_ekitag">エキタグ</string>
 
+    <string name="a11y_got_it">%1$sを取得</string>
+    <string name="a11y_photo">%1$sの写真を撮る</string>
+    <string name="a11y_remove_find">%1$sの記録を削除</string>
+    <string name="state_collected">取得済み</string>
+    <string name="state_to_get">未取得</string>
     <string name="got_it">取得</string>
     <string name="got_it_again">もう一度取得</string>
     <string name="photo">写真</string>
@@ -118,6 +123,7 @@
     <string name="more_backup">今すぐバックアップ</string>
     <string name="more_backup_sub">すべての記録を選んだファイルに保存します。写真はギャラリーに残ります。</string>
     <string name="more_backup_done">バックアップ完了：%1$s</string>
+    <string name="more_backup_done_named">%1$s に保存しました：%2$s</string>
     <string name="more_backup_failed">バックアップを保存できませんでした</string>
     <string name="more_restore">バックアップから復元</string>
     <string name="more_restore_sub">このアプリのデータをバックアップの内容に置き換えます。現在のデータは先に「ダウンロード」へ保存します。</string>
@@ -141,6 +147,7 @@
     <string name="more_auto_sub_on">オン。最初のバックアップを準備中です。</string>
     <string name="more_auto_sub_last">オン。前回のバックアップ：%1$s</string>
     <string name="more_auto_sub_failed">前回のバックアップに失敗しました。タップしてフォルダを選び直してください。</string>
+    <string name="more_auto_body">週に1回、この端末の「%1$s」フォルダに保存します。最新の%2$d件を残します。</string>
     <string name="more_auto_now">今すぐバックアップ</string>
     <string name="more_auto_change">フォルダを変更</string>
     <string name="more_auto_off">オフにする</string>

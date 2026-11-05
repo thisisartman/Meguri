@@ -3,5 +3,5 @@
     <plurals name="finds"><item quantity="one">%d find</item><item quantity="other">%d finds</item></plurals>
     <plurals name="items"><item quantity="one">%d item</item><item quantity="other">%d items</item></plurals>
     <plurals name="photos"><item quantity="one">%d photo</item><item quantity="other">%d photos</item></plurals>
-    <string name="count_sep">, </string>
+    <string name="count_sep">", "</string>
 </resources>

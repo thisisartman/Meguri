@@ -292,7 +292,11 @@ private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBefor
                     }
                 }
                 a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                TextButton(onClick = { confirmRemove = true }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+                TextButton(
+                    onClick = { confirmRemove = true },
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+                    modifier = Modifier.spoken(stringResource(R.string.a11y_remove_find, whenText)),
+                ) {
                     Text(stringResource(R.string.item_remove_find))
                 }
             }

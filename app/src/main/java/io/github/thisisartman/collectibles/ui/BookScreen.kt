@@ -206,8 +206,9 @@ fun ItemListRow(
     } else {
         Modifier.clickable(onClick = onOpen)
     }
+    val state = stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get)
     Row(
-        Modifier.fillMaxWidth().then(rowAction).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().then(rowAction).collectedState(state).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         // The row handles the tap; the box only shows the state
@@ -278,7 +279,8 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
             modifier = Modifier.fillMaxSize(),
         ) {
             items(stations, key = { it.item.id }) { r ->
-                Column(Modifier.clickable { nav.openItem(r.item.id) }, horizontalAlignment = Alignment.CenterHorizontally) {
+                val state = stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get)
+                Column(Modifier.clickable { nav.openItem(r.item.id) }.collectedState(state), horizontalAlignment = Alignment.CenterHorizontally) {
                     val isNearest = r.item.id == nearest?.item?.id
                     Box(contentAlignment = Alignment.Center) { if (isNearest) EmptySlot(72.dp, strong = true) else Mark(r, 72.dp) }
                     Spacer(Modifier.height(4.dp))

@@ -75,7 +75,11 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val msg = runCatching { vm.io.exportBackup(uri) }
-                .map { context.getString(R.string.more_backup_done, countsText(context.resources, it.finds, it.items)) }
+                .map {
+                    val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
+                    val counts = countsText(context.resources, it.finds, it.items)
+                    if (name != null) context.getString(R.string.more_backup_done_named, name, counts) else context.getString(R.string.more_backup_done, counts)
+                }
                 .getOrElse { vm.log.e("Backup", "Export failed", it); failText }
             scope.launch { snackbar.showSnackbar(msg) }
         }
@@ -173,6 +177,16 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         AlertDialog(
             onDismissRequest = { autoDialog = false },
             title = { Text(stringResource(R.string.more_auto)) },
+            text = {
+                val folderName = remember(autoTick) {
+                    vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
+                }
+                val last = remember(autoTick) { vm.auto.lastSuccessMs?.let { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it)) } }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.more_auto_body, folderName ?: "?", AutoBackup.KEEP))
+                    if (last != null) Text(stringResource(R.string.more_auto_sub_last, last), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
             confirmButton = {
                 TextButton(onClick = { autoDialog = false; vm.auto.runNow() }) { Text(stringResource(R.string.more_auto_now)) }
             },

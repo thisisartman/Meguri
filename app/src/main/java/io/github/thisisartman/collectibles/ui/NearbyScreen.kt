@@ -241,8 +241,8 @@ private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> 
             // Distance on its own line: it is what the tile is for, and it must not be the part that gets cut
             Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
             Spacer(Modifier.height(8.dp))
-            Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
-            InkOutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
+            Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_got_it, name)), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
+            InkOutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_photo, name)), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
         }
     }
 }

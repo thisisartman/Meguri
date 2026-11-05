@@ -88,11 +88,11 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                 items(results, key = { it.row.item.id }) { r ->
                     val name = r.row.item.displayName(ja)
                     val buttons: @Composable () -> Unit = {
-                        Button(onClick = { vm.gotIt(r.row, name); onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
+                        Button(onClick = { vm.gotIt(r.row, name); onDismiss() }, modifier = Modifier.heightIn(min = 48.dp).spoken(stringResource(R.string.a11y_got_it, name)), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.got_it))
                         }
                         Spacer(Modifier.width(6.dp))
-                        InkOutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
+                        InkOutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp).spoken(stringResource(R.string.a11y_photo, name)), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.photo))
                         }
                     }

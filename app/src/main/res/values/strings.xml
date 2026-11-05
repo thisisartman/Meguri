@@ -31,6 +31,11 @@
     <string name="type_ekitag">Ekitag</string>
 
     <string name="got_it">Got it</string>
+    <string name="a11y_got_it">Got it: %1$s</string>
+    <string name="a11y_photo">Photo of %1$s</string>
+    <string name="a11y_remove_find">Remove the find from %1$s</string>
+    <string name="state_collected">Collected</string>
+    <string name="state_to_get">Still to get</string>
     <string name="got_it_again">Got it again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
@@ -118,6 +123,7 @@
     <string name="more_backup">Back up now</string>
     <string name="more_backup_sub">Saves all finds to a file you choose. Photos stay in the gallery.</string>
     <string name="more_backup_done">Backup saved: %1$s</string>
+    <string name="more_backup_done_named">Saved %1$s: %2$s</string>
     <string name="more_backup_failed">Couldn\'t save the backup</string>
     <string name="more_restore">Restore from a backup</string>
     <string name="more_restore_sub">Replaces everything here with a backup file. Your current data is saved to Downloads first.</string>
@@ -142,6 +148,7 @@
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
     <string name="more_auto_sub_failed">The last backup failed. Tap to pick the folder again.</string>
     <string name="more_auto_now">Back up now</string>
+    <string name="more_auto_body">Once a week, to the folder "%1$s" on this phone. Keeps the last %2$d.</string>
     <string name="more_auto_change">Change folder</string>
     <string name="more_auto_off">Turn off</string>
     <string name="more_import">Load catalogue (CSV)</string>

@@ -1,6 +1,9 @@
 package io.github.thisisartman.collectibles.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.Item
 import io.github.thisisartman.collectibles.data.ItemType
@@ -57,6 +60,14 @@ fun countsText(res: android.content.res.Resources, finds: Int, items: Int, photo
         res.getQuantityString(R.plurals.items, items, items),
         photos?.let { res.getQuantityString(R.plurals.photos, it, it) },
     ).joinToString(res.getString(R.string.count_sep))
+
+/** What a screen reader says for a control, when its visible label alone would not say which item it acts on. */
+fun androidx.compose.ui.Modifier.spoken(text: String): androidx.compose.ui.Modifier =
+    this.then(androidx.compose.ui.Modifier.semantics { contentDescription = text })
+
+/** "Collected" or "Still to get", read with a row or a stamp slot. */
+fun androidx.compose.ui.Modifier.collectedState(text: String): androidx.compose.ui.Modifier =
+    this.then(androidx.compose.ui.Modifier.semantics { stateDescription = text })
 
 /** The separator between parts of a line: " · " in English, "・" in Japanese. */
 @androidx.compose.runtime.Composable
