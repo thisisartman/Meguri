@@ -19,7 +19,11 @@ import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
-data class ImportResult(val added: Int, val updated: Int, val lines: Int, val skipped: List<String>)
+data class ImportResult(val added: Int, val updated: Int, val lines: Int, val skipped: List<String>, val unchanged: Int = 0)
+
+/** Whether a catalogue row changes what is stored; a reload of the same file changes nothing. */
+fun catalogRowChanges(existing: Item?, incoming: Item): Boolean =
+    existing == null || incoming.copy(updatedAt = existing.updatedAt) != existing
 data class BackupResult(val finds: Int, val items: Int, val photos: Int)
 
 @Singleton
@@ -47,6 +51,7 @@ class CatalogAndBackup @Inject constructor(
     private suspend fun importRows(maps: List<Map<String, String>>): ImportResult {
         var added = 0
         var updated = 0
+        var unchanged = 0
         val lineIds = mutableSetOf<String>()
         val seen = mutableSetOf<String>()
         val skipped = mutableListOf<String>()
@@ -56,9 +61,17 @@ class CatalogAndBackup @Inject constructor(
                 val row = CatalogRow.from(m).getOrElse { skipped += "row ${i + 2}: ${it.message}"; return@forEachIndexed }
                 val existing = dao.itemByCatalogKey(row.catalogKey)
                 val item = row.toItem(existing, UUID.randomUUID().toString(), now)
-                dao.upsertItem(item)
+                val changes = catalogRowChanges(existing, item)
+                // Unchanged rows are left alone, so their update time (and "recent" order) stays put
+                if (changes) dao.upsertItem(item)
                 // A station on two lines is two rows of one item: count the item once.
-                if (seen.add(row.catalogKey)) { if (existing == null) added++ else updated++ }
+                if (seen.add(row.catalogKey)) {
+                    when {
+                        existing == null -> added++
+                        changes -> updated++
+                        else -> unchanged++
+                    }
+                }
                 if (row.lineId != null && row.lineSeq != null) {
                     dao.upsertLine(Line(row.lineId, row.lineNameJa ?: row.lineId, row.lineNameRomaji))
                     dao.upsertLineStation(LineStation(row.lineId, item.id, row.lineSeq))
@@ -66,8 +79,8 @@ class CatalogAndBackup @Inject constructor(
                 }
             }
         }
-        log.i("Catalog", "Import: $added added, $updated updated, ${lineIds.size} lines, ${skipped.size} skipped ${skipped.take(5)}")
-        return ImportResult(added, updated, lineIds.size, skipped)
+        log.i("Catalog", "Import: $added added, $updated updated, $unchanged unchanged, ${lineIds.size} lines, ${skipped.size} skipped ${skipped.take(5)}")
+        return ImportResult(added, updated, lineIds.size, skipped, unchanged)
     }
 
     /**

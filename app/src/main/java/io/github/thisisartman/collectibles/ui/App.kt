@@ -33,6 +33,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -88,6 +89,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         val info = if (ok) CameraCapture.describe(resolver, uri) else null
         if (info != null) vm.attachPhoto(findId, info) else CameraCapture.discardIfEmpty(resolver, uri)
         vm.retryPosition(findId)
+        vm.reshowLogged(findId)
     }
     val photo = remember {
         PhotoLauncher { findId ->
@@ -139,7 +141,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
 
     CompositionLocalProvider(LocalPhoto provides photo) {
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) },
+            // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
+            snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
             floatingActionButton = {
                 // Hidden while marking owned cards: the mark button takes the bottom of the screen
                 if (route == null || route == NEARBY || (route == BOOK && !bookMarking)) {

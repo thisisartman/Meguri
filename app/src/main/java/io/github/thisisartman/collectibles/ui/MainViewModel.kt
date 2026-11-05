@@ -46,7 +46,7 @@ data class Around(val summary: CollectionSummary, val next: Ranked?)
 data class AroundHere(val near: List<Around>, val elsewhere: List<CollectionSummary>, val located: Boolean)
 
 /** A snackbar message with an optional undo. */
-data class Logged(val findId: String, val name: String, val atMs: Long)
+data class Logged(val findId: String, val name: String, val atMs: Long, val shownAt: Long = System.nanoTime())
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -102,7 +102,7 @@ class MainViewModel @Inject constructor(
     fun gotIt(row: ItemRow, name: String, onLogged: (String) -> Unit = {}) {
         viewModelScope.launch {
             val id = repo.logFind(row.item.id, Via.MANUAL)
-            _logged.value = Logged(id, name, System.currentTimeMillis())
+            emit(Logged(id, name, System.currentTimeMillis()))
             onLogged(id)
         }
     }
@@ -112,7 +112,7 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val row = repo.itemRowOnce(itemId) ?: return@launch
             val id = repo.logFind(itemId, Via.NOTIFICATION)
-            _logged.value = Logged(id, if (japanese) row.item.nameJa else row.item.nameRomaji ?: row.item.nameJa, System.currentTimeMillis())
+            emit(Logged(id, if (japanese) row.item.nameJa else row.item.nameRomaji ?: row.item.nameJa, System.currentTimeMillis()))
             onLogged(id)
         }
     }
@@ -120,9 +120,25 @@ class MainViewModel @Inject constructor(
     fun addNew(type: ItemType, nameJa: String, nameRomaji: String?, onDone: (itemId: String, findId: String) -> Unit = { _, _ -> }) {
         viewModelScope.launch {
             val (itemId, findId) = repo.addItemWithFind(type, nameJa, nameRomaji)
-            _logged.value = Logged(findId, nameRomaji?.ifBlank { null } ?: nameJa, System.currentTimeMillis())
+            emit(Logged(findId, nameRomaji?.ifBlank { null } ?: nameJa, System.currentTimeMillis()))
             onDone(itemId, findId)
         }
+    }
+
+    private var lastLogged: Logged? = null
+
+    private fun emit(l: Logged) {
+        lastLogged = l
+        _logged.value = l
+    }
+
+    /**
+     * Shows "Logged ... Undo" again once the camera closes: the bar timed out or was hidden behind the camera,
+     * and without it a cancelled photo left no sign that the find was kept (overnight review round 4).
+     */
+    fun reshowLogged(findId: String) {
+        val l = lastLogged?.takeIf { it.findId == findId } ?: return
+        emit(l.copy(shownAt = System.nanoTime()))
     }
 
     fun undo(findId: String) {

@@ -53,6 +53,7 @@
     <string name="item_distance">Distance</string>
     <string name="item_open_maps">Open in Maps</string>
     <string name="item_wave">Wave %1$s · %2$s</string>
+    <string name="item_wave_only">Wave %1$s</string>
     <string name="item_no_finds">Not collected yet</string>
     <string name="item_add_photo">Add a photo</string>
     <string name="item_remove_before_app">Remove \"had before the app\"</string>
@@ -134,6 +135,7 @@
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
     <string name="more_import_done">Catalogue loaded: %1$d new, %2$d updated, %3$d railway lines</string>
+    <string name="more_import_same">Catalogue already up to date: %1$d items, %2$d railway lines</string>
     <string name="more_import_none">No catalogue rows found in that file. Is it the catalogue CSV?</string>
     <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
     <string name="more_logs">Logs</string>

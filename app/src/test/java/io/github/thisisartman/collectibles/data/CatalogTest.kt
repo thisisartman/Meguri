@@ -4,6 +4,7 @@ import io.github.thisisartman.collectibles.ui.MainViewModel
 import io.github.thisisartman.collectibles.ui.Ranked
 import io.github.thisisartman.collectibles.ui.foldForSearch
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -132,4 +133,12 @@ class CatalogTest {
         assertEquals(foldForSearch("Jouetsu"), foldForSearch("JOETSU"))
         assertEquals(foldForSearch("Echigo-Yuzawa"), foldForSearch("echigo yuzawa"))
     }
+
+    @Test fun reloadingTheSameRowChangesNothing() {
+        val old = Item(id = "a", type = ItemType.EKI_STAMP, catalogKey = "EKI_STAMP:x", nameJa = "吉田駅", origin = Origin.CSV_IMPORT, createdAt = 1, updatedAt = 1000)
+        assertFalse(catalogRowChanges(old, old.copy(updatedAt = 5000)))
+        assertTrue(catalogRowChanges(old, old.copy(nameRomaji = "Yoshida Station", updatedAt = 5000)))
+        assertTrue(catalogRowChanges(null, old))
+    }
 }
+

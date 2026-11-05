@@ -193,8 +193,8 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
     ).joinToString(" · ")
     if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     if (item.series != null) {
-        val date = item.releaseDate.orEmpty().let { if (ja) it else it.replace('/', '-') }
-        Text(stringResource(R.string.item_wave, item.series, date), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        val date = item.releaseDate?.takeIf { it.isNotBlank() }?.let { if (ja) it else it.replace('/', '-') }
+        Text(if (date != null) stringResource(R.string.item_wave, item.series, date) else stringResource(R.string.item_wave_only, item.series), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     if (lineNames.isNotEmpty()) {
         Text(stringResource(R.string.item_on_lines, lineNames.joinToString(if (ja) "・" else ", ")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
