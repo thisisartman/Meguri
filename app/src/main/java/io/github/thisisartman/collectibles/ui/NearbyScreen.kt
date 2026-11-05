@@ -190,7 +190,7 @@ fun TypeChip(type: ItemType, extra: String? = null) {
         TypeDot(type)
         Spacer(Modifier.width(4.dp))
         Text(
-            stringResource(type.label()) + (extra?.let { " · $it" } ?: ""),
+            stringResource(type.label()) + (extra?.let { sep() + it } ?: ""),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,

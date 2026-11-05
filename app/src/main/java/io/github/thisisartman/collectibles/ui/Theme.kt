@@ -133,10 +133,24 @@ fun InkFilterChip(
     ),
 )
 
+/** Material's type scale with phrase-based line breaks: affects Japanese only, Latin text breaks as before. */
+private val PhraseTypography: androidx.compose.material3.Typography = androidx.compose.material3.Typography().let { t ->
+    fun androidx.compose.ui.text.TextStyle.phrase() = copy(
+        lineBreak = androidx.compose.ui.text.style.LineBreak.Paragraph.copy(wordBreak = androidx.compose.ui.text.style.LineBreak.WordBreak.Phrase),
+    )
+    t.copy(
+        displayLarge = t.displayLarge.phrase(), displayMedium = t.displayMedium.phrase(), displaySmall = t.displaySmall.phrase(),
+        headlineLarge = t.headlineLarge.phrase(), headlineMedium = t.headlineMedium.phrase(), headlineSmall = t.headlineSmall.phrase(),
+        titleLarge = t.titleLarge.phrase(), titleMedium = t.titleMedium.phrase(), titleSmall = t.titleSmall.phrase(),
+        bodyLarge = t.bodyLarge.phrase(), bodyMedium = t.bodyMedium.phrase(), bodySmall = t.bodySmall.phrase(),
+        labelLarge = t.labelLarge.phrase(), labelMedium = t.labelMedium.phrase(), labelSmall = t.labelSmall.phrase(),
+    )
+}
+
 @Composable
 fun CollectiblesTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
     CompositionLocalProvider(LocalTypeColors provides if (dark) DarkTypes else LightTypes) {
-        MaterialTheme(colorScheme = if (dark) Dark else Light, content = content)
+        MaterialTheme(colorScheme = if (dark) Dark else Light, typography = PhraseTypography, content = content)
     }
 }
