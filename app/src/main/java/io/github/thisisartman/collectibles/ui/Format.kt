@@ -50,6 +50,14 @@ fun formatDistance(meters: Double): Pair<Int, String> =
     else if (meters < 1000) R.string.m to (Math.round(meters / 10.0) * 10).toString()
     else R.string.km to if (meters < 10_000) String.format(Locale.US, "%.1f", meters / 1000) else Math.round(meters / 1000).toString()
 
+/** "21 finds, 119 items, 1 photo" in the app's language; photos left out when null. */
+fun countsText(res: android.content.res.Resources, finds: Int, items: Int, photos: Int? = null): String =
+    listOfNotNull(
+        res.getQuantityString(R.plurals.finds, finds, finds),
+        res.getQuantityString(R.plurals.items, items, items),
+        photos?.let { res.getQuantityString(R.plurals.photos, it, it) },
+    ).joinToString(res.getString(R.string.count_sep))
+
 fun formatDate(ms: Long, japanese: Boolean): String =
     SimpleDateFormat(if (japanese) "yyyy/MM/dd" else "yyyy-MM-dd", Locale.US).format(Date(ms))
 

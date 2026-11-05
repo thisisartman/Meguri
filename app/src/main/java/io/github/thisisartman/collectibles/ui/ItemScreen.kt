@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -93,8 +94,10 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 items(finds, key = { it.find.id }) { f ->
                     FindCard(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) })
                 }
-                item { SectionTitle(stringResource(R.string.item_where)) }
-                item { Facts(item) }
+                if (hasFacts(item)) {
+                    item { SectionTitle(stringResource(R.string.item_where)) }
+                    item { Facts(item) }
+                }
             } else {
                 // Still to get: how to get there first, then the facts
                 item {
@@ -105,8 +108,10 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                     }
                 }
                 item { Actions(item, meters) }
-                item { SectionTitle(stringResource(R.string.item_where)) }
-                item { Facts(item) }
+                if (hasFacts(item)) {
+                    item { SectionTitle(stringResource(R.string.item_where)) }
+                    item { Facts(item) }
+                }
                 item {
                     Text(
                         stringResource(R.string.item_no_finds),
@@ -118,7 +123,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             }
         }
         Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedButton(
+            InkOutlinedButton(
                 onClick = {
                     val latest = finds.firstOrNull { !it.find.beforeApp }?.find?.id
                     if (latest != null) photo.capture(latest) else vm.gotIt(r, name) { id -> photo.capture(id) }
@@ -126,9 +131,9 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 modifier = Modifier.weight(1f),
             ) { Text(stringResource(R.string.photo)) }
             if (r.collected) {
-                OutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it_again)) }
+                InkOutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it_again)) }
             } else {
-                Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it)) }
+                Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.got_it)) }
             }
         }
     }
@@ -143,7 +148,8 @@ private fun NameBlock(item: Item, ja: Boolean, lineNames: List<String>) {
 @Composable
 private fun Actions(item: Item, meters: Double?) {
     val context = LocalContext.current
-    val hasPlace = item.lat != null && item.lng != null
+    // Standing at the place (a goshuin added where it was logged, say), directions help nobody
+    val hasPlace = item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)
     val phone = item.placePhone?.takeIf { it.isNotBlank() }
     if (!hasPlace && phone == null) return
     // FlowRow: with large text, Call moves to its own line instead of being squeezed beside Directions
@@ -153,7 +159,7 @@ private fun Actions(item: Item, meters: Double?) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (hasPlace) {
-            FilledTonalButton(onClick = {
+            FilledTonalButton(modifier = Modifier.heightIn(min = 48.dp), onClick = {
                 val uri = Uri.parse("geo:${item.lat},${item.lng}?q=${item.lat},${item.lng}(${Uri.encode(item.placeName ?: item.nameJa)})")
                 runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
             }) {
@@ -163,7 +169,7 @@ private fun Actions(item: Item, meters: Double?) {
             }
         }
         if (phone != null) {
-            OutlinedButton(onClick = {
+            InkOutlinedButton(onClick = {
                 // Opens the dialer with the number filled in; no call permission needed
                 runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' }))) }
             }) {
@@ -194,6 +200,10 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
         Text(stringResource(R.string.item_on_lines, lineNames.joinToString(if (ja) "・" else ", ")), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
+
+/** Whether "Where to get it" has anything to show; a goshuin added by hand often has nothing yet. */
+private fun hasFacts(item: Item): Boolean =
+    listOfNotNull(item.hoursText, item.closedDays, item.placeName?.takeIf { it != item.nameJa }, item.address, item.notes).any { it.isNotBlank() }
 
 @Composable
 private fun Facts(item: Item) {

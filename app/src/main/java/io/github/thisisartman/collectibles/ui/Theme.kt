@@ -1,6 +1,14 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -54,6 +62,28 @@ private val LightTypes = TypeColors(Color(0xFF3A5BA8), Color(0xFFB83A1E), Color(
 private val DarkTypes = TypeColors(Color(0xFF6A87D2), Color(0xFFE2603F), Color(0xFF2EA88B), Color(0xFF2EA88B), Color(0xFF16161A), Color(0xFF6E6E76))
 
 val LocalTypeColors = staticCompositionLocalOf { LightTypes }
+
+/**
+ * The app's outlined button. Material's default draws the border in outlineVariant, the divider colour
+ * (about 1.2:1 on the page), and the label in grey, so real actions looked disabled (overnight review round 2).
+ * Here the border is outline (3:1 or more) and the label is ink, with a 48 dp minimum height.
+ */
+@Composable
+fun InkOutlinedButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    contentPadding: PaddingValues = ButtonDefaults.ContentPadding,
+    content: @Composable RowScope.() -> Unit,
+) = OutlinedButton(
+    onClick = onClick,
+    modifier = modifier.heightIn(min = 48.dp),
+    enabled = enabled,
+    border = BorderStroke(1.dp, if (enabled) MaterialTheme.colorScheme.outline else MaterialTheme.colorScheme.outlineVariant),
+    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+    contentPadding = contentPadding,
+    content = content,
+)
 
 @Composable
 fun CollectiblesTheme(content: @Composable () -> Unit) {

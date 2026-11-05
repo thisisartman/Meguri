@@ -49,6 +49,7 @@ import androidx.navigation.NavHostController
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.Origin
 
 @Composable
 fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () -> Unit) {
@@ -81,13 +82,16 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
             if (nearest.isEmpty()) {
                 // No catalogue yet is not the same as having everything
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    // Only things added by hand: still no catalogue, so not "you have everything"
+                    val noCatalogue = rows.none { it.item.origin != Origin.USER }
                     Text(
-                        stringResource(if (rows.isEmpty()) R.string.nearby_no_catalogue else R.string.nearby_all_done),
+                        stringResource(if (noCatalogue) R.string.nearby_no_catalogue else R.string.nearby_all_done),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (rows.isEmpty()) {
-                        TextButton(onClick = { nav.openMore() },contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_load_catalogue)) }
+                    if (noCatalogue) {
+                        Spacer(Modifier.height(8.dp))
+                        InkOutlinedButton(onClick = { nav.openMore() }) { Text(stringResource(R.string.nearby_load_catalogue)) }
                     }
                 }
             } else {
@@ -214,7 +218,7 @@ private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> 
             Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
             Spacer(Modifier.height(8.dp))
             Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
-            OutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
+            InkOutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
         }
     }
 }

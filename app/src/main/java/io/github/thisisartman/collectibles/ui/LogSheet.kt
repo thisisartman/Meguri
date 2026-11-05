@@ -71,7 +71,13 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                 placeholder = { Text(stringResource(R.string.log_search)) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            if (query.isBlank()) {
+            if (query.isBlank() && results.isEmpty()) {
+                Text(
+                    stringResource(R.string.log_nothing_yet),
+                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else if (query.isBlank()) {
                 Text(
                     stringResource(if (here.fix != null) R.string.log_near_you else R.string.log_recent),
                     Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -86,7 +92,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                             Text(stringResource(R.string.got_it))
                         }
                         Spacer(Modifier.width(6.dp))
-                        OutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
+                        InkOutlinedButton(onClick = { vm.gotIt(r.row, name) { id -> photo.capture(id) }; onDismiss() }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp)) {
                             Text(stringResource(R.string.photo))
                         }
                     }
@@ -115,7 +121,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                     Text(stringResource(R.string.log_not_in_list_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Spacer(Modifier.width(8.dp))
-                OutlinedButton(onClick = { newOpen = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.log_new)) }
+                InkOutlinedButton(onClick = { newOpen = true }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.log_new)) }
             }
         }
     }
@@ -147,11 +153,14 @@ fun NewItemDialog(initialName: String, onDismiss: () -> Unit, onSave: (ItemType,
                 Text(stringResource(R.string.new_type), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MANHOLE_CARD).forEach { t ->
-                        FilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label()), maxLines = 1) })
+                        FilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label()), maxLines = 1) }, leadingIcon = { TypeDot(t) }, modifier = Modifier.heightIn(min = 48.dp))
                     }
                 }
                 OutlinedTextField(value = nameJa, onValueChange = { nameJa = it }, label = { Text(stringResource(R.string.new_name_ja)) }, singleLine = true)
                 OutlinedTextField(value = romaji, onValueChange = { romaji = it }, label = { Text(stringResource(R.string.new_name_romaji)) }, singleLine = true)
+                if (nameJa.isBlank() && romaji.isBlank()) {
+                    Text(stringResource(R.string.new_needs_name), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         },
         confirmButton = {

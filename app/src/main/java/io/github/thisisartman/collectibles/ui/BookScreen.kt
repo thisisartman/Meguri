@@ -81,7 +81,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false)
             Spacer(Modifier.width(8.dp))
             val action = if (marking) R.string.cancel else R.string.book_mark_owned
-            TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false)) {
+            // Only catalogue items still to get can be marked; things added by hand already have their find
+            if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false)) {
                 Text(stringResource(action), textAlign = TextAlign.End)
             }
         }
