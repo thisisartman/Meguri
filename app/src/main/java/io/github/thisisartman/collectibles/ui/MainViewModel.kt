@@ -107,6 +107,16 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** The Photo action on an alert: log the find, then open the camera for it. */
+    fun logFromAlert(itemId: String, japanese: Boolean, onLogged: (String) -> Unit) {
+        viewModelScope.launch {
+            val row = repo.itemRowOnce(itemId) ?: return@launch
+            val id = repo.logFind(itemId, Via.NOTIFICATION)
+            _logged.value = Logged(id, if (japanese) row.item.nameJa else row.item.nameRomaji ?: row.item.nameJa, System.currentTimeMillis())
+            onLogged(id)
+        }
+    }
+
     fun addNew(type: ItemType, nameJa: String, nameRomaji: String?, onDone: (itemId: String, findId: String) -> Unit = { _, _ -> }) {
         viewModelScope.launch {
             val (itemId, findId) = repo.addItemWithFind(type, nameJa, nameRomaji)

@@ -187,6 +187,9 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         }
         HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
 
+        AlertsSection()
+        SectionTitle(stringResource(R.string.more_backup_section))
+
         MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
             val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
             saveBackup.launch("collectibles-backup-$stamp.zip")

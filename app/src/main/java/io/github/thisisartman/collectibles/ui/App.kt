@@ -69,7 +69,7 @@ fun NavHostController.openMore() = openTab(MORE)
 fun NavHostController.openBook() = openTab(BOOK)
 
 @Composable
-fun App() {
+fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val vm: MainViewModel = hiltViewModel()
     val nav = rememberNavController()
     val context = LocalContext.current
@@ -105,6 +105,23 @@ fun App() {
     LifecycleResumeEffect(Unit) {
         vm.refreshPosition()
         onPauseOrDispose { }
+    }
+
+    val alertsVm: AlertsViewModel = hiltViewModel()
+    val japanese = isJapanese()
+    val tripPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (!startTrip(context, alertsVm)) nav.openMore()
+    }
+    LaunchedEffect(request) {
+        when (val r = request ?: return@LaunchedEffect) {
+            is AppRequest.OpenItem -> { AlertNotifierCancel.cancel(context, r.itemId); nav.openItem(r.itemId) }
+            is AppRequest.Photo -> {
+                AlertNotifierCancel.cancel(context, r.itemId)
+                vm.logFromAlert(r.itemId, japanese) { id -> photo.capture(id) }
+            }
+            AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
+        }
+        onRequestHandled()
     }
 
     val logged by vm.logged.collectAsStateWithLifecycle()

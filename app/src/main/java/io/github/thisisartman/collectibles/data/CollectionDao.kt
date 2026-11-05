@@ -29,8 +29,21 @@ interface CollectionDao {
     @Query("$ITEM_ROW WHERE i.id = :id")
     fun observeItemRow(id: String): Flow<ItemRow?>
 
+    @Query("$ITEM_ROW WHERE i.id = :id")
+    suspend fun itemRowOnce(id: String): ItemRow?
+
     @Query("SELECT * FROM item WHERE id = :id")
     suspend fun item(id: String): Item?
+
+    /** Alert candidates: a place, not an Ekitag, and no find yet. */
+    @Query(
+        """
+        SELECT * FROM item i
+        WHERE i.lat IS NOT NULL AND i.lng IS NOT NULL AND i.type != 'EKITAG'
+          AND NOT EXISTS (SELECT 1 FROM acquisition a WHERE a.item_id = i.id)
+        """,
+    )
+    suspend fun uncollectedPlaces(): List<Item>
 
     @Query("SELECT * FROM item WHERE catalog_key = :key")
     suspend fun itemByCatalogKey(key: String): Item?

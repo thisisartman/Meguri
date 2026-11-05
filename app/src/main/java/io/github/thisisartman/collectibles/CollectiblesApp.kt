@@ -18,6 +18,8 @@ class CollectiblesApp : Application() {
     @Inject lateinit var log: FileLog
     @Inject lateinit var restore: BackupRestore
     @Inject lateinit var autoBackup: AutoBackup
+    @Inject lateinit var notifier: io.github.thisisartman.collectibles.alerts.AlertNotifier
+    @Inject lateinit var geofences: io.github.thisisartman.collectibles.alerts.Geofences
 
     override fun onCreate() {
         super.onCreate()
@@ -29,6 +31,8 @@ class CollectiblesApp : Application() {
                 "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})",
         )
         autoBackup.catchUpIfOverdue()
+        notifier.createChannels()
+        geofences.refreshInBackground()
         CoroutineScope(Dispatchers.IO).launch {
             runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
         }

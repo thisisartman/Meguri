@@ -99,6 +99,7 @@
     <string name="more_language">言語</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
+    <string name="more_backup_section">データ</string>
     <string name="more_backup">今すぐバックアップ</string>
     <string name="more_backup_sub">すべての記録を選んだファイルに保存します。写真はギャラリーに残ります。</string>
     <string name="more_backup_done">バックアップ完了: 記録%1$d件、項目%2$d件</string>
@@ -136,4 +137,45 @@
     <string name="more_logs">ログ</string>
     <string name="more_about">このアプリについて</string>
     <string name="more_about_sub">バージョン%1$s・オフラインで動作・データはこの端末にのみ保存・地図データ © OpenStreetMap contributors</string>
+
+    <!-- Alerts (M4) -->
+    <string name="alerts_title">通知</string>
+    <string name="trip_title">トリップモード</string>
+    <string name="trip_sub_off">深夜0時まで数分ごとに現在地を確認し、未取得のものが近くにあると知らせます。電車や散歩のときに。</string>
+    <string name="trip_sub_on">%1$sまでオン。ここか通知からオフにできます。</string>
+    <string name="trip_needs_location">トリップモードには位置情報の許可が必要です。</string>
+    <string name="bg_title">アプリを閉じていても通知</string>
+    <string name="bg_sub_off">Googleの位置情報サービスを使うため、電池の消費は少なめです。位置情報を「常に許可」にする必要があります。</string>
+    <string name="bg_sub_on">オン</string>
+    <string name="bg_sub_accuracy">動作していません: Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
+    <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
+    <string name="bg_sub_needs">位置情報の「常に許可」が必要です。タップして許可してください。</string>
+    <string name="bg_sub_no_play">この端末では使えません(Google Play開発者サービスがありません)。トリップモードを使ってください。</string>
+    <string name="bg_dialog_title">位置情報を常に許可しますか?</string>
+    <string name="bg_dialog_text">別の画面で設定します。「常に許可」を選ぶと、アプリを閉じていても通知が届きます。位置情報が外部に送られることはありません。</string>
+    <string name="bg_dialog_go">続ける</string>
+    <string name="alert_distance">通知する距離</string>
+    <string name="alert_for">通知する種類</string>
+    <string name="quiet_title">夜は通知しない</string>
+    <string name="quiet_sub">22:00〜7:00は通知しません</string>
+    <string name="setup_title">通知が止まらないようにする</string>
+    <string name="setup_sub">Meguriの電池の使用を「制限なし」にしてください。</string>
+    <string name="setup_sub_samsung">Meguriの電池の使用を「制限なし」にし、「スリープ中のアプリ」に入れないでください。</string>
+    <string name="notif_off">Meguriの通知がオフです。タップしてオンにしてください。</string>
+    <string name="alerts_channel">未取得のものが近く</string>
+    <string name="alerts_channel_sub">まだ持っていないものの近くに来たとき</string>
+    <string name="trip_channel">トリップモード</string>
+    <string name="trip_channel_sub">トリップモードがオンの間に表示</string>
+    <string name="alert_text">%1$s・あと%2$s</string>
+    <string name="alert_text_here">%1$s・ここです</string>
+    <string name="alert_done">取得</string>
+    <string name="alert_dismiss">閉じる</string>
+    <string name="alert_logged">%1$sを記録しました</string>
+    <string name="trip_on_until">トリップモード %1$sまで</string>
+    <string name="trip_checking">近くの未取得を確認中</string>
+    <string name="trip_nearest">最寄り: %1$s・%2$s</string>
+    <string name="trip_stop">停止</string>
+    <string name="trip_quiet">%1$s・%2$sまで通知なし</string>
+    <string name="tile_on">オン</string>
+    <string name="tile_off">オフ</string>
 </resources>

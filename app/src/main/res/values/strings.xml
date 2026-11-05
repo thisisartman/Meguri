@@ -99,6 +99,7 @@
     <string name="more_language">Language</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
+    <string name="more_backup_section">Your data</string>
     <string name="more_backup">Back up now</string>
     <string name="more_backup_sub">Saves all finds to a file you choose. Photos stay in the gallery.</string>
     <string name="more_backup_done">Backup saved: %1$d finds, %2$d items</string>
@@ -136,4 +137,45 @@
     <string name="more_logs">Logs</string>
     <string name="more_about">About</string>
     <string name="more_about_sub">Version %1$s · works offline · your data stays on this phone · Map data © OpenStreetMap contributors</string>
+
+    <!-- Alerts (M4) -->
+    <string name="alerts_title">Alerts</string>
+    <string name="trip_title">Trip mode</string>
+    <string name="trip_sub_off">Checks where you are every few minutes until midnight and tells you when something to get is close. For trains and walks.</string>
+    <string name="trip_sub_on">On until %1$s. Turn it off here or from its notification.</string>
+    <string name="trip_needs_location">Trip mode needs location access.</string>
+    <string name="bg_title">Alerts when the app is closed</string>
+    <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
+    <string name="bg_sub_on">On</string>
+    <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
+    <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
+    <string name="bg_sub_needs">Needs location set to \"Allow all the time\". Tap to allow it.</string>
+    <string name="bg_sub_no_play">Not available on this phone (no Google Play services). Use Trip mode.</string>
+    <string name="bg_dialog_title">Allow location all the time?</string>
+    <string name="bg_dialog_text">Android asks on a separate page. Choose \"Allow all the time\" so alerts can come while the app is closed. Meguri never sends your location anywhere.</string>
+    <string name="bg_dialog_go">Continue</string>
+    <string name="alert_distance">Alert distance</string>
+    <string name="alert_for">Alert for</string>
+    <string name="quiet_title">Quiet at night</string>
+    <string name="quiet_sub">No alerts from 22:00 to 07:00</string>
+    <string name="setup_title">Keep alerts working</string>
+    <string name="setup_sub">Set battery use for Meguri to Unrestricted, so the phone does not stop alerts.</string>
+    <string name="setup_sub_samsung">Set battery use for Meguri to Unrestricted and keep it out of Sleeping apps, so the phone does not stop alerts.</string>
+    <string name="notif_off">Notifications are off for Meguri. Alerts need them: tap to turn them on.</string>
+    <string name="alerts_channel">Near something to get</string>
+    <string name="alerts_channel_sub">When you are close to something you still need</string>
+    <string name="trip_channel">Trip mode</string>
+    <string name="trip_channel_sub">Shown while Trip mode is on</string>
+    <string name="alert_text">%1$s · %2$s away</string>
+    <string name="alert_text_here">%1$s · you are here</string>
+    <string name="alert_done">Got it</string>
+    <string name="alert_dismiss">Dismiss</string>
+    <string name="alert_logged">Logged %1$s</string>
+    <string name="trip_on_until">Trip mode on until %1$s</string>
+    <string name="trip_checking">Looking for things to get nearby</string>
+    <string name="trip_nearest">Nearest: %1$s · %2$s</string>
+    <string name="trip_stop">Stop</string>
+    <string name="trip_quiet">%1$s · quiet until %2$s</string>
+    <string name="tile_on">On</string>
+    <string name="tile_off">Off</string>
 </resources>
