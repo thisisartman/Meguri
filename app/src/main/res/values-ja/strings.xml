@@ -71,7 +71,7 @@
     <string name="item_remove_confirm">外す</string>
     <string name="nearby_around_here">近く・%1$d km以内</string>
     <string name="nearby_next">次: %1$s・%2$s</string>
-    <string name="nearby_elsewhere">その他の地域: %1$s</string>
+    <string name="nearby_elsewhere">その他の地域</string>
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>

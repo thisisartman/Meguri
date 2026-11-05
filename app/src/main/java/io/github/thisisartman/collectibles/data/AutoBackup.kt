@@ -13,6 +13,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import dagger.hilt.EntryPoint
+import io.github.thisisartman.collectibles.BuildConfig
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -127,8 +128,11 @@ class AutoBackup @Inject constructor(
 
     companion object {
         const val KEEP = 4
-        const val PREFIX = "collectibles-auto-"
-        val OWN_FILE = Regex("^collectibles-auto-\\d{8}-\\d{6}( \\(\\d+\\))?(\\.zip)?$")
+        /** The dev build has its own names, so pruning in a shared folder never touches the real app's backups (#42). */
+        fun prefixFor(dev: Boolean) = if (dev) "collectibles-dev-auto-" else "collectibles-auto-"
+        fun ownFile(prefix: String) = Regex("^" + Regex.escape(prefix) + "\\d{8}-\\d{6}( \\(\\d+\\))?(\\.zip)?$")
+        val PREFIX = prefixFor(BuildConfig.DEBUG)
+        val OWN_FILE = ownFile(PREFIX)
         private const val WORK_WEEKLY = "auto-backup-weekly"
         private const val WORK_NOW = "auto-backup-now"
         private const val KEY_FOLDER = "auto_folder"

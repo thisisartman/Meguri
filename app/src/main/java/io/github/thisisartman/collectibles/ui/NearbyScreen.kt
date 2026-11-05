@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -133,17 +134,29 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
             SummaryCard(s, title, next = a.next, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() })
         }
         if (around.elsewhere.isNotEmpty()) {
-            item {
-                val list = around.elsewhere.map { s ->
-                    summaryTitle(s, lineName(lines, s.lineId, ja)) + " " +
-                        (if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString())
-                }.joinToString(" · ")
-                Text(
-                    stringResource(R.string.nearby_elsewhere, list),
-                    Modifier.fillMaxWidth().clickable { nav.openBook() }.padding(horizontal = 16.dp, vertical = 12.dp),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+            item { SectionTitle(stringResource(R.string.nearby_elsewhere)) }
+            items(around.elsewhere, key = { "elsewhere-" + it.key }) { s ->
+                Row(
+                    Modifier.fillMaxWidth()
+                        .clickable { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() }
+                        .heightIn(min = 48.dp)
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    TypeDot(s.type)
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        summaryTitle(s, lineName(lines, s.lineId, ja)),
+                        Modifier.weight(1f),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             }
         }
     }
