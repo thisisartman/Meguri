@@ -218,7 +218,7 @@ private fun Facts(item: Item) {
         Fact(stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
         // A station's place is the station itself: repeating its Japanese name adds nothing (and breaks English mode)
         Fact(stringResource(placeLabel), listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.address).joinToString("\n"))
-        item.notes?.let { Fact("", it) }
+        item.notes?.let { Fact("", localNote(it, isJapanese())) }
     }
 }
 

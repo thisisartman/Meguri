@@ -69,6 +69,20 @@ fun androidx.compose.ui.Modifier.spoken(text: String): androidx.compose.ui.Modif
 fun androidx.compose.ui.Modifier.collectedState(text: String): androidx.compose.ui.Modifier =
     this.then(androidx.compose.ui.Modifier.semantics { stateDescription = text })
 
+/**
+ * The catalogue's station notes are one of two fixed English sentences (the generator wrote them, and an older
+ * backup carries the earlier one). Japanese mode shows them in Japanese; any other note is shown as written.
+ * A proper fix is a Japanese notes column in the catalogue (open item, schema v2).
+ */
+private val STATION_NOTES_JA = mapOf(
+    "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors." to
+        "この駅の紙のスタンプは未確認です。地図データ © OpenStreetMap contributors",
+    "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked." to
+        "駅の位置はOpenStreetMap（ODbL）によるものです。紙のスタンプがあるかは未確認です。",
+)
+
+fun localNote(note: String, japanese: Boolean): String = if (japanese) STATION_NOTES_JA[note.trim()] ?: note else note
+
 /** The separator between parts of a line: " · " in English, "・" in Japanese. */
 @androidx.compose.runtime.Composable
 fun sep(): String = androidx.compose.ui.res.stringResource(R.string.sep)
