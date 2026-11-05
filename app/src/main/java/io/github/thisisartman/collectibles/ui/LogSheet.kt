@@ -95,7 +95,7 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                             Mark(r.row, 30.dp)
                             Spacer(Modifier.width(10.dp))
                             Column(Modifier.weight(1f)) {
-                                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = if (largeText) 2 else 1, overflow = TextOverflow.Ellipsis)
+                                Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 // Distance first: it is the part that must survive when the line is cut
                                 TypeChip(r.row.item.type, listOfNotNull(distanceText(r.meters), r.row.item.code).joinToString(" · ").ifEmpty { null })
                             }

@@ -130,7 +130,7 @@
     <string name="more_auto_off">オフにする</string>
     <string name="more_import">カタログを読み込む（CSV）</string>
     <string name="more_import_sub">項目と路線を追加・更新します。記録は削除されません。</string>
-    <string name="more_import_done">カタログ: 追加%1$d件、更新%2$d件、路線%3$d件</string>
+    <string name="more_import_done">カタログを読み込みました: 新規%1$d件、更新%2$d件、路線%3$d本</string>
     <string name="more_import_none">このファイルにカタログの行がありません。カタログのCSVですか？</string>
     <string name="more_import_failed">カタログを読み込めませんでした: %1$s</string>
     <string name="more_logs">ログ</string>

@@ -140,7 +140,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                     Modifier.fillMaxWidth()
                         .clickable { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() }
                         .heightIn(min = 48.dp)
-                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                        .padding(horizontal = 24.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     TypeDot(s.type)
