@@ -39,7 +39,7 @@
     <string name="got_it_again">もう一度集めた</string>
     <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
-    <string name="logged">%1$sを記録・%2$s</string>
+    <string name="logged">%1$sを集めた・%2$s</string>
     <string name="had_before_app">アプリ以前から所持</string>
     <string name="last">最新：%1$s</string>
     <string name="count">%1$d / %2$d</string>
@@ -197,7 +197,7 @@
     <string name="alert_text_here">%1$s・ここです</string>
     <string name="alert_done">集めた</string>
     <string name="alert_dismiss">閉じる</string>
-    <string name="alert_logged">%1$sを記録しました</string>
+    <string name="alert_logged">%1$sを集めました</string>
     <string name="trip_on_until">トリップモード %1$sまで</string>
     <string name="trip_checking">近くの未取得を確認中</string>
     <string name="trip_nearest">最寄り：%1$s・%2$s</string>

@@ -39,7 +39,7 @@
     <string name="got_it_again">Collected again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
-    <string name="logged">Logged %1$s · %2$s</string>
+    <string name="logged">Collected %1$s · %2$s</string>
     <string name="had_before_app">had before the app</string>
     <string name="last">Last: %1$s</string>
     <string name="count">%1$d / %2$d</string>
@@ -197,7 +197,7 @@
     <string name="alert_text_here">%1$s · you are here</string>
     <string name="alert_done">Collected</string>
     <string name="alert_dismiss">Dismiss</string>
-    <string name="alert_logged">Logged %1$s</string>
+    <string name="alert_logged">Collected %1$s</string>
     <string name="trip_on_until">Trip mode on until %1$s</string>
     <string name="trip_checking">Looking for things to get nearby</string>
     <string name="trip_nearest">Nearest: %1$s · %2$s</string>
