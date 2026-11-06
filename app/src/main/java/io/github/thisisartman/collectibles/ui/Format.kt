@@ -46,7 +46,8 @@ fun Item.sealLabel(japanese: Boolean): String {
 }
 
 fun formatDistance(meters: Double): Pair<Int, String> =
-    if (meters < 1000) R.string.m to (Math.round(meters / 10.0) * 10).toString()
+    if (meters < HERE_M) R.string.here to ""
+    else if (meters < 1000) R.string.m to (Math.round(meters / 10.0) * 10).toString()
     else R.string.km to if (meters < 10_000) String.format(Locale.US, "%.1f", meters / 1000) else Math.round(meters / 1000).toString()
 
 fun formatDate(ms: Long, japanese: Boolean): String =
@@ -56,6 +57,9 @@ fun formatDateTime(ms: Long, japanese: Boolean): String =
     SimpleDateFormat(if (japanese) "yyyy/MM/dd HH:mm" else "yyyy-MM-dd HH:mm", Locale.US).format(Date(ms))
 
 fun formatTime(ms: Long): String = SimpleDateFormat("HH:mm", Locale.US).format(Date(ms))
+
+/** Closer than this, a distance reads "here": GPS is not more exact than that. */
+const val HERE_M = 25.0
 
 /** Search: case-insensitive, macrons and long-vowel spellings folded (Jōetsu = Joetsu = Jouetsu). */
 fun foldForSearch(s: String): String = s.lowercase(Locale.ROOT)

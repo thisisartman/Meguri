@@ -18,18 +18,18 @@ val signingProps: Properties? = providers.gradleProperty("COLLECTIBLES_SIGNING")
     ?.takeIf { it.isFile }
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
-val appVersionName = "0.0.1"
+val appVersionName = "0.2.0"
 
 android {
     namespace = "io.github.thisisartman.collectibles"
     compileSdk = 37
 
     defaultConfig {
-        // Placeholder until the app name is chosen (issue #14). Must be final before the first real build.
+        // Permanent since real data went in (issue #14). Changing it would make a new app and strand the data.
         applicationId = "io.github.thisisartman.collectibles"
         minSdk = 29
         targetSdk = 37
-        versionCode = 1
+        versionCode = 2
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "Meguri"

@@ -30,6 +30,7 @@
     <string name="last">最近: %1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
+    <string name="here">ここ</string>
     <string name="m">%1$s m</string>
 
     <string name="book_title">コレクション</string>
@@ -71,7 +72,7 @@
     <string name="item_remove_confirm">外す</string>
     <string name="nearby_around_here">近く・%1$d km以内</string>
     <string name="nearby_next">次: %1$s・%2$s</string>
-    <string name="nearby_elsewhere">その他の地域: %1$s</string>
+    <string name="nearby_elsewhere">その他の地域</string>
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>
@@ -129,7 +130,7 @@
     <string name="more_auto_off">オフにする</string>
     <string name="more_import">カタログを読み込む（CSV）</string>
     <string name="more_import_sub">項目と路線を追加・更新します。記録は削除されません。</string>
-    <string name="more_import_done">カタログ: 追加%1$d件、更新%2$d件、路線%3$d件</string>
+    <string name="more_import_done">カタログを読み込みました: 新規%1$d件、更新%2$d件、路線%3$d本</string>
     <string name="more_import_none">このファイルにカタログの行がありません。カタログのCSVですか？</string>
     <string name="more_import_failed">カタログを読み込めませんでした: %1$s</string>
     <string name="more_logs">ログ</string>

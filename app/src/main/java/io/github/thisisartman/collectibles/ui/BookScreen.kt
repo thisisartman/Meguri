@@ -1,6 +1,10 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -85,7 +89,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Manhole cards by prefecture
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->
-                item(key = "h:m:$pref") {
+                stickyHeader(key = "h:m:$pref") {
                     GroupHeader(ItemType.MANHOLE_CARD, stringResource(R.string.type_manhole_plural) + " · " + pref.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, ja) }, "${list.count { it.collected }} / ${list.size}")
                 }
                 items(list, key = { it.item.id }) { r ->
@@ -97,7 +101,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Eki stamps: one row per line (opens the stamp book), then other stations
             val ekiSummaries = summaries.filter { it.type == ItemType.EKI_STAMP }
             if (ekiSummaries.isNotEmpty()) {
-                item(key = "h:e") { GroupHeader(ItemType.EKI_STAMP, stringResource(R.string.type_eki_plural), null) }
+                stickyHeader(key = "h:e") { GroupHeader(ItemType.EKI_STAMP, stringResource(R.string.type_eki_plural), null) }
                 items(ekiSummaries, key = { "e:" + it.key }) { s ->
                     val name = lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
                     // The group header already says "Eki stamps"; the card names only the line
@@ -107,7 +111,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Goshuin
             val goshuin = rows.filter { it.item.type == ItemType.GOSHUIN }
             if (goshuin.isNotEmpty()) {
-                item(key = "h:g") { GroupHeader(ItemType.GOSHUIN, stringResource(R.string.type_goshuin), goshuin.count { it.collected }.toString()) }
+                stickyHeader(key = "h:g") { GroupHeader(ItemType.GOSHUIN, stringResource(R.string.type_goshuin), goshuin.count { it.collected }.toString()) }
                 items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
@@ -138,7 +142,11 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
 
 @Composable
 fun GroupHeader(type: ItemType, title: String, count: String?) {
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    // Pinned while its rows scroll, so it needs the page colour behind it
+    Row(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.background).padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         TypeDot(type)
         Spacer(Modifier.width(6.dp))
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
@@ -152,11 +160,17 @@ fun ItemListRow(
     onToggle: () -> Unit, onOpen: () -> Unit,
 ) {
     val canMark = marking && !r.collected
+    val rowAction = if (canMark) {
+        Modifier.toggleable(value = checked, role = Role.Checkbox, onValueChange = { onToggle() })
+    } else {
+        Modifier.clickable(onClick = onOpen)
+    }
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = if (canMark) onToggle else onOpen).padding(horizontal = 16.dp, vertical = 8.dp),
+        Modifier.fillMaxWidth().then(rowAction).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (marking) Checkbox(checked = checked || r.collected, onCheckedChange = if (canMark) { _ -> onToggle() } else null, enabled = canMark)
+        // The row handles the tap; the box only shows the state
+        if (marking) Checkbox(checked = checked || r.collected, onCheckedChange = null, enabled = canMark, modifier = Modifier.padding(end = 12.dp))
         Mark(r, 36.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {

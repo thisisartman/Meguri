@@ -31,6 +31,7 @@
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
     <string name="m">%1$s m</string>
+    <string name="here">here</string>
 
     <string name="book_title">My book</string>
     <string name="book_other_stations">Other stations</string>
@@ -71,7 +72,7 @@
     <string name="item_remove_confirm">Remove</string>
     <string name="nearby_around_here">Around here · within %1$d km</string>
     <string name="nearby_next">Next: %1$s · %2$s</string>
-    <string name="nearby_elsewhere">Elsewhere: %1$s</string>
+    <string name="nearby_elsewhere">Elsewhere</string>
     <string name="item_directions">Directions · %1$s</string>
     <string name="item_directions_plain">Directions</string>
     <string name="item_call">Call</string>
@@ -129,7 +130,7 @@
     <string name="more_auto_off">Turn off</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
-    <string name="more_import_done">Catalogue: %1$d added, %2$d updated · railway lines: %3$d</string>
+    <string name="more_import_done">Catalogue loaded: %1$d new, %2$d updated, %3$d railway lines</string>
     <string name="more_import_none">No catalogue rows found in that file. Is it the catalogue CSV?</string>
     <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
     <string name="more_logs">Logs</string>
