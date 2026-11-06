@@ -224,7 +224,15 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         ) { padding ->
             // Landscape and wide screens: content keeps a readable width, centred (overnight review round 10)
             androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
-                NavHost(nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
+                // No crossfade between pages: the map draws on its own surface and stayed on screen for the fade
+                // before the next page's background appeared (owner, 2026-11-07)
+                NavHost(
+                    nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize(),
+                    enterTransition = { androidx.compose.animation.EnterTransition.None },
+                    exitTransition = { androidx.compose.animation.ExitTransition.None },
+                    popEnterTransition = { androidx.compose.animation.EnterTransition.None },
+                    popExitTransition = { androidx.compose.animation.ExitTransition.None },
+                ) {
                     composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
                     composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() }) }

@@ -6,8 +6,8 @@
     <string name="nav_more">More</string>
 
     <string name="nearby_title">Nearby</string>
-    <string name="nearby_still_to_get">Still to get, nearest first</string>
-    <string name="nearby_still_to_get_no_fix">Still to get</string>
+    <string name="nearby_still_to_get">Uncollected, nearest first</string>
+    <string name="nearby_still_to_get_no_fix">Uncollected</string>
     <string name="nearby_all_far">Nothing to get within %1$d km; the nearest is %2$s away.</string>
     <string name="nearby_approximate">approximate</string>
     <string name="nearby_my_book">My book</string>
@@ -30,17 +30,17 @@
     <string name="type_eki_plural">Station stamps</string>
     <string name="type_ekitag">Ekitag</string>
 
-    <string name="got_it">Collected</string>
-    <string name="a11y_got_it">Collected: %1$s</string>
+    <string name="got_it">Collect</string>
+    <string name="a11y_got_it">Collect %1$s</string>
     <string name="a11y_photo">Photo of %1$s</string>
-    <string name="a11y_remove_find">Remove the find from %1$s</string>
+    <string name="a11y_remove_find">Remove the collection from %1$s</string>
     <string name="state_collected">Collected</string>
-    <string name="state_to_get">Still to get</string>
-    <string name="got_it_again">Collected again</string>
+    <string name="state_to_get">Uncollected</string>
+    <string name="got_it_again">Collect again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
     <string name="logged">Collected %1$s · %2$s</string>
-    <string name="had_before_app">had before the app</string>
+    <string name="had_before_app">Collected</string>
     <string name="last">Last: %1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
@@ -53,12 +53,12 @@
     <string name="complete">Complete</string>
     <string name="book_other_stations">Other stations</string>
     <string name="book_no_prefecture">No prefecture</string>
-    <string name="book_mark_owned">Mark ones I already have</string>
-    <string name="book_mark_done">Mark %1$d as had before the app</string>
+    <string name="book_mark_owned">Mark as collected</string>
+    <string name="book_mark_done">Mark %1$d as collected</string>
     <string name="book_marked">Marked %1$d</string>
     <string name="cancel">Cancel</string>
 
-    <string name="item_your_record">Your record</string>
+    <string name="item_your_record">Collected</string>
     <string name="item_where">Where to get it</string>
     <string name="item_handed_out_at">Handed out at</string>
     <string name="item_hours">Hours</string>
@@ -71,9 +71,9 @@
     <string name="item_open_maps">Open in Maps</string>
     <string name="item_wave">Wave %1$s · %2$s</string>
     <string name="item_wave_only">Wave %1$s</string>
-    <string name="item_no_finds">Not collected yet</string>
+    <string name="item_no_finds">Uncollected</string>
     <string name="item_add_photo">Add a photo</string>
-    <string name="item_remove_before_app">Remove \"had before the app\"</string>
+    <string name="item_remove_before_app">Mark as uncollected</string>
     <string name="item_found_at">%1$s · %2$s</string>
     <string name="item_no_position">no position</string>
     <string name="back">Back</string>
@@ -81,13 +81,13 @@
     <string name="nearby_no_catalogue">No catalogue loaded yet. A catalogue lists what there is to collect and where, so Meguri can show what is near you. Without one you can still log anything with +.</string>
     <string name="nearby_load_catalogue">Load a catalogue</string>
     <string name="nearby_all_done">You have everything in your catalogue.</string>
-    <string name="book_mark_choose">Choose the ones you already have</string>
+    <string name="book_mark_choose">Choose the ones you have</string>
     <string name="item_finding_position">finding position…</string>
-    <string name="item_position_saved">place saved</string>
+    <string name="item_position_saved">location saved</string>
     <string name="item_find_map">Map</string>
-    <string name="item_remove_confirm_title">Remove from your collection?</string>
-    <string name="item_remove_confirm_text">%1$s will count as not collected again.</string>
-    <string name="item_remove_confirm">Remove</string>
+    <string name="item_remove_confirm_title">Mark as uncollected?</string>
+    <string name="item_remove_confirm_text">%1$s will count as uncollected again.</string>
+    <string name="item_remove_confirm">Mark as uncollected</string>
     <string name="nearby_around_here">Around here · within %1$d km</string>
     <string name="nearby_next">Next: %1$s · %2$s</string>
     <string name="nearby_elsewhere">Elsewhere</string>
@@ -95,10 +95,10 @@
     <string name="item_directions_plain">Directions</string>
     <string name="item_call">Call</string>
     <string name="item_on_lines">On %1$s</string>
-    <string name="item_remove_find">Remove this find</string>
-    <string name="item_remove_find_title">Remove this find?</string>
-    <string name="item_remove_find_text">The find from %1$s is removed. Photos stay in the gallery.</string>
-    <string name="line_nearest">Nearest still to get: %2$s · %1$s</string>
+    <string name="item_remove_find">Remove</string>
+    <string name="item_remove_find_title">Remove this collection?</string>
+    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Photos stay in the gallery.</string>
+    <string name="line_nearest">Nearest uncollected: %2$s · %1$s</string>
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
@@ -173,7 +173,7 @@
     <string name="trip_needs_location">Trip mode needs location access.</string>
     <string name="bg_title">Alerts when the app is closed</string>
     <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
-    <string name="bg_sub_on">Tells you when you are near something still to get, even with Meguri closed.</string>
+    <string name="bg_sub_on">Tells you when you are near something uncollected, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
     <string name="bg_sub_needs">Needs location set to \"Allow all the time\". Tap to allow it.</string>
@@ -195,7 +195,7 @@
     <string name="trip_channel_sub">Shown while Trip mode is on</string>
     <string name="alert_text">%1$s · %2$s away</string>
     <string name="alert_text_here">%1$s · you are here</string>
-    <string name="alert_done">Collected</string>
+    <string name="alert_done">Collect</string>
     <string name="alert_dismiss">Dismiss</string>
     <string name="alert_logged">Collected %1$s</string>
     <string name="trip_on_until">Trip mode on until %1$s</string>
@@ -209,7 +209,7 @@
     <string name="map_title_stamps">Stamps on the map</string>
     <string name="map_title_cards">Cards on the map</string>
     <string name="map_collected">Collected</string>
-    <string name="map_not_collected">Still to get</string>
+    <string name="map_not_collected">Uncollected</string>
     <string name="map_details">Details</string>
     <string name="map_expand">Expand</string>
     <string name="nearby_tab_stamps">Stamps</string>
@@ -223,7 +223,7 @@
 
     <!-- Welcome before a catalogue (#58, Legion) -->
     <string name="welcome_title">Welcome to Meguri</string>
-    <string name="welcome_what">Your own record of manhole cards, station stamps and goshuin: what you have, and what is still to get near you. It works offline.</string>
+    <string name="welcome_what">Your own record of manhole cards, station stamps and goshuin: what you have, and what is uncollected near you. It works offline.</string>
     <string name="welcome_catalogue">A catalogue lists what there is to collect and where. Start with the Niigata one, which comes with the app, or load your own CSV file.</string>
     <string name="welcome_load_bundled">Load the Niigata catalogue</string>
     <string name="welcome_load_file">Load a CSV file</string>
@@ -236,8 +236,8 @@
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">Stamp</string>
     <string name="photo_kind_proof">Proof (Ekitag or card)</string>
-    <string name="photo_kind_other">Other</string>
-    <string name="photo_add_title">Add a photo: what is it?</string>
+    <string name="photo_kind_other">Other photo</string>
+    <string name="photo_add_title">Add a photo</string>
     <string name="photo_take">Take a photo</string>
     <string name="photo_pick">Choose from the gallery</string>
     <string name="photo_edit_title">This photo</string>
@@ -251,4 +251,18 @@
     <string name="nearby_search">Search stamps and cards</string>
     <string name="nearby_search_clear">Clear search</string>
     <string name="nearby_recenter">Back to where you are</string>
+    <string name="pin_from_you">%1$s from you</string>
+    <string name="sort_tip">Nearest: the distance under each item is how far it is from you. A to Z: names in alphabetical order.</string>
+    <string name="tip_dismiss">Got it, hide this tip</string>
+    <string name="date_not_recorded">Date not recorded</string>
+    <string name="item_photos">Photos</string>
+    <string name="photo_add_kind">Add: %1$s</string>
+    <string name="kind_station_stamp">Station stamp</string>
+    <string name="kind_ekitag">Ekitag screenshot</string>
+    <string name="kind_station">Station photo</string>
+    <string name="kind_card">Card</string>
+    <string name="kind_manhole">Manhole cover</string>
+    <string name="kind_place">Where you got it</string>
+    <string name="kind_goshuin">Goshuin</string>
+    <string name="kind_shrine">Shrine or temple</string>
 </resources>

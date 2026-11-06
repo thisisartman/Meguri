@@ -45,14 +45,45 @@ fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
     val ja = isJapanese()
     when {
         row.photoUri != null -> PhotoThumb(row.photoUri, size, modifier)
-        row.collected -> Seal(row.item.sealLabel(ja), LocalTypeColors.current.of(row.item.type), size, modifier)
+        // Manhole cards keep their official card code (F001); the rest show their type icon, since stations have
+        // no official short form like airport codes (research 2026-11-07, owner's N10)
+        row.collected && row.item.type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD && row.item.code != null ->
+            Seal(row.item.sealLabel(ja), LocalTypeColors.current.of(row.item.type), size, modifier)
+        row.collected -> Seal("", LocalTypeColors.current.of(row.item.type), size, modifier, icon = typeIcon(row.item.type))
         else -> EmptySlot(size, modifier)
     }
 }
 
+/** The type's icon (public domain, CC0: Mapbox Maki and Temaki; see res/drawable/ic_type_*.xml). */
+@androidx.annotation.DrawableRes
+fun typeIcon(type: io.github.thisisartman.collectibles.data.ItemType): Int = when (type) {
+    io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD -> io.github.thisisartman.collectibles.R.drawable.ic_type_manhole
+    io.github.thisisartman.collectibles.data.ItemType.GOSHUIN -> io.github.thisisartman.collectibles.R.drawable.ic_type_goshuin
+    io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP -> io.github.thisisartman.collectibles.R.drawable.ic_type_station
+    io.github.thisisartman.collectibles.data.ItemType.EKITAG -> io.github.thisisartman.collectibles.R.drawable.ic_type_ekitag
+}
+
+/** A small type icon in the type's colour, e.g. next to a name. */
 @Composable
-fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, modifier: Modifier = Modifier) {
+fun TypeIcon(type: io.github.thisisartman.collectibles.data.ItemType, size: Dp = 20.dp, modifier: Modifier = Modifier) {
+    androidx.compose.material3.Icon(
+        androidx.compose.ui.res.painterResource(typeIcon(type)),
+        contentDescription = null,
+        tint = LocalTypeColors.current.of(type),
+        modifier = modifier.size(size),
+    )
+}
+
+@Composable
+fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, modifier: Modifier = Modifier, @androidx.annotation.DrawableRes icon: Int? = null) {
     Box(modifier.size(size).clip(CircleShape).background(color), contentAlignment = Alignment.Center) {
+        if (icon != null) {
+            androidx.compose.material3.Icon(
+                androidx.compose.ui.res.painterResource(icon), contentDescription = null,
+                tint = LocalTypeColors.current.onSeal, modifier = Modifier.size(size * 0.55f),
+            )
+            return@Box
+        }
         Text(
             label,
             color = LocalTypeColors.current.onSeal,

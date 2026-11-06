@@ -42,6 +42,8 @@ import androidx.compose.material3.Slider
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -110,6 +112,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var byName by rememberSaveable { mutableStateOf(false) }
     var tileStep by rememberSaveable { mutableIntStateOf(1) }
     var sortOpen by remember { mutableStateOf(false) }
+    // One-time tips (owner, 2026-11-07): shown once, closed with an X, never again
+    val tips = remember { ctx.getSharedPreferences("tips", android.content.Context.MODE_PRIVATE) }
+    var sortTip by remember { mutableStateOf(false) }
     var sizeOpen by rememberSaveable { mutableStateOf(false) }
     val sizeLabel = stringResource(R.string.nearby_tile_size)
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
@@ -120,14 +125,27 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 
     val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
     val kinds = remember(inTab) { inTab.map { it.item.type }.distinct().sortedBy { it.ordinal } }
-    val shown = remember(inTab, rows, kind, byName, here, ja, query) {
-        // A search looks through everything (both tabs, every kind) by name in either language or by code
-        val q = query.trim().lowercase()
-        val k = if (q.isNotEmpty()) rows.filter { r ->
-            listOfNotNull(r.item.nameRomaji, r.item.nameJa, r.item.code).any { it.lowercase().contains(q) }
-        } else inTab.filter { kind == null || it.item.type == kind }
-        if (byName) k.sortedBy { it.item.displayName(ja).lowercase() }
-        else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
+    // Search results by type (owner, 2026-11-07): All, or one type, as chips under the search bar
+    var searchKind by rememberSaveable { mutableStateOf<ItemType?>(null) }
+    var searchFocused by remember { mutableStateOf(false) }
+    // A search looks through everything (both tabs, every kind), fuzzy, by name in either language, code or place
+    val matches = remember(rows, query) {
+        val q = query.trim()
+        if (q.isEmpty()) emptyList()
+        else rows.map { it to fuzzyScore(q, listOf(it.item.nameRomaji, it.item.nameJa, it.item.code, it.item.placeName)) }.filter { it.second > 0 }
+    }
+    val matchKinds = remember(matches) { matches.map { it.first.item.type }.distinct().sortedBy { it.ordinal } }
+    val shown = remember(inTab, matches, kind, searchKind, byName, here, ja, query) {
+        if (query.isNotBlank()) {
+            // Best match first, then nearest
+            matches.filter { searchKind == null || it.first.item.type == searchKind }
+                .sortedWith(compareByDescending<Pair<ItemRow, Int>> { it.second }.thenBy { vm.distanceTo(it.first) ?: Double.MAX_VALUE })
+                .map { it.first }
+        } else {
+            val k = inTab.filter { kind == null || it.item.type == kind }
+            if (byName) k.sortedBy { it.item.displayName(ja).lowercase() }
+            else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
+        }
     }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
 
@@ -206,7 +224,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                     Box {
-                        IconButton(onClick = { sortOpen = true }) {
+                        IconButton(onClick = { sortOpen = true; if (!tips.getBoolean(TIP_SORT, false)) sortTip = true }) {
                             Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.nearby_sort))
                         }
                         DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
@@ -243,6 +261,22 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 .semantics { contentDescription = sizeLabel },
                         )
                         Box(Modifier.size(20.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
+                    }
+                }
+                // What the sort orders mean, once (owner, 2026-11-07)
+                AnimatedVisibility(visible = sortTip) {
+                    Surface(
+                        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    ) {
+                        Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(stringResource(R.string.sort_tip), Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
+                            IconButton(onClick = { sortTip = false; tips.edit().putBoolean(TIP_SORT, true).apply() }) {
+                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.tip_dismiss))
+                            }
+                        }
                     }
                 }
                 if (shown.isEmpty()) {
@@ -308,7 +342,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         androidx.compose.material3.TextField(
                             value = query,
                             onValueChange = { query = it; picked = null },
-                            modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                            modifier = Modifier.weight(1f).focusRequester(focusRequester)
+                                .onFocusChanged { searchFocused = it.isFocused },
                             placeholder = { Text(stringResource(R.string.nearby_search), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             singleLine = true,
                             keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
@@ -327,6 +362,52 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                         // Log a find is the middle of the bottom bar now; the top right is the menu (owner, 2026-11-06)
                         MenuButton(nav)
+                    }
+                    // While typing, the keyboard hides the sheet, so results drop down under the search bar,
+                    // with chips for All and each type found (owner, 2026-11-07)
+                    if (searching && searchFocused) {
+                        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                        if (matchKinds.size > 1) {
+                            Row(
+                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                FilterChip(selected = searchKind == null, onClick = { searchKind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                                matchKinds.forEach { t ->
+                                    FilterChip(
+                                        selected = searchKind == t, onClick = { searchKind = t },
+                                        label = { Text(stringResource(t.pluralLabel())) },
+                                        leadingIcon = { TypeIcon(t, 16.dp) },
+                                    )
+                                }
+                            }
+                        }
+                        if (shown.isEmpty()) {
+                            Text(stringResource(R.string.nearby_empty_kind), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
+                            items(shown.take(8), key = { "s-" + it.item.id }) { r ->
+                                Row(
+                                    Modifier.fillMaxWidth().heightIn(min = 52.dp)
+                                        .clickable { focus.clearFocus(); nav.openItem(r.item.id) }
+                                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    TypeIcon(r.item.type, 20.dp)
+                                    Spacer(Modifier.width(12.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        Text(r.item.displayName(ja), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(
+                                            listOfNotNull(
+                                                stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
+                                                distanceText(vm.distanceTo(r)),
+                                            ).joinToString(sep()),
+                                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        )
+                                    }
+                                }
+                            }
+                        }
                     }
                     val fix = here.fix
                     if (fix == null || !here.live) {
@@ -360,14 +441,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
                 ) {
                     Column(Modifier.padding(14.dp)) {
-                        Text(r.item.displayName(ja), style = MaterialTheme.typography.titleMedium)
-                        Text(
-                            listOfNotNull(
-                                stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
-                                distanceText(vm.distanceTo(r)),
-                            ).joinToString(sep()),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        PinHeader(r, vm.distanceTo(r))
                         Spacer(Modifier.height(10.dp))
                         PinActions(r, vm, nav, onCollected = { picked = null })
                     }
@@ -378,6 +452,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 }
 
 private val TILE_SIZES = listOf(48.dp, 64.dp, 84.dp)
+private const val TIP_SORT = "sort"
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable

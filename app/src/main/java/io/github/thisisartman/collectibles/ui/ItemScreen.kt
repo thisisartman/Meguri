@@ -22,6 +22,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
@@ -80,72 +84,97 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
         val lineNames = lines.filter { l -> stations.any { it.lineId == l.id && it.itemId == item.id } }
             .map { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
         val meters = vm.distanceTo(r)
+        val context = LocalContext.current
+        // Photos go on the latest collection; with none yet, adding a photo collects the item first
+        val target = finds.firstOrNull()?.find?.id
+        val photoActions = remember(target, r.item.id) {
+            FindPhotoActions(
+                takePhoto = { kind ->
+                    if (target != null) { vm.nextPhotoKind(target, kind); photo.capture(target) }
+                    else vm.gotIt(r, name) { id -> vm.nextPhotoKind(id, kind); photo.capture(id) }
+                },
+                pickPhoto = { uri, kind ->
+                    if (target != null) vm.addGalleryPhoto(context, target, uri, kind)
+                    else vm.gotIt(r, name) { id -> vm.addGalleryPhoto(context, id, uri, kind) }
+                },
+                setKind = vm::setPhotoKind,
+                remove = vm::removePhoto,
+            )
+        }
+        // Owner, 2026-11-07: one layout for collected and uncollected, like a map app's place page:
+        // who and where, actions, photos (a dotted square per kind), when you collected it, then the facts
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
-            if (r.collected) {
-                // Have it: your mark large, your record, then the facts
-                item {
-                    Column(Modifier.fillMaxWidth().padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                        // With large text the seal gives way, so your record still starts on the first screen
-                        Mark(r, if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 100.dp else 140.dp)
+            item {
+                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Mark(r, 64.dp)
+                    Spacer(Modifier.width(14.dp))
+                    Column {
+                        NameText(item, ja, lineNames)
+                        Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                            TypeIcon(item.type, 16.dp)
+                            Spacer(Modifier.width(6.dp))
+                            Text(
+                                stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = if (r.collected) LocalTypeColors.current.of(item.type) else MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
                     }
                 }
-                item { NameBlock(item, ja, lineNames) }
-                item { Actions(item, meters) }
+            }
+            item { Actions(item, meters) }
+            item { SectionTitle(stringResource(R.string.item_photos)) }
+            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions) }
+            if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
-                    val context = LocalContext.current
-                    val photoActions = remember(f.find.id) {
-                        FindPhotoActions(
-                            takePhoto = { kind -> vm.nextPhotoKind(f.find.id, kind); photo.capture(f.find.id) },
-                            pickPhoto = { uri, kind -> vm.addGalleryPhoto(context, f.find.id, uri, kind) },
-                            setKind = vm::setPhotoKind,
-                            remove = vm::removePhoto,
-                        )
-                    }
-                    FindCard(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) }, photoActions = photoActions)
-                }
-                if (hasFacts(item)) {
-                    item { SectionTitle(stringResource(R.string.item_where)) }
-                    item { Facts(item) }
-                }
-            } else {
-                // Still to get: how to get there first, then the facts
-                item {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Mark(r, 56.dp)
-                        Spacer(Modifier.width(14.dp))
-                        Column { NameText(item, ja, lineNames) }
-                    }
-                }
-                item { Actions(item, meters) }
-                if (hasFacts(item)) {
-                    item { SectionTitle(stringResource(R.string.item_where)) }
-                    item { Facts(item) }
-                }
-                item {
-                    Text(
-                        stringResource(R.string.item_no_finds),
-                        Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
+                    CollectionRow(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) })
                 }
             }
+            if (hasFacts(item)) {
+                item { SectionTitle(stringResource(R.string.item_where)) }
+                item { Facts(item) }
+            }
+            item { Spacer(Modifier.height(16.dp)) }
+        }
+        // Bottom: Photo opens a menu of the kinds for this type (owner, 2026-11-07); Collect is the main action
+        var menu by remember { mutableStateOf(false) }
+        var menuKind by remember { mutableStateOf<String?>(null) }
+        var picking by remember { mutableStateOf(false) }
+        val pick = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()) { uri ->
+            val k = menuKind
+            if (uri != null && k != null) photoActions.pickPhoto(uri, k)
+            menuKind = null
         }
         Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            InkOutlinedButton(
-                onClick = {
-                    val latest = finds.firstOrNull { !it.find.beforeApp }?.find?.id
-                    if (latest != null) photo.capture(latest) else vm.gotIt(r, name) { id -> photo.capture(id) }
-                },
-                modifier = Modifier.weight(1f),
-            ) { Text(stringResource(R.string.photo)) }
-            if (r.collected) {
-                InkOutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.got_it_again)) }
-            } else {
-                Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.got_it)) }
+            Box(Modifier.weight(1f)) {
+                InkOutlinedButton(onClick = { menu = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(stringResource(R.string.photo))
+                    Icon(Icons.Filled.ArrowDropDown, contentDescription = null)
+                }
+                PhotoKindMenu(item.type, menu, onDismiss = { menu = false }, onPick = { menuKind = it })
             }
+            val collectLabel = stringResource(if (r.collected) R.string.got_it_again else R.string.got_it)
+            val collectContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+                Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(collectLabel)
+            }
+            if (r.collected) InkOutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
+            else Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
         }
+        // While the gallery is open the dialog stays hidden; the pick result clears menuKind
+        menuKind?.let { k ->
+            if (!picking) PhotoSourceDialog(
+                title = stringResource(R.string.photo_add_kind, stringResource(kindLabel(item.type, k))),
+                onCamera = { menuKind = null; photoActions.takePhoto(k) },
+                onGallery = { picking = true; pick.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                onDismiss = { menuKind = null },
+            )
+        }
+        LaunchedEffect(menuKind) { if (menuKind == null) picking = false }
     }
 }
 
@@ -169,11 +198,9 @@ private fun Actions(item: Item, meters: Double?) {
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (hasPlace) {
-            FilledTonalButton(modifier = Modifier.heightIn(min = 48.dp), onClick = {
-                val uri = Uri.parse("geo:${item.lat},${item.lng}?q=${item.lat},${item.lng}(${Uri.encode(item.placeName ?: item.nameJa)})")
-                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
-            }) {
-                Icon(Icons.Filled.Place, contentDescription = null, modifier = Modifier.size(18.dp))
+            FilledTonalButton(modifier = Modifier.heightIn(min = 48.dp), onClick = { openDirections(context, item) }) {
+                // The same directions icon as the pin card (owner, 2026-11-07: consistent everywhere)
+                Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain))
             }
@@ -244,73 +271,55 @@ private fun Fact(label: String, value: String) {
 /** How long after a find its missing position counts as "still being found". */
 private const val POSITION_WAIT_MS = 2 * 60 * 1000L
 
+/**
+ * One time you collected the item, as a single line (owner, 2026-11-07: no "had before the app", no "record"):
+ * the date, or "Date not recorded"; Map when a position was saved; a delete icon that asks first.
+ */
 @Composable
-private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit, photoActions: FindPhotoActions) {
-    // Removing a "had before the app" mark or a find has no Undo, so both ask first
+private fun CollectionRow(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit) {
+    val a = f.find
+    val whenText = a.acquiredAt?.takeIf { !a.beforeApp }?.let { formatDateTime(it, ja) } ?: stringResource(R.string.date_not_recorded)
     var confirmRemove by remember { mutableStateOf(false) }
     if (confirmRemove) {
-        val a = f.find
         AlertDialog(
             onDismissRequest = { confirmRemove = false },
-            title = { Text(stringResource(if (a.beforeApp) R.string.item_remove_confirm_title else R.string.item_remove_find_title)) },
-            text = {
-                Text(
-                    if (a.beforeApp) stringResource(R.string.item_remove_confirm_text, name)
-                    else stringResource(R.string.item_remove_find_text, a.acquiredAt?.let { formatDateTime(it, ja) }.orEmpty())
-                )
-            },
+            title = { Text(stringResource(R.string.item_remove_find_title)) },
+            text = { Text(stringResource(R.string.item_remove_find_text, whenText)) },
             confirmButton = {
                 TextButton(onClick = { confirmRemove = false; if (a.beforeApp) onRemoveBeforeApp() else onRemoveFind() }) {
-                    Text(stringResource(R.string.item_remove_confirm), color = MaterialTheme.colorScheme.error)
+                    Text(stringResource(R.string.item_remove_find), color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    Card(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(Modifier.padding(12.dp)) {
-            val a = f.find
-            if (a.beforeApp) {
-                Text(stringResource(R.string.had_before_app), style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { confirmRemove = true }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                    Text(stringResource(R.string.item_remove_before_app))
-                }
-            } else {
-                val whenText = a.acquiredAt?.let { formatDateTime(it, ja) } ?: ""
-                // The position is filled in after the find is saved; for a while it is pending, not missing
-                var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-                LaunchedEffect(a.id, a.lat) {
-                    while (a.lat == null && now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS) { delay(5_000); now = System.currentTimeMillis() }
-                }
-                val whereText = when {
-                    a.lat != null && a.lng != null -> stringResource(R.string.item_position_saved)
-                    now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS -> stringResource(R.string.item_finding_position)
-                    else -> stringResource(R.string.item_no_position)
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(stringResource(R.string.item_found_at, whenText, whereText), style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"), modifier = Modifier.weight(1f))
-                    if (a.lat != null && a.lng != null) {
-                        val context = LocalContext.current
-                        TextButton(onClick = {
-                            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${a.lat},${a.lng}?q=${a.lat},${a.lng}"))) }
-                        }) { Text(stringResource(R.string.item_find_map)) }
-                    }
-                }
-                a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
-                TextButton(
-                    onClick = { confirmRemove = true },
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
-                    modifier = Modifier.spoken(stringResource(R.string.a11y_remove_find, whenText)),
-                ) {
-                    Text(stringResource(R.string.item_remove_find))
-                }
-            }
-            // Several photos per find, each with its kind; a "had before the app" find can take proof photos too
-            FindPhotos(f.photos, photoActions)
+    // The position is filled in after the collection is saved; for a while it is pending, not missing
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(a.id, a.lat) {
+        while (!a.beforeApp && a.lat == null && now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS) { delay(5_000); now = System.currentTimeMillis() }
+    }
+    val whereText = when {
+        a.beforeApp -> null
+        a.lat != null && a.lng != null -> stringResource(R.string.item_position_saved)
+        now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS -> stringResource(R.string.item_finding_position)
+        else -> null
+    }
+    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(painterResource(R.drawable.ic_collect), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
+            Text(whenText, style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"))
+            whereText?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+            a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+        }
+        if (a.lat != null && a.lng != null) {
+            val context = LocalContext.current
+            TextButton(onClick = {
+                runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${a.lat},${a.lng}?q=${a.lat},${a.lng}"))) }
+            }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.item_find_map)) }
+        }
+        IconButton(onClick = { confirmRemove = true }) {
+            Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.a11y_remove_find, whenText), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

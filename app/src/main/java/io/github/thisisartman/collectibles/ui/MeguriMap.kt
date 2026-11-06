@@ -96,6 +96,11 @@ fun MeguriMap(
                 isScrollGesturesEnabled = interactive; isZoomGesturesEnabled = interactive
                 isRotateGesturesEnabled = false; isTiltGesturesEnabled = false
                 isAttributionEnabled = true; isLogoEnabled = false
+                // The map's credit button sat bottom-left under the Nearby sheet (2026-11-07 review): put it top left,
+                // just under the search bar, where it can be seen and tapped
+                val d = context.resources.displayMetrics.density
+                attributionGravity = android.view.Gravity.TOP or android.view.Gravity.START
+                setAttributionMargins((16 * d).toInt(), (128 * d).toInt(), 0, 0)
             }
             val builder = offlineStyle?.let { Style.Builder().fromJson(it) } ?: Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)
             m.setStyle(builder) { s ->
@@ -134,8 +139,17 @@ fun MeguriMap(
                 )
                 style = s
             }
+            // A 48 dp square around the finger, not a single point (owner, 2026-11-07: pins were hard to hit);
+            // when several pins fall inside, the one nearest the finger wins
+            val slop = 24f * context.resources.displayMetrics.density
             m.addOnMapClickListener { point ->
-                val hit = m.queryRenderedFeatures(m.projection.toScreenLocation(point), LAYER).firstOrNull()
+                val p = m.projection.toScreenLocation(point)
+                val box = android.graphics.RectF(p.x - slop, p.y - slop, p.x + slop, p.y + slop)
+                val hit = m.queryRenderedFeatures(box, LAYER).minByOrNull { f ->
+                    val g = f.geometry() as? Point ?: return@minByOrNull Float.MAX_VALUE
+                    val s = m.projection.toScreenLocation(LatLng(g.latitude(), g.longitude()))
+                    (s.x - p.x) * (s.x - p.x) + (s.y - p.y) * (s.y - p.y)
+                }
                 if (hit != null) tapPin(hit.getStringProperty("id")) else tapMap()
                 true
             }

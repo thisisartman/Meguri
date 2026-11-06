@@ -30,17 +30,17 @@
     <string name="type_eki_plural">駅スタンプ</string>
     <string name="type_ekitag">エキタグ</string>
 
-    <string name="a11y_got_it">%1$sを集めた</string>
+    <string name="a11y_got_it">%1$sを集める</string>
     <string name="a11y_photo">%1$sの写真を撮る</string>
-    <string name="a11y_remove_find">%1$sの記録を削除</string>
+    <string name="a11y_remove_find">%1$sの取得を削除</string>
     <string name="state_collected">取得済み</string>
     <string name="state_to_get">未取得</string>
-    <string name="got_it">集めた</string>
-    <string name="got_it_again">もう一度集めた</string>
+    <string name="got_it">集める</string>
+    <string name="got_it_again">もう一度集める</string>
     <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを集めた・%2$s</string>
-    <string name="had_before_app">アプリ以前から所持</string>
+    <string name="had_before_app">取得済み</string>
     <string name="last">最新：%1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
@@ -53,12 +53,12 @@
     <string name="book_title">コレクション</string>
     <string name="book_other_stations">その他の駅</string>
     <string name="book_no_prefecture">都道府県なし</string>
-    <string name="book_mark_owned">所持済みをまとめて登録</string>
-    <string name="book_mark_done">%1$d件をアプリ以前から所持として登録</string>
+    <string name="book_mark_owned">取得済みにする</string>
+    <string name="book_mark_done">%1$d件を取得済みにする</string>
     <string name="book_marked">%1$d件を登録</string>
     <string name="cancel">キャンセル</string>
 
-    <string name="item_your_record">記録</string>
+    <string name="item_your_record">取得</string>
     <string name="item_where">入手場所</string>
     <string name="item_handed_out_at">配布場所</string>
     <string name="item_hours">配布時間</string>
@@ -73,7 +73,7 @@
     <string name="item_wave_only">第%1$s弾</string>
     <string name="item_no_finds">未取得</string>
     <string name="item_add_photo">写真を追加</string>
-    <string name="item_remove_before_app">「アプリ以前から所持」を取り消す</string>
+    <string name="item_remove_before_app">未取得に戻す</string>
     <string name="item_found_at">%1$s・%2$s</string>
     <string name="item_no_position">位置なし</string>
     <string name="back">戻る</string>
@@ -81,13 +81,13 @@
     <string name="nearby_no_catalogue">カタログがまだありません。カタログには集められるものと場所が入っていて、近くのものを表示できます。カタログがなくても、+ でどれでも記録できます。</string>
     <string name="nearby_load_catalogue">カタログを読み込む</string>
     <string name="nearby_all_done">カタログのすべてを取得済みです。</string>
-    <string name="book_mark_choose">所持しているものを選択</string>
+    <string name="book_mark_choose">持っているものを選択</string>
     <string name="item_finding_position">位置を取得中…</string>
-    <string name="item_position_saved">位置情報あり</string>
+    <string name="item_position_saved">位置あり</string>
     <string name="item_find_map">地図</string>
-    <string name="item_remove_confirm_title">コレクションから外しますか？</string>
+    <string name="item_remove_confirm_title">未取得に戻しますか？</string>
     <string name="item_remove_confirm_text">%1$sは未取得に戻ります。</string>
-    <string name="item_remove_confirm">外す</string>
+    <string name="item_remove_confirm">未取得に戻す</string>
     <string name="nearby_around_here">%1$d km以内</string>
     <string name="nearby_next">次：%1$s・%2$s</string>
     <string name="nearby_elsewhere">その他の地域</string>
@@ -95,9 +95,9 @@
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>
     <string name="item_on_lines">%1$s</string>
-    <string name="item_remove_find">この記録を削除</string>
-    <string name="item_remove_find_title">この記録を削除しますか？</string>
-    <string name="item_remove_find_text">%1$sの記録を削除します。写真はギャラリーに残ります。</string>
+    <string name="item_remove_find">削除</string>
+    <string name="item_remove_find_title">この取得を削除しますか？</string>
+    <string name="item_remove_find_text">%1$sの取得を削除します。ほかになければ未取得に戻ります。写真はギャラリーに残ります。</string>
     <string name="line_nearest">最寄りの未取得：%2$s・%1$s</string>
 
     <string name="log_title">記録する</string>
@@ -195,7 +195,7 @@
     <string name="trip_channel_sub">トリップモードがオンの間に表示</string>
     <string name="alert_text">%1$s・あと%2$s</string>
     <string name="alert_text_here">%1$s・ここです</string>
-    <string name="alert_done">集めた</string>
+    <string name="alert_done">集める</string>
     <string name="alert_dismiss">閉じる</string>
     <string name="alert_logged">%1$sを集めました</string>
     <string name="trip_on_until">トリップモード %1$sまで</string>
@@ -236,8 +236,8 @@
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">スタンプ</string>
     <string name="photo_kind_proof">証明（Ekitag・カード）</string>
-    <string name="photo_kind_other">その他</string>
-    <string name="photo_add_title">写真を追加：何の写真ですか？</string>
+    <string name="photo_kind_other">その他の写真</string>
+    <string name="photo_add_title">写真を追加</string>
     <string name="photo_take">写真を撮る</string>
     <string name="photo_pick">ギャラリーから選ぶ</string>
     <string name="photo_edit_title">この写真</string>
@@ -251,4 +251,18 @@
     <string name="nearby_search">スタンプやカードを検索</string>
     <string name="nearby_search_clear">検索を消す</string>
     <string name="nearby_recenter">現在地に戻る</string>
+    <string name="pin_from_you">現在地から%1$s</string>
+    <string name="sort_tip">近い順：各項目の下の距離は、現在地からの距離です。名前順：名前のアルファベット順・五十音順です。</string>
+    <string name="tip_dismiss">わかりました。このヒントを閉じる</string>
+    <string name="date_not_recorded">日付の記録なし</string>
+    <string name="item_photos">写真</string>
+    <string name="photo_add_kind">追加：%1$s</string>
+    <string name="kind_station_stamp">駅スタンプ</string>
+    <string name="kind_ekitag">エキタグの画面</string>
+    <string name="kind_station">駅の写真</string>
+    <string name="kind_card">カード</string>
+    <string name="kind_manhole">マンホール</string>
+    <string name="kind_place">もらった場所</string>
+    <string name="kind_goshuin">御朱印</string>
+    <string name="kind_shrine">寺社</string>
 </resources>

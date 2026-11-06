@@ -11,8 +11,16 @@ import androidx.room.Relation
 enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG }
 
 /** A photo's kind, kept in `photo.role` (#54): the stamp itself, proof of an Ekitag or a card, or anything else. */
+/**
+ * What a photo shows, stored as text in photo.role (no schema change to add one). STAMP is the collectible
+ * itself (stamp image, card, goshuin page). PROOF is from 0.3 before per-type kinds and reads as the screenshot
+ * or card kind; OTHER is anything else.
+ */
 object PhotoKind {
     const val STAMP = "stamp"
+    const val EKITAG = "ekitag"
+    const val MANHOLE = "manhole"
+    const val PLACE = "place"
     const val PROOF = "proof"
     const val OTHER = "other"
 }

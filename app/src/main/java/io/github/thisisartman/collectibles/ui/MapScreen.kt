@@ -8,6 +8,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -98,13 +101,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                 shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium)
-                    val sub = listOfNotNull(
-                        stringResource(if (row.findCount > 0) R.string.map_collected else R.string.map_not_collected),
-                        distanceText(vm.distanceTo(row)),
-                        row.item.placeName?.takeIf { it != row.item.nameJa },
-                    ).joinToString(sep())
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    PinHeader(row, vm.distanceTo(row))
                     Spacer(Modifier.height(12.dp))
                     PinActions(row, vm, nav, onCollected = { picked = null })
                 }
@@ -122,20 +119,44 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
 fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollected: () -> Unit) {
     val context = LocalContext.current
     val name = row.item.displayName(isJapanese())
+    // Owner, 2026-11-07: icon plus word, so a later compact card can drop the words and keep the icons;
+    // "Collect" (a verb) with a plus-on-stack icon, since "Collected" read as already collected
+    val pad = androidx.compose.foundation.layout.PaddingValues(start = 12.dp, end = 14.dp)
+    @Composable fun Lead(res: Int) { Icon(painterResource(res), contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        InkOutlinedButton(onClick = {
-            val i = row.item
-            val uri = Uri.parse("geo:${i.lat},${i.lng}?q=${i.lat},${i.lng}(${Uri.encode(i.placeName ?: i.nameJa)})")
-            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
-        }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.item_directions_plain), maxLines = 1) }
+        InkOutlinedButton(onClick = { openDirections(context, row.item) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad) {
+            Lead(R.drawable.ic_directions); Text(stringResource(R.string.item_directions_plain), maxLines = 1)
+        }
+        val details: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+            Icon(Icons.Filled.Info, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp))
+            Text(stringResource(R.string.map_details), maxLines = 1)
+        }
         if (row.findCount > 0) {
-            Button(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.map_details), maxLines = 1) }
+            Button(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad, content = details)
         } else {
-            InkOutlinedButton(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.map_details), maxLines = 1) }
+            InkOutlinedButton(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad, content = details)
             Button(
                 onClick = { vm.gotIt(row, name); onCollected() },
                 modifier = Modifier.heightIn(min = 48.dp).spoken(stringResource(R.string.a11y_got_it, name)),
-            ) { Text(stringResource(R.string.got_it), maxLines = 1) }
+                contentPadding = pad,
+            ) { Lead(R.drawable.ic_collect); Text(stringResource(R.string.got_it), maxLines = 1) }
         }
     }
+}
+
+/** A tapped pin's title and status: type icon, name, then "Uncollected · 1.7 km from you". */
+@Composable
+fun PinHeader(row: ItemRow, meters: Double?) {
+    val ja = isJapanese()
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        TypeIcon(row.item.type, 22.dp)
+        Spacer(Modifier.width(8.dp))
+        Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+    }
+    val distance = distanceText(meters)?.let { stringResource(R.string.pin_from_you, it) }
+    Text(
+        listOfNotNull(stringResource(if (row.findCount > 0) R.string.map_collected else R.string.map_not_collected), distance).joinToString(sep()),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(start = 30.dp),
+    )
 }
