@@ -62,6 +62,7 @@ fun MeguriMap(
         c == null || OfflineMap.covers(c.first, c.second)
     }
     val types = LocalTypeColors.current
+    val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -119,7 +120,8 @@ fun MeguriMap(
                         PropertyFactory.circleStrokeWidth(Expression.literal(3f)),
                         PropertyFactory.circleStrokeColor(Expression.get("color")),
                         PropertyFactory.circleColor(
-                            Expression.switchCase(Expression.get("collected"), Expression.get("color"), Expression.color(AColor.WHITE)),
+                            // Hollow pins take the page colour, so in dark mode "still to get" isn't the brightest thing on the map
+                            Expression.switchCase(Expression.get("collected"), Expression.get("color"), Expression.color(hollow)),
                         ),
                     ),
                 )
