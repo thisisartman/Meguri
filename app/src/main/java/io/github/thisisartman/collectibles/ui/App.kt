@@ -276,6 +276,20 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     }
                     composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
                     composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }
+                    composable("trip") { Page { TripScreen(vm, nav, snackbar, onBack = { nav.popBackStack() }, onAlready = { nav.navigate("trip-check") }) } }
+                    composable("trip-check") {
+                        // The route's things as today's plan has them (Already went, #46 and owner item 9)
+                        val rows by vm.rows.collectAsStateWithLifecycle()
+                        val trip by vm.trip.collectAsStateWithLifecycle()
+                        val graph by vm.railGraph.collectAsStateWithLifecycle()
+                        val only = remember(trip, rows, graph) {
+                            trip?.let { t ->
+                                val legs = graph.route(t.from, t.to, avoid = if (t.localOnly) setOf(io.github.thisisartman.collectibles.data.RailGraph.SHINKANSEN) else emptySet())
+                                legs?.let { io.github.thisisartman.collectibles.data.TripRules.plan(it, rows, t.getOff).countedIds.toSet() }
+                            } ?: emptySet()
+                        }
+                        Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }, only = only, tripDay = true) }
+                    }
                 }
             }
         }

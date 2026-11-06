@@ -23,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -59,6 +60,30 @@ import kotlinx.coroutines.launch
 /** One page of the Collection check: a group of items (a prefecture's cards, a line's stamps) to tick. */
 private data class CheckGroup(val key: String, val title: String, val rows: List<ItemRow>)
 
+/** Noon local time on the day of [ms]. */
+internal fun noonOf(ms: Long): Long = java.util.Calendar.getInstance().apply {
+    timeInMillis = ms; set(java.util.Calendar.HOUR_OF_DAY, 12); set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
+}.timeInMillis
+
+/** The date picker works in UTC midnights. */
+private fun utcMidnight(localMs: Long): Long {
+    val c = java.util.Calendar.getInstance().apply { timeInMillis = localMs }
+    return java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
+        clear(); set(c.get(java.util.Calendar.YEAR), c.get(java.util.Calendar.MONTH), c.get(java.util.Calendar.DAY_OF_MONTH))
+    }.timeInMillis
+}
+
+private fun noonFromUtcDate(utcMs: Long): Long {
+    val u = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply { timeInMillis = utcMs }
+    return java.util.Calendar.getInstance().apply {
+        clear(); set(u.get(java.util.Calendar.YEAR), u.get(java.util.Calendar.MONTH), u.get(java.util.Calendar.DAY_OF_MONTH), 12, 0)
+    }.timeInMillis
+}
+
+@Composable
+private fun formatDay(ms: Long): String =
+    java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, androidx.compose.ui.platform.LocalConfiguration.current.locales[0]).format(java.util.Date(ms))
+
 /**
  * Collection check (#68, owner's name): add everything you already have, one group per page, swiping left and
  * right; manhole cards first (owner, 2026-11-07). Tick the tiles you have and save the page; no dates or places
@@ -66,7 +91,14 @@ private data class CheckGroup(val key: String, val title: String, val rows: List
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CollectionCheckScreen(vm: MainViewModel, snackbar: SnackbarHostState, onBack: () -> Unit) {
+fun CollectionCheckScreen(
+    vm: MainViewModel,
+    snackbar: SnackbarHostState,
+    onBack: () -> Unit,
+    // "Already went?" on a trip (#46, owner item 9): only the route's things, saved as got on the trip's day
+    only: Set<String>? = null,
+    tripDay: Boolean = false,
+) {
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
@@ -78,8 +110,9 @@ fun CollectionCheckScreen(vm: MainViewModel, snackbar: SnackbarHostState, onBack
     val otherStations = stringResource(R.string.book_other_stations)
     val customLabel = stringResource(R.string.type_custom)
     // Only catalogue items can be ticked; things you added yourself already have their collection
-    val groups = remember(rows, lines, stations, ja, customTypes) {
+    val groups = remember(rows, lines, stations, ja, customTypes, only) {
         val candidates = rows.filter { it.item.origin != Origin.USER || it.item.type == ItemType.CUSTOM }
+            .filter { only == null || it.item.id in only }
         val out = mutableListOf<CheckGroup>()
         candidates.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().forEach { (p, l) ->
             out += CheckGroup("m:$p", manholeLabel + (if (p.isNotEmpty()) " · " + prefectureName(p, ja) else ""), l.sortedBy { it.item.code ?: it.item.nameJa })
@@ -104,19 +137,48 @@ fun CollectionCheckScreen(vm: MainViewModel, snackbar: SnackbarHostState, onBack
     val scope = rememberCoroutineScope()
     val addedText = stringResource(R.string.check_added_count)
     val undoText = stringResource(R.string.undo)
+    // The trip's day: today unless you pick another (noon, so a time zone change keeps the date)
+    var dayMs by rememberSaveable { mutableStateOf(noonOf(System.currentTimeMillis())) }
+    var pickDay by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-            title = { Text(stringResource(R.string.check_title)) },
+            title = { Text(stringResource(if (tripDay) R.string.trip_already_title else R.string.check_title)) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
+            actions = {
+                if (tripDay) androidx.compose.material3.AssistChip(
+                    onClick = { pickDay = true },
+                    label = { Text(formatDay(dayMs)) },
+                    leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp)) },
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+            },
         )
+        if (pickDay) {
+            val state = androidx.compose.material3.rememberDatePickerState(
+                initialSelectedDateMillis = utcMidnight(dayMs),
+                selectableDates = object : androidx.compose.material3.SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= System.currentTimeMillis()
+                },
+            )
+            androidx.compose.material3.DatePickerDialog(
+                onDismissRequest = { pickDay = false },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        state.selectedDateMillis?.let { dayMs = noonFromUtcDate(it) }
+                        pickDay = false
+                    }) { Text(stringResource(android.R.string.ok)) }
+                },
+                dismissButton = { androidx.compose.material3.TextButton(onClick = { pickDay = false }) { Text(stringResource(android.R.string.cancel)) } },
+            ) { androidx.compose.material3.DatePicker(state) }
+        }
         if (groups.isEmpty()) {
             Text(stringResource(R.string.check_nothing), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             return@Column
         }
         Text(
-            stringResource(R.string.check_hint),
+            stringResource(if (tripDay) R.string.trip_already_hint else R.string.check_hint),
             Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth()) { page ->
@@ -168,7 +230,13 @@ fun CollectionCheckScreen(vm: MainViewModel, snackbar: SnackbarHostState, onBack
             enabled = ticked.isNotEmpty(),
             onClick = {
                 val ids = ticked
-                vm.markBeforeApp(ids) { added ->
+                if (tripDay) vm.markOn(ids, dayMs) { made ->
+                    ticked = emptySet()
+                    scope.launch {
+                        val r = snackbar.showSnackbar(addedText.format(made.size), actionLabel = undoText, duration = SnackbarDuration.Long)
+                        if (r == SnackbarResult.ActionPerformed) vm.removeFinds(made)
+                    }
+                } else vm.markBeforeApp(ids) { added ->
                     ticked = emptySet()
                     scope.launch {
                         val r = snackbar.showSnackbar(addedText.format(added), actionLabel = undoText, duration = SnackbarDuration.Long)

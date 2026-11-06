@@ -45,9 +45,35 @@ class CatalogAndBackup @Inject constructor(
 
     /** The Niigata catalogue that ships inside the app (#58), so a first start needs no file. */
     suspend fun importBundled(): ImportResult = withContext(Dispatchers.IO) {
-        val text = context.assets.open(BUNDLED_CATALOGUE).use { it.readBytes().toString(Charsets.UTF_8) }
-        importCatalogText(text)
+        val text = bundledText()
+        importCatalogText(text).also { bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply() }
     }
+
+    /**
+     * An app update can bring a changed bundled catalogue (phase 4 added the Joetsu Shinkansen for route trips).
+     * A phone that loaded the bundled catalogue before gets the new rows on the next start; the import only adds
+     * and updates by catalogue key, never deletes an item or a find. A phone that never loaded it is left alone.
+     */
+    suspend fun refreshBundledIfChanged(): ImportResult? = withContext(Dispatchers.IO) {
+        val text = bundledText()
+        val sha = sha(text)
+        val have = dao.allLines().map { it.id }.toSet()
+        val loadedBefore = have.any { it in BUNDLED_LINE_IDS }
+        if (!loadedBefore) return@withContext null
+        // Also after restoring a backup made before a line was added: the file is the same, a line is missing
+        val missing = Csv.parseWithHeader(text).mapNotNull { it["line_id"]?.trim()?.ifEmpty { null } }.toSet() - have
+        if (bundledPrefs.getString(KEY_BUNDLED_SHA, null) == sha && missing.isEmpty()) return@withContext null
+        importCatalogText(text).also {
+            bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha).apply()
+            log.i("Catalog", "Bundled catalogue updated: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
+        }
+    }
+
+    private val bundledPrefs get() = context.getSharedPreferences("catalogue", Context.MODE_PRIVATE)
+
+    private fun bundledText() = context.assets.open(BUNDLED_CATALOGUE).use { it.readBytes().toString(Charsets.UTF_8) }
+
+    private fun sha(text: String) = java.security.MessageDigest.getInstance("SHA-256").digest(text.toByteArray()).joinToString("") { "%02x".format(it) }
 
     suspend fun importCatalogText(text: String): ImportResult {
         val maps = Csv.parseWithHeader(text)
@@ -202,3 +228,6 @@ class CatalogAndBackup @Inject constructor(
 
 /** Built by tools/trip-catalog/make_catalog.py; copy the new CSV here when it changes. */
 const val BUNDLED_CATALOGUE = "catalogue/trip-niigata.csv"
+private const val KEY_BUNDLED_SHA = "bundled_sha"
+/** Lines only the bundled catalogue brings: one of them in the database means it was loaded. */
+private val BUNDLED_LINE_IDS = setOf("JR_JOETSU", "JR_SHINETSU", "JR_ECHIGO", "JR_YAHIKO")

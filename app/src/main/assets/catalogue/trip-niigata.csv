@@ -122,3 +122,10 @@ MANHOLE_CARD,,13-100-Y001,江戸川区 Y001,Edogawa-ku Y001,15,,東京都,江戸
 MANHOLE_CARD,,13-219-A001,狛江市 A001,Komae-shi A001,06,,東京都,狛江市,,,,,,,,,,,,,
 MANHOLE_CARD,,13-219-B001,狛江市 B001,Komae-shi B001,15,,東京都,狛江市,,,,,,,,,,,,,
 GOSHUIN,,,豪徳寺,Gotokuji,,,東京都,世田谷区,,,,,,,,,,,,,
+EKI_STAMP,,,高崎駅,Takasaki Station,,,群馬県,,高崎駅,,,36.320861,139.012263,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,1
+EKI_STAMP,,,上毛高原駅,Jomo-Kogen Station,,,群馬県,,上毛高原駅,,,36.693163,138.977633,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,2
+EKI_STAMP,,,越後湯沢駅,Echigo-Yuzawa Station,,,新潟県,,越後湯沢駅,,,36.935878,138.809423,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,3
+EKI_STAMP,,,浦佐駅,Urasa Station,,,新潟県,,浦佐駅,,,37.167224,138.922841,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,4
+EKI_STAMP,,,長岡駅,Nagaoka Station,,,新潟県,,長岡駅,,,37.447878,138.854167,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,5
+EKI_STAMP,,,燕三条駅,Tsubame-Sanjo Station,,,新潟県,,燕三条駅,,,37.648370,138.939089,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,6
+EKI_STAMP,,,新潟駅,Niigata Station,,,新潟県,,新潟駅,,,37.912244,139.061329,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU_SHINKANSEN,上越新幹線,Joetsu Shinkansen,7

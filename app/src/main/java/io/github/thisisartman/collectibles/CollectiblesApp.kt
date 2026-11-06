@@ -20,6 +20,7 @@ class CollectiblesApp : Application() {
     @Inject lateinit var autoBackup: AutoBackup
     @Inject lateinit var notifier: io.github.thisisartman.collectibles.alerts.AlertNotifier
     @Inject lateinit var geofences: io.github.thisisartman.collectibles.alerts.Geofences
+    @Inject lateinit var catalogue: io.github.thisisartman.collectibles.data.CatalogAndBackup
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +36,7 @@ class CollectiblesApp : Application() {
         geofences.refreshInBackground()
         CoroutineScope(Dispatchers.IO).launch {
             runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
+            runCatching { catalogue.refreshBundledIfChanged() }.onFailure { log.e("Catalog", "Bundled refresh failed", it) }
         }
     }
 }

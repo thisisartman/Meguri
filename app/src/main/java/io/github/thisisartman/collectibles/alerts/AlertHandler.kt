@@ -25,6 +25,11 @@ class AlertHandler @Inject constructor(
     private val dao = db.dao()
     private val lock = Mutex()
 
+    /** The route's stations with their places, in order, for "get off next" (stations without a place are left out). */
+    suspend fun places(ids: List<String>): List<Pair<Item, Pair<Double, Double>>> = ids.mapNotNull { id ->
+        dao.item(id)?.let { i -> if (i.lat != null && i.lng != null) i to (i.lat to i.lng) else null }
+    }
+
     /** Items still to get that have a place, as alert candidates. */
     suspend fun candidates(): List<Item> = dao.uncollectedPlaces()
 

@@ -10,6 +10,13 @@ import io.github.thisisartman.collectibles.data.Line
 import io.github.thisisartman.collectibles.data.LineStation
 import io.github.thisisartman.collectibles.data.PhotoInfo
 import io.github.thisisartman.collectibles.data.Via
+import io.github.thisisartman.collectibles.data.LinkEnd
+import io.github.thisisartman.collectibles.data.MapsLink
+import io.github.thisisartman.collectibles.data.PlaceLookup
+import io.github.thisisartman.collectibles.data.RailGraph
+import io.github.thisisartman.collectibles.data.SavedTrip
+import io.github.thisisartman.collectibles.data.TripStore
+import kotlinx.coroutines.flow.map
 import io.github.thisisartman.collectibles.location.Fix
 import io.github.thisisartman.collectibles.location.LocationSource
 import io.github.thisisartman.collectibles.location.distanceM
@@ -45,6 +52,14 @@ data class Around(val summary: CollectionSummary, val next: Ranked?)
 /** Nearby's lower half: collections with something to get within the radius, nearest first, and the rest. */
 data class AroundHere(val near: List<Around>, val elsewhere: List<CollectionSummary>, val located: Boolean)
 
+/** What a pasted link gave: each end as (station id, metres from the place in the link), or why it gave nothing. */
+sealed interface LinkRead {
+    data class Ends(val from: Pair<String, Double>?, val to: Pair<String, Double>?, val mode: String?) : LinkRead
+    data object NotALink : LinkRead
+    /** A short link that could not be opened: it needs the network once. */
+    data object Offline : LinkRead
+}
+
 /** A snackbar message with an optional undo. */
 data class Logged(val findId: String, val name: String, val atMs: Long, val shownAt: Long = System.nanoTime())
 
@@ -52,6 +67,7 @@ data class Logged(val findId: String, val name: String, val atMs: Long, val show
 class MainViewModel @Inject constructor(
     private val repo: CollectionRepository,
     private val location: LocationSource,
+    private val trips: TripStore,
 ) : ViewModel() {
 
     val rows: StateFlow<List<ItemRow>> = repo.itemRows().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
@@ -201,6 +217,48 @@ class MainViewModel @Inject constructor(
 
     fun unmarkBeforeApp(itemId: String) {
         viewModelScope.launch { repo.unmarkBeforeApp(itemId) }
+    }
+
+    fun markOn(ids: Set<String>, atMs: Long, onDone: (List<String>) -> Unit) {
+        viewModelScope.launch { onDone(repo.markOn(ids, atMs)) }
+    }
+
+    fun removeFinds(findIds: List<String>) { viewModelScope.launch { repo.removeFinds(findIds) } }
+
+    // Route trips (#46, #60, #62): today's plan, and reading a Google Maps link
+    val trip: StateFlow<SavedTrip?> = trips.trip
+
+    val railGraph: StateFlow<RailGraph> = lineStations.map { RailGraph.from(it) }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, RailGraph(emptyMap()))
+
+    fun saveTrip(t: SavedTrip) = trips.save(t)
+    fun clearTrip() = trips.clear()
+    fun currentTrip() = trips.current()
+
+    /**
+     * A pasted link to two stations. Each end is matched by name first, then by position (the nearest station on
+     * the bundled lines), then by looking the name up on OpenStreetMap. [LinkRead.Ends] carries how far each
+     * matched station is from the place in the link, so the screen can say when an end is off the bundled lines.
+     */
+    suspend fun readLink(text: String, japanese: Boolean): LinkRead {
+        val raw = MapsLink.findUrl(text) ?: return LinkRead.NotALink
+        val url = if (MapsLink.isShort(raw)) MapsLink.resolve(raw) ?: return LinkRead.Offline else raw
+        val t = MapsLink.parse(url) ?: return LinkRead.NotALink
+        val graph = railGraph.value
+        val stations = rows.value.filter { graph.has(it.item.id) && it.item.lat != null && it.item.lng != null }
+        suspend fun snap(e: LinkEnd?): Pair<String, Double>? {
+            e ?: return null
+            e.name?.let { n ->
+                val k = MapsLink.stationKey(n)
+                stations.firstOrNull { MapsLink.stationKey(it.item.nameJa) == k || it.item.nameRomaji?.let(MapsLink::stationKey) == k }
+                    ?.let { return it.item.id to 0.0 }
+            }
+            val pos = if (e.hasPosition) e.lat!! to e.lng!! else e.name?.let { n ->
+                PlaceLookup.search(n, here.value.fix?.lat, here.value.fix?.lng, japanese).firstOrNull()?.let { it.lat to it.lng }
+            } ?: return null
+            return stations.map { it.item.id to distanceM(pos.first, pos.second, it.item.lat!!, it.item.lng!!) }.minByOrNull { it.second }
+        }
+        return LinkRead.Ends(snap(t.from), snap(t.to), t.mode)
     }
 
     fun distanceTo(row: ItemRow): Double? {

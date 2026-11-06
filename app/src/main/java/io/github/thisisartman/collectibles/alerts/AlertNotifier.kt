@@ -118,13 +118,19 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
 
     fun cancel(itemId: String) = nm.cancel(notificationId(itemId))
 
-    fun tripNotification(untilText: String, nearest: String?): android.app.Notification {
+    /** "浦佐 → 新潟 until 23:59" when a route is planned for today. */
+    fun tripRouteTitle(from: Item, to: Item, untilText: String): String = context.getString(R.string.trip_route_until, nameOf(from), nameOf(to), untilText)
+
+    fun getOffText(station: Item, meters: Double): String = context.getString(R.string.trip_get_off_next, nameOf(station), distance(meters))
+
+    fun tripNotification(untilText: String, nearest: String?, title: String? = null): android.app.Notification {
         val open = PendingIntent.getActivity(context, 1, MainActivity.launchIntent(context), PendingIntent.FLAG_IMMUTABLE)
         val stop = broadcast(AlertReceiver.ACTION_STOP_TRIP, 2) {}
         return NotificationCompat.Builder(context, CH_TRIP)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.getString(R.string.trip_on_until, untilText))
+            .setContentTitle(title ?: context.getString(R.string.trip_on_until, untilText))
             .setContentText(nearest ?: context.getString(R.string.trip_checking))
+            .setStyle(NotificationCompat.BigTextStyle().bigText(nearest ?: context.getString(R.string.trip_checking)))
             .setOngoing(true)
             .setSilent(true)
             .setContentIntent(open)

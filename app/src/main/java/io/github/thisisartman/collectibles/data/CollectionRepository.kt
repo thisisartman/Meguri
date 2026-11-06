@@ -135,6 +135,26 @@ class CollectionRepository @Inject constructor(
 
     suspend fun setCost(findId: String, yen: Int?) = dao.setFindCost(findId, yen?.coerceAtLeast(0))
 
+    /**
+     * A trip that already happened (#46, #68): a find on that day for each item, no place or photo. Skips items
+     * already collected. Returns the new finds, so Undo can take exactly these back.
+     */
+    suspend fun markOn(itemIds: Collection<String>, atMs: Long): List<String> {
+        val made = mutableListOf<String>()
+        db.withTransaction {
+            for (id in itemIds) {
+                if (dao.findCount(id) > 0) continue
+                val f = newId()
+                dao.insertFind(Acquisition(id = f, itemId = id, acquiredAt = atMs, via = Via.BULK, createdAt = now()))
+                made += f
+            }
+        }
+        log.i("Log", "Marked ${made.size} items as got on a past trip")
+        return made
+    }
+
+    suspend fun removeFinds(findIds: Collection<String>) = db.withTransaction { findIds.forEach { dao.deleteFind(it) } }
+
     /** Marks items as "had before the app": a find with no date, place or photo. Skips items already collected. */
     suspend fun markBeforeApp(itemIds: Collection<String>): Int {
         var added = 0

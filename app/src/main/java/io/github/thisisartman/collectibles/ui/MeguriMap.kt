@@ -58,6 +58,8 @@ fun MeguriMap(
     // When set, the camera is remembered under this name: coming back to the page puts the map where it was
     // instead of re-framing it (owner, 2026-11-07: the transition back to Nearby)
     memoryKey: String? = null,
+    // A planned trip's line, station to station (#46); the camera fits it when the map first opens
+    route: List<Pair<Double, Double>> = emptyList(),
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -70,6 +72,7 @@ fun MeguriMap(
     }
     val types = LocalTypeColors.current
     val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
+    val routeColor = androidx.compose.material3.MaterialTheme.colorScheme.primary.toArgb()
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
@@ -144,6 +147,17 @@ fun MeguriMap(
                         PropertyFactory.circleStrokeColor(Expression.color(AColor.WHITE)),
                     ),
                 )
+                // The trip's line, under the pins, in the theme's primary colour
+                s.addSource(GeoJsonSource(SRC_ROUTE))
+                s.addLayer(
+                    org.maplibre.android.style.layers.LineLayer(LAYER_ROUTE, SRC_ROUTE).withProperties(
+                        PropertyFactory.lineColor(Expression.color(routeColor)),
+                        PropertyFactory.lineWidth(Expression.literal(4f)),
+                        PropertyFactory.lineOpacity(Expression.literal(0.85f)),
+                        PropertyFactory.lineCap(org.maplibre.android.style.layers.Property.LINE_CAP_ROUND),
+                        PropertyFactory.lineJoin(org.maplibre.android.style.layers.Property.LINE_JOIN_ROUND),
+                    ),
+                )
                 s.addSource(GeoJsonSource(SRC))
                 s.addLayer(
                     CircleLayer(LAYER, SRC).withProperties(
@@ -184,7 +198,8 @@ fun MeguriMap(
     var placed by remember { mutableStateOf(memoryKey != null && CameraMemory.saved[memoryKey] != null) }
     var placedAt by remember { mutableStateOf(if (placed) memoryKey?.let { CameraMemory.placedAt[it] } else null) }
     LaunchedEffect(placedAt) { memoryKey?.let { k -> placedAt?.let { CameraMemory.placedAt[k] = it } } }
-    LaunchedEffect(style, pins, here) {
+    var fittedRoute by remember { mutableStateOf<List<Pair<Double, Double>>>(emptyList()) }
+    LaunchedEffect(style, pins, here, route) {
         val s = style ?: return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
         s.getSourceAs<GeoJsonSource>(SRC)?.setGeoJson(
@@ -201,6 +216,19 @@ fun MeguriMap(
         s.getSourceAs<GeoJsonSource>(SRC_HERE)?.setGeoJson(
             FeatureCollection.fromFeatures(listOfNotNull(here?.let { Feature.fromGeometry(Point.fromLngLat(it.second, it.first)) })),
         )
+        s.getSourceAs<GeoJsonSource>(SRC_ROUTE)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                if (route.size >= 2) listOf(Feature.fromGeometry(org.maplibre.geojson.LineString.fromLngLats(route.map { Point.fromLngLat(it.second, it.first) })))
+                else emptyList(),
+            ),
+        )
+        // A trip map frames the whole line, once
+        if (route.size >= 2 && route != fittedRoute) {
+            placed = true
+            fittedRoute = route
+            m.moveCamera(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(route.map { LatLng(it.first, it.second) }).build(), 60))
+            return@LaunchedEffect
+        }
         // Place once, and again when you have moved far (over about 5 km) from where it was placed
         val movedFar = here != null && placedAt != null && dist2(MapPin("", placedAt!!.first, placedAt!!.second, ItemType.EKI_STAMP, false), here) > 0.0025
         if ((!placed || movedFar) && (here != null || pins.isNotEmpty())) {
@@ -251,6 +279,8 @@ private fun colorHex(c: Color) = String.format("#%06X", c.toArgb() and 0xFFFFFF)
 private const val SRC = "items"
 private const val LAYER = "items-pins"
 private const val SRC_HERE = "here"
+private const val SRC_ROUTE = "route"
+private const val LAYER_ROUTE = "route-line"
 private const val LAYER_HERE = "here-dot"
 private const val LAYER_HERE_HALO = "here-halo"
 private const val STYLE_LIGHT = "https://tiles.openfreemap.org/styles/liberty"

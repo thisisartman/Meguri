@@ -7,6 +7,13 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- **Phase 4a (in the next build): Trip, in the top-right menu.**
+  - Pick where you start and end, or paste a Google Maps directions link. The app finds the train (Shinkansen or local lines), every station it passes, and what is within 2 km of each.
+  - Station stamps count only where you tap "Get off"; anything else near the line always counts.
+  - "Start trip" turns on Trip mode for the day, and its notification says where you get off next.
+  - "Already went" ticks what you got on a past trip, on the day you pick.
+  - "Share" sends the plan as a message.
+  - The Joetsu Shinkansen is added to the bundled lines.
 - **Phase 3 (in the next build):** "Back up with photos" in Settings, for a new phone: the backup carries every photo, and restoring it puts them back in the gallery. On the same phone nothing is duplicated.
 - **Phase 2 (in the next build):**
   - Your own collections: make one in Settings (name, colour, icon, whether you note what you paid); add items to it; they get a "Mine" tab on Nearby and a section in My book.

@@ -15,6 +15,10 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import dagger.hilt.android.AndroidEntryPoint
+import io.github.thisisartman.collectibles.data.Item
+import io.github.thisisartman.collectibles.data.SavedTrip
+import io.github.thisisartman.collectibles.data.TripStore
+import io.github.thisisartman.collectibles.data.nextGetOff
 import io.github.thisisartman.collectibles.debug.FileLog
 import io.github.thisisartman.collectibles.location.Fix
 import io.github.thisisartman.collectibles.location.LocationSource
@@ -39,12 +43,16 @@ class TripModeService : Service() {
     @Inject lateinit var notifier: AlertNotifier
     @Inject lateinit var location: LocationSource
     @Inject lateinit var log: FileLog
+    @Inject lateinit var trips: TripStore
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val main = Handler(Looper.getMainLooper())
     private val lm by lazy { getSystemService(LocationManager::class.java) }
     private var intervalMs = AlertRules.MAX_INTERVAL_MS
     private var nearestText: String? = null
+    private var titleText: String? = null
+    /** Today's route stations with their places, loaded once per plan. */
+    private var routeCache: Pair<SavedTrip, List<Pair<Item, Pair<Double, Double>>>>? = null
     private var prev: Fix? = null
     private val stopAtEnd = Runnable { log.i("Trip", "End of the trip time"); stopSelfAndClear() }
 
@@ -103,7 +111,20 @@ class TripModeService : Service() {
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             val quiet = settings.quietOn && AlertRules.inQuietHours(hour, AlertSettings.QUIET_FROM, AlertSettings.QUIET_TO)
             // In quiet hours Trip mode still runs, so say why nothing is alerting
-            nearestText = nearest?.let { notifier.nearestText(it.first, it.second) }?.let { if (quiet) notifier.quietSuffix(it) else it }
+            val near = nearest?.let { notifier.nearestText(it.first, it.second) }?.let { if (quiet) notifier.quietSuffix(it) else it }
+            // With a route planned for today, the notification leads with where you get off next (#46, #62)
+            val route = trips.current()?.takeIf { it.stations.isNotEmpty() }
+            val places = route?.let { r -> routeCache?.takeIf { it.first == r }?.second ?: handler.places(r.stations).also { routeCache = r to it } }
+            val off = if (route != null && places != null) {
+                nextGetOff(places.map { Triple(it.first.id, it.second.first, it.second.second) }, route.getOff, fix.lat, fix.lng)
+                    ?.let { (id, m) -> places.first { it.first.id == id }.first to m }
+            } else null
+            titleText = if (route != null && places != null) {
+                val from = places.firstOrNull { it.first.id == route.from }?.first
+                val to = places.firstOrNull { it.first.id == route.to }?.first
+                if (from != null && to != null) notifier.tripRouteTitle(from, to, time(settings.tripUntilMs)) else null
+            } else null
+            nearestText = listOfNotNull(off?.let { notifier.getOffText(it.first, it.second) }, near).joinToString("\n").ifEmpty { null }
             main.post {
                 updateNotification()
                 // Re-ask only on a real change, so GPS is not restarted on every fix
@@ -112,7 +133,7 @@ class TripModeService : Service() {
         }
     }
 
-    private fun notification() = notifier.tripNotification(time(settings.tripUntilMs), nearestText)
+    private fun notification() = notifier.tripNotification(time(settings.tripUntilMs), nearestText, titleText)
 
     @SuppressLint("MissingPermission")
     private fun updateNotification() {
