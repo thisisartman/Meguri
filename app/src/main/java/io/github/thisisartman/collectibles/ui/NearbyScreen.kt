@@ -8,7 +8,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -77,7 +79,7 @@ import io.github.thisisartman.collectibles.data.Origin
 /** Nearby, layout B (owner's pick, 2026-11-06): the map fills the screen and a sheet of tiles sits over it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
@@ -126,11 +128,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                             onClick = { tab = t; kind = null },
                             shape = SegmentedButtonDefaults.itemShape(i, 2),
                         ) {
-                            Text(
-                                stringResource(if (t == MapSection.STAMPS) R.string.nearby_tab_stamps else R.string.nearby_tab_cards) +
-                                    "  " + stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
-                                maxLines = 1,
-                            )
+                            // Name and count on two lines, so neither is cut at large text
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(stringResource(if (t == MapSection.STAMPS) R.string.nearby_tab_stamps else R.string.nearby_tab_cards), maxLines = 1)
+                                Text(
+                                    stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
+                                    style = MaterialTheme.typography.labelSmall, maxLines = 1,
+                                )
+                            }
                         }
                     }
                 }
@@ -143,12 +148,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                     if (kinds.size > 1) kinds.forEach { t ->
                         FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
                     }
-                    Spacer(Modifier.width(4.dp))
+                }
+                // Sort and size on their own row, so the chips never push them off the screen
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = { byName = !byName }) {
-                        Text(stringResource(if (byName) R.string.nearby_sort_az else R.string.nearby_sort_near))
+                        Text(stringResource(if (byName) R.string.nearby_sort_az else R.string.nearby_sort_near), maxLines = 1)
                     }
                     TextButton(onClick = { tileStep = (tileStep + 1) % TILE_SIZES.size }) {
-                        Text(stringResource(R.string.nearby_tile_size, tileStep + 1))
+                        Text(stringResource(R.string.nearby_tile_size, tileStep + 1), maxLines = 1)
                     }
                 }
                 if (shown.isEmpty()) {
@@ -160,8 +167,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                     )
                 } else {
                     val tile = TILE_SIZES[tileStep]
+                    // Wider cells with large text, so names wrap between words instead of inside them
+                    val cell = (tile + 24.dp) * LocalDensity.current.fontScale.coerceIn(1f, 2f)
                     LazyVerticalGrid(
-                        columns = GridCells.Adaptive(tile + 24.dp),
+                        columns = GridCells.Adaptive(cell),
                         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 96.dp),
                         modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp),
                     ) {
@@ -211,6 +220,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boo
                             Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.map_expand))
                         }
                     }
+                    FilledTonalIconButton(onClick = onLog) {
+                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.a11y_log_find))
+                    }
                 }
             }
             // A tapped pin: what it is, with Details and Directions (#52)
@@ -258,7 +270,7 @@ private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, o
         Spacer(Modifier.height(4.dp))
         Text(
             name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
-            maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = size + 20.dp),
+            maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         distance?.let {
             Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

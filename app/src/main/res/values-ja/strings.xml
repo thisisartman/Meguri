@@ -219,4 +219,5 @@
     <string name="nearby_sort_az">名前順 ▾</string>
     <string name="nearby_tile_size">サイズ %1$d</string>
     <string name="nearby_empty_kind">まだありません。</string>
+    <string name="a11y_log_find">記録する</string>
 </resources>

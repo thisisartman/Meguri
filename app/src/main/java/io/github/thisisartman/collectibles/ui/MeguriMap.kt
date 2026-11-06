@@ -96,6 +96,22 @@ fun MeguriMap(
             }
             val builder = offlineStyle?.let { Style.Builder().fromJson(it) } ?: Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)
             m.setStyle(builder) { s ->
+                // Under the pins, larger and soft, so a pin where you stand stays visible
+                s.addSource(GeoJsonSource(SRC_HERE))
+                s.addLayer(
+                    CircleLayer(LAYER_HERE_HALO, SRC_HERE).withProperties(
+                        PropertyFactory.circleRadius(Expression.literal(16f)),
+                        PropertyFactory.circleColor(Expression.color(0x332A6BE0)),
+                    ),
+                )
+                s.addLayer(
+                    CircleLayer(LAYER_HERE, SRC_HERE).withProperties(
+                        PropertyFactory.circleRadius(Expression.literal(6f)),
+                        PropertyFactory.circleColor(Expression.color(0xFF2A6BE0.toInt())),
+                        PropertyFactory.circleStrokeWidth(Expression.literal(2f)),
+                        PropertyFactory.circleStrokeColor(Expression.color(AColor.WHITE)),
+                    ),
+                )
                 s.addSource(GeoJsonSource(SRC))
                 s.addLayer(
                     CircleLayer(LAYER, SRC).withProperties(
@@ -105,15 +121,6 @@ fun MeguriMap(
                         PropertyFactory.circleColor(
                             Expression.switchCase(Expression.get("collected"), Expression.get("color"), Expression.color(AColor.WHITE)),
                         ),
-                    ),
-                )
-                s.addSource(GeoJsonSource(SRC_HERE))
-                s.addLayer(
-                    CircleLayer(LAYER_HERE, SRC_HERE).withProperties(
-                        PropertyFactory.circleRadius(Expression.literal(6f)),
-                        PropertyFactory.circleColor(Expression.color(0xFF2A6BE0.toInt())),
-                        PropertyFactory.circleStrokeWidth(Expression.literal(3f)),
-                        PropertyFactory.circleStrokeColor(Expression.color(AColor.WHITE)),
                     ),
                 )
                 style = s
@@ -166,5 +173,6 @@ private const val SRC = "items"
 private const val LAYER = "items-pins"
 private const val SRC_HERE = "here"
 private const val LAYER_HERE = "here-dot"
+private const val LAYER_HERE_HALO = "here-halo"
 private const val STYLE_LIGHT = "https://tiles.openfreemap.org/styles/liberty"
 private const val STYLE_DARK = "https://tiles.openfreemap.org/styles/dark"
