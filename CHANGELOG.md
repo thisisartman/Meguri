@@ -2,7 +2,8 @@
 
 ## 2026-11-06: v0.3 started, from the owner's trip feedback (not released)
 - Planned: a map on Nearby, in the layout the owner picked (the map fills the screen, with a sheet of Stamps and Cards on top), a colour setting, a welcome screen, several photos per find and plain English names. Plan in `docs/V0.3_PLAN.md`.
-- Being built: the map itself, with online tiles for now. The app goes online for map tiles only.
+- Built, not yet tried on a phone: Nearby is now a map with a sheet of round tiles (Stamps and Cards tabs, filters by kind, nearest or A to Z, three sizes); tap a pin for Details and Directions; a full-screen map per tab.
+- The map works offline around the trip area (IUJ and Urasa to Niigata City) and uses online map tiles elsewhere. The app goes online for map tiles only.
 
 ## 2026-11-06: Version 0.2.0, ready for the S23, with alerts (#43, #10, #42)
 - Alerts near things still to get: Trip mode (checks your position every 20 s to 2 min until 23:59, from More or a quick-settings tile) and alerts while the app is closed (Google geofences, needs location "Allow all the time"). Got it, Photo and Dismiss on the notification; Got it turns into "Logged ... Undo". Distance 200 m to 1 km, per-type switches, quiet at night 22:00 to 07:00, once a visit.
