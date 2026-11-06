@@ -5,6 +5,7 @@
 - Tried on an emulator, not yet on a phone: Nearby is now a map with a sheet of round tiles (Stamps and Cards tabs, filters by kind, nearest or A to Z, three sizes); tap a pin for Details and Directions; a full-screen map per tab.
 - The map works offline around the trip area (IUJ and Urasa to Niigata City) and uses online map tiles elsewhere. The app goes online for map tiles only.
 - Known problem: the map shows no place names yet (being fixed). Dark mode works; "still to get" pins are no longer the brightest thing on a dark map.
+- Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
 
 ## 2026-11-06: Version 0.2.0, ready for the S23, with alerts (#43, #10, #42)
