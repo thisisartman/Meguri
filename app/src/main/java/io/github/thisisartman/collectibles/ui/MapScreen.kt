@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -104,17 +106,36 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                     ).joinToString(" · ")
                     Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(12.dp))
-                    Row {
-                        Button(onClick = { nav.openItem(row.item.id) }) { Text(stringResource(R.string.map_details)) }
-                        Spacer(Modifier.width(8.dp))
-                        InkOutlinedButton(onClick = {
-                            val i = row.item
-                            val uri = Uri.parse("geo:${i.lat},${i.lng}?q=${i.lat},${i.lng}(${Uri.encode(i.placeName ?: i.nameJa)})")
-                            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
-                        }) { Text(stringResource(R.string.item_directions_plain)) }
-                    }
+                    PinActions(row, vm, nav, onCollected = { picked = null })
                 }
             }
+        }
+    }
+}
+
+/**
+ * A tapped pin's buttons, the same on Nearby and the full-screen map. Owner, 2026-11-06: collect straight from
+ * the map. Still to get: Directions, Details, and Collected as the main action on the right, as everywhere else.
+ * Collected already: Directions and Details.
+ */
+@Composable
+fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollected: () -> Unit) {
+    val context = LocalContext.current
+    val name = row.item.displayName(isJapanese())
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        InkOutlinedButton(onClick = {
+            val i = row.item
+            val uri = Uri.parse("geo:${i.lat},${i.lng}?q=${i.lat},${i.lng}(${Uri.encode(i.placeName ?: i.nameJa)})")
+            runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, uri)) }
+        }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.item_directions_plain), maxLines = 1) }
+        if (row.findCount > 0) {
+            Button(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.map_details), maxLines = 1) }
+        } else {
+            InkOutlinedButton(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.map_details), maxLines = 1) }
+            Button(
+                onClick = { vm.gotIt(row, name); onCollected() },
+                modifier = Modifier.heightIn(min = 48.dp).spoken(stringResource(R.string.a11y_got_it, name)),
+            ) { Text(stringResource(R.string.got_it), maxLines = 1) }
         }
     }
 }

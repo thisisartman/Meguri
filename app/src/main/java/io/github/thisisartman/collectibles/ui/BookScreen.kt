@@ -86,15 +86,19 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             Spacer(Modifier.width(8.dp))
             val action = if (marking) R.string.cancel else R.string.book_mark_owned
             // Only catalogue items still to get can be marked; things added by hand already have their find
-            if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false)) {
+            // 48 dp tall like every other control (it measured 32 dp in the 2026-11-06 Poco review)
+            if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false).heightIn(min = 48.dp)) {
                 Text(stringResource(action), textAlign = TextAlign.End)
             }
+            // The same top-right menu as Nearby: Settings and Logs
+            if (!marking) MenuButton(nav)
         }
         // Sections fold on a tap, so a long book stays easy to get around (overnight review round 8)
         var folded by remember { mutableStateOf(setOf<String>()) }
         fun isOpen(key: String) = marking || key !in folded
         fun toggle(key: String) { folded = if (key in folded) folded - key else folded + key }
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 96.dp)) {
+        // No floating button any more (Log is in the bottom bar), so the list only needs a little room at the end
+        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             // Manhole cards by prefecture
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->

@@ -30,13 +30,13 @@
     <string name="type_eki_plural">駅スタンプ</string>
     <string name="type_ekitag">エキタグ</string>
 
-    <string name="a11y_got_it">%1$sを取得</string>
+    <string name="a11y_got_it">%1$sを集めた</string>
     <string name="a11y_photo">%1$sの写真を撮る</string>
     <string name="a11y_remove_find">%1$sの記録を削除</string>
     <string name="state_collected">取得済み</string>
     <string name="state_to_get">未取得</string>
-    <string name="got_it">取得</string>
-    <string name="got_it_again">もう一度取得</string>
+    <string name="got_it">集めた</string>
+    <string name="got_it_again">もう一度集めた</string>
     <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを記録・%2$s</string>
@@ -115,7 +115,7 @@
     <string name="new_name_romaji">名前（ローマ字・任意）</string>
     <string name="new_save">保存して記録</string>
 
-    <string name="more_title">その他</string>
+    <string name="more_title">設定</string>
     <string name="more_language">言語</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
@@ -173,7 +173,7 @@
     <string name="trip_needs_location">トリップモードには位置情報の許可が必要です。</string>
     <string name="bg_title">アプリを閉じていても通知</string>
     <string name="bg_sub_off">Googleの位置情報サービスを使うため、電池の消費は少なめです。位置情報を「常に許可」にする必要があります。</string>
-    <string name="bg_sub_on">オン</string>
+    <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
     <string name="bg_sub_needs">位置情報の「常に許可」が必要です。タップして許可してください。</string>
@@ -195,7 +195,7 @@
     <string name="trip_channel_sub">トリップモードがオンの間に表示</string>
     <string name="alert_text">%1$s・あと%2$s</string>
     <string name="alert_text_here">%1$s・ここです</string>
-    <string name="alert_done">取得</string>
+    <string name="alert_done">集めた</string>
     <string name="alert_dismiss">閉じる</string>
     <string name="alert_logged">%1$sを記録しました</string>
     <string name="trip_on_until">トリップモード %1$sまで</string>
@@ -245,4 +245,7 @@
     <string name="photo_remove_note">外すだけで、写真はギャラリーに残ります。</string>
     <string name="photo_done">完了</string>
     <string name="a11y_photo_kind">写真：%1$s。タップで変更・削除</string>
+    <string name="menu_settings">設定</string>
+    <string name="menu_open">メニュー</string>
+    <string name="nav_log">記録</string>
 </resources>

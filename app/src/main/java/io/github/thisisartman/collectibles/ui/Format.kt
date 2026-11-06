@@ -74,14 +74,17 @@ fun androidx.compose.ui.Modifier.collectedState(text: String): androidx.compose.
  * backup carries the earlier one). Japanese mode shows them in Japanese; any other note is shown as written.
  * A proper fix is a Japanese notes column in the catalogue (open item, schema v2).
  */
-private val STATION_NOTES_JA = mapOf(
-    "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors." to
-        "この駅の紙のスタンプは未確認です。地図データ © OpenStreetMap contributors",
-    "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked." to
-        "駅の位置はOpenStreetMap（ODbL）によるものです。紙のスタンプがあるかは未確認です。",
+private val GENERATED_STATION_NOTES = setOf(
+    "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.",
+    "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked.",
 )
 
-fun localNote(note: String, japanese: Boolean): String = if (japanese) STATION_NOTES_JA[note.trim()] ?: note else note
+// Shown in place of the generator's notes, in the app's own voice (the OpenStreetMap credit is in About)
+private const val STATION_NOTE_EN = "Not every station has a stamp. If you can't see one, ask at the ticket gate."
+private const val STATION_NOTE_JA = "スタンプがない駅もあります。見当たらないときは改札で聞いてみてください。"
+
+fun localNote(note: String, japanese: Boolean): String =
+    if (note.trim() in GENERATED_STATION_NOTES) (if (japanese) STATION_NOTE_JA else STATION_NOTE_EN) else note
 
 /** The separator between parts of a line: " · " in English, "・" in Japanese. */
 @androidx.compose.runtime.Composable

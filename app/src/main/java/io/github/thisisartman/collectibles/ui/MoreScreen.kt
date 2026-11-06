@@ -3,6 +3,7 @@ package io.github.thisisartman.collectibles.ui
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -68,7 +69,7 @@ class MoreViewModel @Inject constructor(
 }
 
 @Composable
-fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewModel = hiltViewModel()) {
+fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {}, vm: MoreViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val ja = isJapanese()
     val scope = rememberCoroutineScope()
@@ -196,7 +197,16 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         )
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Text(stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(16.dp))
+        // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
+        Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            androidx.compose.material3.IconButton(onClick = onBack) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back),
+                )
+            }
+            Text(stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
+        }
 
         SectionTitle(stringResource(R.string.more_language))
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

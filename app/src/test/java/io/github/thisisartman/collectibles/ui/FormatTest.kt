@@ -20,10 +20,14 @@ class FormatTest {
         assertEquals(R.string.km to "11", formatDistance(11_200.0))
     }
 
-    @Test fun stationNotesInJapaneseModeOnly() {
-        val en = "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors."
-        assertEquals("この駅の紙のスタンプは未確認です。地図データ © OpenStreetMap contributors", localNote(en, japanese = true))
-        assertEquals(en, localNote(en, japanese = false))
+    @Test fun generatedStationNotesReadInTheAppsVoice() {
+        for (generated in listOf(
+            "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.",
+            "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked.",
+        )) {
+            assertEquals("Not every station has a stamp. If you can't see one, ask at the ticket gate.", localNote(generated, japanese = false))
+            assertEquals("スタンプがない駅もあります。見当たらないときは改札で聞いてみてください。", localNote(generated, japanese = true))
+        }
         assertEquals("One card per person.", localNote("One card per person.", japanese = true))
     }
 }

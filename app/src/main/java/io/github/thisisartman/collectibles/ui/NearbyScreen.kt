@@ -300,9 +300,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.map_expand))
                         }
                     }
-                    FilledTonalIconButton(onClick = onLog) {
-                        Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.a11y_log_find))
-                    }
+                    // Log a find is the middle of the bottom bar now; the top right is the menu (owner, 2026-11-06)
+                    MenuButton(nav)
                 }
             }
             // A tapped pin: what it is, with Details and Directions (#52)
@@ -321,15 +320,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(10.dp))
-                        Row {
-                            Button(onClick = { nav.openItem(r.item.id) }) { Text(stringResource(R.string.map_details)) }
-                            Spacer(Modifier.width(8.dp))
-                            InkOutlinedButton(onClick = {
-                                val i = r.item
-                                val uri = android.net.Uri.parse("geo:${i.lat},${i.lng}?q=${i.lat},${i.lng}(${android.net.Uri.encode(i.placeName ?: i.nameJa)})")
-                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri)) }
-                            }) { Text(stringResource(R.string.item_directions_plain)) }
-                        }
+                        PinActions(r, vm, nav, onCollected = { picked = null })
                     }
                 }
             }

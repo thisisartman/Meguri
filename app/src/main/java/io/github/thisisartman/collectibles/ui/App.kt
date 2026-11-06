@@ -5,14 +5,14 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Place
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -70,7 +70,8 @@ fun NavHostController.openTab(route: String) = navigate(route) {
     launchSingleTop = true
     restoreState = true
 }
-fun NavHostController.openMore() = openTab(MORE)
+// Settings is a page of its own now (opened from the top-right menu), not a tab
+fun NavHostController.openMore() = navigate(MORE) { launchSingleTop = true }
 fun NavHostController.openBook() = openTab(BOOK)
 
 @Composable
@@ -163,31 +164,53 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
 
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
-    val topLevel = route == null || route in setOf(NEARBY, BOOK, MORE)
+    val topLevel = route == null || route in setOf(NEARBY, BOOK)
 
     CompositionLocalProvider(LocalPhoto provides photo) {
         Scaffold(
             // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
             snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
-            floatingActionButton = {
-                // Hidden while marking owned cards: the mark button takes the bottom of the screen
-                // Nearby has its own + in the header, so the button never covers the tile grid
-                if (route == BOOK && !bookMarking) {
-                    FloatingActionButton(
-                        onClick = { showLog = true },
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                    ) { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.log_title)) }
-                }
-            },
             bottomBar = {
-                if (topLevel) {
+                // Hidden while marking owned cards: the mark button takes the bottom of the screen
+                if (topLevel && !(route == BOOK && bookMarking)) {
                     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
-                        listOf(
+                        // Owner, 2026-11-06: the app is used from the bottom, so Log a find is the middle button
+                        // (one + for the whole app, replacing the header + and the My book floating button)
+                        val items = listOf(
                             Triple(NEARBY, R.string.nav_nearby, Icons.Filled.Place),
+                            Triple("log", R.string.nav_log, Icons.Filled.Add),
                             Triple(BOOK, R.string.nav_book, Icons.AutoMirrored.Filled.List),
-                            Triple(MORE, R.string.nav_more, Icons.Filled.MoreVert),
-                        ).forEach { (r, label, icon) ->
+                        )
+                        items.forEach { (r, label, icon) ->
+                            if (r == "log") {
+                                NavigationBarItem(
+                                    selected = false,
+                                    onClick = { showLog = true },
+                                    icon = {
+                                        // Takes only a normal icon's 24 dp in the layout and rises above it, so "Log"
+                                        // lines up with Nearby and My book (it sat lower in the 2026-11-06 review)
+                                        androidx.compose.material3.Surface(
+                                            modifier = Modifier.layout { measurable, constraints ->
+                                                val p = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
+                                                val h = 24.dp.roundToPx()
+                                                layout(p.width, h) { p.place(0, h - p.height + 6.dp.roundToPx()) }
+                                            },
+                                            shape = androidx.compose.foundation.shape.CircleShape,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            contentColor = MaterialTheme.colorScheme.onPrimary,
+                                            shadowElevation = 2.dp,
+                                        ) {
+                                            Icon(icon, contentDescription = stringResource(R.string.log_title), modifier = Modifier.padding(10.dp).size(28.dp))
+                                        }
+                                    },
+                                    label = { Text(stringResource(label)) },
+                                    colors = NavigationBarItemDefaults.colors(
+                                        indicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                                        unselectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    ),
+                                )
+                                return@forEach
+                            }
                             NavigationBarItem(
                                 selected = (route ?: NEARBY) == r,
                                 onClick = { nav.openTab(r) },
@@ -211,7 +234,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                 NavHost(nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
                     composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
-                    composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
+                    composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() }) }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
                     }

@@ -30,13 +30,13 @@
     <string name="type_eki_plural">Station stamps</string>
     <string name="type_ekitag">Ekitag</string>
 
-    <string name="got_it">Got it</string>
-    <string name="a11y_got_it">Got it: %1$s</string>
+    <string name="got_it">Collected</string>
+    <string name="a11y_got_it">Collected: %1$s</string>
     <string name="a11y_photo">Photo of %1$s</string>
     <string name="a11y_remove_find">Remove the find from %1$s</string>
     <string name="state_collected">Collected</string>
     <string name="state_to_get">Still to get</string>
-    <string name="got_it_again">Got it again</string>
+    <string name="got_it_again">Collected again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
     <string name="logged">Logged %1$s · %2$s</string>
@@ -115,7 +115,7 @@
     <string name="new_name_romaji">Name in romaji (optional)</string>
     <string name="new_save">Save and log</string>
 
-    <string name="more_title">More</string>
+    <string name="more_title">Settings</string>
     <string name="more_language">Language</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
@@ -173,7 +173,7 @@
     <string name="trip_needs_location">Trip mode needs location access.</string>
     <string name="bg_title">Alerts when the app is closed</string>
     <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
-    <string name="bg_sub_on">On</string>
+    <string name="bg_sub_on">Tells you when you are near something still to get, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
     <string name="bg_sub_needs">Needs location set to \"Allow all the time\". Tap to allow it.</string>
@@ -195,7 +195,7 @@
     <string name="trip_channel_sub">Shown while Trip mode is on</string>
     <string name="alert_text">%1$s · %2$s away</string>
     <string name="alert_text_here">%1$s · you are here</string>
-    <string name="alert_done">Got it</string>
+    <string name="alert_done">Collected</string>
     <string name="alert_dismiss">Dismiss</string>
     <string name="alert_logged">Logged %1$s</string>
     <string name="trip_on_until">Trip mode on until %1$s</string>
@@ -245,4 +245,7 @@
     <string name="photo_remove_note">Removing only unlinks it: the picture stays in your gallery.</string>
     <string name="photo_done">Done</string>
     <string name="a11y_photo_kind">Photo: %1$s. Tap to change or remove.</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_open">Menu</string>
+    <string name="nav_log">Log</string>
 </resources>
