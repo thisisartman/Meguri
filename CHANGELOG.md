@@ -7,6 +7,9 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- On the Poco's dev copy (a real phone): place names show in English and Japanese, in dark and light mode.
+- The Nearby sheet now rests high enough to show a whole row of tiles, with both lines of a name and the distance (names like Minami-Yoshida Station were cut off).
+- Sort and tile size are now icons on the chips row: the sort icon opens Nearest or A to Z, and the grid icon opens a size slider. A new sort or filter starts from the top of the list, and names in neighbouring columns no longer run together.
 
 ## 2026-11-06: Version 0.2.0, ready for the S23, with alerts (#43, #10, #42)
 - Alerts near things still to get: Trip mode (checks your position every 20 s to 2 min until 23:59, from More or a quick-settings tile) and alerts while the app is closed (Google geofences, needs location "Allow all the time"). Got it, Photo and Dismiss on the notification; Got it turns into "Logged ... Undo". Distance 200 m to 1 km, per-type switches, quiet at night 22:00 to 07:00, once a visit.
