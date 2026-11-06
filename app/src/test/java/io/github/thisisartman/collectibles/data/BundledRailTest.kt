@@ -23,6 +23,17 @@ class BundledRailTest {
         assertEquals(93, keys.size)
     }
 
+    @Test fun damCardsFromTheMlitList() {
+        // Niigata's 33 dams on the MLIT list of 2026-01-16, less Okumiomote (not handed out: road closed)
+        val dams = rows.filter { it.type == ItemType.DAM_CARD }
+        assertEquals(32, dams.size)
+        assertEquals(32, dams.map { it.catalogKey }.toSet().size)
+        assertTrue(dams.none { it.nameJa == "奥三面ダム" })
+        assertTrue(dams.all { it.prefecture == "新潟県" && it.sourceUrl!!.startsWith("https://www.mlit.go.jp/") })
+        assertTrue(dams.all { "国土交通省" in it.notes.orEmpty() })
+        assertEquals(30, dams.count { it.lat != null && it.lng != null })
+    }
+
     @Test fun urasaToNiigataRidesTheShinkansen() {
         val r = graph.route(key("浦佐駅"), key("新潟駅"))!!
         assertEquals(listOf(RailGraph.SHINKANSEN), r.map { it.lineId })

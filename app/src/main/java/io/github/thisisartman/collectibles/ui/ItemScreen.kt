@@ -252,7 +252,8 @@ private fun Facts(item: Item) {
         ItemType.MANHOLE_CARD -> R.string.item_handed_out_at to R.string.item_hours
         ItemType.GOSHUIN -> R.string.item_office to R.string.item_office_hours
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
-        ItemType.CUSTOM -> R.string.item_place to R.string.item_hours
+        ItemType.CUSTOM, ItemType.MUSEUM_STAMP -> R.string.item_place to R.string.item_hours
+        ItemType.DAM_CARD -> R.string.item_handed_out_at to R.string.item_hours
     }
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp),

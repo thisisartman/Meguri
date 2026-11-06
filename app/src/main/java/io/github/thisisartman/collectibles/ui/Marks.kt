@@ -63,6 +63,8 @@ fun typeIcon(type: io.github.thisisartman.collectibles.data.ItemType): Int = whe
     io.github.thisisartman.collectibles.data.ItemType.EKITAG -> io.github.thisisartman.collectibles.R.drawable.ic_type_ekitag
     // Your own collections: their chosen icon is drawn by [customIcon]; this is the fallback
     io.github.thisisartman.collectibles.data.ItemType.CUSTOM -> io.github.thisisartman.collectibles.R.drawable.ic_collect
+    io.github.thisisartman.collectibles.data.ItemType.DAM_CARD -> io.github.thisisartman.collectibles.R.drawable.ic_type_dam
+    io.github.thisisartman.collectibles.data.ItemType.MUSEUM_STAMP -> io.github.thisisartman.collectibles.R.drawable.ic_type_museum
 }
 
 /** A small type icon in the type's colour, e.g. next to a name. */

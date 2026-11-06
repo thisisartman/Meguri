@@ -36,9 +36,17 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getInt(KEY_RADIUS, DEFAULT_RADIUS_M)
         set(v) = prefs.edit().putInt(KEY_RADIUS, v).apply()
 
+    /**
+     * Kinds that alert. A set saved before dam cards and museum stamps existed (#55) gets them once, switched on like
+     * the defaults; the marker records that, so switching them off afterwards sticks.
+     */
     var types: Set<ItemType>
-        get() = prefs.getStringSet(KEY_TYPES, null)?.mapNotNull { runCatching { ItemType.valueOf(it) }.getOrNull() }?.toSet() ?: DEFAULT_TYPES
-        set(v) = prefs.edit().putStringSet(KEY_TYPES, v.map { it.name }.toSet()).apply()
+        get() {
+            val saved = prefs.getStringSet(KEY_TYPES, null) ?: return DEFAULT_TYPES
+            val kinds = saved.mapNotNull { runCatching { ItemType.valueOf(it) }.getOrNull() }.toSet()
+            return if (MARK_V2 in saved) kinds else kinds + NEW_IN_V2
+        }
+        set(v) = prefs.edit().putStringSet(KEY_TYPES, v.map { it.name }.toSet() + MARK_V2).apply()
 
     var quietOn: Boolean
         get() = prefs.getBoolean(KEY_QUIET, true)
@@ -68,7 +76,9 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
     companion object {
         const val DEFAULT_RADIUS_M = 300
         val RADIUS_CHOICES = listOf(200, 300, 500, 1000)
-        val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP)
+        val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP)
+        val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2
+        private const val MARK_V2 = "_kinds_v2"
         const val QUIET_FROM = 22
         const val QUIET_TO = 7
         const val COOLDOWN_MS = 12 * 60 * 60_000L

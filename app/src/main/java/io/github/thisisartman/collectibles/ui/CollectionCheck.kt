@@ -107,10 +107,12 @@ fun CollectionCheckScreen(
     val manholeLabel = stringResource(R.string.type_manhole_plural)
     val ekiLabel = stringResource(R.string.type_eki_plural)
     val goshuinLabel = stringResource(R.string.type_goshuin)
+    val damLabel = stringResource(R.string.type_dam_plural)
+    val museumLabel = stringResource(R.string.type_museum_plural)
     val otherStations = stringResource(R.string.book_other_stations)
     val customLabel = stringResource(R.string.type_custom)
     // Only catalogue items can be ticked; things you added yourself already have their collection
-    val groups = remember(rows, lines, stations, ja, customTypes, only) {
+    val groups = remember(rows, lines, stations, ja, customTypes, only, damLabel, museumLabel) {
         val candidates = rows.filter { it.item.origin != Origin.USER || it.item.type == ItemType.CUSTOM }
             .filter { only == null || it.item.id in only }
         val out = mutableListOf<CheckGroup>()
@@ -126,6 +128,8 @@ fun CollectionCheckScreen(
         }
         eki.filter { it.item.id !in placed }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("e:_", "$ekiLabel · $otherStations", it) }
         candidates.filter { it.item.type == ItemType.GOSHUIN }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("g", goshuinLabel, it) }
+        candidates.filter { it.item.type == ItemType.DAM_CARD }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("dam", damLabel, it) }
+        candidates.filter { it.item.type == ItemType.MUSEUM_STAMP }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("mus", museumLabel, it) }
         candidates.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }.forEach { (id, l) ->
             out += CheckGroup("c:$id", customTypes[id]?.name ?: customLabel, l)
         }

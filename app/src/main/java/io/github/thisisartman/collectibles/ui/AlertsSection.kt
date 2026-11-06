@@ -197,7 +197,8 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     Text(stringResource(R.string.alert_for), Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.bodyLarge)
     val types = remember(tick) { s.types }
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin, ItemType.EKI_STAMP to R.string.type_eki_plural)
+        listOf(ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin, ItemType.EKI_STAMP to R.string.type_eki_plural,
+            ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural)
             .forEach { (t, label) ->
                 InkFilterChip(
                     selected = t in types,

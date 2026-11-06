@@ -40,6 +40,8 @@ fun ItemType.label(): Int = when (this) {
     ItemType.EKI_STAMP -> R.string.type_eki
     ItemType.EKITAG -> R.string.type_ekitag
     ItemType.CUSTOM -> R.string.type_custom
+    ItemType.DAM_CARD -> R.string.type_dam
+    ItemType.MUSEUM_STAMP -> R.string.type_museum
 }
 
 /** Short text inside a seal: the design code for manhole cards, else the start of the name. */
@@ -118,5 +120,7 @@ fun Item.matches(query: String): Boolean {
 fun ItemType.pluralLabel(): Int = when (this) {
     ItemType.MANHOLE_CARD -> R.string.type_manhole_plural
     ItemType.EKI_STAMP -> R.string.type_eki_plural
+    ItemType.DAM_CARD -> R.string.type_dam_plural
+    ItemType.MUSEUM_STAMP -> R.string.type_museum_plural
     else -> label()
 }

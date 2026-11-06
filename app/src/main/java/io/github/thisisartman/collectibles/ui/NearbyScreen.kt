@@ -566,7 +566,7 @@ fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
     s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + sep() + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
     s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + sep() + (lineName ?: s.lineId)
     s.type == ItemType.EKI_STAMP -> stringResource(R.string.type_eki_plural) + sep() + stringResource(R.string.book_other_stations)
-    else -> stringResource(s.type.label())
+    else -> stringResource(s.type.pluralLabel())
 }
 
 @Composable

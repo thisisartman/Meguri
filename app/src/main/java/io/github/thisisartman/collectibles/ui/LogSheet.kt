@@ -193,7 +193,7 @@ fun NewItemDialog(
             Column(Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(stringResource(R.string.new_type), style = MaterialTheme.typography.labelLarge)
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    listOf(ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MANHOLE_CARD).forEach { t ->
+                    listOf(ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MANHOLE_CARD, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP).forEach { t ->
                         InkFilterChip(selected = type == t, onClick = { type = t; customId = null }, label = { Text(stringResource(t.label()), maxLines = 1) }, leadingIcon = { TypeDot(t) })
                     }
                     customTypes.forEach { c ->

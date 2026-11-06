@@ -55,6 +55,8 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             ItemType.EKI_STAMP -> R.string.type_eki
             ItemType.EKITAG -> R.string.type_ekitag
             ItemType.CUSTOM -> R.string.type_custom
+            ItemType.DAM_CARD -> R.string.type_dam
+            ItemType.MUSEUM_STAMP -> R.string.type_museum
         },
     )
 

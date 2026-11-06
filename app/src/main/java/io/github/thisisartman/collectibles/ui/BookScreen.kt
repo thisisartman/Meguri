@@ -128,17 +128,23 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     SummaryCard(s, name ?: s.lineId ?: stringResource(R.string.book_other_stations), onClick = { nav.openLine(s.lineId.orEmpty()) })
                 }
             }
-            // Goshuin
-            val goshuin = rows.filter { it.item.type == ItemType.GOSHUIN }
+            // Goshuin, dam cards, museum stamps (#55): one section each, open-ended (no fixed total)
+            listOf(Triple(ItemType.GOSHUIN, R.string.type_goshuin, "h:g"), Triple(ItemType.DAM_CARD, R.string.type_dam_plural, "h:dam"),
+                Triple(ItemType.MUSEUM_STAMP, R.string.type_museum_plural, "h:mus")).forEach { (kind, label, hk) ->
+            val goshuin = rows.filter { it.item.type == kind }
             if (goshuin.isNotEmpty()) {
-                stickyHeader(key = "h:g") {
-                    GroupHeader(ItemType.GOSHUIN, stringResource(R.string.type_goshuin), goshuin.count { it.collected }.toString(), open = isOpen("h:g"), onToggle = if (marking) null else ({ toggle("h:g") }))
+                stickyHeader(key = hk) {
+                    // Dam cards are a known list (MLIT), so they count against it; goshuin and museum stamps are open-ended
+                    val got = goshuin.count { it.collected }
+                    GroupHeader(kind, stringResource(label), if (kind == ItemType.DAM_CARD) "$got / ${goshuin.size}" else got.toString(),
+                        open = isOpen(hk), onToggle = if (marking) null else ({ toggle(hk) }))
                 }
-                if (isOpen("h:g")) items(goshuin.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
+                if (isOpen(hk)) items(goshuin.sortedWith(compareByDescending<io.github.thisisartman.collectibles.data.ItemRow> { it.lastAt ?: 0L }.thenBy { it.item.displayName(ja) }), key = { it.item.id }) { r ->
                     ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
                         onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
                         onOpen = { nav.openItem(r.item.id) })
                 }
+            }
             }
             // Your own collections (#64), one section each, newest collections last
             rows.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }

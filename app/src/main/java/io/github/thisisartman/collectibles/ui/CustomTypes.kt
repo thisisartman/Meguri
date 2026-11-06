@@ -90,8 +90,33 @@ fun colorOf(item: Item): Color {
 @Composable
 fun iconOf(item: Item): Int {
     val custom = item.customTypeId?.let { LocalCustomTypes.current[it] }
-    return if (item.type == ItemType.CUSTOM && custom != null) customIconRes(custom.icon) else typeIcon(item.type)
+    return when {
+        item.type == ItemType.CUSTOM && custom != null -> customIconRes(custom.icon)
+        item.type == ItemType.GOSHUIN -> goshuinIcon(item.nameJa)
+        else -> typeIcon(item.type)
+    }
 }
+
+/** Whether a goshuin's place is a shrine or a temple, from its name; null when the name does not say. */
+fun shrineOrTemple(nameJa: String): Boolean? = when {
+    listOf("神社", "大社", "神宮", "八幡宮", "天満宮", "稲荷", "宮").any { it in nameJa } -> true
+    listOf("寺", "院", "不動", "観音", "大師", "坊").any { it in nameJa } -> false
+    else -> null
+}
+
+/**
+ * The GSI map symbols for goshuin (#53, owner 2026-11-07: official icons): the torii for a shrine, and for a temple
+ * what [TEMPLE_SYMBOL] says (the official 卍 can be misread outside Japan, so the owner is asked).
+ */
+@androidx.annotation.DrawableRes
+fun goshuinIcon(nameJa: String): Int = when (shrineOrTemple(nameJa)) {
+    true -> R.drawable.ic_type_shrine
+    false -> if (TEMPLE_SYMBOL) R.drawable.ic_type_temple else R.drawable.ic_type_goshuin
+    null -> R.drawable.ic_type_goshuin
+}
+
+/** The official 卍 for temples; false keeps the goshuin icon (Telegram meguri-53-temple). */
+const val TEMPLE_SYMBOL = true
 
 /** The name of an item's kind: the built-in kind, or its own collection's name. */
 @Composable

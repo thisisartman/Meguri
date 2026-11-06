@@ -1,0 +1,13 @@
+<!-- Temple: the GSI map symbol for 寺院 (卍, left-facing manji), redrawn. 出典：国土地理院 (PDL1.0) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- the cross -->
+    <path android:fillColor="#FF000000" android:pathData="M11,4h2v16h-2z" />
+    <path android:fillColor="#FF000000" android:pathData="M4,11h16v2h-16z" />
+    <!-- arms bending anticlockwise: top to the left, right arm up, bottom to the right, left arm down -->
+    <path android:fillColor="#FF000000" android:pathData="M4,4h9v2h-9z" />
+    <path android:fillColor="#FF000000" android:pathData="M18,4h2v9h-2z" />
+    <path android:fillColor="#FF000000" android:pathData="M11,18h9v2h-9z" />
+    <path android:fillColor="#FF000000" android:pathData="M4,11h2v9h-2z" />
+</vector>

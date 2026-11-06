@@ -78,7 +78,10 @@ object AppLook {
 }
 
 @Immutable
-data class TypeColors(val manhole: Color, val goshuin: Color, val ekiStamp: Color, val ekitag: Color, val onSeal: Color, val dash: Color, val custom: Color) {
+data class TypeColors(
+    val manhole: Color, val goshuin: Color, val ekiStamp: Color, val ekitag: Color, val onSeal: Color, val dash: Color, val custom: Color,
+    val dam: Color, val museum: Color,
+) {
     /** A built-in kind's colour; your own collections use their chosen colour (see [colorOf]), this is the fallback. */
     fun of(type: ItemType): Color = when (type) {
         ItemType.MANHOLE_CARD -> manhole
@@ -86,11 +89,13 @@ data class TypeColors(val manhole: Color, val goshuin: Color, val ekiStamp: Colo
         ItemType.EKI_STAMP -> ekiStamp
         ItemType.EKITAG -> ekitag
         ItemType.CUSTOM -> custom
+        ItemType.DAM_CARD -> dam
+        ItemType.MUSEUM_STAMP -> museum
     }
 }
 
-private val LightTypes = TypeColors(Color(0xFF3A5BA8), Color(0xFFB83A1E), Color(0xFF00806A), Color(0xFF00806A), Color.White, Color(0xFF8E8E94), Color(0xFF7A5AA8))
-private val DarkTypes = TypeColors(Color(0xFF6A87D2), Color(0xFFE2603F), Color(0xFF2EA88B), Color(0xFF2EA88B), Color(0xFF16161A), Color(0xFF6E6E76), Color(0xFFA88AD2))
+private val LightTypes = TypeColors(Color(0xFF3A5BA8), Color(0xFFB83A1E), Color(0xFF00806A), Color(0xFF00806A), Color.White, Color(0xFF8E8E94), Color(0xFF7A5AA8), Color(0xFF5A6470), Color(0xFF5F6B12))
+private val DarkTypes = TypeColors(Color(0xFF6A87D2), Color(0xFFE2603F), Color(0xFF2EA88B), Color(0xFF2EA88B), Color(0xFF16161A), Color(0xFF6E6E76), Color(0xFFA88AD2), Color(0xFF9AA6B2), Color(0xFFA8B84E))
 
 val LocalTypeColors = staticCompositionLocalOf { LightTypes }
 

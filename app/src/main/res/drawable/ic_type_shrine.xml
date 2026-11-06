@@ -1,0 +1,12 @@
+<!-- Shrine: the GSI map symbol for 神社 (a torii), redrawn. 出典：国土地理院 (PDL1.0) -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp"
+    android:viewportWidth="24" android:viewportHeight="24">
+    <!-- top beam, a little wider than the posts, curving up at the ends -->
+    <path android:fillColor="#FF000000" android:pathData="M2,4.2 Q12,5.6 22,4.2 L21.6,6.6 Q12,7.8 2.4,6.6 Z" />
+    <!-- second beam -->
+    <path android:fillColor="#FF000000" android:pathData="M4.5,9.2h15v2h-15z" />
+    <!-- posts -->
+    <path android:fillColor="#FF000000" android:pathData="M6.2,6.8h2.2v14.2h-2.2z" />
+    <path android:fillColor="#FF000000" android:pathData="M15.6,6.8h2.2v14.2h-2.2z" />
+</vector>

@@ -47,8 +47,8 @@ import io.github.thisisartman.collectibles.data.ItemType
 /** Which items a map shows: everything, or one Nearby section. */
 enum class MapSection(val types: Set<ItemType>) {
     ALL(ItemType.entries.toSet()),
-    STAMPS(setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN)),
-    CARDS(setOf(ItemType.MANHOLE_CARD)),
+    STAMPS(setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN, ItemType.MUSEUM_STAMP)),
+    CARDS(setOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD)),
     // Your own collections (#64); the tab shows only when you have any
     MINE(setOf(ItemType.CUSTOM)),
 }

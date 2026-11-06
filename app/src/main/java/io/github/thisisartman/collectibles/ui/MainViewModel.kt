@@ -301,8 +301,10 @@ class MainViewModel @Inject constructor(
             val other = rows.filter { it.item.type == ItemType.EKI_STAMP && it.item.id !in onLine }
             if (other.isNotEmpty()) out += CollectionSummary("l:", ItemType.EKI_STAMP, "", other.count { it.collected }, null, last(other), memberIds = other.ids())
 
-            val goshuin = rows.filter { it.item.type == ItemType.GOSHUIN }
-            if (goshuin.isNotEmpty()) out += CollectionSummary("g", ItemType.GOSHUIN, "", goshuin.count { it.collected }, null, last(goshuin), memberIds = goshuin.ids())
+            listOf(ItemType.GOSHUIN to "g", ItemType.DAM_CARD to "dam", ItemType.MUSEUM_STAMP to "mus").forEach { (kind, key) ->
+                val l = rows.filter { it.item.type == kind }
+                if (l.isNotEmpty()) out += CollectionSummary(key, kind, "", l.count { it.collected }, null, last(l), memberIds = l.ids())
+            }
             return out
         }
 

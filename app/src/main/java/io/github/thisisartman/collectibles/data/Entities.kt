@@ -9,7 +9,8 @@ import androidx.room.PrimaryKey
 import androidx.room.Relation
 
 /** The four built-in kinds, and CUSTOM for an item in one of your own collections (its `customTypeId`, schema v2). */
-enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG, CUSTOM }
+/** Kinds of collectible. Stored by name, so new kinds go at the end with no migration (dam cards, museum stamps: #55). */
+enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG, CUSTOM, DAM_CARD, MUSEUM_STAMP }
 
 /**
  * One of your own collections (#64, schema v2): a name, a colour and an icon, and whether its collections record
