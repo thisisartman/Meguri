@@ -116,8 +116,13 @@ fun MeguriMap(
                 s.addSource(GeoJsonSource(SRC))
                 s.addLayer(
                     CircleLayer(LAYER, SRC).withProperties(
-                        PropertyFactory.circleRadius(Expression.literal(7f)),
-                        PropertyFactory.circleStrokeWidth(Expression.literal(3f)),
+                        // Small at regional zoom, so a line of stations doesn't hide the place names; full size near you
+                        PropertyFactory.circleRadius(
+                            Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 2f), Expression.stop(11, 4f), Expression.stop(13, 7f)),
+                        ),
+                        PropertyFactory.circleStrokeWidth(
+                            Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 1f), Expression.stop(13, 3f)),
+                        ),
                         PropertyFactory.circleStrokeColor(Expression.get("color")),
                         PropertyFactory.circleColor(
                             // Hollow pins take the page colour, so in dark mode "still to get" isn't the brightest thing on the map
