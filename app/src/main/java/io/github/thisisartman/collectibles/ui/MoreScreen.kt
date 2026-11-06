@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilterChip
@@ -199,6 +202,23 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
             InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
+        }
+        if (AppLook.available()) {
+            var device by remember { mutableStateOf(AppLook.deviceColours(context)) }
+            Row(
+                Modifier.fillMaxWidth()
+                    .toggleable(value = device, role = Role.Switch, onValueChange = { device = it; AppLook.setDeviceColours(context, it) })
+                    .heightIn(min = 56.dp)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.look_device_colours), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.look_device_colours_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+                androidx.compose.material3.Switch(checked = device, onCheckedChange = null)
+            }
         }
         HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
 

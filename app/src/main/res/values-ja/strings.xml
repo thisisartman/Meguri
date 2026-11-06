@@ -213,4 +213,8 @@
     <string name="welcome_load_bundled">新潟のカタログを読み込む</string>
     <string name="welcome_load_file">CSVファイルを読み込む</string>
     <string name="welcome_other_ways">別の端末から移る場合は、その他、バックアップから復元。カタログにないものも + で記録できます。</string>
+
+    <!-- Colour setting (#57, Legion) -->
+    <string name="look_device_colours">端末の色を使う</string>
+    <string name="look_device_colours_sub">Meguriの色の代わりに、壁紙に合わせた端末の色を使います。種類ごとの色は変わりません。</string>
 </resources>

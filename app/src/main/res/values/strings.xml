@@ -213,4 +213,8 @@
     <string name="welcome_load_bundled">Load the Niigata catalogue</string>
     <string name="welcome_load_file">Load a CSV file</string>
     <string name="welcome_other_ways">Moving from another phone? More, Restore from a backup. Anything not in a catalogue can still be logged with +.</string>
+
+    <!-- Colour setting (#57, Legion) -->
+    <string name="look_device_colours">Device colours</string>
+    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each kind stay the same.</string>
 </resources>

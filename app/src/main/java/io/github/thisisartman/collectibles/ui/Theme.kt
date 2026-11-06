@@ -23,17 +23,17 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import io.github.thisisartman.collectibles.data.ItemType
 
-// Tokens from docs/DESIGN.md §4 (contrast and colour-blind checks recorded there).
-// Colour means type only; buttons are neutral; collected vs still-to-get is shape, never colour.
+// Palette B, "seal gold" (owner's pick, 2026-11-06, #57): one Meguri accent, gold, for the main action and what is
+// selected; type colours, dashed slots and seals unchanged. Contrast: Design/colour-2026-11-06/pairs*.csv, 53 pairs pass.
 
 private val Light = lightColorScheme(
-    primary = Color(0xFF1D1D1F), onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFE6E1D8), onPrimaryContainer = Color(0xFF1D1D1F),
-    secondaryContainer = Color(0xFFE6E1D8), onSecondaryContainer = Color(0xFF1D1D1F),
-    secondary = Color(0xFF1D1D1F), onSecondary = Color(0xFFFFFFFF),
-    tertiary = Color(0xFF1D1D1F), onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFE6E1D8), onTertiaryContainer = Color(0xFF1D1D1F),
-    inversePrimary = Color(0xFFECECEF),
+    primary = Color(0xFF8A5A00), onPrimary = Color(0xFFFFFFFF),
+    primaryContainer = Color(0xFFF4E6C8), onPrimaryContainer = Color(0xFF5C3C00),
+    secondaryContainer = Color(0xFFF4E6C8), onSecondaryContainer = Color(0xFF5C3C00),
+    secondary = Color(0xFF8A5A00), onSecondary = Color(0xFFFFFFFF),
+    tertiary = Color(0xFF8A5A00), onTertiary = Color(0xFFFFFFFF),
+    tertiaryContainer = Color(0xFFF4E6C8), onTertiaryContainer = Color(0xFF5C3C00),
+    inversePrimary = Color(0xFFE0B252),
     background = Color(0xFFFBF8F3), onBackground = Color(0xFF1D1D1F),
     surface = Color(0xFFFBF8F3), onSurface = Color(0xFF1D1D1F),
     surfaceVariant = Color(0xFFEFE9DF), onSurfaceVariant = Color(0xFF66666B),
@@ -44,21 +44,38 @@ private val Light = lightColorScheme(
 )
 
 private val Dark = darkColorScheme(
-    primary = Color(0xFFECECEF), onPrimary = Color(0xFF16161A),
-    primaryContainer = Color(0xFF33333A), onPrimaryContainer = Color(0xFFECECEF),
-    secondaryContainer = Color(0xFF33333A), onSecondaryContainer = Color(0xFFECECEF),
-    secondary = Color(0xFFECECEF), onSecondary = Color(0xFF16161A),
-    tertiary = Color(0xFFECECEF), onTertiary = Color(0xFF16161A),
-    tertiaryContainer = Color(0xFF33333A), onTertiaryContainer = Color(0xFFECECEF),
-    inversePrimary = Color(0xFF1D1D1F),
-    background = Color(0xFF16161A), onBackground = Color(0xFFECECEF),
-    surface = Color(0xFF16161A), onSurface = Color(0xFFECECEF),
-    surfaceVariant = Color(0xFF33333A), onSurfaceVariant = Color(0xFFA3A3AB),
-    surfaceContainerLowest = Color(0xFF222227), surfaceContainerLow = Color(0xFF222227),
-    surfaceContainer = Color(0xFF222227), surfaceContainerHigh = Color(0xFF222227), surfaceContainerHighest = Color(0xFF2A2A30),
-    outline = Color(0xFF6E6E76), outlineVariant = Color(0xFF33333A),
-    inverseSurface = Color(0xFFECECEF), inverseOnSurface = Color(0xFF16161A),
+    primary = Color(0xFFE0B252), onPrimary = Color(0xFF1A1400),
+    primaryContainer = Color(0xFF3A3120), onPrimaryContainer = Color(0xFFF3D9A0),
+    secondaryContainer = Color(0xFF3A3120), onSecondaryContainer = Color(0xFFF3D9A0),
+    secondary = Color(0xFFE0B252), onSecondary = Color(0xFF1A1400),
+    tertiary = Color(0xFFE0B252), onTertiary = Color(0xFF1A1400),
+    tertiaryContainer = Color(0xFF3A3120), onTertiaryContainer = Color(0xFFF3D9A0),
+    inversePrimary = Color(0xFF8A5A00),
+    background = Color(0xFF17151F), onBackground = Color(0xFFF1ECE2),
+    surface = Color(0xFF17151F), onSurface = Color(0xFFF1ECE2),
+    surfaceVariant = Color(0xFF33303D), onSurfaceVariant = Color(0xFFB3ACBD),
+    surfaceContainerLowest = Color(0xFF221F2B), surfaceContainerLow = Color(0xFF221F2B),
+    surfaceContainer = Color(0xFF221F2B), surfaceContainerHigh = Color(0xFF221F2B), surfaceContainerHighest = Color(0xFF2C2836),
+    outline = Color(0xFF776F84), outlineVariant = Color(0xFF33303D),
+    inverseSurface = Color(0xFFF1ECE2), inverseOnSurface = Color(0xFF17151F),
 )
+
+/** "Device colours" in More (#57): the phone's wallpaper colours (Android 12+) instead of Meguri's own. */
+object AppLook {
+    private const val PREFS = "look"
+    private const val KEY = "device_colours"
+    private val state = androidx.compose.runtime.mutableStateOf<Boolean?>(null)
+
+    fun available(): Boolean = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+
+    fun deviceColours(context: android.content.Context): Boolean =
+        state.value ?: context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getBoolean(KEY, false).also { state.value = it }
+
+    fun setDeviceColours(context: android.content.Context, on: Boolean) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putBoolean(KEY, on).apply()
+        state.value = on
+    }
+}
 
 @Immutable
 data class TypeColors(val manhole: Color, val goshuin: Color, val ekiStamp: Color, val ekitag: Color, val onSeal: Color, val dash: Color) {
@@ -128,7 +145,7 @@ fun InkFilterChip(
     border = androidx.compose.material3.FilterChipDefaults.filterChipBorder(
         enabled = true, selected = selected,
         borderColor = MaterialTheme.colorScheme.outline,
-        selectedBorderColor = MaterialTheme.colorScheme.onSurface,
+        selectedBorderColor = MaterialTheme.colorScheme.primary,
         borderWidth = 1.dp, selectedBorderWidth = 1.dp,
     ),
 )
@@ -150,7 +167,12 @@ private val PhraseTypography: androidx.compose.material3.Typography = androidx.c
 @Composable
 fun CollectiblesTheme(content: @Composable () -> Unit) {
     val dark = isSystemInDarkTheme()
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Type colours stay Meguri's own either way: colour means type
+    val scheme = if (AppLook.available() && AppLook.deviceColours(context)) {
+        if (dark) androidx.compose.material3.dynamicDarkColorScheme(context) else androidx.compose.material3.dynamicLightColorScheme(context)
+    } else if (dark) Dark else Light
     CompositionLocalProvider(LocalTypeColors provides if (dark) DarkTypes else LightTypes) {
-        MaterialTheme(colorScheme = if (dark) Dark else Light, typography = PhraseTypography, content = content)
+        MaterialTheme(colorScheme = scheme, typography = PhraseTypography, content = content)
     }
 }
