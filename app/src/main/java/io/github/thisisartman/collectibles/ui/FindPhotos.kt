@@ -85,6 +85,7 @@ fun kindLabel(type: ItemType, kind: String): Int = when (kind) {
 private fun sameKind(a: String, b: String, type: ItemType): Boolean =
     a == b || (a == PhotoKind.PROOF && b == (if (type == ItemType.MANHOLE_CARD) PhotoKind.STAMP else PhotoKind.EKITAG))
 
+// Three to a row on a phone (3 x 96 + 2 x 10 + 2 x 16 = 340 dp, inside a 360 dp screen)
 private val SLOT = 96.dp
 
 /**
@@ -92,6 +93,7 @@ private val SLOT = 96.dp
  * camera and a caption to add one; extra photos follow, then "Other photo". Tap an empty square to add, a photo
  * to change its kind or remove it.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
     var adding by remember { mutableStateOf<String?>(null) }
@@ -107,17 +109,20 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
     val shown = slots.mapNotNull { it.second }.map { it.id }.toSet()
     val extra = sorted.filter { it.id !in shown }
 
-    LazyRow(
+    // A grid that wraps to the screen, not a sideways strip: every kind is visible without scrolling
+    // (map-app study, 2026-11-07: the strip cut off "Other photo")
+    FlowRow(
+        Modifier.padding(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        items(slots, key = { "slot-" + it.first }) { (kind, p) ->
+        slots.forEach { (kind, p) ->
             val label = stringResource(kindLabel(type, kind))
             if (p != null) PhotoSquare(p, label) { editing = p }
             else EmptySquare(label) { adding = kind }
         }
-        items(extra, key = { it.id }) { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role))) { editing = p } }
-        item(key = "slot-other") { EmptySquare(stringResource(R.string.photo_kind_other)) { adding = PhotoKind.OTHER } }
+        extra.forEach { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role))) { editing = p } }
+        EmptySquare(stringResource(R.string.photo_kind_other)) { adding = PhotoKind.OTHER }
     }
 
     adding?.let { kind ->

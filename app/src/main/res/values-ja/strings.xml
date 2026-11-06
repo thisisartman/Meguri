@@ -267,4 +267,6 @@
     <string name="kind_shrine">寺社</string>
     <string name="added_on">%1$sに追加</string>
     <string name="no_date">—</string>
+    <string name="item_map_not_saved">この場所の地図は端末に保存されていないため、ここではインターネットが必要です。</string>
+    <string name="search_show_on_map">地図で見る</string>
 </resources>

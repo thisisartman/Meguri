@@ -128,6 +128,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     // Search results by type (owner, 2026-11-07): All, or one type, as chips under the search bar
     var searchKind by rememberSaveable { mutableStateOf<ItemType?>(null) }
     var searchFocused by remember { mutableStateOf(false) }
+    var listOpen by rememberSaveable { mutableStateOf(false) }
+    var fitTick by remember { mutableIntStateOf(0) }
     // A search looks through everything (both tabs, every kind), fuzzy, by name in either language, code or place
     val matches = remember(rows, query) {
         val q = query.trim()
@@ -318,8 +320,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             var recenter by remember { mutableIntStateOf(0) }
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
-                onPinTap = { picked = it }, onMapTap = { picked = null; focus.clearFocus() },
+                onPinTap = { picked = it }, onMapTap = { picked = null; focus.clearFocus(); listOpen = false },
                 recenter = recenter,
+                fitTick = fitTick,
+                memoryKey = "nearby",
             )
             // Back to where you are (owner, 2026-11-06), just above the sheet on the right
             if (here.fix != null) {
@@ -341,7 +345,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         Icon(painterResource(R.drawable.ic_search), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         androidx.compose.material3.TextField(
                             value = query,
-                            onValueChange = { query = it; picked = null },
+                            onValueChange = { query = it; picked = null; listOpen = it.isNotBlank() },
                             modifier = Modifier.weight(1f).focusRequester(focusRequester)
                                 .onFocusChanged { searchFocused = it.isFocused },
                             placeholder = { Text(stringResource(R.string.nearby_search), maxLines = 1, overflow = TextOverflow.Ellipsis) },
@@ -356,7 +360,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             ),
                         )
                         if (query.isNotEmpty()) {
-                            IconButton(onClick = { query = ""; focus.clearFocus() }) {
+                            IconButton(onClick = { query = ""; listOpen = false; focus.clearFocus() }) {
                                 Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.nearby_search_clear))
                             }
                         }
@@ -365,7 +369,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     }
                     // While typing, the keyboard hides the sheet, so results drop down under the search bar,
                     // with chips for All and each type found (owner, 2026-11-07)
-                    if (searching && searchFocused) {
+                    // The list stays open after the keyboard closes (#67, B); a tap on the map, a result, the cross or
+                    // Show on map closes it
+                    if (searching && (searchFocused || listOpen)) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                         if (matchKinds.size > 1) {
                             Row(
@@ -386,26 +392,45 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             Text(stringResource(R.string.nearby_empty_kind), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp)) {
+                            // Each row: type icon, the name with the typed part in bold, the Japanese name and prefecture,
+                            // the state; distance with an arrow on the right (map-app study, 2026-11-07)
                             items(shown.take(8), key = { "s-" + it.item.id }) { r ->
                                 Row(
-                                    Modifier.fillMaxWidth().heightIn(min = 52.dp)
-                                        .clickable { focus.clearFocus(); nav.openItem(r.item.id) }
+                                    Modifier.fillMaxWidth().heightIn(min = 60.dp)
+                                        .clickable { focus.clearFocus(); listOpen = false; nav.openItem(r.item.id) }
                                         .padding(horizontal = 16.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     TypeIcon(r.item.type, 20.dp)
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
-                                        Text(r.item.displayName(ja), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                        Text(boldMatch(r.item.displayName(ja), query), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         Text(
                                             listOfNotNull(
+                                                r.item.nameJa.takeIf { !ja && it != r.item.displayName(ja) },
+                                                r.item.prefecture?.let { prefectureName(it, ja) },
                                                 stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
-                                                distanceText(vm.distanceTo(r)),
                                             ).joinToString(sep()),
                                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1, overflow = TextOverflow.Ellipsis,
                                         )
                                     }
+                                    distanceText(vm.distanceTo(r))?.let { d ->
+                                        Spacer(Modifier.width(8.dp))
+                                        DistanceArrow(d, here.fix?.let { it.lat to it.lng }, r.item.lat?.let { lat -> r.item.lng?.let { lat to it } }, MaterialTheme.typography.labelMedium)
+                                    }
                                 }
+                            }
+                        }
+                        // Show on map: close the list and fit the map to every result (#67, A)
+                        if (shown.any { it.item.lat != null }) {
+                            TextButton(
+                                onClick = { focus.clearFocus(); listOpen = false; fitTick++ },
+                                modifier = Modifier.align(Alignment.End).padding(end = 8.dp).heightIn(min = 48.dp),
+                            ) {
+                                Icon(Icons.Filled.Place, contentDescription = null, modifier = Modifier.size(18.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(stringResource(R.string.search_show_on_map))
                             }
                         }
                     }
@@ -441,7 +466,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
                 ) {
                     Column(Modifier.padding(14.dp)) {
-                        PinHeader(r, vm.distanceTo(r))
+                        PinHeader(r, vm.distanceTo(r), here.fix?.let { it.lat to it.lng })
                         Spacer(Modifier.height(10.dp))
                         PinActions(r, vm, nav, onCollected = { picked = null })
                     }
@@ -465,7 +490,10 @@ private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, o
         Spacer(Modifier.height(4.dp))
         Text(
             // Always two lines tall, so every tile in a row is the same height and distances line up
-            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
+            // Break after a hyphen or between words, never inside one ("Tsubame-Sanjo" broke as "Tsubam / e-Sanjo"),
+            // and never start a line with the " · " separator
+            tileName(name),
+            style = MaterialTheme.typography.labelMedium.copy(lineBreak = androidx.compose.ui.text.style.LineBreak.Simple), textAlign = TextAlign.Center,
             minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         distance?.let {

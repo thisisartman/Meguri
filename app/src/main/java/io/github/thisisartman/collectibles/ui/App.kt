@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -72,6 +73,14 @@ fun NavHostController.openTab(route: String) = navigate(route) {
 // Settings is a page of its own now (opened from the top-right menu), not a tab
 fun NavHostController.openMore() = navigate(MORE) { launchSingleTop = true }
 fun NavHostController.openBook() = openTab(BOOK)
+
+/** A page on the app's background colour, so nothing behind it (the map's surface) shows through while it loads. */
+@Composable
+private fun Page(content: @Composable () -> Unit) {
+    androidx.compose.foundation.layout.Box(
+        Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
+    ) { content() }
+}
 
 @Composable
 fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
@@ -234,20 +243,22 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     popExitTransition = { androidx.compose.animation.ExitTransition.None },
                 ) {
                     composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
-                    composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
-                    composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() }) }
+                    // Every page but the maps sits on a solid background: the item page had none, so for a moment
+                    // after a tap the Nearby map showed through it (screen recording on the Poco, 2026-11-07)
+                    composable(BOOK) { Page { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) } }
+                    composable(MORE) { Page { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() }) } }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                        ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
+                        Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }) }
                     }
                     composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
-                        LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
+                        Page { LineScreen(vm, id, nav, onBack = { nav.popBackStack() }) }
                     }
                     composable("map/{section}", listOf(navArgument("section") { type = NavType.StringType })) {
                         val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
                         MapScreen(vm, nav, section)
                     }
-                    composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
+                    composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
                 }
             }
         }

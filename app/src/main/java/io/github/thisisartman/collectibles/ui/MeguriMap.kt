@@ -53,6 +53,11 @@ fun MeguriMap(
     onMapTap: () -> Unit = {},
     // Each increase moves the camera back to you (the recentre button, owner 2026-11-06)
     recenter: Int = 0,
+    // Each increase fits the camera to the pins shown (search "Show on map", #67)
+    fitTick: Int = 0,
+    // When set, the camera is remembered under this name: coming back to the page puts the map where it was
+    // instead of re-framing it (owner, 2026-11-07: the transition back to Nearby)
+    memoryKey: String? = null,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -69,9 +74,13 @@ fun MeguriMap(
     val tapMap by rememberUpdatedState(onMapTap)
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
+    // Until the style has drawn, the map shows this colour: the page's own background, not MapLibre's light grey,
+    // which flashed in dark mode when coming back to Nearby (screen recording on the Poco, 2026-11-07)
+    val loadColor = androidx.compose.material3.MaterialTheme.colorScheme.background.toArgb()
     val mapView = remember {
         MapLibre.getInstance(context)
-        MapView(context).apply { onCreate(Bundle()) }
+        val options = org.maplibre.android.maps.MapLibreMapOptions.createFromAttributes(context).foregroundLoadColor(loadColor)
+        MapView(context, options).apply { setBackgroundColor(loadColor); onCreate(Bundle()) }
     }
     DisposableEffect(lifecycle) {
         val observer = LifecycleEventObserver { _, e ->
@@ -92,6 +101,10 @@ fun MeguriMap(
         } else null
         mapView.getMapAsync { m ->
             map = m
+            memoryKey?.let { key ->
+                CameraMemory.saved[key]?.let { m.cameraPosition = it }
+                m.addOnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }
+            }
             m.uiSettings.apply {
                 isScrollGesturesEnabled = interactive; isZoomGesturesEnabled = interactive
                 isRotateGesturesEnabled = false; isTiltGesturesEnabled = false
@@ -167,8 +180,10 @@ fun MeguriMap(
         }
     }
     // Pins and position follow the data; the camera is placed once, around you and the nearest pins.
-    var placed by remember { mutableStateOf(false) }
-    var placedAt by remember { mutableStateOf<Pair<Double, Double>?>(null) }
+    // A remembered camera counts as placed (it was placed on an earlier visit)
+    var placed by remember { mutableStateOf(memoryKey != null && CameraMemory.saved[memoryKey] != null) }
+    var placedAt by remember { mutableStateOf(if (placed) memoryKey?.let { CameraMemory.placedAt[it] } else null) }
+    LaunchedEffect(placedAt) { memoryKey?.let { k -> placedAt?.let { CameraMemory.placedAt[k] = it } } }
     LaunchedEffect(style, pins, here) {
         val s = style ?: return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
@@ -200,6 +215,20 @@ fun MeguriMap(
             }
         }
     }
+    LaunchedEffect(fitTick) {
+        if (fitTick == 0) return@LaunchedEffect
+        val m = map ?: return@LaunchedEffect
+        val pts = pins.map { LatLng(it.lat, it.lng) }
+        when {
+            // Room for the search bar above and the sheet's top edge below, so no pin sits under either
+            pts.size >= 2 -> {
+                val d = context.resources.displayMetrics.density
+                m.animateCamera(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(pts).build(),
+                    (40 * d).toInt(), (130 * d).toInt(), (40 * d).toInt(), (60 * d).toInt()), 700)
+            }
+            pts.size == 1 -> m.animateCamera(CameraUpdateFactory.newLatLngZoom(pts.first(), 15.0), 700)
+        }
+    }
     LaunchedEffect(recenter) {
         if (recenter == 0) return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
@@ -207,6 +236,12 @@ fun MeguriMap(
         m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(h.first, h.second), 15.0), 600)
     }
     AndroidView(factory = { mapView }, modifier = modifier)
+}
+
+/** Cameras kept while the app runs, by map name, so going to another page and back does not move the map. */
+private object CameraMemory {
+    val saved = mutableMapOf<String, CameraPosition>()
+    val placedAt = mutableMapOf<String, Pair<Double, Double>>()
 }
 
 private fun dist2(p: MapPin, h: Pair<Double, Double>) = (p.lat - h.first).let { it * it } + (p.lng - h.second).let { it * it }

@@ -267,4 +267,6 @@
     <string name="kind_shrine">Shrine or temple</string>
     <string name="added_on">Added %1$s</string>
     <string name="no_date">—</string>
+    <string name="item_map_not_saved">The map for this place is not saved on this phone, so it needs internet here.</string>
+    <string name="search_show_on_map">Show on map</string>
 </resources>

@@ -101,7 +101,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                 shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
             ) {
                 Column(Modifier.padding(16.dp)) {
-                    PinHeader(row, vm.distanceTo(row))
+                    PinHeader(row, vm.distanceTo(row), here.fix?.let { it.lat to it.lng })
                     Spacer(Modifier.height(12.dp))
                     PinActions(row, vm, nav, onCollected = { picked = null })
                 }
@@ -124,7 +124,7 @@ fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollec
     val pad = androidx.compose.foundation.layout.PaddingValues(start = 12.dp, end = 14.dp)
     @Composable fun Lead(res: Int) { Icon(painterResource(res), contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        InkOutlinedButton(onClick = { openDirections(context, row.item) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad) {
+        InkOutlinedButton(onClick = { openDirections(context, row.item, vm.distanceTo(row)) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad) {
             Lead(R.drawable.ic_directions); Text(stringResource(R.string.item_directions_plain), maxLines = 1)
         }
         val details: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
@@ -144,9 +144,12 @@ fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollec
     }
 }
 
-/** A tapped pin's title and status: type icon, name, then "Uncollected · 1.7 km from you". */
+/**
+ * A tapped pin's title and status: type icon, name, the Japanese name, then the state as a word on the left and the
+ * distance with an arrow pointing at the place on the right (map-app study, 2026-11-07).
+ */
 @Composable
-fun PinHeader(row: ItemRow, meters: Double?) {
+fun PinHeader(row: ItemRow, meters: Double?, here: Pair<Double, Double>?) {
     val ja = isJapanese()
     Row(verticalAlignment = Alignment.CenterVertically) {
         TypeIcon(row.item.type, 22.dp)
@@ -159,10 +162,16 @@ fun PinHeader(row: ItemRow, meters: Double?) {
             }
         }
     }
-    val distance = distanceText(meters)?.let { stringResource(R.string.pin_from_you, it) }
-    Text(
-        listOfNotNull(stringResource(if (row.findCount > 0) R.string.map_collected else R.string.map_not_collected), distance).joinToString(sep()),
-        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(start = 30.dp),
-    )
+    Row(Modifier.fillMaxWidth().padding(start = 30.dp, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+        val collected = row.findCount > 0
+        Text(
+            stringResource(if (collected) R.string.map_collected else R.string.map_not_collected),
+            style = MaterialTheme.typography.labelLarge,
+            color = if (collected) LocalTypeColors.current.of(row.item.type) else MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
+        )
+        distanceText(meters)?.let { d ->
+            DistanceArrow(d, here, row.item.lat?.let { lat -> row.item.lng?.let { lat to it } })
+        }
+    }
 }

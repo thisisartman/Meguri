@@ -22,6 +22,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.foundation.layout.Box
@@ -123,6 +125,11 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 }
             }
             item { Actions(item, meters) }
+            // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
+            if (hasFacts(item)) {
+                item { SectionTitle(stringResource(R.string.item_where)) }
+                item { Facts(item) }
+            }
             item { SectionTitle(stringResource(R.string.item_photos)) }
             item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions) }
             if (finds.isNotEmpty()) {
@@ -130,10 +137,6 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 items(finds, key = { it.find.id }) { f ->
                     CollectionRow(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) })
                 }
-            }
-            if (hasFacts(item)) {
-                item { SectionTitle(stringResource(R.string.item_where)) }
-                item { Facts(item) }
             }
             item { Spacer(Modifier.height(16.dp)) }
         }
@@ -189,31 +192,14 @@ private fun Actions(item: Item, meters: Double?) {
     val context = LocalContext.current
     // Standing at the place (a goshuin added where it was logged, say), directions help nobody
     val hasPlace = item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)
-    val phone = item.placePhone?.takeIf { it.isNotBlank() }
-    if (!hasPlace && phone == null) return
-    // FlowRow: with large text, Call moves to its own line instead of being squeezed beside Directions
-    FlowRow(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        if (hasPlace) {
-            FilledTonalButton(modifier = Modifier.heightIn(min = 48.dp), onClick = { openDirections(context, item) }) {
-                // The same directions icon as the pin card (owner, 2026-11-07: consistent everywhere)
-                Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain))
-            }
-        }
-        if (phone != null) {
-            InkOutlinedButton(onClick = {
-                // Opens the dialer with the number filled in; no call permission needed
-                runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' }))) }
-            }) {
-                Icon(Icons.Filled.Call, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(R.string.item_call))
-            }
+    if (!hasPlace) return
+    // Call is a row in "Where to get it" now (tap the number), so Directions stands alone here
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        FilledTonalButton(modifier = Modifier.heightIn(min = 48.dp), onClick = { openDirections(context, item, meters) }) {
+            // The same directions icon as the pin card (owner, 2026-11-07: consistent everywhere)
+            Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain))
         }
     }
 }
@@ -238,34 +224,68 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
     }
 }
 
+/** The map for this item's area is not on the phone (outside the offline pack), so it needs internet there. */
+private fun offlineMissing(item: Item): Boolean =
+    item.lat != null && item.lng != null && !OfflineMap.covers(item.lat, item.lng)
+
 /** Whether "Where to get it" has anything to show; a goshuin added by hand often has nothing yet. */
 private fun hasFacts(item: Item): Boolean =
-    listOfNotNull(item.hoursText, item.closedDays, item.placeName?.takeIf { it != item.nameJa }, item.address, item.notes).any { it.isNotBlank() }
+    listOfNotNull(item.hoursText, item.closedDays, item.placeName?.takeIf { it != item.nameJa }, item.address, item.notes, item.placePhone).any { it.isNotBlank() } ||
+        offlineMissing(item)
 
+/**
+ * "Where to get it", right under the header as one grouped card of one-line icon rows (map-app study, 2026-11-07:
+ * Google only mentions the manhole card inside a review; Organic Maps' rows are about 48 dp): hours, place, phone
+ * (tap to call), notes, and a plain line when the map for this spot is not saved on the phone.
+ */
 @Composable
 private fun Facts(item: Item) {
+    val context = LocalContext.current
     val (placeLabel, hoursLabel) = when (item.type) {
         ItemType.MANHOLE_CARD -> R.string.item_handed_out_at to R.string.item_hours
         ItemType.GOSHUIN -> R.string.item_office to R.string.item_office_hours
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
     }
-    Column(Modifier.fillMaxWidth()) {
-        // Hours first: on a trip day the question is whether it is open. Distance and phone are in the buttons above.
-        Fact(stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
-        // A station's place is the station itself: repeating its Japanese name adds nothing (and breaks English mode)
-        Fact(stringResource(placeLabel), listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.address).joinToString("\n"))
-        item.notes?.let { Fact("", localNote(it, isJapanese())) }
+    androidx.compose.material3.Surface(
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+        shape = RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainer,
+    ) {
+        Column(Modifier.padding(vertical = 4.dp)) {
+            // Hours first: on a trip day the question is whether it is open
+            FactRow(painterResource(R.drawable.ic_schedule), stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
+            // A station's place is the station itself: repeating its Japanese name adds nothing (and breaks English mode)
+            FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Place), stringResource(placeLabel), listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.address).joinToString("\n"))
+            item.placePhone?.takeIf { it.isNotBlank() }?.let { phone ->
+                FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Call), stringResource(R.string.item_call), phone) {
+                    // Opens the dialer with the number filled in; no call permission needed
+                    runCatching { context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + phone.filter { it.isDigit() || it == '+' }))) }
+                }
+            }
+            item.notes?.let { FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Info), "", localNote(it, isJapanese())) }
+            if (offlineMissing(item)) {
+                FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Info), "", stringResource(R.string.item_map_not_saved))
+            }
+        }
     }
 }
 
 @Composable
-private fun Fact(label: String, value: String) {
+private fun FactRow(icon: androidx.compose.ui.graphics.painter.Painter, label: String, value: String, onClick: (() -> Unit)? = null) {
     if (value.isBlank()) return
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 5.dp)) {
-        if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(icon, contentDescription = null, tint = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(value, style = MaterialTheme.typography.bodyMedium, color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
+        }
     }
-    HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 /** How long after a find its missing position counts as "still being found". */

@@ -7,6 +7,14 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- **0.3.0-beta.2** (phase 1 of the feedback build):
+  - The item page puts "Where to get it" right under the name, as rows with icons: hours, place, phone (tap to call), notes, and a note when this place's map isn't saved on the phone.
+  - Photos are a grid that shows every kind.
+  - Tapping a pin shows the status apart from the distance, with an arrow pointing to the place (it turns with the phone).
+  - Search results list the Japanese name, prefecture, the matched letters in bold, and the distance with an arrow; they stay open after the keyboard closes, and "Show on map" fits the map to them.
+  - Directions open walking routes under 2 km and public transport beyond.
+  - Opening a page no longer shows the map through it, and coming back to Nearby keeps the map where it was, with no light flash in dark mode.
+  - Names wrap between words.
 - Research: a UI analysis of Google Maps and Organic Maps place pages on the Poco (`docs/research/ui-analysis-map-apps-2026-11-07.md`).
 - Map labels show place names in one language (no Japanese line under English names); the Japanese name is on the pin card and the item page instead.
 - 0.3.0-beta.1, the first beta, merged into `testing` (2026-11-07). Installed as the Poco's real app the same night, over 0.0.1, after a backup; all 21 of the owner's finds came through.

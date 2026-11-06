@@ -11,6 +11,19 @@ import java.text.Normalizer
 fun fuzzyScore(query: String, candidates: List<String?>): Int =
     candidates.filterNotNull().maxOfOrNull { scoreOne(fold(query), fold(it)) } ?: 0
 
+/** The name with the typed text in bold where it appears as written (ignoring case); otherwise plain. */
+fun boldMatch(name: String, query: String): androidx.compose.ui.text.AnnotatedString {
+    val q = query.trim()
+    val at = if (q.isEmpty()) -1 else name.indexOf(q, ignoreCase = true)
+    return androidx.compose.ui.text.buildAnnotatedString {
+        append(name)
+        if (at >= 0) addStyle(androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold), at, at + q.length)
+    }
+}
+
+/** A name ready for a narrow tile: a break chance after each hyphen, and " · " kept with the word before it. */
+fun tileName(name: String): String = name.replace("-", "-​").replace(" · ", " · ")
+
 internal fun fold(s: String): String {
     val noMarks = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
     return noMarks
