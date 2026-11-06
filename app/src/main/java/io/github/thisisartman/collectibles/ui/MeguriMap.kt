@@ -40,7 +40,7 @@ import org.maplibre.geojson.Point
 data class MapPin(val id: String, val lat: Double, val lng: Double, val type: ItemType, val collected: Boolean)
 
 /**
- * The map (#47). Online tiles from OpenFreeMap for now; an offline Niigata pack replaces them next (#9).
+ * The map (#47). The offline Niigata pack inside the trip area (#9, [OfflineMap]), online OpenFreeMap tiles elsewhere.
  * Pins: filled in the type's colour when collected, hollow when still to get. [onPinTap] gets the item id.
  */
 @Composable
@@ -55,6 +55,12 @@ fun MeguriMap(
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     val dark = isSystemInDarkTheme()
+    val japanese = isJapanese()
+    // Offline inside the trip area, online elsewhere; decided once, from where you are or the first pin
+    val offline = remember {
+        val c = here ?: pins.firstOrNull()?.let { it.lat to it.lng }
+        c == null || OfflineMap.covers(c.first, c.second)
+    }
     val types = LocalTypeColors.current
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
@@ -77,7 +83,10 @@ fun MeguriMap(
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); mapView.onStop(); mapView.onDestroy() }
     }
-    LaunchedEffect(mapView, dark) {
+    LaunchedEffect(mapView, dark, japanese) {
+        val offlineStyle = if (offline) {
+            runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { OfflineMap.styleJson(context, dark, japanese) } }.getOrNull()
+        } else null
         mapView.getMapAsync { m ->
             map = m
             m.uiSettings.apply {
@@ -85,7 +94,8 @@ fun MeguriMap(
                 isRotateGesturesEnabled = false; isTiltGesturesEnabled = false
                 isAttributionEnabled = true; isLogoEnabled = false
             }
-            m.setStyle(Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)) { s ->
+            val builder = offlineStyle?.let { Style.Builder().fromJson(it) } ?: Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)
+            m.setStyle(builder) { s ->
                 s.addSource(GeoJsonSource(SRC))
                 s.addLayer(
                     CircleLayer(LAYER, SRC).withProperties(
