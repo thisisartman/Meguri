@@ -588,7 +588,7 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Mark(last, 26.dp)
                     Spacer(Modifier.width(8.dp))
-                    val whenText = if (last.lastAt != null) formatDate(last.lastAt, ja) else stringResource(R.string.had_before_app)
+                    val whenText = if (last.lastAt != null) formatDate(last.lastAt, ja) else stringResource(R.string.no_date)
                     Text(
                         stringResource(R.string.last, last.item.displayName(ja) + sep() + whenText),
                         style = MaterialTheme.typography.bodySmall,

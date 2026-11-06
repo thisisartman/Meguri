@@ -224,7 +224,7 @@ fun ItemListRow(
             val sub = listOfNotNull(
                 r.item.code,
                 distanceText(meters),
-                if (r.collected) (r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app)) else null,
+                if (r.collected) (r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.no_date)) else null,
             ).joinToString(sep())
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -294,7 +294,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                         textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                     if (r.collected) {
-                        Text(r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.had_before_app), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text(r.lastAt?.let { formatDate(it, ja) } ?: stringResource(R.string.no_date), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     } else {
                         distanceText(dist[r.item.id])?.let {
                             Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

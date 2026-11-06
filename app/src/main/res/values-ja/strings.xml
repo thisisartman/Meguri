@@ -265,4 +265,6 @@
     <string name="kind_place">もらった場所</string>
     <string name="kind_goshuin">御朱印</string>
     <string name="kind_shrine">寺社</string>
+    <string name="added_on">%1$sに追加</string>
+    <string name="no_date">—</string>
 </resources>

@@ -278,7 +278,12 @@ private const val POSITION_WAIT_MS = 2 * 60 * 1000L
 @Composable
 private fun CollectionRow(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit) {
     val a = f.find
-    val whenText = a.acquiredAt?.takeIf { !a.beforeApp }?.let { formatDateTime(it, ja) } ?: stringResource(R.string.date_not_recorded)
+    // Owner, 2026-11-07: something you had before the app shows the day it was added; a dash if there is no date at all
+    val whenText = when {
+        !a.beforeApp && a.acquiredAt != null -> formatDateTime(a.acquiredAt, ja)
+        a.createdAt > 0 -> stringResource(R.string.added_on, formatDate(a.createdAt, ja))
+        else -> stringResource(R.string.no_date)
+    }
     var confirmRemove by remember { mutableStateOf(false) }
     if (confirmRemove) {
         AlertDialog(

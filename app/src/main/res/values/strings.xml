@@ -265,4 +265,6 @@
     <string name="kind_place">Where you got it</string>
     <string name="kind_goshuin">Goshuin</string>
     <string name="kind_shrine">Shrine or temple</string>
+    <string name="added_on">Added %1$s</string>
+    <string name="no_date">—</string>
 </resources>
