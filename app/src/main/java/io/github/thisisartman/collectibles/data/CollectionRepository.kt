@@ -25,6 +25,7 @@ class CollectionRepository @Inject constructor(
 
     fun itemRows(): Flow<List<ItemRow>> = dao.observeItemRows()
     fun itemRow(id: String): Flow<ItemRow?> = dao.observeItemRow(id)
+    suspend fun itemRowOnce(id: String): ItemRow? = dao.itemRowOnce(id)
     fun finds(itemId: String): Flow<List<FindWithPhotos>> = dao.observeFinds(itemId)
     fun lines(): Flow<List<Line>> = dao.observeLines()
     fun line(id: String): Flow<Line?> = dao.observeLine(id)
@@ -44,6 +45,24 @@ class CollectionRepository @Inject constructor(
             if (fix != null) dao.setFindLocation(id, fix.lat, fix.lng, fix.accuracyM)
             else log.w("Log", "No position for find $id")
         }
+        return id
+    }
+
+    /**
+     * Logs a find from an alert (Done on the notification). Uses [fix], the position that set off the alert, when it
+     * is under 10 minutes old; otherwise looks for a position the usual way.
+     */
+    suspend fun logFindAt(itemId: String, via: Via, fix: io.github.thisisartman.collectibles.location.Fix?): String {
+        val fresh = fix?.takeIf { now() - it.timeMs <= 10 * 60_000 }
+        if (fresh == null) return logFind(itemId, via)
+        val id = newId()
+        dao.insertFind(
+            Acquisition(
+                id = id, itemId = itemId, acquiredAt = now(), lat = fresh.lat, lng = fresh.lng, accuracyM = fresh.accuracyM,
+                via = via, createdAt = now(),
+            ),
+        )
+        log.i("Log", "Find $id for item $itemId from an alert")
         return id
     }
 

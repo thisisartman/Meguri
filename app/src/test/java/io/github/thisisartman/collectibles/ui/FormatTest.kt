@@ -19,4 +19,11 @@ class FormatTest {
         assertEquals(R.string.km to "1.6", formatDistance(1_600.0))
         assertEquals(R.string.km to "11", formatDistance(11_200.0))
     }
+
+    @Test fun stationNotesInJapaneseModeOnly() {
+        val en = "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors."
+        assertEquals("この駅の紙のスタンプは未確認です。地図データ © OpenStreetMap contributors", localNote(en, japanese = true))
+        assertEquals(en, localNote(en, japanese = false))
+        assertEquals("One card per person.", localNote("One card per person.", japanese = true))
+    }
 }

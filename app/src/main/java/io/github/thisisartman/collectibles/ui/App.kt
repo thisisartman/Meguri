@@ -5,6 +5,8 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
@@ -15,6 +17,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
@@ -33,6 +36,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -69,7 +73,7 @@ fun NavHostController.openMore() = openTab(MORE)
 fun NavHostController.openBook() = openTab(BOOK)
 
 @Composable
-fun App() {
+fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val vm: MainViewModel = hiltViewModel()
     val nav = rememberNavController()
     val context = LocalContext.current
@@ -88,6 +92,7 @@ fun App() {
         val info = if (ok) CameraCapture.describe(resolver, uri) else null
         if (info != null) vm.attachPhoto(findId, info) else CameraCapture.discardIfEmpty(resolver, uri)
         vm.retryPosition(findId)
+        vm.reshowLogged(findId)
     }
     val photo = remember {
         PhotoLauncher { findId ->
@@ -97,14 +102,53 @@ fun App() {
         }
     }
 
-    val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.refreshPosition() }
+    // After two refusals Android stops showing its prompt, so "Allow location" must open Settings instead (round 9)
+    val activity = androidx.activity.compose.LocalActivity.current
+    val locationPrefs = remember { context.getSharedPreferences("location", android.content.Context.MODE_PRIVATE) }
+    var locationBlocked by remember { mutableStateOf(locationPrefs.getBoolean("blocked", false)) }
+    val askLocation = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+        val granted = result.values.any { it }
+        val canAskAgain = activity?.let { androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION) } ?: true
+        locationBlocked = !granted && !canAskAgain && !LocationAccess.has(context)
+        locationPrefs.edit().putBoolean("blocked", locationBlocked).apply()
+        vm.refreshPosition()
+    }
+    val onAllowLocation: () -> Unit = {
+        when {
+            // Allowed and switched on, but no position yet: ask again
+            LocationAccess.has(context) && LocationAccess.systemOn(context) -> vm.refreshPosition()
+            // Allowed, but the phone's location is switched off
+            LocationAccess.has(context) -> LocationAccess.openLocationSettings(context)
+            locationBlocked -> LocationAccess.openAppSettings(context)
+            else -> askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
     LaunchedEffect(Unit) {
         CameraCapture.cleanEmptyRows(resolver)
         askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
     LifecycleResumeEffect(Unit) {
+        // Back from Settings with location allowed: the blocked note no longer applies
+        if (LocationAccess.has(context) && locationBlocked) { locationBlocked = false; locationPrefs.edit().putBoolean("blocked", false).apply() }
         vm.refreshPosition()
         onPauseOrDispose { }
+    }
+
+    val alertsVm: AlertsViewModel = hiltViewModel()
+    val japanese = isJapanese()
+    val tripPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+        if (!startTrip(context, alertsVm)) nav.openMore()
+    }
+    LaunchedEffect(request) {
+        when (val r = request ?: return@LaunchedEffect) {
+            is AppRequest.OpenItem -> { AlertNotifierCancel.cancel(context, r.itemId); nav.openItem(r.itemId) }
+            is AppRequest.Photo -> {
+                AlertNotifierCancel.cancel(context, r.itemId)
+                vm.logFromAlert(r.itemId, japanese) { id -> photo.capture(id) }
+            }
+            AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
+        }
+        onRequestHandled()
     }
 
     val logged by vm.logged.collectAsStateWithLifecycle()
@@ -122,7 +166,8 @@ fun App() {
 
     CompositionLocalProvider(LocalPhoto provides photo) {
         Scaffold(
-            snackbarHost = { SnackbarHost(snackbar) },
+            // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
+            snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
             floatingActionButton = {
                 // Hidden while marking owned cards: the mark button takes the bottom of the screen
                 if (route == null || route == NEARBY || (route == BOOK && !bookMarking)) {
@@ -146,24 +191,34 @@ fun App() {
                                 onClick = { nav.openTab(r) },
                                 icon = { Icon(icon, contentDescription = null) },
                                 label = { Text(stringResource(label)) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
+                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
+                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                                ),
                             )
                         }
                     }
                 }
             },
         ) { padding ->
-            NavHost(nav, startDestination = NEARBY, modifier = Modifier.padding(padding)) {
-                composable(NEARBY) { NearbyScreen(vm, nav, onAllowLocation = { askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)) }) }
-                composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
-                composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
-                composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                    ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
+            // Landscape and wide screens: content keeps a readable width, centred (overnight review round 10)
+            androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
+                NavHost(nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
+                    composable(NEARBY) { NearbyScreen(vm, nav, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
+                    composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
+                    composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
+                    composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
+                        ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() })
+                    }
+                    composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
+                        val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
+                        LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
+                    }
+                    composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
                 }
-                composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                    val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
-                    LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
-                }
-                composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
             }
         }
         if (showLog) {

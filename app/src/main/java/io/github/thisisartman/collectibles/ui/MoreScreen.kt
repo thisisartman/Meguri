@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -74,7 +75,11 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val msg = runCatching { vm.io.exportBackup(uri) }
-                .map { context.getString(R.string.more_backup_done, it.finds, it.items) }
+                .map {
+                    val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
+                    val counts = countsText(context.resources, it.finds, it.items)
+                    if (name != null) context.getString(R.string.more_backup_done_named, name, counts) else context.getString(R.string.more_backup_done, counts)
+                }
                 .getOrElse { vm.log.e("Backup", "Export failed", it); failText }
             scope.launch { snackbar.showSnackbar(msg) }
         }
@@ -83,7 +88,13 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val msg = runCatching { vm.io.importCatalog(uri) }
-                .map { if (it.added + it.updated == 0) context.getString(R.string.more_import_none) else context.getString(R.string.more_import_done, it.added, it.updated, it.lines) }
+                .map {
+                    when {
+                        it.added + it.updated + it.unchanged == 0 -> context.getString(R.string.more_import_none)
+                        it.added + it.updated == 0 -> context.getString(R.string.more_import_same, it.unchanged, it.lines)
+                        else -> context.getString(R.string.more_import_done, it.added, it.updated, it.lines)
+                    }
+                }
                 .getOrElse { vm.log.e("Catalog", "Import failed", it); context.getString(R.string.more_import_failed, it.message ?: "") }
             scope.launch { snackbar.showSnackbar(msg) }
         }
@@ -102,7 +113,7 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         vm.run {
             runCatching { vm.restore.restore(info) }
                 .onSuccess {
-                    Toast.makeText(context, restoreDone.format(it.finds, it.items), Toast.LENGTH_LONG).show()
+                    Toast.makeText(context, restoreDone.format(countsText(context.resources, it.finds, it.items)), Toast.LENGTH_LONG).show()
                     // Back to a fresh start: no screen may still point at a row that is gone.
                     context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { launch ->
                         context.startActivity(Intent.makeRestartActivityTask(launch.component))
@@ -166,6 +177,16 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         AlertDialog(
             onDismissRequest = { autoDialog = false },
             title = { Text(stringResource(R.string.more_auto)) },
+            text = {
+                val folderName = remember(autoTick) {
+                    vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
+                }
+                val last = remember(autoTick) { vm.auto.lastSuccessMs?.let { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it)) } }
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.more_auto_body, folderName ?: "?", AutoBackup.KEEP))
+                    if (last != null) Text(stringResource(R.string.more_auto_sub_last, last), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            },
             confirmButton = {
                 TextButton(onClick = { autoDialog = false; vm.auto.runNow() }) { Text(stringResource(R.string.more_auto_now)) }
             },
@@ -182,10 +203,12 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
 
         SectionTitle(stringResource(R.string.more_language))
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            FilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
-            FilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
+            InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
+            InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
         }
         HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+
+        SectionTitle(stringResource(R.string.more_backup_section))
 
         MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
             val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
@@ -214,6 +237,7 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
         MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
             openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
         }
+        AlertsSection()
         MoreRow(stringResource(R.string.more_logs), null, onLogs)
         MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}
     }
@@ -235,8 +259,8 @@ private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: ()
         title = { Text(stringResource(if (wipes && !sure) R.string.more_restore_empty_title else R.string.more_restore_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(stringResource(R.string.more_restore_backup_line, date, p.info.finds, p.info.items, p.info.photos))
-                Text(stringResource(R.string.more_restore_now_line, p.now.finds, p.now.items, p.now.photos))
+                Text(stringResource(R.string.more_restore_backup_line, date, countsText(LocalContext.current.resources, p.info.finds, p.info.items, p.info.photos)))
+                Text(stringResource(R.string.more_restore_now_line, countsText(LocalContext.current.resources, p.now.finds, p.now.items, p.now.photos)))
                 Text(stringResource(if (wipes) R.string.more_restore_empty_body else R.string.more_restore_body))
             }
         },

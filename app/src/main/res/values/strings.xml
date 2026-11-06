@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="sep">" · "</string>
     <string name="nav_nearby">Nearby</string>
     <string name="nav_book">My book</string>
     <string name="nav_more">More</string>
 
     <string name="nearby_title">Nearby</string>
     <string name="nearby_still_to_get">Still to get, nearest first</string>
+    <string name="nearby_still_to_get_no_fix">Still to get</string>
+    <string name="nearby_all_far">Nothing to get within %1$d km; the nearest is %2$s away.</string>
+    <string name="nearby_approximate">approximate</string>
     <string name="nearby_my_book">My book</string>
-    <string name="nearby_location_off">Location off · showing recent items</string>
+    <string name="nearby_location_off">Location is switched off · showing recent items</string>
+    <string name="nearby_location_not_allowed">Location not allowed · showing recent items</string>
+    <string name="nearby_no_position">No position yet · showing recent items</string>
+    <string name="nearby_try_again">Try again</string>
     <string name="nearby_from_fix">From your position at %1$s</string>
     <string name="nearby_from_now">From your position now</string>
     <string name="nearby_nothing_left">Nothing left to get near here</string>
     <string name="nearby_empty_book">Nothing logged yet. Tap + to log your first find.</string>
     <string name="nearby_allow_location">Allow location</string>
+    <string name="nearby_allow_in_settings">Allow location in Settings</string>
+    <string name="nearby_turn_on_location">Turn on location</string>
 
     <string name="type_manhole">Manhole card</string>
     <string name="type_manhole_plural">Manhole cards</string>
@@ -22,6 +31,11 @@
     <string name="type_ekitag">Ekitag</string>
 
     <string name="got_it">Got it</string>
+    <string name="a11y_got_it">Got it: %1$s</string>
+    <string name="a11y_photo">Photo of %1$s</string>
+    <string name="a11y_remove_find">Remove the find from %1$s</string>
+    <string name="state_collected">Collected</string>
+    <string name="state_to_get">Still to get</string>
     <string name="got_it_again">Got it again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
@@ -34,6 +48,9 @@
     <string name="here">here</string>
 
     <string name="book_title">My book</string>
+    <string name="book_fold">Fold</string>
+    <string name="book_unfold">Unfold</string>
+    <string name="complete">Complete</string>
     <string name="book_other_stations">Other stations</string>
     <string name="book_no_prefecture">No prefecture</string>
     <string name="book_mark_owned">Mark ones I already have</string>
@@ -53,6 +70,7 @@
     <string name="item_distance">Distance</string>
     <string name="item_open_maps">Open in Maps</string>
     <string name="item_wave">Wave %1$s · %2$s</string>
+    <string name="item_wave_only">Wave %1$s</string>
     <string name="item_no_finds">Not collected yet</string>
     <string name="item_add_photo">Add a photo</string>
     <string name="item_remove_before_app">Remove \"had before the app\"</string>
@@ -60,7 +78,7 @@
     <string name="item_no_position">no position</string>
     <string name="back">Back</string>
     <string name="nearby_finding">Finding your position…</string>
-    <string name="nearby_no_catalogue">No catalogue loaded yet.</string>
+    <string name="nearby_no_catalogue">No catalogue loaded yet. A catalogue lists what there is to collect and where, so Meguri can show what is near you. Without one you can still log anything with +.</string>
     <string name="nearby_load_catalogue">Load a catalogue</string>
     <string name="nearby_all_done">You have everything in your catalogue.</string>
     <string name="book_mark_choose">Choose the ones you already have</string>
@@ -84,9 +102,11 @@
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
-    <string name="log_near_you">Near you</string>
+    <string name="log_near_you">Nearest first</string>
     <string name="log_recent">Recent</string>
     <string name="log_not_in_list">Not in the list?</string>
+    <string name="log_nothing_yet">Nothing to suggest yet. Add what you got with New below.</string>
+    <string name="new_needs_name">Type a name to save.</string>
     <string name="log_not_in_list_sub">Add a new goshuin, stamp or card here, with this find</string>
     <string name="log_new">New</string>
     <string name="new_title">New item</string>
@@ -99,21 +119,23 @@
     <string name="more_language">Language</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
+    <string name="more_backup_section">Your data</string>
     <string name="more_backup">Back up now</string>
     <string name="more_backup_sub">Saves all finds to a file you choose. Photos stay in the gallery.</string>
-    <string name="more_backup_done">Backup saved: %1$d finds, %2$d items</string>
+    <string name="more_backup_done">Backup saved: %1$s</string>
+    <string name="more_backup_done_named">Saved %1$s: %2$s</string>
     <string name="more_backup_failed">Couldn\'t save the backup</string>
     <string name="more_restore">Restore from a backup</string>
     <string name="more_restore_sub">Replaces everything here with a backup file. Your current data is saved to Downloads first.</string>
     <string name="more_restore_title">Restore this backup?</string>
-    <string name="more_restore_backup_line">Backup from %1$s: %2$d finds, %3$d items, %4$d photos</string>
-    <string name="more_restore_now_line">On this phone now: %1$d finds, %2$d items, %3$d photos</string>
+    <string name="more_restore_backup_line">Backup from %1$s: %2$s</string>
+    <string name="more_restore_now_line">On this phone now: %1$s</string>
     <string name="more_restore_body">Everything on this phone is replaced by the backup. A copy of the current data is saved to Downloads first.</string>
     <string name="more_restore_confirm">Restore</string>
     <string name="more_restore_empty_title">This backup has no finds</string>
     <string name="more_restore_empty_body">Restoring it removes all of your finds. A copy of the current data is saved to Downloads first.</string>
     <string name="more_restore_continue">Continue</string>
-    <string name="more_restore_done">Restored: %1$d finds, %2$d items</string>
+    <string name="more_restore_done">Restored: %1$s</string>
     <string name="more_restore_failed">Couldn\'t restore. Your data is unchanged.</string>
     <string name="more_restore_not_backup">That file isn\'t a backup from this app. Your data is unchanged.</string>
     <string name="more_restore_newer">That backup is from a newer version of the app. Update the app first. Your data is unchanged.</string>
@@ -126,14 +148,61 @@
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
     <string name="more_auto_sub_failed">The last backup failed. Tap to pick the folder again.</string>
     <string name="more_auto_now">Back up now</string>
+    <string name="more_auto_body">Once a week, to the folder "%1$s" on this phone. Keeps the last %2$d.</string>
     <string name="more_auto_change">Change folder</string>
     <string name="more_auto_off">Turn off</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
     <string name="more_import_done">Catalogue loaded: %1$d new, %2$d updated, %3$d railway lines</string>
+    <string name="more_import_same">Catalogue already up to date: %1$d items, %2$d railway lines</string>
     <string name="more_import_none">No catalogue rows found in that file. Is it the catalogue CSV?</string>
     <string name="more_import_failed">Couldn\'t read the catalogue: %1$s</string>
     <string name="more_logs">Logs</string>
+    <string name="logs_export">Export logs</string>
+    <string name="logs_refresh">Refresh</string>
+    <string name="logs_crash_test">Crash test</string>
+    <string name="logs_about">Errors and crashes are saved on this phone only. Export them to send with a bug report.</string>
     <string name="more_about">About</string>
     <string name="more_about_sub">Version %1$s · works offline · your data stays on this phone · Map data © OpenStreetMap contributors</string>
+
+    <!-- Alerts (M4) -->
+    <string name="alerts_title">Alerts</string>
+    <string name="trip_title">Trip mode</string>
+    <string name="trip_sub_off">Checks where you are every few minutes until midnight and tells you when something to get is close. For trains and walks.</string>
+    <string name="trip_sub_on">On until %1$s. Turn it off here or from its notification.</string>
+    <string name="trip_needs_location">Trip mode needs location access.</string>
+    <string name="bg_title">Alerts when the app is closed</string>
+    <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
+    <string name="bg_sub_on">On</string>
+    <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
+    <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
+    <string name="bg_sub_needs">Needs location set to \"Allow all the time\". Tap to allow it.</string>
+    <string name="bg_sub_no_play">Not available on this phone (no Google Play services). Use Trip mode.</string>
+    <string name="bg_dialog_title">Allow location all the time?</string>
+    <string name="bg_dialog_text">Android asks on a separate page. Choose \"Allow all the time\" so alerts can come while the app is closed. Meguri never sends your location anywhere.</string>
+    <string name="bg_dialog_go">Continue</string>
+    <string name="alert_distance">Alert distance</string>
+    <string name="alert_for">Alert for</string>
+    <string name="quiet_title">Quiet at night</string>
+    <string name="quiet_sub">No alerts from 22:00 to 07:00</string>
+    <string name="setup_title">Keep alerts working</string>
+    <string name="setup_sub">Set battery use for Meguri to Unrestricted, so the phone does not stop alerts.</string>
+    <string name="setup_sub_samsung">Set battery use for Meguri to Unrestricted and keep it out of Sleeping apps, so the phone does not stop alerts.</string>
+    <string name="notif_off">Notifications are off for Meguri. Alerts need them: tap to turn them on.</string>
+    <string name="alerts_channel">Near something to get</string>
+    <string name="alerts_channel_sub">When you are close to something you still need</string>
+    <string name="trip_channel">Trip mode</string>
+    <string name="trip_channel_sub">Shown while Trip mode is on</string>
+    <string name="alert_text">%1$s · %2$s away</string>
+    <string name="alert_text_here">%1$s · you are here</string>
+    <string name="alert_done">Got it</string>
+    <string name="alert_dismiss">Dismiss</string>
+    <string name="alert_logged">Logged %1$s</string>
+    <string name="trip_on_until">Trip mode on until %1$s</string>
+    <string name="trip_checking">Looking for things to get nearby</string>
+    <string name="trip_nearest">Nearest: %1$s · %2$s</string>
+    <string name="trip_stop">Stop</string>
+    <string name="trip_quiet">%1$s · quiet until %2$s</string>
+    <string name="tile_on">On</string>
+    <string name="tile_off">Off</string>
 </resources>

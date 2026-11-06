@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="finds"><item quantity="other">記録%d件</item></plurals>
+    <plurals name="items"><item quantity="other">項目%d件</item></plurals>
+    <plurals name="photos"><item quantity="other">写真%d枚</item></plurals>
+    <string name="count_sep">、</string>
+</resources>

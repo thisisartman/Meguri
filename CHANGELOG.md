@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-11-06: Version 0.2.0, ready for the S23, with alerts (#43, #10, #42)
+- Alerts near things still to get: Trip mode (checks your position every 20 s to 2 min until 23:59, from More or a quick-settings tile) and alerts while the app is closed (Google geofences, needs location "Allow all the time"). Got it, Photo and Dismiss on the notification; Got it turns into "Logged ... Undo". Distance 200 m to 1 km, per-type switches, quiet at night 22:00 to 07:00, once a visit.
+- More says when background alerts cannot work (Google Location Accuracy off) and opens the right settings page; "Keep alerts working" opens battery settings (and mentions Sleeping apps on Samsung).
+- Nearby says why there is no position (not allowed, location switched off, no position yet) with the right button, notes an approximate position, and says when nothing is within 30 km. "Allow location" opens Settings once Android stops asking.
+- "Approximate" location now gives a position (it gave none before).
+- "Not in the list?" stays visible under the + sheet's list; Got it and Photo are 48 dp; names get two lines.
+- Distances under 25 m read "here".
+- My book: sections fold, headers stay at the top, complete collections show a check.
+- One outlined button and one chip style: visible borders, a check on selected chips, 48 dp. No more purple from Material's defaults.
+- A double tap on Got it logs one find, not two.
+- After the camera closes, "Logged ... Undo" shows again, so a cancelled photo still shows the find was kept.
+- Reloading the same catalogue says it is up to date instead of "119 updated".
+- Backups name the file they saved; the weekly backup dialog says its folder and how many it keeps; counts use proper plurals.
+- Japanese mode: Logs in Japanese, "・" separators, full-width colons, natural line breaks, plainer wording.
+- Screen readers hear which item a Got it or Photo button is for, and which find a Remove button removes.
+- No white flash before the first frame; landscape keeps a readable width.
+- The dev build names its weekly backups `collectibles-dev-auto-...`, so it never prunes the real app's backups (#42).
+- Tested in a 15-round overnight review on an Android 16 emulator with the S23's screen; records in `Resources/Verification/overnight-2026-11-06/` (outside the repo).
+
 ## 2026-11-03: Trip day (#36, round 5)
 - "Nearby" lists the collections with something to get within 30 km, nearest first, each with what to get next; the rest fold into one line.
 - An item's page leads with "Directions" (with the distance) and "Call"; a station says which lines it is on; hours come before the address.

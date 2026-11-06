@@ -49,9 +49,10 @@ import androidx.navigation.NavHostController
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.Origin
 
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val nearest by vm.nearest.collectAsStateWithLifecycle()
@@ -66,28 +67,54 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
             Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)) {
                 Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.headlineMedium)
                 val fix = here.fix
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val allowed = LocationAccess.has(ctx)
+                val systemOn = LocationAccess.systemOn(ctx)
                 val where = when {
                     fix == null && here.searching -> stringResource(R.string.nearby_finding)
-                    fix == null -> stringResource(R.string.nearby_location_off)
+                    fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
+                    fix == null && !systemOn -> stringResource(R.string.nearby_location_off)
+                    fix == null -> stringResource(R.string.nearby_no_position)
                     here.live -> stringResource(R.string.nearby_from_now)
                     else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
-                }
+                }.let { if (fix != null && !LocationAccess.hasPrecise(ctx)) it + sep() + stringResource(R.string.nearby_approximate) else it }
                 Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (fix == null && !here.searching) TextButton(onClick = onAllowLocation, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_allow_location)) }
+                if (fix == null && !here.searching) {
+                    val label = when {
+                        !allowed && locationBlocked -> R.string.nearby_allow_in_settings
+                        !allowed -> R.string.nearby_allow_location
+                        !systemOn -> R.string.nearby_turn_on_location
+                        else -> R.string.nearby_try_again
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    InkOutlinedButton(onClick = onAllowLocation) { Text(stringResource(label)) }
+                }
             }
         }
-        item { SectionTitle(stringResource(R.string.nearby_still_to_get)) }
+        item { SectionTitle(stringResource(if (here.fix != null) R.string.nearby_still_to_get else R.string.nearby_still_to_get_no_fix)) }
+        nearest.firstOrNull()?.meters?.takeIf { it > MainViewModel.AROUND_RADIUS_M }?.let { far ->
+            item {
+                Text(
+                    stringResource(R.string.nearby_all_far, (MainViewModel.AROUND_RADIUS_M / 1000).toInt(), distanceText(far).orEmpty()),
+                    Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
         item {
             if (nearest.isEmpty()) {
                 // No catalogue yet is not the same as having everything
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                    // Only things added by hand: still no catalogue, so not "you have everything"
+                    val noCatalogue = rows.none { it.item.origin != Origin.USER }
                     Text(
-                        stringResource(if (rows.isEmpty()) R.string.nearby_no_catalogue else R.string.nearby_all_done),
+                        stringResource(if (noCatalogue) R.string.nearby_no_catalogue else R.string.nearby_all_done),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    if (rows.isEmpty()) {
-                        TextButton(onClick = { nav.openMore() },contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.nearby_load_catalogue)) }
+                    if (noCatalogue) {
+                        Spacer(Modifier.height(8.dp))
+                        InkOutlinedButton(onClick = { nav.openMore() }) { Text(stringResource(R.string.nearby_load_catalogue)) }
                     }
                 }
             } else {
@@ -151,9 +178,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onAllowLocation: () 
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(Modifier.width(8.dp))
-                    Text(
+                    CountText(
                         if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
-                        style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = "tnum"),
+                        complete = s.total != null && s.total > 0 && s.collected == s.total,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
@@ -186,7 +214,7 @@ fun TypeChip(type: ItemType, extra: String? = null) {
         TypeDot(type)
         Spacer(Modifier.width(4.dp))
         Text(
-            stringResource(type.label()) + (extra?.let { " · $it" } ?: ""),
+            stringResource(type.label()) + (extra?.let { sep() + it } ?: ""),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,
@@ -213,17 +241,17 @@ private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> 
             // Distance on its own line: it is what the tile is for, and it must not be the part that gets cut
             Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
             Spacer(Modifier.height(8.dp))
-            Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
-            OutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth(), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
+            Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_got_it, name)), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
+            InkOutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_photo, name)), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
         }
     }
 }
 
 @Composable
 fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
-    s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + " · " + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
-    s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + " · " + (lineName ?: s.lineId)
-    s.type == ItemType.EKI_STAMP -> stringResource(R.string.type_eki_plural) + " · " + stringResource(R.string.book_other_stations)
+    s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + sep() + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
+    s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + sep() + (lineName ?: s.lineId)
+    s.type == ItemType.EKI_STAMP -> stringResource(R.string.type_eki_plural) + sep() + stringResource(R.string.book_other_stations)
     else -> stringResource(s.type.label())
 }
 
@@ -241,9 +269,10 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                 TypeDot(s.type)
                 Spacer(Modifier.width(6.dp))
                 Text(title, style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
-                Text(
+                CountText(
                     if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
-                    style = MaterialTheme.typography.titleSmall.copy(fontFeatureSettings = "tnum"),
+                    complete = s.total != null && s.total > 0 && s.collected == s.total,
+                    style = MaterialTheme.typography.titleSmall,
                 )
             }
             // Around here: what to get next in this collection, and how far
@@ -277,7 +306,7 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                     Spacer(Modifier.width(8.dp))
                     val whenText = if (last.lastAt != null) formatDate(last.lastAt, ja) else stringResource(R.string.had_before_app)
                     Text(
-                        stringResource(R.string.last, last.item.displayName(ja) + " · " + whenText),
+                        stringResource(R.string.last, last.item.displayName(ja) + sep() + whenText),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

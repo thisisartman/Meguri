@@ -74,16 +74,16 @@ fun LogsScreen(onBack: () -> Unit, viewModel: LogsViewModel = hiltViewModel()) {
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = { saveFile.launch(viewModel.exportFileName()) }) { Text("Export logs") }
-                OutlinedButton(onClick = viewModel::refresh) { Text("Refresh") }
+                Button(onClick = { saveFile.launch(viewModel.exportFileName()) }) { Text(stringResource(R.string.logs_export)) }
+                OutlinedButton(onClick = viewModel::refresh) { Text(stringResource(R.string.logs_refresh)) }
                 if (BuildConfig.DEBUG) {
                     OutlinedButton(onClick = { throw IllegalStateException("Crash test from the Logs screen") }) {
-                        Text("Crash test")
+                        Text(stringResource(R.string.logs_crash_test))
                     }
                 }
             }
             Text(
-                "Errors and crashes are saved on this phone only. Export them to send with a bug report.",
+                stringResource(R.string.logs_about),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(vertical = 8.dp),
             )

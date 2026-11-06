@@ -1,6 +1,9 @@
 package io.github.thisisartman.collectibles.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.Item
 import io.github.thisisartman.collectibles.data.ItemType
@@ -49,6 +52,40 @@ fun formatDistance(meters: Double): Pair<Int, String> =
     if (meters < HERE_M) R.string.here to ""
     else if (meters < 1000) R.string.m to (Math.round(meters / 10.0) * 10).toString()
     else R.string.km to if (meters < 10_000) String.format(Locale.US, "%.1f", meters / 1000) else Math.round(meters / 1000).toString()
+
+/** "21 finds, 119 items, 1 photo" in the app's language; photos left out when null. */
+fun countsText(res: android.content.res.Resources, finds: Int, items: Int, photos: Int? = null): String =
+    listOfNotNull(
+        res.getQuantityString(R.plurals.finds, finds, finds),
+        res.getQuantityString(R.plurals.items, items, items),
+        photos?.let { res.getQuantityString(R.plurals.photos, it, it) },
+    ).joinToString(res.getString(R.string.count_sep))
+
+/** What a screen reader says for a control, when its visible label alone would not say which item it acts on. */
+fun androidx.compose.ui.Modifier.spoken(text: String): androidx.compose.ui.Modifier =
+    this.then(androidx.compose.ui.Modifier.semantics { contentDescription = text })
+
+/** "Collected" or "Still to get", read with a row or a stamp slot. */
+fun androidx.compose.ui.Modifier.collectedState(text: String): androidx.compose.ui.Modifier =
+    this.then(androidx.compose.ui.Modifier.semantics { stateDescription = text })
+
+/**
+ * The catalogue's station notes are one of two fixed English sentences (the generator wrote them, and an older
+ * backup carries the earlier one). Japanese mode shows them in Japanese; any other note is shown as written.
+ * A proper fix is a Japanese notes column in the catalogue (open item, schema v2).
+ */
+private val STATION_NOTES_JA = mapOf(
+    "Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors." to
+        "この駅の紙のスタンプは未確認です。地図データ © OpenStreetMap contributors",
+    "Station position from OpenStreetMap (ODbL). Whether this station has a paper stamp is not checked." to
+        "駅の位置はOpenStreetMap（ODbL）によるものです。紙のスタンプがあるかは未確認です。",
+)
+
+fun localNote(note: String, japanese: Boolean): String = if (japanese) STATION_NOTES_JA[note.trim()] ?: note else note
+
+/** The separator between parts of a line: " · " in English, "・" in Japanese. */
+@androidx.compose.runtime.Composable
+fun sep(): String = androidx.compose.ui.res.stringResource(R.string.sep)
 
 fun formatDate(ms: Long, japanese: Boolean): String =
     SimpleDateFormat(if (japanese) "yyyy/MM/dd" else "yyyy-MM-dd", Locale.US).format(Date(ms))

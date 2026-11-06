@@ -33,6 +33,28 @@ class LocationSource @Inject constructor(@ApplicationContext private val context
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
             ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
 
+    private fun hasFine(): Boolean =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+    /**
+     * GPS when precise location is allowed. With "Approximate" only, Android refuses the GPS provider, so use the
+     * fused provider (Android 12+), which hands approximate apps a blurred position, or the network provider.
+     */
+    private fun provider(): String? {
+        val m = lm ?: return null
+        fun on(p: String) = runCatching { m.isProviderEnabled(p) }.getOrDefault(false)
+        return when {
+            hasFine() && on(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S && on(LocationManager.FUSED_PROVIDER) -> LocationManager.FUSED_PROVIDER
+            on(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+            on(LocationManager.GPS_PROVIDER) && hasFine() -> LocationManager.GPS_PROVIDER
+            else -> null
+        }
+    }
+
+    /** Whether the phone's own location switch is on. */
+    fun systemLocationOn(): Boolean = lm?.let { androidx.core.location.LocationManagerCompat.isLocationEnabled(it) } ?: false
+
     /** Newest last-known position from any provider, or null. */
     @SuppressLint("MissingPermission")
     fun lastKnown(): Fix? {
@@ -52,11 +74,7 @@ class LocationSource @Inject constructor(@ApplicationContext private val context
     @SuppressLint("MissingPermission")
     suspend fun current(timeoutMs: Long = 20_000): Fix? {
         if (!hasPermission() || lm == null) return null
-        val provider = when {
-            lm.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
-            lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
-            else -> return null
-        }
+        val provider = provider() ?: return null
         return withTimeoutOrNull(timeoutMs) {
             suspendCancellableCoroutine { cont ->
                 val signal = CancellationSignal()
