@@ -7,6 +7,14 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- 0.3.0-beta.1, the first beta, merged into `testing` (2026-11-07).
+- Item page: one layout for collected and uncollected. Photos are dotted squares, one per kind for the type (a station has Station stamp, Ekitag screenshot and Station photo), and the Photo button opens the same kinds in a menu. Each collection is one line with its date (or "Date not recorded"); "had before the app" is gone.
+- Buttons say "Collect" and "Collect again"; the state is "Uncollected" everywhere.
+- Tap a pin for its type icon, "Uncollected · 1.7 km from you", and Directions, Details and Collect, each with an icon. Pins are easier to hit.
+- Directions open the actual place in Google Maps (by its name), not a loose pin.
+- Search is forgiving (spaces, hyphens, long vowels, small typos, Japanese) and shows results under the search bar, with a chip per type.
+- Collected stations show a station icon on their seal instead of three letters; manhole cards keep their card code.
+- Pages change without the map lingering on screen.
 - New layout (owner's redesign): the bottom bar is Nearby, a gold + for logging a find, and My book. Settings and Logs moved to a round menu at the top right. "Got it" is now "Collected" (Japanese 集めた), and its message says "Collected ...".
 - Nearby's top card is a search bar: it searches everything by English or Japanese name or code, and the map and list show only the results. A button above the sheet brings the map back to you. Tap a pin to get Directions, Details and Collected.
 - From a 5-round review on the Poco, in light and dark mode, English, Japanese and large text: Photo and Collected sit in the same order everywhere, the station note reads plainly, "Alerts when the app is closed" explains itself, and every control is at least 48 dp.

@@ -18,7 +18,8 @@ val signingProps: Properties? = providers.gradleProperty("COLLECTIBLES_SIGNING")
     ?.takeIf { it.isFile }
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
-val appVersionName = "0.3.0"
+// Owner, 2026-11-07: this version is the beta, under testing
+val appVersionName = "0.3.0-beta.1"
 
 android {
     namespace = "io.github.thisisartman.collectibles"
