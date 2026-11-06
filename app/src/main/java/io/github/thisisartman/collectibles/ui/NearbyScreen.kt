@@ -99,13 +99,15 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
     }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
-    val noCatalogue = rows.none { it.item.origin != Origin.USER }
+
     val pickedRow = rows.firstOrNull { it.item.id == picked }
 
+    val noCatalogue = rows.none { it.item.origin != Origin.USER }
     val sheet = rememberBottomSheetScaffoldState()
     BottomSheetScaffold(
         scaffoldState = sheet,
-        sheetPeekHeight = 300.dp,
+        // Taller while the welcome shows, so both of its buttons are in view without dragging
+        sheetPeekHeight = if (noCatalogue) 520.dp else 300.dp,
         sheetContainerColor = MaterialTheme.colorScheme.surface,
         sheetContent = {
             Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
