@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.ui.layout.layout
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
@@ -183,32 +182,26 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         )
                         items.forEach { (r, label, icon) ->
                             if (r == "log") {
-                                NavigationBarItem(
-                                    selected = false,
-                                    onClick = { showLog = true },
-                                    icon = {
-                                        // Takes only a normal icon's 24 dp in the layout and rises above it, so "Log"
-                                        // lines up with Nearby and My book (it sat lower in the 2026-11-06 review)
-                                        androidx.compose.material3.Surface(
-                                            modifier = Modifier.layout { measurable, constraints ->
-                                                val p = measurable.measure(constraints.copy(minHeight = 0, maxHeight = androidx.compose.ui.unit.Constraints.Infinity))
-                                                val h = 24.dp.roundToPx()
-                                                layout(p.width, h) { p.place(0, h - p.height + 6.dp.roundToPx()) }
-                                            },
-                                            shape = androidx.compose.foundation.shape.CircleShape,
-                                            color = MaterialTheme.colorScheme.primary,
-                                            contentColor = MaterialTheme.colorScheme.onPrimary,
-                                            shadowElevation = 2.dp,
-                                        ) {
-                                            Icon(icon, contentDescription = stringResource(R.string.log_title), modifier = Modifier.padding(10.dp).size(28.dp))
+                                // A 56 dp gold circle centred in the bar, with no label of its own: a raised circle
+                                // was cut off at the bar's top edge and touched "Log" at large text (2026-11-06 review)
+                                androidx.compose.foundation.layout.Box(
+                                    // Not fillMaxHeight: in the bar's row that made the bar take the whole screen
+                                    Modifier.weight(1f).align(androidx.compose.ui.Alignment.CenterVertically),
+                                    contentAlignment = androidx.compose.ui.Alignment.Center,
+                                ) {
+                                    androidx.compose.material3.Surface(
+                                        onClick = { showLog = true },
+                                        shape = androidx.compose.foundation.shape.CircleShape,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                                        shadowElevation = 2.dp,
+                                        modifier = Modifier.size(56.dp),
+                                    ) {
+                                        androidx.compose.foundation.layout.Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
+                                            Icon(icon, contentDescription = stringResource(R.string.log_title), modifier = Modifier.size(30.dp))
                                         }
-                                    },
-                                    label = { Text(stringResource(label)) },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        indicatorColor = androidx.compose.ui.graphics.Color.Transparent,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                    ),
-                                )
+                                    }
+                                }
                                 return@forEach
                             }
                             NavigationBarItem(

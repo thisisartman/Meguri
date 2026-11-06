@@ -248,4 +248,7 @@
     <string name="menu_settings">設定</string>
     <string name="menu_open">メニュー</string>
     <string name="nav_log">記録</string>
+    <string name="nearby_search">スタンプやカードを検索</string>
+    <string name="nearby_search_clear">検索を消す</string>
+    <string name="nearby_recenter">現在地に戻る</string>
 </resources>

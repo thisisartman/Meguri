@@ -40,6 +40,8 @@ import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Slider
 import androidx.compose.ui.res.painterResource
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -111,11 +113,19 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var sizeOpen by rememberSaveable { mutableStateOf(false) }
     val sizeLabel = stringResource(R.string.nearby_tile_size)
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
+    var query by rememberSaveable { mutableStateOf("") }
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
+    val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+    val searching = query.isNotBlank()
 
     val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
     val kinds = remember(inTab) { inTab.map { it.item.type }.distinct().sortedBy { it.ordinal } }
-    val shown = remember(inTab, kind, byName, here, ja) {
-        val k = inTab.filter { kind == null || it.item.type == kind }
+    val shown = remember(inTab, rows, kind, byName, here, ja, query) {
+        // A search looks through everything (both tabs, every kind) by name in either language or by code
+        val q = query.trim().lowercase()
+        val k = if (q.isNotEmpty()) rows.filter { r ->
+            listOfNotNull(r.item.nameRomaji, r.item.nameJa, r.item.code).any { it.lowercase().contains(q) }
+        } else inTab.filter { kind == null || it.item.type == kind }
         if (byName) k.sortedBy { it.item.displayName(ja).lowercase() }
         else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
     }
@@ -156,7 +166,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     )
                     return@Column
                 }
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                // While searching, the tabs give way to the number found, on the row with sort and size (below)
+                if (!searching) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     listOf(MapSection.STAMPS, MapSection.CARDS).forEachIndexed { i, t ->
                         val all = rows.filter { it.item.type in t.types }
                         SegmentedButton(
@@ -182,8 +193,15 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
-                        if (kinds.size > 1) kinds.forEach { t ->
+                        // The kind filters only apply to a tab, not to a search across everything
+                        if (searching) Text(
+                            androidx.compose.ui.res.pluralStringResource(R.plurals.nearby_found, shown.size, shown.size, query.trim()),
+                            Modifier.padding(start = 4.dp),
+                            style = MaterialTheme.typography.titleSmall,
+                            maxLines = 2,
+                        )
+                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                        if (!searching && kinds.size > 1) kinds.forEach { t ->
                             FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
                         }
                     }
@@ -240,7 +258,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     val cell = (tile + 24.dp) * LocalDensity.current.fontScale.coerceIn(1f, 2f)
                     // A new sort, tab or filter starts from the top (keys would otherwise hold the old place)
                     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
-                    LaunchedEffect(byName, tab, kind) { grid.scrollToItem(0) }
+                    LaunchedEffect(byName, tab, kind, query) { grid.scrollToItem(0) }
                     LazyVerticalGrid(
                         state = grid,
                         columns = GridCells.Adaptive(cell),
@@ -263,45 +281,76 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         },
     ) { inner ->
         Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding() - peek.coerceAtMost(inner.calculateBottomPadding()))) {
+            var recenter by remember { mutableIntStateOf(0) }
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
-                onPinTap = { picked = it }, onMapTap = { picked = null },
+                onPinTap = { picked = it }, onMapTap = { picked = null; focus.clearFocus() },
+                recenter = recenter,
             )
-            // Where you are, and what to do when there is no position
+            // Back to where you are (owner, 2026-11-06), just above the sheet on the right
+            if (here.fix != null) {
+                androidx.compose.material3.SmallFloatingActionButton(
+                    onClick = { recenter++ },
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = peek + 12.dp),
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = MaterialTheme.colorScheme.primary,
+                ) { Icon(painterResource(R.drawable.ic_my_location), contentDescription = stringResource(R.string.nearby_recenter)) }
+            }
+            // Search (owner, 2026-11-06: in place of the map button, since dragging the sheet down shows the whole map),
+            // the menu, and a line about your position only when something needs doing
             Surface(
                 Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp), shadowElevation = 3.dp,
+                shape = RoundedCornerShape(28.dp), shadowElevation = 3.dp,
             ) {
-                Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.titleMedium)
-                        val fix = here.fix
-                        val allowed = LocationAccess.has(ctx)
-                        val where = when {
-                            fix == null && here.searching -> stringResource(R.string.nearby_finding)
-                            fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
-                            fix == null && !LocationAccess.systemOn(ctx) -> stringResource(R.string.nearby_location_off)
-                            fix == null -> stringResource(R.string.nearby_no_position)
-                            here.live -> stringResource(R.string.nearby_from_now)
-                            else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
+                Column {
+                    Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(painterResource(R.drawable.ic_search), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        androidx.compose.material3.TextField(
+                            value = query,
+                            onValueChange = { query = it; picked = null },
+                            modifier = Modifier.weight(1f).focusRequester(focusRequester),
+                            placeholder = { Text(stringResource(R.string.nearby_search), maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                            singleLine = true,
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                            keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { focus.clearFocus() }),
+                            colors = androidx.compose.material3.TextFieldDefaults.colors(
+                                focusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                unfocusedContainerColor = androidx.compose.ui.graphics.Color.Transparent,
+                                focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                                unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                            ),
+                        )
+                        if (query.isNotEmpty()) {
+                            IconButton(onClick = { query = ""; focus.clearFocus() }) {
+                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.nearby_search_clear))
+                            }
                         }
-                        Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        // Log a find is the middle of the bottom bar now; the top right is the menu (owner, 2026-11-06)
+                        MenuButton(nav)
                     }
-                    if (here.fix == null && !here.searching) {
-                        val label = when {
-                            !LocationAccess.has(ctx) && locationBlocked -> R.string.nearby_allow_in_settings
-                            !LocationAccess.has(ctx) -> R.string.nearby_allow_location
-                            !LocationAccess.systemOn(ctx) -> R.string.nearby_turn_on_location
-                            else -> R.string.nearby_try_again
-                        }
-                        TextButton(onClick = onAllowLocation) { Text(stringResource(label)) }
-                    } else {
-                        IconButton(onClick = { nav.openMap(tab) }) {
-                            Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.map_expand))
+                    val fix = here.fix
+                    if (fix == null || !here.live) {
+                        Row(Modifier.padding(start = 16.dp, end = 8.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                            val allowed = LocationAccess.has(ctx)
+                            val where = when {
+                                fix == null && here.searching -> stringResource(R.string.nearby_finding)
+                                fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
+                                fix == null && !LocationAccess.systemOn(ctx) -> stringResource(R.string.nearby_location_off)
+                                fix == null -> stringResource(R.string.nearby_no_position)
+                                else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
+                            }
+                            Text(where, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            if (fix == null && !here.searching) {
+                                val label = when {
+                                    !LocationAccess.has(ctx) && locationBlocked -> R.string.nearby_allow_in_settings
+                                    !LocationAccess.has(ctx) -> R.string.nearby_allow_location
+                                    !LocationAccess.systemOn(ctx) -> R.string.nearby_turn_on_location
+                                    else -> R.string.nearby_try_again
+                                }
+                                TextButton(onClick = onAllowLocation, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(label)) }
+                            }
                         }
                     }
-                    // Log a find is the middle of the bottom bar now; the top right is the menu (owner, 2026-11-06)
-                    MenuButton(nav)
                 }
             }
             // A tapped pin: what it is, with Details and Directions (#52)
@@ -316,7 +365,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             listOfNotNull(
                                 stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
                                 distanceText(vm.distanceTo(r)),
-                            ).joinToString(" · "),
+                            ).joinToString(sep()),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(10.dp))

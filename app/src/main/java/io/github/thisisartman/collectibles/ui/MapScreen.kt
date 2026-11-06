@@ -103,7 +103,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                         stringResource(if (row.findCount > 0) R.string.map_collected else R.string.map_not_collected),
                         distanceText(vm.distanceTo(row)),
                         row.item.placeName?.takeIf { it != row.item.nameJa },
-                    ).joinToString(" · ")
+                    ).joinToString(sep())
                     Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.height(12.dp))
                     PinActions(row, vm, nav, onCollected = { picked = null })

@@ -51,6 +51,8 @@ fun MeguriMap(
     interactive: Boolean = true,
     onPinTap: (String) -> Unit = {},
     onMapTap: () -> Unit = {},
+    // Each increase moves the camera back to you (the recentre button, owner 2026-11-06)
+    recenter: Int = 0,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -172,6 +174,12 @@ fun MeguriMap(
                 m.cameraPosition = CameraPosition.Builder().target(focus.first()).zoom(13.0).build()
             }
         }
+    }
+    LaunchedEffect(recenter) {
+        if (recenter == 0) return@LaunchedEffect
+        val m = map ?: return@LaunchedEffect
+        val h = here ?: return@LaunchedEffect
+        m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(h.first, h.second), 15.0), 600)
     }
     AndroidView(factory = { mapView }, modifier = modifier)
 }
