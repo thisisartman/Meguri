@@ -303,4 +303,6 @@
     <string name="type_museum">博物館スタンプ</string>
     <string name="type_dam">ダムカード</string>
     <string name="collection_name_taken">同じ名前のコレクションがすでにあります。</string>
+    <string name="more_backup_photos">写真ごとバックアップ</string>
+    <string name="more_backup_photos_sub">新しい端末へ移るとき用：写真もすべて含めます。新しい端末で復元すると写真がギャラリーに戻ります。</string>
 </resources>

@@ -303,4 +303,6 @@
     <string name="type_museum">Museum stamp</string>
     <string name="type_dam">Dam card</string>
     <string name="collection_name_taken">You already have a collection with this name.</string>
+    <string name="more_backup_photos">Back up with photos</string>
+    <string name="more_backup_photos_sub">For a new phone: the same backup with every photo inside. Restore it there and the photos go back in the gallery.</string>
 </resources>

@@ -79,10 +79,12 @@ fun MoreScreen(
     val scope = rememberCoroutineScope()
     val failText = stringResource(R.string.more_backup_failed)
 
+    var withPhotos by remember { mutableStateOf(false) }
     val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
+        val photos = withPhotos
         vm.run {
-            val msg = runCatching { vm.io.exportBackup(uri) }
+            val msg = runCatching { vm.io.exportBackup(uri, photos) }
                 .map {
                     val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
                     val counts = countsText(context.resources, it.finds, it.items)
@@ -244,7 +246,14 @@ fun MoreScreen(
 
         MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
             val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+            withPhotos = false
             saveBackup.launch("collectibles-backup-$stamp.zip")
+        }
+        // Moving to a new phone (#66): the same backup with every photo inside, so nothing depends on the gallery
+        MoreRow(stringResource(R.string.more_backup_photos), stringResource(R.string.more_backup_photos_sub)) {
+            val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+            withPhotos = true
+            saveBackup.launch("collectibles-backup-photos-$stamp.zip")
         }
         MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
             openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))

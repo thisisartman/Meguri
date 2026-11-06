@@ -24,7 +24,7 @@ data class ImportResult(val added: Int, val updated: Int, val lines: Int, val sk
 /** Whether a catalogue row changes what is stored; a reload of the same file changes nothing. */
 fun catalogRowChanges(existing: Item?, incoming: Item): Boolean =
     existing == null || incoming.copy(updatedAt = existing.updatedAt) != existing
-data class BackupResult(val finds: Int, val items: Int, val photos: Int)
+data class BackupResult(val finds: Int, val items: Int, val photos: Int, val photoFiles: Int = 0)
 
 @Singleton
 class CatalogAndBackup @Inject constructor(
@@ -93,16 +93,19 @@ class CatalogAndBackup @Inject constructor(
      * Writes a zip: the database file (the restore source) plus readable CSVs of everything.
      * Photos are not included; they stay in the gallery and are relinked by their fingerprint.
      */
-    suspend fun exportBackup(uri: Uri): BackupResult = withContext(Dispatchers.IO) {
-        val result = context.contentResolver.openOutputStream(uri, "wt")!!.use { writeBackupLocked(it) }
-        log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos to $uri")
+    suspend fun exportBackup(uri: Uri, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
+        val result = context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> lock.withLock { writeBackup(out, withPhotos) } }
+        log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos (${result.photoFiles} files) to $uri")
         result
     }
 
     suspend fun writeBackupLocked(out: OutputStream): BackupResult = lock.withLock { writeBackup(out) }
 
-    /** Caller holds [lock]. */
-    suspend fun writeBackup(out: OutputStream): BackupResult = withContext(Dispatchers.IO) {
+    /**
+     * Caller holds [lock]. [withPhotos] (#66, moving to a new phone): each photo's picture goes into the zip as
+     * `photos/<photo id>`, so a phone that doesn't have it can put it back in its gallery on restore.
+     */
+    suspend fun writeBackup(out: OutputStream, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
         val snapshot = File(context.noBackupFilesDir, "export-${UUID.randomUUID()}.db")
         try {
             val rows = snapshotDatabase(snapshot)
@@ -120,11 +123,21 @@ class CatalogAndBackup @Inject constructor(
                     val byLine = lines.associateBy { it.id }
                     ls.forEach { s -> append(Csv.line(s.lineId, byLine[s.lineId]?.nameJa, byLine[s.lineId]?.nameRomaji, s.itemId, s.seq)) }
                 })
-                text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":${CollectiblesDb.VERSION},"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size}}""")
+                var files = 0
+                if (withPhotos) photos.forEach { p ->
+                    // A picture that can't be read (deleted from the gallery) is left out; the row still travels
+                    runCatching {
+                        context.contentResolver.openInputStream(Uri.parse(p.contentUri))!!.use { input ->
+                            zip.putNextEntry(ZipEntry("photos/${p.id}")); input.copyTo(zip); zip.closeEntry()
+                        }
+                        files++
+                    }.onFailure { log.w("Backup", "Photo ${p.id} could not be read, left out") }
+                }
+                text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":${CollectiblesDb.VERSION},"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size},"photo_files":$files}""")
                 zip.finish()
                 zip.flush()
+                BackupResult(finds.size, items.size, photos.size, files)
             }
-            BackupResult(finds.size, items.size, photos.size)
         } finally {
             listOf("", "-wal", "-shm", "-journal").forEach { File(snapshot.path + it).delete() }
         }

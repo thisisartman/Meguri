@@ -87,9 +87,14 @@ class BackupRestore @Inject constructor(
                     ZipInputStream(input).use { zip ->
                         var entry = zip.nextEntry
                         while (entry != null) {
-                            when (entry.name) {
-                                CollectiblesDb.NAME -> dbFile.outputStream().use { copyCapped(zip, it) }
-                                "backup.json" -> createdMs = CREATED_MS.find(zip.readBytes().toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
+                            when {
+                                entry.name == CollectiblesDb.NAME -> dbFile.outputStream().use { copyCapped(zip, it) }
+                                // Pictures carried by a "with photos" backup (#66); the name is a photo id only
+                                entry.name.startsWith("photos/") && PHOTO_ID.matches(entry.name.removePrefix("photos/")) -> {
+                                    val dirP = File(dir, "photos").apply { mkdirs() }
+                                    File(dirP, entry.name.removePrefix("photos/")).outputStream().use { copyCapped(zip, it, MAX_PHOTO_BYTES) }
+                                }
+                                entry.name == "backup.json" -> createdMs = CREATED_MS.find(zip.readBytes().toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
                             }
                             entry = zip.nextEntry
                         }
@@ -108,14 +113,14 @@ class BackupRestore @Inject constructor(
         }
     }
 
-    private fun copyCapped(input: ZipInputStream, out: java.io.OutputStream) {
+    private fun copyCapped(input: ZipInputStream, out: java.io.OutputStream, cap: Long = MAX_DB_BYTES) {
         val buffer = ByteArray(64 * 1024)
         var total = 0L
         while (true) {
             val n = input.read(buffer)
             if (n < 0) return
             total += n
-            if (total > MAX_DB_BYTES) throw BackupError.Damaged("database too large")
+            if (total > cap) throw BackupError.Damaged("file too large")
             out.write(buffer, 0, n)
         }
     }
@@ -177,7 +182,9 @@ class BackupRestore @Inject constructor(
                 copy
             }
             log.i("Restore", "Restored ${rows.finds.size} finds, ${rows.items.size} items, ${rows.photos.size} photos; safety copy $safety")
-            val relink = if (rows.photos.isEmpty()) null else relinkPhotos()
+            // A "with photos" backup (#66): pictures this phone can't open are put back in its gallery first
+            val placed = restoreBundledPhotos(File(info.dir, "photos"))
+            val relink = if (rows.photos.isEmpty() || placed == rows.photos.size) null else relinkPhotos()
             RestoreResult(rows.items.size, rows.finds.size, rows.photos.size, safety, rows.photos.isNotEmpty() && relink == null)
         } finally {
             discard(info)
@@ -286,6 +293,38 @@ class BackupRestore @Inject constructor(
         }
     }
 
+    /**
+     * For each restored photo whose picture this phone can't open, writes the copy carried in the backup into the
+     * gallery (Pictures/Meguri, the app's own entries, so no gallery permission is needed) and points the photo at
+     * it. Pictures the phone already has are left alone, so a restore on the same phone adds no duplicates.
+     * Returns how many photos now have a working picture from the bundle or were already fine.
+     */
+    private suspend fun restoreBundledPhotos(dir: File): Int {
+        if (!dir.isDirectory) return 0
+        val resolver = context.contentResolver
+        var ok = 0
+        for (p in dao.allPhotos()) {
+            val readable = runCatching { resolver.openInputStream(Uri.parse(p.contentUri))!!.use { it.read() } ; true }.getOrDefault(false)
+            if (readable) { ok++; continue }
+            val file = File(dir, p.id).takeIf { it.isFile } ?: continue
+            val values = android.content.ContentValues().apply {
+                put(MediaStore.Images.Media.DISPLAY_NAME, p.displayName ?: "meguri-${p.id}.jpg")
+                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Meguri")
+            }
+            val uri = runCatching { resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values) }.getOrNull() ?: continue
+            val written = runCatching { resolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }; true }.getOrDefault(false)
+            if (written) {
+                dao.setPhotoLink(p.id, uri.toString(), ContentUris.parseId(uri), false)
+                ok++
+            } else {
+                resolver.delete(uri, null, null)
+            }
+        }
+        log.i("Restore", "Photos from the backup: $ok of ${dao.photoTotal()} now open")
+        return ok
+    }
+
     /** After a restart that cut a relink short. */
     suspend fun resumeRelinkIfPending() {
         if (relinkPending) relinkPhotos()
@@ -308,6 +347,8 @@ class BackupRestore @Inject constructor(
     companion object {
         private const val KEY_RELINK = "relink_pending"
         private const val MAX_DB_BYTES = 256L * 1024 * 1024
+        private const val MAX_PHOTO_BYTES = 64L * 1024 * 1024
+        private val PHOTO_ID = Regex("[A-Za-z0-9-]{1,64}")
         private val CREATED_MS = Regex("\"created_ms\":(\\d+)")
 
         fun photoPermission(): String =
