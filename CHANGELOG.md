@@ -8,6 +8,7 @@
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
 - 0.3.0-beta.1, the first beta, merged into `testing` (2026-11-07).
+- Planning: Meguri is now planned as an inventory manager (`docs/PLAN-inventory.md`, draft for the owner). The app has no changes from this yet.
 - Item page: one layout for collected and uncollected. Photos are dotted squares, one per kind for the type (a station has Station stamp, Ekitag screenshot and Station photo), and the Photo button opens the same kinds in a menu. Each collection is one line with its date (or "Date not recorded"); "had before the app" is gone.
 - Buttons say "Collect" and "Collect again"; the state is "Uncollected" everywhere.
 - Tap a pin for its type icon, "Uncollected · 1.7 km from you", and Directions, Details and Collect, each with an icon. Pins are easier to hit.
