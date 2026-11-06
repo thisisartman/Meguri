@@ -30,6 +30,24 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.border
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.IconToggleButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.Slider
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import kotlin.math.roundToInt
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -89,6 +107,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var kind by rememberSaveable { mutableStateOf<ItemType?>(null) }
     var byName by rememberSaveable { mutableStateOf(false) }
     var tileStep by rememberSaveable { mutableIntStateOf(1) }
+    var sortOpen by remember { mutableStateOf(false) }
+    var sizeOpen by rememberSaveable { mutableStateOf(false) }
+    val sizeLabel = stringResource(R.string.nearby_tile_size)
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
 
     val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
@@ -104,10 +125,23 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 
     val noCatalogue = rows.none { it.item.origin != Origin.USER }
     val sheet = rememberBottomSheetScaffoldState()
+    // The resting sheet shows the header and one whole row of tiles (name lines and distance too),
+    // measured, so it fits at any text size and tile size. 300 dp until the first measure.
+    val density = LocalDensity.current
+    var handlePx by remember { mutableIntStateOf(0) }
+    var gridTopPx by remember { mutableIntStateOf(0) }
+    var rowPx by remember { mutableIntStateOf(0) }
+    val restingPeek = if (handlePx > 0 && gridTopPx > 0 && rowPx > 0) {
+        with(density) { (handlePx + gridTopPx + rowPx).toDp() } + 12.dp
+    } else 300.dp
+    // Taller while the welcome shows, so both of its buttons are in view without dragging
+    val peek = if (noCatalogue) 520.dp else restingPeek.coerceIn(220.dp, 480.dp)
     BottomSheetScaffold(
         scaffoldState = sheet,
-        // Taller while the welcome shows, so both of its buttons are in view without dragging
-        sheetPeekHeight = if (noCatalogue) 520.dp else 300.dp,
+        sheetPeekHeight = peek,
+        sheetDragHandle = {
+            Box(Modifier.onSizeChanged { handlePx = it.height }) { BottomSheetDefaults.DragHandle() }
+        },
         sheetContainerColor = MaterialTheme.colorScheme.surface,
         sheetContent = {
             Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
@@ -141,23 +175,56 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                 }
-                Row(
-                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
-                    if (kinds.size > 1) kinds.forEach { t ->
-                        FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
+                // Chips scroll on the left; sort and size are icons pinned on the right (owner: icons over words)
+                Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                        if (kinds.size > 1) kinds.forEach { t ->
+                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
+                        }
+                    }
+                    Box {
+                        IconButton(onClick = { sortOpen = true }) {
+                            Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.nearby_sort))
+                        }
+                        DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
+                            listOf(false to R.string.nearby_sort_near, true to R.string.nearby_sort_az).forEach { (az, label) ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(label)) },
+                                    onClick = { byName = az; sortOpen = false },
+                                    leadingIcon = {
+                                        if (byName == az) Icon(Icons.Filled.Check, contentDescription = null)
+                                        else Spacer(Modifier.size(24.dp))
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }) {
+                        Icon(
+                            painterResource(R.drawable.ic_grid_view),
+                            contentDescription = stringResource(R.string.nearby_tile_size),
+                            tint = if (sizeOpen) MaterialTheme.colorScheme.primary else LocalContentColor.current,
+                        )
                     }
                 }
-                // Sort and size on their own row, so the chips never push them off the screen
-                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), horizontalArrangement = Arrangement.End) {
-                    TextButton(onClick = { byName = !byName }) {
-                        Text(stringResource(if (byName) R.string.nearby_sort_az else R.string.nearby_sort_near), maxLines = 1)
-                    }
-                    TextButton(onClick = { tileStep = (tileStep + 1) % TILE_SIZES.size }) {
-                        Text(stringResource(R.string.nearby_tile_size, tileStep + 1), maxLines = 1)
+                // The size icon expands into a slider: small circle on the left, large on the right
+                AnimatedVisibility(visible = sizeOpen) {
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
+                        Slider(
+                            value = tileStep.toFloat(),
+                            onValueChange = { tileStep = it.roundToInt().coerceIn(0, TILE_SIZES.lastIndex) },
+                            valueRange = 0f..TILE_SIZES.lastIndex.toFloat(),
+                            steps = TILE_SIZES.size - 2,
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                                .semantics { contentDescription = sizeLabel },
+                        )
+                        Box(Modifier.size(20.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
                     }
                 }
                 if (shown.isEmpty()) {
@@ -171,20 +238,31 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     val tile = TILE_SIZES[tileStep]
                     // Wider cells with large text, so names wrap between words instead of inside them
                     val cell = (tile + 24.dp) * LocalDensity.current.fontScale.coerceIn(1f, 2f)
+                    // A new sort, tab or filter starts from the top (keys would otherwise hold the old place)
+                    val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+                    LaunchedEffect(byName, tab, kind) { grid.scrollToItem(0) }
                     LazyVerticalGrid(
+                        state = grid,
                         columns = GridCells.Adaptive(cell),
+                        // A gap between columns, so two one-line names never read as one
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
                         contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 96.dp),
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp)
+                            .onGloballyPositioned { gridTopPx = it.positionInParent().y.toInt() },
                     ) {
-                        items(shown, key = { it.item.id }) { r ->
-                            RoundTile(r, tile, r.item.displayName(ja), distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
+                        itemsIndexed(shown, key = { _, r -> r.item.id }) { i, r ->
+                            // The first row's tallest tile sets the resting height; top padding 4 dp
+                            val m = if (i == 0) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
+                            Box(m) {
+                                RoundTile(r, tile, r.item.displayName(ja), distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
+                            }
                         }
                     }
                 }
             }
         },
     ) { inner ->
-        Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding() - 300.dp.coerceAtMost(inner.calculateBottomPadding()))) {
+        Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding() - peek.coerceAtMost(inner.calculateBottomPadding()))) {
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
                 onPinTap = { picked = it }, onMapTap = { picked = null },
@@ -271,8 +349,9 @@ private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, o
         Mark(row, size)
         Spacer(Modifier.height(4.dp))
         Text(
+            // Always two lines tall, so every tile in a row is the same height and distances line up
             name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
-            maxLines = 2, overflow = TextOverflow.Ellipsis,
+            minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         distance?.let {
             Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

@@ -215,10 +215,10 @@
     <string name="nearby_tab_stamps">スタンプ</string>
     <string name="nearby_tab_cards">カード</string>
     <string name="nearby_kind_all">すべて</string>
-    <string name="nearby_sort_near">近い順 ▾</string>
-    <string name="nearby_sort_az">名前順 ▾</string>
-    <string name="nearby_tile_size">サイズ %1$d</string>
-    <string name="nearby_empty_kind">まだありません。</string>
+    <string name="nearby_sort">並べ替え</string>
+    <string name="nearby_sort_near">近い順</string>
+    <string name="nearby_sort_az">名前順</string>
+    <string name="nearby_tile_size">表示サイズ</string>    <string name="nearby_empty_kind">まだありません。</string>
     <string name="a11y_log_find">記録する</string>
 
     <!-- Welcome before a catalogue (#58, Legion) -->
