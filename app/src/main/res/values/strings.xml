@@ -205,4 +205,11 @@
     <string name="trip_quiet">%1$s · quiet until %2$s</string>
     <string name="tile_on">On</string>
     <string name="tile_off">Off</string>
+    <string name="map_title_all">Map</string>
+    <string name="map_title_stamps">Stamps on the map</string>
+    <string name="map_title_cards">Cards on the map</string>
+    <string name="map_collected">Collected</string>
+    <string name="map_not_collected">Still to get</string>
+    <string name="map_details">Details</string>
+    <string name="map_expand">Expand</string>
 </resources>

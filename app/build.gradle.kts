@@ -95,6 +95,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.work.runtime)
+    implementation(libs.maplibre.android)
     implementation(libs.androidx.documentfile)
     // Geofencing only (PRD FR-12); everything else uses Android's own LocationManager
     implementation(libs.play.services.location)

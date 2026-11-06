@@ -205,4 +205,11 @@
     <string name="trip_quiet">%1$s・%2$sまで通知なし</string>
     <string name="tile_on">オン</string>
     <string name="tile_off">オフ</string>
+    <string name="map_title_all">地図</string>
+    <string name="map_title_stamps">スタンプの地図</string>
+    <string name="map_title_cards">カードの地図</string>
+    <string name="map_collected">取得済み</string>
+    <string name="map_not_collected">未取得</string>
+    <string name="map_details">詳細</string>
+    <string name="map_expand">拡大</string>
 </resources>
