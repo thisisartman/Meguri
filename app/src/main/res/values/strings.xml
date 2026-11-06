@@ -212,4 +212,11 @@
     <string name="map_not_collected">Still to get</string>
     <string name="map_details">Details</string>
     <string name="map_expand">Expand</string>
+    <string name="nearby_tab_stamps">Stamps</string>
+    <string name="nearby_tab_cards">Cards</string>
+    <string name="nearby_kind_all">All</string>
+    <string name="nearby_sort_near">Nearest ▾</string>
+    <string name="nearby_sort_az">A to Z ▾</string>
+    <string name="nearby_tile_size">Size %1$d</string>
+    <string name="nearby_empty_kind">Nothing here yet.</string>
 </resources>

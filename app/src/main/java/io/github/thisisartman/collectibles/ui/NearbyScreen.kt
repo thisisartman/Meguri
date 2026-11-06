@@ -1,5 +1,28 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberBottomSheetScaffoldState
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,12 +50,12 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,141 +74,194 @@ import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.data.Origin
 
+/** Nearby, layout B (owner's pick, 2026-11-06): the map fills the screen and a sheet of tiles sits over it. */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NearbyScreen(vm: MainViewModel, nav: NavHostController, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
-    val nearest by vm.nearest.collectAsStateWithLifecycle()
-    val summaries by vm.summaries.collectAsStateWithLifecycle()
-    val lines by vm.lines.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
-    val around by vm.aroundHere.collectAsStateWithLifecycle()
-    val photo = LocalPhoto.current
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var tab by rememberSaveable { mutableStateOf(MapSection.STAMPS) }
+    var kind by rememberSaveable { mutableStateOf<ItemType?>(null) }
+    var byName by rememberSaveable { mutableStateOf(false) }
+    var tileStep by rememberSaveable { mutableIntStateOf(1) }
+    var picked by rememberSaveable { mutableStateOf<String?>(null) }
 
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = 96.dp)) {
-        item {
-            Column(Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 4.dp)) {
-                Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.headlineMedium)
-                val fix = here.fix
-                val ctx = androidx.compose.ui.platform.LocalContext.current
-                val allowed = LocationAccess.has(ctx)
-                val systemOn = LocationAccess.systemOn(ctx)
-                val where = when {
-                    fix == null && here.searching -> stringResource(R.string.nearby_finding)
-                    fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
-                    fix == null && !systemOn -> stringResource(R.string.nearby_location_off)
-                    fix == null -> stringResource(R.string.nearby_no_position)
-                    here.live -> stringResource(R.string.nearby_from_now)
-                    else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
-                }.let { if (fix != null && !LocationAccess.hasPrecise(ctx)) it + sep() + stringResource(R.string.nearby_approximate) else it }
-                Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (fix == null && !here.searching) {
-                    val label = when {
-                        !allowed && locationBlocked -> R.string.nearby_allow_in_settings
-                        !allowed -> R.string.nearby_allow_location
-                        !systemOn -> R.string.nearby_turn_on_location
-                        else -> R.string.nearby_try_again
-                    }
-                    Spacer(Modifier.height(6.dp))
-                    InkOutlinedButton(onClick = onAllowLocation) { Text(stringResource(label)) }
-                }
-            }
-        }
-        item { SectionTitle(stringResource(if (here.fix != null) R.string.nearby_still_to_get else R.string.nearby_still_to_get_no_fix)) }
-        nearest.firstOrNull()?.meters?.takeIf { it > MainViewModel.AROUND_RADIUS_M }?.let { far ->
-            item {
-                Text(
-                    stringResource(R.string.nearby_all_far, (MainViewModel.AROUND_RADIUS_M / 1000).toInt(), distanceText(far).orEmpty()),
-                    Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        item {
-            if (nearest.isEmpty()) {
-                // No catalogue yet is not the same as having everything
-                Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                    // Only things added by hand: still no catalogue, so not "you have everything"
-                    val noCatalogue = rows.none { it.item.origin != Origin.USER }
-                    Text(
-                        stringResource(if (noCatalogue) R.string.nearby_no_catalogue else R.string.nearby_all_done),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                    if (noCatalogue) {
+    val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
+    val kinds = remember(inTab) { inTab.map { it.item.type }.distinct().sortedBy { it.ordinal } }
+    val shown = remember(inTab, kind, byName, here, ja) {
+        val k = inTab.filter { kind == null || it.item.type == kind }
+        if (byName) k.sortedBy { it.item.displayName(ja).lowercase() }
+        else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
+    }
+    val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
+    val noCatalogue = rows.none { it.item.origin != Origin.USER }
+    val pickedRow = rows.firstOrNull { it.item.id == picked }
+
+    val sheet = rememberBottomSheetScaffoldState()
+    BottomSheetScaffold(
+        scaffoldState = sheet,
+        sheetPeekHeight = 300.dp,
+        sheetContainerColor = MaterialTheme.colorScheme.surface,
+        sheetContent = {
+            Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
+                if (noCatalogue) {
+                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                        Text(
+                            stringResource(R.string.nearby_no_catalogue),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
                         Spacer(Modifier.height(8.dp))
                         InkOutlinedButton(onClick = { nav.openMore() }) { Text(stringResource(R.string.nearby_load_catalogue)) }
                     }
+                    return@Column
                 }
-            } else {
-                // An undone find comes back at the front; keyed items would otherwise keep it scrolled off the left edge
-                val strip = rememberLazyListState()
-                var lastSize by remember { mutableIntStateOf(nearest.size) }
-                LaunchedEffect(nearest.firstOrNull()?.row?.item?.id, nearest.size) {
-                    if (nearest.size > lastSize) strip.animateScrollToItem(0)
-                    lastSize = nearest.size
+                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+                    listOf(MapSection.STAMPS, MapSection.CARDS).forEachIndexed { i, t ->
+                        val all = rows.filter { it.item.type in t.types }
+                        SegmentedButton(
+                            selected = tab == t,
+                            onClick = { tab = t; kind = null },
+                            shape = SegmentedButtonDefaults.itemShape(i, 2),
+                        ) {
+                            Text(
+                                stringResource(if (t == MapSection.STAMPS) R.string.nearby_tab_stamps else R.string.nearby_tab_cards) +
+                                    "  " + stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
+                                maxLines = 1,
+                            )
+                        }
+                    }
                 }
-                LazyRow(state = strip, contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(nearest.take(25), key = { it.row.item.id }) { r ->
-                        val name = r.row.item.displayName(ja)
-                        NearTile(
-                            row = r.row, name = name, meters = r.meters,
-                            onOpen = { nav.openItem(r.row.item.id) },
-                            onGotIt = { vm.gotIt(r.row, name) },
-                            onPhoto = { vm.gotIt(r.row, name) { id -> photo.capture(id) } },
+                Row(
+                    Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                    if (kinds.size > 1) kinds.forEach { t ->
+                        FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
+                    }
+                    Spacer(Modifier.width(4.dp))
+                    TextButton(onClick = { byName = !byName }) {
+                        Text(stringResource(if (byName) R.string.nearby_sort_az else R.string.nearby_sort_near))
+                    }
+                    TextButton(onClick = { tileStep = (tileStep + 1) % TILE_SIZES.size }) {
+                        Text(stringResource(R.string.nearby_tile_size, tileStep + 1))
+                    }
+                }
+                if (shown.isEmpty()) {
+                    Text(
+                        stringResource(R.string.nearby_empty_kind),
+                        Modifier.padding(16.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    val tile = TILE_SIZES[tileStep]
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(tile + 24.dp),
+                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 96.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp),
+                    ) {
+                        items(shown, key = { it.item.id }) { r ->
+                            RoundTile(r, tile, r.item.displayName(ja), distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
+                        }
+                    }
+                }
+            }
+        },
+    ) { inner ->
+        Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding() - 300.dp.coerceAtMost(inner.calculateBottomPadding()))) {
+            MeguriMap(
+                pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
+                onPinTap = { picked = it }, onMapTap = { picked = null },
+            )
+            // Where you are, and what to do when there is no position
+            Surface(
+                Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp), shadowElevation = 3.dp,
+            ) {
+                Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.nearby_title), style = MaterialTheme.typography.titleMedium)
+                        val fix = here.fix
+                        val allowed = LocationAccess.has(ctx)
+                        val where = when {
+                            fix == null && here.searching -> stringResource(R.string.nearby_finding)
+                            fix == null && !allowed -> stringResource(R.string.nearby_location_not_allowed)
+                            fix == null && !LocationAccess.systemOn(ctx) -> stringResource(R.string.nearby_location_off)
+                            fix == null -> stringResource(R.string.nearby_no_position)
+                            here.live -> stringResource(R.string.nearby_from_now)
+                            else -> stringResource(R.string.nearby_from_fix, formatTime(fix.timeMs))
+                        }
+                        Text(where, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    }
+                    if (here.fix == null && !here.searching) {
+                        val label = when {
+                            !LocationAccess.has(ctx) && locationBlocked -> R.string.nearby_allow_in_settings
+                            !LocationAccess.has(ctx) -> R.string.nearby_allow_location
+                            !LocationAccess.systemOn(ctx) -> R.string.nearby_turn_on_location
+                            else -> R.string.nearby_try_again
+                        }
+                        TextButton(onClick = onAllowLocation) { Text(stringResource(label)) }
+                    } else {
+                        IconButton(onClick = { nav.openMap(tab) }) {
+                            Icon(Icons.Filled.Place, contentDescription = stringResource(R.string.map_expand))
+                        }
+                    }
+                }
+            }
+            // A tapped pin: what it is, with Details and Directions (#52)
+            pickedRow?.let { r ->
+                Surface(
+                    Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 84.dp, start = 12.dp, end = 12.dp).fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
+                ) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text(r.item.displayName(ja), style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            listOfNotNull(
+                                stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
+                                distanceText(vm.distanceTo(r)),
+                            ).joinToString(" · "),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
+                        Spacer(Modifier.height(10.dp))
+                        Row {
+                            Button(onClick = { nav.openItem(r.item.id) }) { Text(stringResource(R.string.map_details)) }
+                            Spacer(Modifier.width(8.dp))
+                            InkOutlinedButton(onClick = {
+                                val i = r.item
+                                val uri = android.net.Uri.parse("geo:${i.lat},${i.lng}?q=${i.lat},${i.lng}(${android.net.Uri.encode(i.placeName ?: i.nameJa)})")
+                                runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, uri)) }
+                            }) { Text(stringResource(R.string.item_directions_plain)) }
+                        }
                     }
                 }
             }
         }
-        // Round 5, A2: with a position, only collections with something to get nearby; the rest on one line
-        item {
-            SectionTitle(
-                if (around.located) stringResource(R.string.nearby_around_here, (MainViewModel.AROUND_RADIUS_M / 1000).toInt())
-                else stringResource(R.string.nearby_my_book)
-            )
-        }
-        if (summaries.isEmpty()) {
-            item {
-                Text(
-                    stringResource(R.string.nearby_empty_book),
-                    Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        }
-        items(around.near, key = { it.summary.key }) { a ->
-            val s = a.summary
-            val title = summaryTitle(s, lineName(lines, s.lineId, ja))
-            SummaryCard(s, title, next = a.next, onClick = { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() })
-        }
-        if (around.elsewhere.isNotEmpty()) {
-            item { SectionTitle(stringResource(R.string.nearby_elsewhere)) }
-            items(around.elsewhere, key = { "elsewhere-" + it.key }) { s ->
-                Row(
-                    Modifier.fillMaxWidth()
-                        .clickable { if (s.type == ItemType.EKI_STAMP) nav.openLine(s.lineId.orEmpty()) else nav.openBook() }
-                        .heightIn(min = 48.dp)
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    TypeDot(s.type)
-                    Spacer(Modifier.width(8.dp))
-                    Text(
-                        summaryTitle(s, lineName(lines, s.lineId, ja)),
-                        Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    CountText(
-                        if (s.total != null) stringResource(R.string.count, s.collected, s.total) else s.collected.toString(),
-                        complete = s.total != null && s.total > 0 && s.collected == s.total,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
-            }
+    }
+}
+
+private val TILE_SIZES = listOf(48.dp, 64.dp, 84.dp)
+
+/** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
+@Composable
+private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
+    Column(
+        Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Mark(row, size)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center,
+            maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = size + 20.dp),
+        )
+        distance?.let {
+            Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
         }
     }
 }
