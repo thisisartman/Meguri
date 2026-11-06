@@ -134,6 +134,7 @@ fun MeguriMap(
     }
     // Pins and position follow the data; the camera is placed once, around you and the nearest pins.
     var placed by remember { mutableStateOf(false) }
+    var placedAt by remember { mutableStateOf<Pair<Double, Double>?>(null) }
     LaunchedEffect(style, pins, here) {
         val s = style ?: return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
@@ -151,8 +152,11 @@ fun MeguriMap(
         s.getSourceAs<GeoJsonSource>(SRC_HERE)?.setGeoJson(
             FeatureCollection.fromFeatures(listOfNotNull(here?.let { Feature.fromGeometry(Point.fromLngLat(it.second, it.first)) })),
         )
-        if (!placed && (here != null || pins.isNotEmpty())) {
+        // Place once, and again when you have moved far (over about 5 km) from where it was placed
+        val movedFar = here != null && placedAt != null && dist2(MapPin("", placedAt!!.first, placedAt!!.second, ItemType.EKI_STAMP, false), here) > 0.0025
+        if ((!placed || movedFar) && (here != null || pins.isNotEmpty())) {
             placed = true
+            placedAt = here
             val focus = (here?.let { h -> pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second) }
                 ?: pins.map { LatLng(it.lat, it.lng) })
             if (focus.size >= 2) {

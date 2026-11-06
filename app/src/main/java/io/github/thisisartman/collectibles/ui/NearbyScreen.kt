@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -109,15 +110,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         sheetContent = {
             Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
                 if (noCatalogue) {
-                    Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                        Text(
-                            stringResource(R.string.nearby_no_catalogue),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                        Spacer(Modifier.height(8.dp))
-                        InkOutlinedButton(onClick = { nav.openMore() }) { Text(stringResource(R.string.nearby_load_catalogue)) }
-                    }
+                    // #58: a proper welcome, with the bundled Niigata catalogue one tap away
+                    val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+                    val scope = androidx.compose.runtime.rememberCoroutineScope()
+                    WelcomeCard(
+                        onLoadBundled = { scope.launch { runCatching { more.io.importBundled() } } },
+                        onLoadFile = { nav.openMore() },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
                     return@Column
                 }
                 SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {

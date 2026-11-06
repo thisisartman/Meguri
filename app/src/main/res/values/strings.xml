@@ -26,8 +26,8 @@
     <string name="type_manhole">Manhole card</string>
     <string name="type_manhole_plural">Manhole cards</string>
     <string name="type_goshuin">Goshuin</string>
-    <string name="type_eki">Eki stamp</string>
-    <string name="type_eki_plural">Eki stamps</string>
+    <string name="type_eki">Station stamp</string>
+    <string name="type_eki_plural">Station stamps</string>
     <string name="type_ekitag">Ekitag</string>
 
     <string name="got_it">Got it</string>
@@ -220,4 +220,16 @@
     <string name="nearby_tile_size">Size %1$d</string>
     <string name="nearby_empty_kind">Nothing here yet.</string>
     <string name="a11y_log_find">Log a find</string>
+
+    <!-- Welcome before a catalogue (#58, Legion) -->
+    <string name="welcome_title">Welcome to Meguri</string>
+    <string name="welcome_what">Your own record of manhole cards, station stamps and goshuin: what you have, and what is still to get near you. It works offline.</string>
+    <string name="welcome_catalogue">A catalogue lists what there is to collect and where. Start with the Niigata one, which comes with the app, or load your own CSV file.</string>
+    <string name="welcome_load_bundled">Load the Niigata catalogue</string>
+    <string name="welcome_load_file">Load a CSV file</string>
+    <string name="welcome_other_ways">Moving from another phone? More, Restore from a backup. Anything not in a catalogue can still be logged with +.</string>
+
+    <!-- Colour setting (#57, Legion) -->
+    <string name="look_device_colours">Device colours</string>
+    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each kind stay the same.</string>
 </resources>
