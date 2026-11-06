@@ -132,10 +132,53 @@ class CollectionRepository @Inject constructor(
         return removed
     }
 
+    /**
+     * The kind the next camera photo for a find gets (#54). Held in memory only: if Android stops the app while the
+     * camera is open, the photo is still attached, as "other", and its kind can be changed on the item page.
+     */
+    private val nextKind = java.util.concurrent.ConcurrentHashMap<String, String>()
+
+    fun setNextPhotoKind(findId: String, kind: String) {
+        nextKind[findId] = kind
+    }
+
+    /**
+     * A picture chosen from the gallery (a screenshot of an Ekitag, say) is copied into Meguri's own photo folder, so
+     * it relinks after a restore like a camera photo, and the picker's short-lived access does not matter.
+     */
+    suspend fun attachFromGallery(context: android.content.Context, findId: String, picked: android.net.Uri, kind: String): Boolean =
+        kotlinx.coroutines.withContext(Dispatchers.IO) {
+            val resolver = context.contentResolver
+            val target = io.github.thisisartman.collectibles.photo.CameraCapture.newPhotoUri(resolver) ?: return@withContext false
+            val ok = runCatching {
+                resolver.openInputStream(picked)!!.use { input -> resolver.openOutputStream(target, "w")!!.use { input.copyTo(it) } }
+            }.isSuccess
+            val info = if (ok) io.github.thisisartman.collectibles.photo.CameraCapture.describe(resolver, target) else null
+            if (info == null) {
+                io.github.thisisartman.collectibles.photo.CameraCapture.discardIfEmpty(resolver, target)
+                log.w("Photo", "Could not copy a gallery photo for find $findId")
+                return@withContext false
+            }
+            nextKind[findId] = kind
+            attachPhoto(findId, info)
+            true
+        }
+
+    suspend fun setPhotoKind(photoId: String, kind: String) {
+        dao.setPhotoRole(photoId, kind)
+        log.i("Photo", "Kind of $photoId is now $kind")
+    }
+
+    suspend fun removePhoto(photoId: String) {
+        dao.deletePhoto(photoId)
+        log.i("Photo", "Removed photo $photoId from its find (the picture stays in the gallery)")
+    }
+
     suspend fun attachPhoto(findId: String, photo: PhotoInfo) {
         dao.insertPhoto(
             Photo(
                 id = newId(), acquisitionId = findId, contentUri = photo.uri, takenAt = photo.takenAt,
+                role = nextKind.remove(findId) ?: PhotoKind.OTHER,
                 mediastoreId = photo.mediastoreId, displayName = photo.displayName, relativePath = photo.relativePath,
                 sizeBytes = photo.sizeBytes, createdAt = now(),
             ),

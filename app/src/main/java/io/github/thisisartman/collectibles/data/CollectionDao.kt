@@ -81,6 +81,13 @@ interface CollectionDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertPhoto(photo: Photo)
 
+    @Query("UPDATE photo SET role = :role WHERE id = :id")
+    suspend fun setPhotoRole(id: String, role: String)
+
+    /** Only the link: the picture itself stays in the gallery. */
+    @Query("DELETE FROM photo WHERE id = :id")
+    suspend fun deletePhoto(id: String)
+
     // Lines (eki-stamp book)
     @Query("SELECT * FROM line ORDER BY name_ja")
     fun observeLines(): Flow<List<Line>>

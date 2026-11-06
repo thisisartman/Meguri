@@ -10,6 +10,13 @@ import androidx.room.Relation
 
 enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG }
 
+/** A photo's kind, kept in `photo.role` (#54): the stamp itself, proof of an Ekitag or a card, or anything else. */
+object PhotoKind {
+    const val STAMP = "stamp"
+    const val PROOF = "proof"
+    const val OTHER = "other"
+}
+
 enum class Origin { SEED, CSV_IMPORT, USER }
 
 enum class Via { MANUAL, NOTIFICATION, SUGGESTION, BULK }

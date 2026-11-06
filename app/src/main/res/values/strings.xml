@@ -217,4 +217,17 @@
     <!-- Colour setting (#57, Legion) -->
     <string name="look_device_colours">Device colours</string>
     <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each kind stay the same.</string>
+
+    <!-- Several photos per find (#54, Legion) -->
+    <string name="photo_kind_stamp">Stamp</string>
+    <string name="photo_kind_proof">Proof (Ekitag or card)</string>
+    <string name="photo_kind_other">Other</string>
+    <string name="photo_add_title">Add a photo: what is it?</string>
+    <string name="photo_take">Take a photo</string>
+    <string name="photo_pick">Choose from the gallery</string>
+    <string name="photo_edit_title">This photo</string>
+    <string name="photo_remove">Remove from this find</string>
+    <string name="photo_remove_note">Removing only unlinks it: the picture stays in your gallery.</string>
+    <string name="photo_done">Done</string>
+    <string name="a11y_photo_kind">Photo: %1$s. Tap to change or remove.</string>
 </resources>

@@ -217,4 +217,17 @@
     <!-- Colour setting (#57, Legion) -->
     <string name="look_device_colours">端末の色を使う</string>
     <string name="look_device_colours_sub">Meguriの色の代わりに、壁紙に合わせた端末の色を使います。種類ごとの色は変わりません。</string>
+
+    <!-- Several photos per find (#54, Legion) -->
+    <string name="photo_kind_stamp">スタンプ</string>
+    <string name="photo_kind_proof">証明（Ekitag・カード）</string>
+    <string name="photo_kind_other">その他</string>
+    <string name="photo_add_title">写真を追加：何の写真ですか？</string>
+    <string name="photo_take">写真を撮る</string>
+    <string name="photo_pick">ギャラリーから選ぶ</string>
+    <string name="photo_edit_title">この写真</string>
+    <string name="photo_remove">この記録から外す</string>
+    <string name="photo_remove_note">外すだけで、写真はギャラリーに残ります。</string>
+    <string name="photo_done">完了</string>
+    <string name="a11y_photo_kind">写真：%1$s。タップで変更・削除</string>
 </resources>

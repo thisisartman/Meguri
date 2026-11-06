@@ -93,7 +93,16 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 item { Actions(item, meters) }
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
-                    FindCard(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) })
+                    val context = LocalContext.current
+                    val photoActions = remember(f.find.id) {
+                        FindPhotoActions(
+                            takePhoto = { kind -> vm.nextPhotoKind(f.find.id, kind); photo.capture(f.find.id) },
+                            pickPhoto = { uri, kind -> vm.addGalleryPhoto(context, f.find.id, uri, kind) },
+                            setKind = vm::setPhotoKind,
+                            remove = vm::removePhoto,
+                        )
+                    }
+                    FindCard(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) }, photoActions = photoActions)
                 }
                 if (hasFacts(item)) {
                     item { SectionTitle(stringResource(R.string.item_where)) }
@@ -236,7 +245,7 @@ private fun Fact(label: String, value: String) {
 private const val POSITION_WAIT_MS = 2 * 60 * 1000L
 
 @Composable
-private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit) {
+private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit, photoActions: FindPhotoActions) {
     // Removing a "had before the app" mark or a find has no Undo, so both ask first
     var confirmRemove by remember { mutableStateOf(false) }
     if (confirmRemove) {
@@ -300,12 +309,8 @@ private fun FindCard(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBefor
                     Text(stringResource(R.string.item_remove_find))
                 }
             }
-            if (f.photos.isNotEmpty()) {
-                Spacer(Modifier.height(8.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    items(f.photos.sortedBy { it.createdAt }, key = { it.id }) { p -> PhotoThumb(p.contentUri, 88.dp) }
-                }
-            }
+            // Several photos per find, each with its kind; a "had before the app" find can take proof photos too
+            FindPhotos(f.photos, photoActions)
         }
     }
 }

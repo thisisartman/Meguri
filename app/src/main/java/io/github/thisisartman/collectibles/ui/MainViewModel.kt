@@ -167,6 +167,14 @@ class MainViewModel @Inject constructor(
 
     fun retryPosition(findId: String) = repo.retryPosition(findId)
 
+    // Several photos per find, each with a kind (#54)
+    fun nextPhotoKind(findId: String, kind: String) = repo.setNextPhotoKind(findId, kind)
+    fun addGalleryPhoto(context: android.content.Context, findId: String, uri: android.net.Uri, kind: String) {
+        viewModelScope.launch { repo.attachFromGallery(context, findId, uri, kind) }
+    }
+    fun setPhotoKind(photoId: String, kind: String) { viewModelScope.launch { repo.setPhotoKind(photoId, kind) } }
+    fun removePhoto(photoId: String) { viewModelScope.launch { repo.removePhoto(photoId) } }
+
     fun markBeforeApp(ids: Set<String>, onDone: (Int) -> Unit) {
         viewModelScope.launch { onDone(repo.markBeforeApp(ids)) }
     }
