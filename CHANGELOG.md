@@ -7,6 +7,7 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- **0.3.0-beta.3** (versionCode 5) carries phases 2 to 5 below. The database moves to version 2, so it cannot go back to beta.2; back up first.
 - **Phase 5 (in the next build): new kinds and official symbols.**
   - Dam cards: all 32 handed out in Niigata, with where and when to get them (from the MLIT list).
   - Museum stamps, for ones you add yourself.
