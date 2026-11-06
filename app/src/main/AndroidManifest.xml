@@ -2,10 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- No network access, ever (PRD §11). Removes INTERNET even if a library asks for it. -->
-    <uses-permission
-        android:name="android.permission.INTERNET"
-        tools:node="remove" />
+    <!-- Map tiles only (#47, owner's choice 2026-11-06): online first, an offline pack next (#9). Nothing else
+         in the app goes online. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <!-- Position of each find and distances to items; foreground only, no background location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />

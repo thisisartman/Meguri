@@ -63,6 +63,7 @@ private const val BOOK = "book"
 private const val MORE = "more"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
+fun NavHostController.openMap(section: MapSection = MapSection.ALL) = navigate("map/${section.name}")
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
 fun NavHostController.openTab(route: String) = navigate(route) {
     popUpTo(NEARBY) { saveState = true }
@@ -170,7 +171,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
             floatingActionButton = {
                 // Hidden while marking owned cards: the mark button takes the bottom of the screen
-                if (route == null || route == NEARBY || (route == BOOK && !bookMarking)) {
+                // Nearby has its own + in the header, so the button never covers the tile grid
+                if (route == BOOK && !bookMarking) {
                     FloatingActionButton(
                         onClick = { showLog = true },
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -207,7 +209,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             // Landscape and wide screens: content keeps a readable width, centred (overnight review round 10)
             androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
                 NavHost(nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize()) {
-                    composable(NEARBY) { NearbyScreen(vm, nav, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
+                    composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     composable(BOOK) { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) }
                     composable(MORE) { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }) }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
@@ -216,6 +218,10 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
                         LineScreen(vm, id, nav, onBack = { nav.popBackStack() })
+                    }
+                    composable("map/{section}", listOf(navArgument("section") { type = NavType.StringType })) {
+                        val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
+                        MapScreen(vm, nav, section)
                     }
                     composable("logs") { LogsScreen(onBack = { nav.popBackStack() }) }
                 }

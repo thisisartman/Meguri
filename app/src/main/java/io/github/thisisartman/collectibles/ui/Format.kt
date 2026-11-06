@@ -109,3 +109,10 @@ fun Item.matches(query: String): Boolean {
     if (q.isEmpty()) return true
     return listOfNotNull(nameJa, nameRomaji, code, municipality, placeName).any { foldForSearch(it).contains(q) }
 }
+
+/** The plural name of a kind, for filters and section titles. */
+fun ItemType.pluralLabel(): Int = when (this) {
+    ItemType.MANHOLE_CARD -> R.string.type_manhole_plural
+    ItemType.EKI_STAMP -> R.string.type_eki_plural
+    else -> label()
+}

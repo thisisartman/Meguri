@@ -52,6 +52,8 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             manifestPlaceholders["appLabel"] = "Meguri (dev)"
+            // Also x86_64, so the map library runs natively on a laptop emulator instead of through ARM translation
+            ndk { abiFilters += "x86_64" }
         }
         release {
             isMinifyEnabled = true
@@ -95,6 +97,7 @@ dependencies {
     ksp(libs.androidx.room.compiler)
 
     implementation(libs.androidx.work.runtime)
+    implementation(libs.maplibre.android)
     implementation(libs.androidx.documentfile)
     // Geofencing only (PRD FR-12); everything else uses Android's own LocationManager
     implementation(libs.play.services.location)
