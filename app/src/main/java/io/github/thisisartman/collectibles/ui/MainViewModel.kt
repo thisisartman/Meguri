@@ -231,6 +231,10 @@ class MainViewModel @Inject constructor(
     val railGraph: StateFlow<RailGraph> = lineStations.map { RailGraph.from(it) }
         .stateIn(viewModelScope, SharingStarted.Eagerly, RailGraph(emptyMap()))
 
+    // Trip report (#61): the days with dated finds, and one day's finds
+    val findTimes: StateFlow<List<Long>> = repo.findTimes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    fun findsBetween(from: Long, to: Long) = repo.findsBetween(from, to)
+
     fun saveTrip(t: SavedTrip) = trips.save(t)
     fun clearTrip() = trips.clear()
     fun currentTrip() = trips.current()

@@ -151,6 +151,9 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                 if (from != null || to != null) IconButton(onClick = { setEnds(null, null); localOnly = false; vm.clearTrip() }) {
                     Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.trip_clear))
                 }
+                IconButton(onClick = { nav.navigate("trip-report") }) {
+                    Icon(painterResource(R.drawable.ic_image), contentDescription = stringResource(R.string.trip_report))
+                }
                 IconButton(onClick = { linkOpen = true }) { Icon(painterResource(R.drawable.ic_link), contentDescription = stringResource(R.string.trip_link)) }
                 IconButton(enabled = plan != null, onClick = {
                     val p = plan ?: return@IconButton

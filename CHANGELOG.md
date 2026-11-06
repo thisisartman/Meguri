@@ -7,6 +7,7 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- **Phase 4b (in the next build): Trip report.** From Trip, pick a day you collected on and share it as a story image (portrait) or a CSV for a spreadsheet.
 - **Phase 4a (in the next build): Trip, in the top-right menu.**
   - Pick where you start and end, or paste a Google Maps directions link. The app finds the train (Shinkansen or local lines), every station it passes, and what is within 2 km of each.
   - Station stamps count only where you tap "Get off"; anything else near the line always counts.

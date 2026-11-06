@@ -70,6 +70,15 @@ interface CollectionDao {
     @Query("DELETE FROM acquisition WHERE item_id = :itemId AND before_app = 1")
     suspend fun deleteBeforeAppFinds(itemId: String): Int
 
+    /** Finds dated in [from, to), oldest first, for the trip report (#61). Finds with no date are left out. */
+    @Transaction
+    @Query("SELECT * FROM acquisition WHERE acquired_at >= :from AND acquired_at < :to ORDER BY acquired_at")
+    fun observeFindsBetween(from: Long, to: Long): Flow<List<FindWithPhotos>>
+
+    /** When each dated find was made, newest first: the days a report can be made for. */
+    @Query("SELECT acquired_at FROM acquisition WHERE acquired_at IS NOT NULL ORDER BY acquired_at DESC")
+    fun observeFindTimes(): Flow<List<Long>>
+
     @Query("SELECT COUNT(*) FROM acquisition WHERE item_id = :itemId")
     suspend fun findCount(itemId: String): Int
 

@@ -346,4 +346,13 @@
     <string name="trip_get_off_next">次に降りる駅：%1$s・%2$s</string>
     <string name="trip_plan_route">経路を計画</string>
     <string name="trip_clear">計画を消す</string>
+    <string name="trip_report">トリップレポート</string>
+    <string name="trip_report_collected">%1$d件 集めた</string>
+    <string name="trip_report_none">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="trip_report_share_image">画像を共有</string>
+    <string name="trip_report_share_csv">CSVを共有</string>
+    <string name="trip_report_more">ほか%1$d件</string>
+    <string name="trip_report_kind">%1$s ×%2$d</string>
+    <string name="trip_report_day">%1$s・%2$d</string>
+    <string name="trip_report_footer">Meguri</string>
 </resources>

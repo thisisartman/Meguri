@@ -27,6 +27,8 @@ class CollectionRepository @Inject constructor(
     fun itemRow(id: String): Flow<ItemRow?> = dao.observeItemRow(id)
     suspend fun itemRowOnce(id: String): ItemRow? = dao.itemRowOnce(id)
     fun finds(itemId: String): Flow<List<FindWithPhotos>> = dao.observeFinds(itemId)
+    fun findsBetween(from: Long, to: Long): Flow<List<FindWithPhotos>> = dao.observeFindsBetween(from, to)
+    fun findTimes(): Flow<List<Long>> = dao.observeFindTimes()
     fun lines(): Flow<List<Line>> = dao.observeLines()
     fun line(id: String): Flow<Line?> = dao.observeLine(id)
     fun lineStations(): Flow<List<LineStation>> = dao.observeLineStations()
