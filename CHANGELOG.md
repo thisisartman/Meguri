@@ -8,6 +8,14 @@
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
 - 0.3.0-beta.1, the first beta, merged into `testing` (2026-11-07).
+- Planned from the owner's answers (2026-11-07, 03:20):
+  - Collection check swipes left and right, starting with manhole cards;
+  - cost is recorded on goshuin only;
+  - region downloads go by prefecture and city;
+  - the trip report is an image (and CSV);
+  - Trip mode folds into route planning;
+  - duplicates are to be planned;
+  - no storage location.
 - Planned from the owner's answers: route trips count station stamps only when you confirm you'll get off, within 2 km; the stock-take flow is called "Collection check" (#68); collections will record what you paid.
 - Things you had before the app show "Added 3 Nov 2026" (the day they went in); lists show "—" where there is no date.
 - Planning: Meguri follows the ethos of inventory management: everything you have counts, taking stock is easy, collecting is one tap, counts are right, nothing is lost (`docs/PLAN-inventory.md`). The app has no changes from this yet.
