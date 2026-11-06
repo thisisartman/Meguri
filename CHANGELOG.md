@@ -7,6 +7,7 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- Map labels show place names in one language (no Japanese line under English names); the Japanese name is on the pin card and the item page instead.
 - 0.3.0-beta.1, the first beta, merged into `testing` (2026-11-07). Installed as the Poco's real app the same night, over 0.0.1, after a backup; all 21 of the owner's finds came through.
 - Planned from the owner's answers (2026-11-07, 03:20):
   - Collection check swipes left and right, starting with manhole cards;

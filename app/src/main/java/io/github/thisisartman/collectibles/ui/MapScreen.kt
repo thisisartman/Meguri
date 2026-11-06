@@ -151,7 +151,13 @@ fun PinHeader(row: ItemRow, meters: Double?) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         TypeIcon(row.item.type, 22.dp)
         Spacer(Modifier.width(8.dp))
-        Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+        Column {
+            Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium, maxLines = 2)
+            // The Japanese name lives here and on the item page, not on the map labels (owner, 2026-11-07)
+            if (!ja && row.item.nameJa != row.item.displayName(ja)) {
+                Text(row.item.nameJa, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+        }
     }
     val distance = distanceText(meters)?.let { stringResource(R.string.pin_from_you, it) }
     Text(

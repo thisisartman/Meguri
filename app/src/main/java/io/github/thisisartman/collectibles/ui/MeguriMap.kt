@@ -104,6 +104,17 @@ fun MeguriMap(
             }
             val builder = offlineStyle?.let { Style.Builder().fromJson(it) } ?: Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)
             m.setStyle(builder) { s ->
+                // Place names in one language (owner, 2026-11-07: the Japanese name belongs on the card and the
+                // page, not under every map label). The online OpenFreeMap styles write "{latin}\n{nonlatin}";
+                // every label that shows a name gets one name instead. Road numbers ("ref") are left alone.
+                val oneName = if (japanese)
+                    Expression.coalesce(Expression.get("name:ja"), Expression.get("name:nonlatin"), Expression.get("name"))
+                else
+                    Expression.coalesce(Expression.get("name:en"), Expression.get("name:latin"), Expression.get("name"))
+                s.layers.filterIsInstance<org.maplibre.android.style.layers.SymbolLayer>().forEach { layer ->
+                    val tf = layer.textField.expression?.toString() ?: layer.textField.value?.toString() ?: return@forEach
+                    if ("name" in tf && "ref" !in tf) layer.setProperties(PropertyFactory.textField(oneName))
+                }
                 // Under the pins, larger and soft, so a pin where you stand stays visible
                 s.addSource(GeoJsonSource(SRC_HERE))
                 s.addLayer(
