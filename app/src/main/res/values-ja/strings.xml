@@ -163,7 +163,7 @@
     <string name="logs_crash_test">クラッシュテスト</string>
     <string name="logs_about">エラーとクラッシュはこの端末にのみ保存されます。不具合を報告するときは書き出して添えてください。</string>
     <string name="more_about">このアプリについて</string>
-    <string name="more_about_sub">バージョン%1$s・オフラインで動作・データはこの端末にのみ保存・地図データ © OpenStreetMap contributors</string>
+    <string name="more_about_sub">バージョン%1$s・オフラインで動作・データはこの端末にのみ保存・地図データ © OpenStreetMap contributors・アイコン：Material Icons（Apache 2.0）、Mapbox Maki・Temaki（CC0）</string>
 
     <!-- Alerts (M4) -->
     <string name="alerts_title">通知</string>

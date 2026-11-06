@@ -1,6 +1,11 @@
-<!-- Temaki ticket (CC0 1.0), placeholder until an NFC-style icon is picked -->
+<!-- Ekitag: a phone with NFC waves, drawn for Meguri (owner's pick B, 2026-11-07); redrawn so the outer wave is not cut off -->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp" android:height="24dp"
-    android:viewportWidth="15" android:viewportHeight="15">
-    <path android:fillColor="#FF000000" android:pathData="M15 12L0 12C0 12 0 9 0 9C2 9 2 6 0 6C0 6 0 3 0 3C0 3 15 3 15 3L15 6C13 6 13 9 15 9zM12 10C12 10 12 5 12 5L3 5L3 10C3 10 12 10 12 10zM11 9L4 9L4 6L11 6L11 9z" />
+    android:viewportWidth="24" android:viewportHeight="24">
+    <path android:strokeColor="#FF000000" android:strokeWidth="1.7" android:strokeLineJoin="round"
+        android:pathData="M4.7,2h4.6a2.2,2.2 0,0 1,2.2 2.2v15.6a2.2,2.2 0,0 1,-2.2 2.2h-4.6a2.2,2.2 0,0 1,-2.2 -2.2v-15.6a2.2,2.2 0,0 1,2.2 -2.2z" />
+    <path android:strokeColor="#FF000000" android:strokeWidth="1.6" android:strokeLineCap="round"
+        android:pathData="M5.5,18.8h3" />
+    <path android:strokeColor="#FF000000" android:strokeWidth="1.7" android:strokeLineCap="round"
+        android:pathData="M14.4,9.6a3.4,3.4 0,0 1,0 4.8M17,7.4a6.4,6.4 0,0 1,0 9.2M19.6,5.2a9.4,9.4 0,0 1,0 13.6" />
 </vector>

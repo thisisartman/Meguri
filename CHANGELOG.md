@@ -14,6 +14,7 @@
 - Directions open the actual place in Google Maps (by its name), not a loose pin.
 - Search is forgiving (spaces, hyphens, long vowels, small typos, Japanese) and shows results under the search bar, with a chip per type.
 - Collected stations show a station icon on their seal instead of three letters; manhole cards keep their card code.
+- Type icons: manhole cover, torii, train, and a phone with NFC waves for Ekitags. About credits the icon sets.
 - Pages change without the map lingering on screen.
 - New layout (owner's redesign): the bottom bar is Nearby, a gold + for logging a find, and My book. Settings and Logs moved to a round menu at the top right. "Got it" is now "Collected" (Japanese 集めた), and its message says "Collected ...".
 - Nearby's top card is a search bar: it searches everything by English or Japanese name or code, and the map and list show only the results. A button above the sheet brings the map back to you. Tap a pin to get Directions, Details and Collected.
