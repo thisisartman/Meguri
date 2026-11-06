@@ -69,7 +69,11 @@ class MoreViewModel @Inject constructor(
 }
 
 @Composable
-fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {}, vm: MoreViewModel = hiltViewModel()) {
+fun MoreScreen(
+    snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {},
+    myCollections: @Composable () -> Unit = {},
+    vm: MoreViewModel = hiltViewModel(),
+) {
     val context = LocalContext.current
     val ja = isJapanese()
     val scope = rememberCoroutineScope()
@@ -207,6 +211,10 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Un
             }
             Text(stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
         }
+
+        // Your own collections first: making one is the reason to come here (#64)
+        SectionTitle(stringResource(R.string.more_my_collections))
+        myCollections()
 
         SectionTitle(stringResource(R.string.more_language))
         Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

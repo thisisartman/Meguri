@@ -57,6 +57,8 @@ class AllRows(
     val photos: List<Photo>,
     val lines: List<Line>,
     val lineStations: List<LineStation>,
+    // Schema v2: your own collections; empty from a v1 backup
+    val collectionTypes: List<CollectionType> = emptyList(),
 )
 
 /**
@@ -189,7 +191,7 @@ class BackupRestore @Inject constructor(
             .build()
         try {
             val d = source.dao()
-            val rows = AllRows(d.allItems(), d.allFinds(), d.allPhotos(), d.allLines(), d.allLineStations())
+            val rows = AllRows(d.allItems(), d.allFinds(), d.allPhotos(), d.allLines(), d.allLineStations(), d.allCollectionTypes())
             if (rows.items.size != info.items || rows.finds.size != info.finds || rows.photos.size != info.photos) {
                 throw BackupError.Damaged("row counts changed while reading")
             }
@@ -212,6 +214,8 @@ class BackupRestore @Inject constructor(
             dao.deleteAllLineStations()
             dao.deleteAllLines()
             dao.deleteAllItems()
+            dao.deleteAllCollectionTypes()
+            dao.insertCollectionTypes(rows.collectionTypes)
             dao.insertItems(rows.items)
             dao.insertLines(rows.lines)
             dao.insertLineStations(rows.lineStations)

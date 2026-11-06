@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Delete
@@ -113,7 +114,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                     Column {
                         NameText(item, ja, lineNames)
                         Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                            TypeIcon(item.type, 16.dp)
+                            ItemTypeIcon(item, 16.dp)
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get),
@@ -135,7 +136,13 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
-                    CollectionRow(f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) })
+                    // Cost only where something is paid: goshuin, and your own collections that note it (owner, 2026-11-07)
+                    val custom = item.customTypeId?.let { LocalCustomTypes.current[it] }
+                    CollectionRow(
+                        f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                        hasCost = item.type == ItemType.GOSHUIN || (item.type == ItemType.CUSTOM && custom?.hasCost == true),
+                        onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
+                    )
                 }
             }
             item { Spacer(Modifier.height(16.dp)) }
@@ -245,6 +252,7 @@ private fun Facts(item: Item) {
         ItemType.MANHOLE_CARD -> R.string.item_handed_out_at to R.string.item_hours
         ItemType.GOSHUIN -> R.string.item_office to R.string.item_office_hours
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
+        ItemType.CUSTOM -> R.string.item_place to R.string.item_hours
     }
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -296,8 +304,51 @@ private const val POSITION_WAIT_MS = 2 * 60 * 1000L
  * the date, or "Date not recorded"; Map when a position was saved; a delete icon that asks first.
  */
 @Composable
-private fun CollectionRow(f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit) {
+private fun CollectionRow(
+    f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit,
+    hasCost: Boolean = false, onQuantity: (Int) -> Unit = {}, onCost: (Int?) -> Unit = {},
+) {
     val a = f.find
+    // Tap the line to change how many (duplicates) and, for goshuin and your own collections that note it, what you paid
+    var editing by remember { mutableStateOf(false) }
+    if (editing) {
+        var qty by remember { mutableStateOf(a.quantity) }
+        var cost by remember { mutableStateOf(a.costYen?.toString().orEmpty()) }
+        AlertDialog(
+            onDismissRequest = { editing = false },
+            title = { Text(stringResource(R.string.find_edit_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.find_quantity), style = MaterialTheme.typography.labelLarge)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = { qty = (qty - 1).coerceAtLeast(1) }, enabled = qty > 1) {
+                            Icon(painterResource(R.drawable.ic_remove), contentDescription = stringResource(R.string.a11y_less))
+                        }
+                        Text("$qty", style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(horizontal = 16.dp))
+                        IconButton(onClick = { qty = (qty + 1).coerceAtMost(99) }) {
+                            Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.a11y_more))
+                        }
+                    }
+                    if (hasCost) {
+                        androidx.compose.material3.OutlinedTextField(
+                            value = cost, onValueChange = { v -> cost = v.filter { it.isDigit() }.take(7) },
+                            label = { Text(stringResource(R.string.find_cost)) }, singleLine = true, prefix = { Text("¥") },
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    if (qty != a.quantity) onQuantity(qty)
+                    val yen = cost.toIntOrNull()
+                    if (hasCost && yen != a.costYen) onCost(yen)
+                    editing = false
+                }) { Text(stringResource(R.string.photo_done)) }
+            },
+            dismissButton = { TextButton(onClick = { editing = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     // Owner, 2026-11-07: something you had before the app shows the day it was added; a dash if there is no date at all
     val whenText = when {
         !a.beforeApp && a.acquiredAt != null -> formatDateTime(a.acquiredAt, ja)
@@ -329,11 +380,16 @@ private fun CollectionRow(f: FindWithPhotos, ja: Boolean, name: String, onRemove
         now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS -> stringResource(R.string.item_finding_position)
         else -> null
     }
-    Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable { editing = true }.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(painterResource(R.drawable.ic_collect), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
-            Text(whenText, style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"))
+            // The date, then "×2" for duplicates and "¥500" when what you paid is noted
+            val extra = listOfNotNull(
+                a.quantity.takeIf { it > 1 }?.let { stringResource(R.string.quantity_times, it) },
+                a.costYen?.let { "¥%,d".format(it) },
+            )
+            Text((listOf(whenText) + extra).joinToString(sep()), style = MaterialTheme.typography.bodyLarge.copy(fontFeatureSettings = "tnum"))
             whereText?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             a.notes?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
         }

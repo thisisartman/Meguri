@@ -1,0 +1,184 @@
+package io.github.thisisartman.collectibles.ui
+
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.thisisartman.collectibles.R
+import io.github.thisisartman.collectibles.data.ItemRow
+import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.Origin
+import kotlinx.coroutines.launch
+
+/** One page of the Collection check: a group of items (a prefecture's cards, a line's stamps) to tick. */
+private data class CheckGroup(val key: String, val title: String, val rows: List<ItemRow>)
+
+/**
+ * Collection check (#68, owner's name): add everything you already have, one group per page, swiping left and
+ * right; manhole cards first (owner, 2026-11-07). Tick the tiles you have and save the page; no dates or places
+ * are asked, and each one shows the day it was added. Undo takes the page back off.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CollectionCheckScreen(vm: MainViewModel, snackbar: SnackbarHostState, onBack: () -> Unit) {
+    val ja = isJapanese()
+    val rows by vm.rows.collectAsStateWithLifecycle()
+    val lines by vm.lines.collectAsStateWithLifecycle()
+    val stations by vm.lineStations.collectAsStateWithLifecycle()
+    val customTypes = LocalCustomTypes.current
+    val manholeLabel = stringResource(R.string.type_manhole_plural)
+    val ekiLabel = stringResource(R.string.type_eki_plural)
+    val goshuinLabel = stringResource(R.string.type_goshuin)
+    val otherStations = stringResource(R.string.book_other_stations)
+    val customLabel = stringResource(R.string.type_custom)
+    // Only catalogue items can be ticked; things you added yourself already have their collection
+    val groups = remember(rows, lines, stations, ja, customTypes) {
+        val candidates = rows.filter { it.item.origin != Origin.USER || it.item.type == ItemType.CUSTOM }
+        val out = mutableListOf<CheckGroup>()
+        candidates.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().forEach { (p, l) ->
+            out += CheckGroup("m:$p", manholeLabel + (if (p.isNotEmpty()) " · " + prefectureName(p, ja) else ""), l.sortedBy { it.item.code ?: it.item.nameJa })
+        }
+        val eki = candidates.filter { it.item.type == ItemType.EKI_STAMP || it.item.type == ItemType.EKITAG }
+        val placed = mutableSetOf<String>()
+        lines.forEach { line ->
+            val ids = stations.filter { it.lineId == line.id }.sortedBy { it.seq }.map { it.itemId }
+            val l = ids.mapNotNull { id -> eki.firstOrNull { it.item.id == id } }.filter { it.item.id !in placed }
+            if (l.isNotEmpty()) { placed += l.map { it.item.id }; out += CheckGroup("e:${line.id}", ekiLabel + " · " + (if (ja) line.nameJa else line.nameRomaji ?: line.nameJa), l) }
+        }
+        eki.filter { it.item.id !in placed }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("e:_", "$ekiLabel · $otherStations", it) }
+        candidates.filter { it.item.type == ItemType.GOSHUIN }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("g", goshuinLabel, it) }
+        candidates.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }.forEach { (id, l) ->
+            out += CheckGroup("c:$id", customTypes[id]?.name ?: customLabel, l)
+        }
+        out.toList()
+    }
+    // Ticks per item id, kept while you swipe between pages
+    var ticked by rememberSaveable { mutableStateOf(setOf<String>()) }
+    val pager = rememberPagerState { groups.size }
+    val scope = rememberCoroutineScope()
+    val addedText = stringResource(R.string.check_added_count)
+    val undoText = stringResource(R.string.undo)
+
+    Column(Modifier.fillMaxSize()) {
+        TopAppBar(
+            windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
+            title = { Text(stringResource(R.string.check_title)) },
+            navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
+        )
+        if (groups.isEmpty()) {
+            Text(stringResource(R.string.check_nothing), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
+            return@Column
+        }
+        Text(
+            stringResource(R.string.check_hint),
+            Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        HorizontalPager(pager, Modifier.weight(1f).fillMaxWidth()) { page ->
+            val g = groups[page]
+            Column(Modifier.fillMaxSize()) {
+                val have = g.rows.count { it.collected }
+                Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(g.title, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(stringResource(R.string.count, have + g.rows.count { !it.collected && it.item.id in ticked }, g.rows.size), style = MaterialTheme.typography.labelLarge)
+                }
+                LazyVerticalGrid(
+                    columns = GridCells.Adaptive(96.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    items(g.rows, key = { it.item.id }) { r ->
+                        val on = r.item.id in ticked
+                        Column(
+                            Modifier.clickable(enabled = !r.collected, role = Role.Checkbox) {
+                                ticked = if (on) ticked - r.item.id else ticked + r.item.id
+                            }.padding(4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                if (r.collected || !on) Mark(r, 64.dp)
+                                else Surface(Modifier.size(64.dp), shape = CircleShape, color = colorOf(r.item)) {
+                                    Box(contentAlignment = Alignment.Center) { Icon(Icons.Filled.Check, contentDescription = null, tint = LocalTypeColors.current.onSeal, modifier = Modifier.size(32.dp)) }
+                                }
+                            }
+                            Spacer(Modifier.height(4.dp))
+                            Text(tileName(r.item.displayName(ja)), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                }
+            }
+        }
+        // Page dots: where you are among the groups
+        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.Center) {
+            val shown = groups.size.coerceAtMost(12)
+            repeat(shown) { i ->
+                val current = i == pager.currentPage.coerceAtMost(shown - 1)
+                Surface(Modifier.padding(3.dp).size(if (current) 9.dp else 7.dp), shape = CircleShape,
+                    color = if (current) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant) {}
+            }
+        }
+        Button(
+            enabled = ticked.isNotEmpty(),
+            onClick = {
+                val ids = ticked
+                vm.markBeforeApp(ids) { added ->
+                    ticked = emptySet()
+                    scope.launch {
+                        val r = snackbar.showSnackbar(addedText.format(added), actionLabel = undoText, duration = SnackbarDuration.Long)
+                        if (r == SnackbarResult.ActionPerformed) ids.forEach { vm.unmarkBeforeApp(it) }
+                    }
+                }
+            },
+            modifier = Modifier.fillMaxWidth().padding(12.dp).heightIn(min = 48.dp),
+        ) {
+            Text(if (ticked.isEmpty()) stringResource(R.string.check_tick_some) else pluralStringResource(R.plurals.check_add, ticked.size, ticked.size))
+        }
+    }
+}

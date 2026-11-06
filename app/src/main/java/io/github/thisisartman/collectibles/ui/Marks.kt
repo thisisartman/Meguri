@@ -49,7 +49,7 @@ fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
         // no official short form like airport codes (research 2026-11-07, owner's N10)
         row.collected && row.item.type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD && row.item.code != null ->
             Seal(row.item.sealLabel(ja), LocalTypeColors.current.of(row.item.type), size, modifier)
-        row.collected -> Seal("", LocalTypeColors.current.of(row.item.type), size, modifier, icon = typeIcon(row.item.type))
+        row.collected -> Seal("", colorOf(row.item), size, modifier, icon = iconOf(row.item))
         else -> EmptySlot(size, modifier)
     }
 }
@@ -61,6 +61,8 @@ fun typeIcon(type: io.github.thisisartman.collectibles.data.ItemType): Int = whe
     io.github.thisisartman.collectibles.data.ItemType.GOSHUIN -> io.github.thisisartman.collectibles.R.drawable.ic_type_goshuin
     io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP -> io.github.thisisartman.collectibles.R.drawable.ic_type_station
     io.github.thisisartman.collectibles.data.ItemType.EKITAG -> io.github.thisisartman.collectibles.R.drawable.ic_type_ekitag
+    // Your own collections: their chosen icon is drawn by [customIcon]; this is the fallback
+    io.github.thisisartman.collectibles.data.ItemType.CUSTOM -> io.github.thisisartman.collectibles.R.drawable.ic_collect
 }
 
 /** A small type icon in the type's colour, e.g. next to a name. */

@@ -188,16 +188,18 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 // While searching, the tabs give way to the number found, on the row with sort and size (below)
                 if (!searching) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    listOf(MapSection.STAMPS, MapSection.CARDS).forEachIndexed { i, t ->
+                    // A third tab, Mine, once you have items in your own collections (#64)
+                    val tabs = listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { it.item.type == ItemType.CUSTOM } })
+                    tabs.forEachIndexed { i, t ->
                         val all = rows.filter { it.item.type in t.types }
                         SegmentedButton(
                             selected = tab == t,
                             onClick = { tab = t; kind = null },
-                            shape = SegmentedButtonDefaults.itemShape(i, 2),
+                            shape = SegmentedButtonDefaults.itemShape(i, tabs.size),
                         ) {
                             // Name and count on two lines, so neither is cut at large text
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(stringResource(if (t == MapSection.STAMPS) R.string.nearby_tab_stamps else R.string.nearby_tab_cards), maxLines = 1)
+                                Text(stringResource(when (t) { MapSection.STAMPS -> R.string.nearby_tab_stamps; MapSection.CARDS -> R.string.nearby_tab_cards; else -> R.string.nearby_tab_mine }), maxLines = 1)
                                 Text(
                                     stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
                                     style = MaterialTheme.typography.labelSmall, maxLines = 1,
@@ -401,7 +403,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                         .padding(horizontal = 16.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    TypeIcon(r.item.type, 20.dp)
+                                    ItemTypeIcon(r.item, 20.dp)
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(boldMatch(r.item.displayName(ja), query), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)

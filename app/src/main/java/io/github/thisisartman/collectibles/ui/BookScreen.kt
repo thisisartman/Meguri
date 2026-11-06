@@ -87,7 +87,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             val action = if (marking) R.string.cancel else R.string.book_mark_owned
             // Only catalogue items still to get can be marked; things added by hand already have their find
             // 48 dp tall like every other control (it measured 32 dp in the 2026-11-06 Poco review)
-            if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { marking = !marking; selected = emptySet() }, modifier = Modifier.weight(1f, fill = false).heightIn(min = 48.dp)) {
+            if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { if (marking) { marking = false; selected = emptySet() } else nav.navigate("check") }, modifier = Modifier.weight(1f, fill = false).heightIn(min = 48.dp)) {
                 Text(stringResource(action), textAlign = TextAlign.End)
             }
             // The same top-right menu as Nearby: Settings and Logs
@@ -97,6 +97,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
         var folded by remember { mutableStateOf(setOf<String>()) }
         fun isOpen(key: String) = marking || key !in folded
         fun toggle(key: String) { folded = if (key in folded) folded - key else folded + key }
+        val customTypes = LocalCustomTypes.current
+        val customLabel = stringResource(R.string.type_custom)
         // No floating button any more (Log is in the bottom bar), so the list only needs a little room at the end
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             // Manhole cards by prefecture
@@ -138,6 +140,22 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                         onOpen = { nav.openItem(r.item.id) })
                 }
             }
+            // Your own collections (#64), one section each, newest collections last
+            rows.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }
+                .toSortedMap(compareBy { customTypes[it]?.createdAt ?: Long.MAX_VALUE })
+                .forEach { (typeId, list) ->
+                    val key = "h:c:$typeId"
+                    val got = list.count { it.collected }
+                    stickyHeader(key = key) {
+                        GroupHeader(ItemType.CUSTOM, customTypes[typeId]?.name ?: customLabel, "$got / ${list.size}",
+                            complete = got == list.size, open = isOpen(key), onToggle = if (marking) null else ({ toggle(key) }))
+                    }
+                    if (isOpen(key)) items(list.sortedByDescending { it.lastAt ?: 0L }, key = { it.item.id }) { r ->
+                        ItemListRow(r, ja, vm.distanceTo(r), marking, r.item.id in selected,
+                            onToggle = { selected = if (r.item.id in selected) selected - r.item.id else selected + r.item.id },
+                            onOpen = { nav.openItem(r.item.id) })
+                    }
+                }
             if (rows.isEmpty()) {
                 item { Text(stringResource(R.string.nearby_empty_book), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }

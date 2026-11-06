@@ -174,7 +174,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val route = entry?.destination?.route
     val topLevel = route == null || route in setOf(NEARBY, BOOK)
 
-    CompositionLocalProvider(LocalPhoto provides photo) {
+    val customTypes by vm.collectionTypes.collectAsStateWithLifecycle()
+    var newCollection by remember { mutableStateOf(false) }
+    CompositionLocalProvider(LocalPhoto provides photo, LocalCustomTypes provides customTypes.associateBy { it.id }) {
         Scaffold(
             // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
             snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
@@ -246,7 +248,21 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     // Every page but the maps sits on a solid background: the item page had none, so for a moment
                     // after a tap the Nearby map showed through it (screen recording on the Poco, 2026-11-07)
                     composable(BOOK) { Page { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) } }
-                    composable(MORE) { Page { MoreScreen(snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() }) } }
+                    composable(MORE) {
+                        val rows by vm.rows.collectAsStateWithLifecycle()
+                        Page {
+                            MoreScreen(
+                                snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() },
+                                myCollections = {
+                                    MyCollectionsSection(
+                                        customTypes,
+                                        rows.mapNotNull { it.item.customTypeId }.groupingBy { it }.eachCount(),
+                                        onNew = { newCollection = true },
+                                    )
+                                },
+                            )
+                        }
+                    }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }) }
                     }
@@ -259,7 +275,14 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         MapScreen(vm, nav, section)
                     }
                     composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
+                    composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }
                 }
+            }
+        }
+        if (newCollection) {
+            NewCollectionDialog(onDismiss = { newCollection = false }, existingNames = customTypes.map { it.name }.toSet()) { name, color, icon, hasCost ->
+                vm.addCollectionType(name, color, icon, hasCost)
+                newCollection = false
             }
         }
         if (showLog) {

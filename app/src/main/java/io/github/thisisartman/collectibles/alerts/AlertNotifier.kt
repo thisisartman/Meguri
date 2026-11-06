@@ -54,6 +54,7 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             ItemType.GOSHUIN -> R.string.type_goshuin
             ItemType.EKI_STAMP -> R.string.type_eki
             ItemType.EKITAG -> R.string.type_ekitag
+            ItemType.CUSTOM -> R.string.type_custom
         },
     )
 

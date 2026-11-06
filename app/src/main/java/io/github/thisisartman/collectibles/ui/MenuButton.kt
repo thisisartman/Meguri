@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Build
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,6 +41,11 @@ fun MenuButton(nav: NavHostController, modifier: Modifier = Modifier) {
             )
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.check_title)) },
+                leadingIcon = { Icon(Icons.Filled.Check, contentDescription = null) },
+                onClick = { open = false; nav.navigate("check") },
+            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_settings)) },
                 leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },

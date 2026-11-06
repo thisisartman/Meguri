@@ -7,6 +7,12 @@
 - Place names show on the map in your language (English mode adds the Japanese name). Dark mode works, with readable roads, and "still to get" pins are no longer the brightest thing on a dark map. Pins shrink when zoomed out, so they don't hide town names.
 - Several photos per find, each marked as stamp, proof or other; a photo from the gallery is copied into the app's own folder.
 - Merged from the Legion: the "seal gold" colours with a switch back to the phone's own colours, a welcome screen that loads the Niigata catalogue in one tap, and "Station stamps" in English.
+- **Phase 2 (in the next build):**
+  - Your own collections: make one in Settings (name, colour, icon, whether you note what you paid); add items to it; they get a "Mine" tab on Nearby and a section in My book.
+  - Each collection can count duplicates (×2) and, for goshuin, what you paid: tap the line on the item page.
+  - "Collection check" ticks off what you already have, one group per page, swiping left and right, manhole cards first, with Undo.
+  - Adding a new item can find its place on OpenStreetMap.
+  - Database version 2 adds these without touching anything you already have.
 - **0.3.0-beta.2** (phase 1 of the feedback build):
   - The item page puts "Where to get it" right under the name, as rows with icons: hours, place, phone (tap to call), notes, and a note when this place's map isn't saved on the phone.
   - Photos are a grid that shows every kind.

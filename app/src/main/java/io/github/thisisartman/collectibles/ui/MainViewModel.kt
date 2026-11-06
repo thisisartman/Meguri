@@ -123,9 +123,29 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun addNew(type: ItemType, nameJa: String, nameRomaji: String?, onDone: (itemId: String, findId: String) -> Unit = { _, _ -> }) {
+    val collectionTypes: StateFlow<List<io.github.thisisartman.collectibles.data.CollectionType>> =
+        repo.collectionTypes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    fun addCollectionType(name: String, color: Long, icon: String, hasCost: Boolean, onDone: (String) -> Unit = {}) {
+        viewModelScope.launch { onDone(repo.addCollectionType(name, color, icon, hasCost)) }
+    }
+
+    fun setQuantity(findId: String, quantity: Int) { viewModelScope.launch { repo.setQuantity(findId, quantity) } }
+
+    fun setCost(findId: String, yen: Int?) { viewModelScope.launch { repo.setCost(findId, yen) } }
+
+    suspend fun lookUpPlace(query: String, japanese: Boolean): List<io.github.thisisartman.collectibles.data.PlaceHit> {
+        val f = here.value.fix
+        return io.github.thisisartman.collectibles.data.PlaceLookup.search(query, f?.lat, f?.lng, japanese)
+    }
+
+    fun addNew(
+        type: ItemType, nameJa: String, nameRomaji: String?,
+        customTypeId: String? = null, place: io.github.thisisartman.collectibles.data.PlaceHit? = null, costYen: Int? = null,
+        onDone: (itemId: String, findId: String) -> Unit = { _, _ -> },
+    ) {
         viewModelScope.launch {
-            val (itemId, findId) = repo.addItemWithFind(type, nameJa, nameRomaji)
+            val (itemId, findId) = repo.addItemWithFind(type, nameJa, nameRomaji, customTypeId, place, costYen)
             emit(Logged(findId, nameRomaji?.ifBlank { null } ?: nameJa, System.currentTimeMillis()))
             onDone(itemId, findId)
         }

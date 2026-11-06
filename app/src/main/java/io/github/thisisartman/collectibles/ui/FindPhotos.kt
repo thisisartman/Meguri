@@ -61,6 +61,7 @@ fun photoKinds(type: ItemType): List<String> = when (type) {
     ItemType.EKI_STAMP, ItemType.EKITAG -> listOf(PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.PLACE)
     ItemType.MANHOLE_CARD -> listOf(PhotoKind.STAMP, PhotoKind.MANHOLE, PhotoKind.PLACE)
     ItemType.GOSHUIN -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
+    ItemType.CUSTOM -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
 }
 
 @androidx.annotation.StringRes
@@ -69,13 +70,14 @@ fun kindLabel(type: ItemType, kind: String): Int = when (kind) {
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.kind_station_stamp
         ItemType.MANHOLE_CARD -> R.string.kind_card
         ItemType.GOSHUIN -> R.string.kind_goshuin
+        ItemType.CUSTOM -> R.string.kind_item
     }
     PhotoKind.EKITAG -> R.string.kind_ekitag
     PhotoKind.MANHOLE -> R.string.kind_manhole
     PhotoKind.PLACE -> when (type) {
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.kind_station
         ItemType.GOSHUIN -> R.string.kind_shrine
-        ItemType.MANHOLE_CARD -> R.string.kind_place
+        ItemType.MANHOLE_CARD, ItemType.CUSTOM -> R.string.kind_place
     }
     // 0.3's "proof" was an Ekitag screenshot or a card photo
     PhotoKind.PROOF -> if (type == ItemType.MANHOLE_CARD) R.string.kind_card else R.string.kind_ekitag

@@ -49,6 +49,8 @@ enum class MapSection(val types: Set<ItemType>) {
     ALL(ItemType.entries.toSet()),
     STAMPS(setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN)),
     CARDS(setOf(ItemType.MANHOLE_CARD)),
+    // Your own collections (#64); the tab shows only when you have any
+    MINE(setOf(ItemType.CUSTOM)),
 }
 
 fun ItemRow.toPin(): MapPin? {
@@ -88,6 +90,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                             MapSection.ALL -> R.string.map_title_all
                             MapSection.STAMPS -> R.string.map_title_stamps
                             MapSection.CARDS -> R.string.map_title_cards
+                            MapSection.MINE -> R.string.more_my_collections
                         },
                     ),
                     style = MaterialTheme.typography.titleMedium,
@@ -152,7 +155,7 @@ fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollec
 fun PinHeader(row: ItemRow, meters: Double?, here: Pair<Double, Double>?) {
     val ja = isJapanese()
     Row(verticalAlignment = Alignment.CenterVertically) {
-        TypeIcon(row.item.type, 22.dp)
+        ItemTypeIcon(row.item, 22.dp)
         Spacer(Modifier.width(8.dp))
         Column {
             Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium, maxLines = 2)

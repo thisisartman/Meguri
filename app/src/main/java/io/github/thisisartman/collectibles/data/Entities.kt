@@ -8,7 +8,23 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 
-enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG }
+/** The four built-in kinds, and CUSTOM for an item in one of your own collections (its `customTypeId`, schema v2). */
+enum class ItemType { MANHOLE_CARD, GOSHUIN, EKI_STAMP, EKITAG, CUSTOM }
+
+/**
+ * One of your own collections (#64, schema v2): a name, a colour and an icon, and whether its collections record
+ * what you paid. Items in it have type CUSTOM and point here with `customTypeId`.
+ */
+@Entity(tableName = "collection_type")
+data class CollectionType(
+    @PrimaryKey val id: String,
+    val name: String,
+    @ColumnInfo(name = "name_ja") val nameJa: String? = null,
+    val color: Long,
+    val icon: String,
+    @ColumnInfo(name = "has_cost") val hasCost: Boolean = true,
+    @ColumnInfo(name = "created_at") val createdAt: Long,
+)
 
 /** A photo's kind, kept in `photo.role` (#54): the stamp itself, proof of an Ekitag or a card, or anything else. */
 /**
@@ -67,6 +83,8 @@ data class Item(
     @ColumnInfo(name = "parent_item_id") val parentItemId: String? = null,
     @ColumnInfo(name = "created_at") val createdAt: Long,
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
+    // Schema v2: the collection_type an item of type CUSTOM belongs to (#64)
+    @ColumnInfo(name = "custom_type_id") val customTypeId: String? = null,
 )
 
 /**
@@ -92,6 +110,8 @@ data class Acquisition(
     val notes: String? = null,
     val via: Via,
     @ColumnInfo(name = "created_at") val createdAt: Long,
+    // Schema v2: how many you got this time (duplicates, e.g. a second card to trade); 1 for every older find
+    @ColumnInfo(name = "quantity", defaultValue = "1") val quantity: Int = 1,
 )
 
 /**

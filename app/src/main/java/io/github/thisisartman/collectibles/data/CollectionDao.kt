@@ -157,6 +157,28 @@ interface CollectionDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertItems(items: List<Item>)
 
+    // Your own collections (#64, schema v2)
+    @Query("SELECT * FROM collection_type ORDER BY created_at")
+    fun observeCollectionTypes(): Flow<List<CollectionType>>
+
+    @Query("SELECT * FROM collection_type ORDER BY created_at")
+    suspend fun allCollectionTypes(): List<CollectionType>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertCollectionType(t: CollectionType)
+
+    @Query("DELETE FROM collection_type")
+    suspend fun deleteAllCollectionTypes()
+
+    @Insert(onConflict = OnConflictStrategy.ABORT)
+    suspend fun insertCollectionTypes(types: List<CollectionType>)
+
+    @Query("UPDATE acquisition SET quantity = :quantity WHERE id = :id")
+    suspend fun setFindQuantity(id: String, quantity: Int)
+
+    @Query("UPDATE acquisition SET cost_yen = :yen WHERE id = :id")
+    suspend fun setFindCost(id: String, yen: Int?)
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertFinds(finds: List<Acquisition>)
 

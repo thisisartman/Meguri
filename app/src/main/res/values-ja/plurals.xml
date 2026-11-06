@@ -4,5 +4,6 @@
     <plurals name="items"><item quantity="other">項目%d件</item></plurals>
     <plurals name="photos"><item quantity="other">写真%d枚</item></plurals>
     <plurals name="nearby_found"><item quantity="other">「%2$s」で%1$d件</item></plurals>
+    <plurals name="check_add"><item quantity="other">%d件をコレクションに追加</item></plurals>
     <string name="count_sep">、</string>
 </resources>

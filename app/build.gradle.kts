@@ -109,6 +109,8 @@ dependencies {
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     testImplementation(libs.junit)
+    // The real org.json for JVM unit tests (Android's copy is only a stub there)
+    testImplementation("org.json:json:20240303")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.core)

@@ -88,8 +88,15 @@ class CollectionRepository @Inject constructor(
         log.i("Log", "Undo find $findId")
     }
 
-    /** "Not in the list?": a new item and its find together. Returns the item id. */
-    suspend fun addItemWithFind(type: ItemType, nameJa: String, nameRomaji: String?): Pair<String, String> {
+    /**
+     * "Not in the list?": a new item and its find together. Returns the item id.
+     * [customTypeId] puts it in one of your own collections (type CUSTOM); [place] is a place looked up on
+     * OpenStreetMap (else your position is used); [costYen] is what you paid, where the kind has a cost.
+     */
+    suspend fun addItemWithFind(
+        type: ItemType, nameJa: String, nameRomaji: String?,
+        customTypeId: String? = null, place: PlaceHit? = null, costYen: Int? = null,
+    ): Pair<String, String> {
         val itemId = newId()
         val findId = newId()
         val fix = location.lastKnown()?.takeIf { now() - it.timeMs <= 120_000 }
@@ -97,10 +104,13 @@ class CollectionRepository @Inject constructor(
             dao.insertItem(
                 Item(
                     id = itemId, type = type, nameJa = nameJa.trim(), nameRomaji = nameRomaji?.trim()?.ifEmpty { null },
-                    lat = fix?.lat, lng = fix?.lng, origin = Origin.USER, createdAt = now(), updatedAt = now(),
+                    lat = place?.lat ?: fix?.lat, lng = place?.lng ?: fix?.lng,
+                    placeName = place?.name, address = place?.address,
+                    sourceUrl = place?.osmUrl,
+                    origin = Origin.USER, createdAt = now(), updatedAt = now(), customTypeId = customTypeId,
                 ),
             )
-            dao.insertFind(Acquisition(id = findId, itemId = itemId, acquiredAt = now(), via = Via.MANUAL, createdAt = now()))
+            dao.insertFind(Acquisition(id = findId, itemId = itemId, acquiredAt = now(), via = Via.MANUAL, createdAt = now(), costYen = costYen))
         }
         log.i("Log", "New item $itemId ($type) with find $findId")
         scope.launch {
@@ -110,6 +120,20 @@ class CollectionRepository @Inject constructor(
         }
         return itemId to findId
     }
+
+    // Your own collections (#64) and the details of a collection: how many (duplicates) and what you paid
+    fun collectionTypes(): kotlinx.coroutines.flow.Flow<List<CollectionType>> = dao.observeCollectionTypes()
+
+    suspend fun addCollectionType(name: String, color: Long, icon: String, hasCost: Boolean): String {
+        val id = newId()
+        dao.upsertCollectionType(CollectionType(id = id, name = name.trim(), color = color, icon = icon, hasCost = hasCost, createdAt = now()))
+        log.i("Log", "New collection $id")
+        return id
+    }
+
+    suspend fun setQuantity(findId: String, quantity: Int) = dao.setFindQuantity(findId, quantity.coerceIn(1, 99))
+
+    suspend fun setCost(findId: String, yen: Int?) = dao.setFindCost(findId, yen?.coerceAtLeast(0))
 
     /** Marks items as "had before the app": a find with no date, place or photo. Skips items already collected. */
     suspend fun markBeforeApp(itemIds: Collection<String>): Int {
