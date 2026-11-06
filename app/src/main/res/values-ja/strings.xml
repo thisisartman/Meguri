@@ -205,4 +205,12 @@
     <string name="trip_quiet">%1$s・%2$sまで通知なし</string>
     <string name="tile_on">オン</string>
     <string name="tile_off">オフ</string>
+
+    <!-- Welcome before a catalogue (#58, Legion) -->
+    <string name="welcome_title">Meguriへようこそ</string>
+    <string name="welcome_what">マンホールカード・駅スタンプ・御朱印の自分だけの記録です。持っているものと、近くでまだ取れるものが分かります。オフラインで動きます。</string>
+    <string name="welcome_catalogue">カタログには、集められるものとその場所が入っています。アプリに付いている新潟のカタログから始めるか、自分のCSVファイルを読み込んでください。</string>
+    <string name="welcome_load_bundled">新潟のカタログを読み込む</string>
+    <string name="welcome_load_file">CSVファイルを読み込む</string>
+    <string name="welcome_other_ways">別の端末から移る場合は、その他、バックアップから復元。カタログにないものも + で記録できます。</string>
 </resources>

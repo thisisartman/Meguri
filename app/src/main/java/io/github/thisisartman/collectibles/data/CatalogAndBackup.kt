@@ -43,6 +43,12 @@ class CatalogAndBackup @Inject constructor(
         importCatalogText(text)
     }
 
+    /** The Niigata catalogue that ships inside the app (#58), so a first start needs no file. */
+    suspend fun importBundled(): ImportResult = withContext(Dispatchers.IO) {
+        val text = context.assets.open(BUNDLED_CATALOGUE).use { it.readBytes().toString(Charsets.UTF_8) }
+        importCatalogText(text)
+    }
+
     suspend fun importCatalogText(text: String): ImportResult {
         val maps = Csv.parseWithHeader(text)
         return lock.withLock { importRows(maps) }
@@ -180,3 +186,6 @@ class CatalogAndBackup @Inject constructor(
         }
     }
 }
+
+/** Built by tools/trip-catalog/make_catalog.py; copy the new CSV here when it changes. */
+const val BUNDLED_CATALOGUE = "catalogue/trip-niigata.csv"

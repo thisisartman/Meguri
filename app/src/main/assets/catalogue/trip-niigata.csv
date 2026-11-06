@@ -1,0 +1,124 @@
+type,catalog_key,code,name_ja,name_romaji,series,release_date,prefecture,municipality,place_name,address,place_phone,lat,lng,hours_text,closed_days,notes,source_url,line_id,line_name_ja,line_name_romaji,line_seq
+EKI_STAMP,,,高崎駅,Takasaki Station,,,群馬県,,高崎駅,,,36.320861,139.012263,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,1
+EKI_STAMP,,,高崎問屋町駅,Takasakitonyamachi Station,,,群馬県,,高崎問屋町駅,,,36.346021,139.017084,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,2
+EKI_STAMP,,,井野駅,Ino Station,,,群馬県,,井野駅,,,36.357084,139.023018,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,3
+EKI_STAMP,,,新前橋駅,Shim-Maebashi Station,,,群馬県,,新前橋駅,,,36.378995,139.046830,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,4
+EKI_STAMP,,,群馬総社駅,Gumma-Soja Station,,,群馬県,,群馬総社駅,,,36.415581,139.032284,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,5
+EKI_STAMP,,,八木原駅,Yagihara Station,,,群馬県,,八木原駅,,,36.463662,139.019217,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,6
+EKI_STAMP,,,渋川駅,Shibukawa Station,,,群馬県,,渋川駅,,,36.490687,139.008552,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,7
+EKI_STAMP,,,敷島駅,Shikishima Station,,,群馬県,,敷島駅,,,36.538302,139.033828,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,8
+EKI_STAMP,,,津久田駅,Tsukuda Station,,,群馬県,,津久田駅,,,36.561132,139.042832,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,9
+EKI_STAMP,,,岩本駅,Iwamoto Station,,,群馬県,,岩本駅,,,36.603026,139.047105,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,10
+EKI_STAMP,,,沼田駅,Numata Station,,,群馬県,,沼田駅,,,36.642405,139.035661,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,11
+EKI_STAMP,,,後閑駅,Gokan Station,,,群馬県,,後閑駅,,,36.679255,139.000409,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,12
+EKI_STAMP,,,上牧駅,Kamimoku Station,,,群馬県,,上牧駅,,,36.735449,138.984546,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,13
+EKI_STAMP,,,水上駅,Minakami Station,,,群馬県,,水上駅,,,36.778629,138.968991,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,14
+EKI_STAMP,,,湯檜曽駅,Yubiso Station,,,群馬県,,湯檜曽駅,,,36.802717,138.986573,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,15
+EKI_STAMP,,,土合駅,Doai Station,,,群馬県,,土合駅,,,36.830417,138.964686,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,16
+EKI_STAMP,,,土樽駅,Tsuchitaru Station,,,新潟県,,土樽駅,,,36.874748,138.862204,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,17
+EKI_STAMP,,,越後中里駅,Echigo-Nakazato Station,,,新潟県,,越後中里駅,,,36.909711,138.848449,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,18
+EKI_STAMP,,,岩原スキー場前駅,Iwappara-Ski-jo-mae Station,,,新潟県,,岩原スキー場前駅,,,36.924263,138.839753,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,19
+EKI_STAMP,,,越後湯沢駅,Echigo-Yuzawa Station,,,新潟県,,越後湯沢駅,,,36.935878,138.809423,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,20
+EKI_STAMP,,,石打駅,Ishiuchi Station,,,新潟県,,石打駅,,,36.989309,138.804091,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,21
+EKI_STAMP,,,大沢駅,Osawa Station,,,新潟県,,大沢駅,,,37.021376,138.821400,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,22
+EKI_STAMP,,,上越国際スキー場前駅,Joetsu-Kokusai-Ski-jo-mae Station,,,新潟県,,上越国際スキー場前駅,,,37.028862,138.828421,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,23
+EKI_STAMP,,,塩沢駅,Shiozawa Station,,,新潟県,,塩沢駅,,,37.041563,138.848435,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,24
+EKI_STAMP,,,六日町駅,Muikamachi Station,,,新潟県,,六日町駅,,,37.067214,138.875727,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,25
+EKI_STAMP,,,五日町駅,Itsukamachi Station,,,新潟県,,五日町駅,,,37.119558,138.908062,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,26
+EKI_STAMP,,,浦佐駅,Urasa Station,,,新潟県,,浦佐駅,,,37.167224,138.922841,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,27
+EKI_STAMP,,,八色駅,Yairo Station,,,新潟県,,八色駅,,,37.191982,138.935150,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,28
+EKI_STAMP,,,小出駅,Koide Station,,,新潟県,,小出駅,,,37.233288,138.953490,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,29
+EKI_STAMP,,,越後堀之内駅,Echigo-Horinouchi Station,,,新潟県,,越後堀之内駅,,,37.239050,138.927895,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,30
+EKI_STAMP,,,北堀之内駅,Kita-Horinouchi Station,,,新潟県,,北堀之内駅,,,37.255705,138.896426,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,31
+EKI_STAMP,,,越後川口駅,Echigo-Kawaguchi Station,,,新潟県,,越後川口駅,,,37.272913,138.861961,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,32
+EKI_STAMP,,,小千谷駅,Ojiya Station,,,新潟県,,小千谷駅,,,37.309826,138.813346,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,33
+EKI_STAMP,,,越後滝谷駅,Echigo-Takiya Station,,,新潟県,,越後滝谷駅,,,37.369108,138.835013,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,34
+EKI_STAMP,,,宮内駅,Miyauchi Station,,,新潟県,,宮内駅,,,37.422072,138.840038,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_JOETSU,上越線,Joetsu Line,35
+EKI_STAMP,,,弥彦駅,Yahiko Station,,,新潟県,,弥彦駅,,,37.699256,138.831953,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,1
+EKI_STAMP,,,矢作駅,Yahagi Station,,,新潟県,,矢作駅,,,37.690813,138.851307,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,2
+EKI_STAMP,,,吉田駅,Yoshida Station,,,新潟県,,吉田駅,,,37.687060,138.878695,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,3
+EKI_STAMP,,,西燕駅,Nishi-Tsubame Station,,,新潟県,,西燕駅,,,37.679769,138.909289,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,4
+EKI_STAMP,,,燕駅,Tsubame Station,,,新潟県,,燕駅,,,37.667393,138.928544,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,5
+EKI_STAMP,,,燕三条駅,Tsubame-Sanjo Station,,,新潟県,,燕三条駅,,,37.648370,138.939089,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,6
+EKI_STAMP,,,北三条駅,Kita-Sanjo Station,,,新潟県,,北三条駅,,,37.632644,138.955755,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,7
+EKI_STAMP,,,東三条駅,Higashi-Sanjo Station,,,新潟県,,東三条駅,,,37.628596,138.974463,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_YAHIKO,弥彦線,Yahiko Line,8
+EKI_STAMP,,,柏崎駅,Kashiwazaki Station,,,新潟県,,柏崎駅,,,37.363391,138.555847,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,1
+EKI_STAMP,,,東柏崎駅,Higashi-Kashiwazaki Station,,,新潟県,,東柏崎駅,,,37.373553,138.565693,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,2
+EKI_STAMP,,,西中通駅,Nishi-Nakadori Station,,,新潟県,,西中通駅,,,37.392644,138.593276,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,3
+EKI_STAMP,,,荒浜駅,Arahama Station,,,新潟県,,荒浜駅,,,37.404861,138.601967,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,4
+EKI_STAMP,,,刈羽駅,Kariwa Station,,,新潟県,,刈羽駅,,,37.429733,138.619387,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,5
+EKI_STAMP,,,西山駅,Nishiyama Station,,,新潟県,,西山駅,,,37.448673,138.642702,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,6
+EKI_STAMP,,,礼拝駅,Raihai Station,,,新潟県,,礼拝駅,,,37.459143,138.663923,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,7
+EKI_STAMP,,,石地駅,Ishiji Station,,,新潟県,,石地駅,,,37.484104,138.688286,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,8
+EKI_STAMP,,,小木ノ城駅,Oginojo Station,,,新潟県,,小木ノ城駅,,,37.515791,138.704363,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,9
+EKI_STAMP,,,出雲崎駅,Izumozaki Station,,,新潟県,,出雲崎駅,,,37.531531,138.716067,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,10
+EKI_STAMP,,,妙法寺駅,Myohoji Station,,,新潟県,,妙法寺駅,,,37.566069,138.741791,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,11
+EKI_STAMP,,,小島谷駅,Ojimaya Station,,,新潟県,,小島谷駅,,,37.574569,138.771340,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,12
+EKI_STAMP,,,桐原駅,Kirihara Station,,,新潟県,,桐原駅,,,37.601876,138.792562,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,13
+EKI_STAMP,,,寺泊駅,Teradomari Station,,,新潟県,,寺泊駅,,,37.620394,138.813824,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,14
+EKI_STAMP,,,分水駅,Bunsui Station,,,新潟県,,分水駅,,,37.629382,138.839731,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,15
+EKI_STAMP,,,粟生津駅,Aozu Station,,,新潟県,,粟生津駅,,,37.654241,138.873579,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,16
+EKI_STAMP,,,南吉田駅,Minami-Yoshida Station,,,新潟県,,南吉田駅,,,37.672072,138.870877,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,17
+EKI_STAMP,,,吉田駅,Yoshida Station,,,新潟県,,吉田駅,,,37.687060,138.878695,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,18
+EKI_STAMP,,,北吉田駅,Kita-Yoshida Station,,,新潟県,,北吉田駅,,,37.702272,138.882202,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,19
+EKI_STAMP,,,岩室駅,Iwamuro Station,,,新潟県,,岩室駅,,,37.722228,138.880236,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,20
+EKI_STAMP,,,巻駅,Maki Station,,,新潟県,,巻駅,,,37.756826,138.889619,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,21
+EKI_STAMP,,,越後曽根駅,Echigo-Sone Station,,,新潟県,,越後曽根駅,,,37.793767,138.911117,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,22
+EKI_STAMP,,,越後赤塚駅,Echigo-Akatsuka Station,,,新潟県,,越後赤塚駅,,,37.815666,138.907935,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,23
+EKI_STAMP,,,内野西が丘駅,Uchino-Nishigaoka Station,,,新潟県,,内野西が丘駅,,,37.846149,138.926732,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,24
+EKI_STAMP,,,内野駅,Uchino Station,,,新潟県,,内野駅,,,37.858258,138.936506,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,25
+EKI_STAMP,,,新潟大学前駅,Niigata Daigaku-mae Station,,,新潟県,,新潟大学前駅,,,37.869327,138.954706,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,26
+EKI_STAMP,,,寺尾駅,Terao Station,,,新潟県,,寺尾駅,,,37.879282,138.973934,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,27
+EKI_STAMP,,,小針駅,Kobari Station,,,新潟県,,小針駅,,,37.889546,138.991197,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,28
+EKI_STAMP,,,青山駅,Aoyama Station,,,新潟県,,青山駅,,,37.898632,139.001079,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,29
+EKI_STAMP,,,関屋駅,Sekiya Station,,,新潟県,,関屋駅,,,37.906005,139.015121,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,30
+EKI_STAMP,,,白山駅,Hakusan Station,,,新潟県,,白山駅,,,37.911964,139.030323,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,31
+EKI_STAMP,,,新潟駅,Niigata Station,,,新潟県,,新潟駅,,,37.912244,139.061329,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_ECHIGO,越後線,Echigo Line,32
+EKI_STAMP,,,宮内駅,Miyauchi Station,,,新潟県,,宮内駅,,,37.422072,138.840038,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,1
+EKI_STAMP,,,長岡駅,Nagaoka Station,,,新潟県,,長岡駅,,,37.447878,138.854167,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,2
+EKI_STAMP,,,北長岡駅,Kita-Nagaoka Station,,,新潟県,,北長岡駅,,,37.468169,138.861821,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,3
+EKI_STAMP,,,押切駅,Oshikiri Station,,,新潟県,,押切駅,,,37.504753,138.881220,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,4
+EKI_STAMP,,,見附駅,Mitsuke Station,,,新潟県,,見附駅,,,37.540178,138.904948,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,5
+EKI_STAMP,,,帯織駅,Obiori Station,,,新潟県,,帯織駅,,,37.572667,138.928078,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,6
+EKI_STAMP,,,東光寺駅,Tokoji Station,,,新潟県,,東光寺駅,,,37.594032,138.943691,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,7
+EKI_STAMP,,,三条駅,Sanjo Station,,,新潟県,,三条駅,,,37.621140,138.960895,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,8
+EKI_STAMP,,,東三条駅,Higashi-Sanjo Station,,,新潟県,,東三条駅,,,37.628596,138.974463,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,9
+EKI_STAMP,,,保内駅,Honai Station,,,新潟県,,保内駅,,,37.639307,139.014712,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,10
+EKI_STAMP,,,加茂駅,Kamo Station,,,新潟県,,加茂駅,,,37.658901,139.049247,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,11
+EKI_STAMP,,,羽生田駅,Hanyuda Station,,,新潟県,,羽生田駅,,,37.693444,139.060669,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,12
+EKI_STAMP,,,田上駅,Tagami Station,,,新潟県,,田上駅,,,37.719253,139.074837,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,13
+EKI_STAMP,,,矢代田駅,Yashiroda Station,,,新潟県,,矢代田駅,,,37.749040,139.095708,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,14
+EKI_STAMP,,,古津駅,Furutsu Station,,,新潟県,,古津駅,,,37.772849,139.114530,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,15
+EKI_STAMP,,,新津駅,Niitsu Station,,,新潟県,,新津駅,,,37.800026,139.120993,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,16
+EKI_STAMP,,,さつき野駅,Satsukino Station,,,新潟県,,さつき野駅,,,37.813298,139.117245,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,17
+EKI_STAMP,,,荻川駅,Ogikawa Station,,,新潟県,,荻川駅,,,37.833314,139.111552,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,18
+EKI_STAMP,,,亀田駅,Kameda Station,,,新潟県,,亀田駅,,,37.877239,139.108266,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,19
+EKI_STAMP,,,越後石山駅,Echigo-Ishiyama Station,,,新潟県,,越後石山駅,,,37.896568,139.095285,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,20
+EKI_STAMP,,,新潟駅,Niigata Station,,,新潟県,,新潟駅,,,37.912244,139.061329,,,Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.,https://www.openstreetmap.org,JR_SHINETSU,信越本線,Shin'etsu Line,21
+MANHOLE_CARD,,15-000-A001,新潟県（流域下水道） A001,Niigata-ken (Ryuiki Gesuido) A001,06,2017/12/09,新潟県,,新潟県下水道公社（新潟浄化センター管理棟 2階事務室）,新潟市東区下山3丁目680番地,025-271-1151,37.951155,139.124041,平日 9:00～17:00／土日祝・年末年始 10:00～15:00（土日祝・年末年始は予約が必要）,,,,,,,
+MANHOLE_CARD,,15-100-A001,新潟市 A001,Niigata-shi A001,01,2016/04/01,新潟県,新潟市,新潟古町まちみなと情報館,新潟市中央区古町通七番町995番地7,025-378-4101,37.922414,139.045026,10:00～17:00（水曜、年末年始を除く。営業日は施設に確認）,,,,,,,
+MANHOLE_CARD,,15-100-B001,新潟市 B001,Niigata-shi B001,06,2017/12/09,新潟県,新潟市,新津鉄道資料館,新潟市秋葉区新津東町2-5-6,0250-24-5700,37.801767,139.141835,9:30～17:00（火曜（祝日なら翌日）、年末年始を除く）,,,,,,,
+MANHOLE_CARD,,15-202-A001,長岡市 火焔土器,Nagaoka · Kaen doki,07,2018/04/28,新潟県,長岡市,ながおか市民協働センター,長岡市大手通1-4-10 シティホールプラザアオーレ長岡 西棟3階,0258-39-2020,37.44725,138.851111,8:30～21:00（12/29～1/3を除く）,,,,,,,
+MANHOLE_CARD,,15-202-B001,長岡市 ナッちゃん,Nagaoka · Nat-chan,13,2020/12/17,新潟県,長岡市,道の駅ながおか花火館 長岡花火ミュージアム,長岡市喜多町707,0258-86-7766,37.455291,138.804645,10:00～17:30（水曜、12/31～1/2を除く）,,,,,,,
+MANHOLE_CARD,,15-202-C001,長岡市 新潟アルビレックスBB,Nagaoka · Albirex BB,14,,新潟県,長岡市,ながおか市民協働センター,長岡市大手通1-4-10 シティホールプラザアオーレ長岡 西棟3階,0258-39-2020,37.446261,138.85131,8:30～21:00（12/29～1/3を除く）,,,,,,,
+MANHOLE_CARD,,15-202-G001,長岡市 水道通水100周年,Nagaoka · Water supply 100 years,29,2026/07/31,新潟県,長岡市,米百俵プレイス ミライエ長岡 3階 インフォメーションカウンター,長岡市大手通2-3-10,0258-86-6008,37.448388,138.848878,平日・土 9:00～21:00／日祝 9:00～18:00（第2木曜、月末、12/29～1/3は休館）,,,,,,,
+MANHOLE_CARD,,15-213-E001,燕市 合併20周年,Tsubame · 20 years as one city,29,2026/07/31,新潟県,燕市,燕市役所 2階 下水道課 20番窓口（土日祝は夜間休日受付）,燕市吉田西太田1934,0256-77-8291,37.673156,138.882245,9:00～16:30（12/29～1/3は休止）,,,,,,,
+MANHOLE_CARD,,15-202-F001,長岡市 長岡の四季,Nagaoka · Four seasons,22,,新潟県,長岡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-205-A001,柏崎市 A001,Kashiwazaki-shi A001,09,,新潟県,柏崎市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-205-B001,柏崎市 B001,Kashiwazaki-shi B001,13,,新潟県,柏崎市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-A001,佐渡市 A001,Sado-shi A001,21,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-B001,佐渡市 B001,Sado-shi B001,22,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-D001,佐渡市 D001,Sado-shi D001,24,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-F001,佐渡市 F001,Sado-shi F001,26,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-G001,佐渡市 G001,Sado-shi G001,27,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,15-224-H001,佐渡市 H001,Sado-shi H001,28,,新潟県,佐渡市,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-C001,東京23区 C001,Tokyo 23-ku C001,05,,東京都,,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-D001,東京23区 D001,Tokyo 23-ku D001,05,,東京都,,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-L101,東京23区 L101,Tokyo 23-ku L101,24,,東京都,,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-N001,東京23区 N001,Tokyo 23-ku N001,14,,東京都,,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-O001,新宿区 O001,Shinjuku-ku O001,15,,東京都,新宿区,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-X001,葛飾区 X001,Katsushika-ku X001,15,,東京都,葛飾区,,,,,,,,,,,,,
+MANHOLE_CARD,,13-100-Y001,江戸川区 Y001,Edogawa-ku Y001,15,,東京都,江戸川区,,,,,,,,,,,,,
+MANHOLE_CARD,,13-219-A001,狛江市 A001,Komae-shi A001,06,,東京都,狛江市,,,,,,,,,,,,,
+MANHOLE_CARD,,13-219-B001,狛江市 B001,Komae-shi B001,15,,東京都,狛江市,,,,,,,,,,,,,
+GOSHUIN,,,豪徳寺,Gotokuji,,,東京都,世田谷区,,,,,,,,,,,,,

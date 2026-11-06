@@ -87,15 +87,9 @@ fun MoreScreen(snackbar: SnackbarHostState, onLogs: () -> Unit, vm: MoreViewMode
     val openCatalog = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
-            val msg = runCatching { vm.io.importCatalog(uri) }
-                .map {
-                    when {
-                        it.added + it.updated + it.unchanged == 0 -> context.getString(R.string.more_import_none)
-                        it.added + it.updated == 0 -> context.getString(R.string.more_import_same, it.unchanged, it.lines)
-                        else -> context.getString(R.string.more_import_done, it.added, it.updated, it.lines)
-                    }
-                }
-                .getOrElse { vm.log.e("Catalog", "Import failed", it); context.getString(R.string.more_import_failed, it.message ?: "") }
+            val r = runCatching { vm.io.importCatalog(uri) }
+            r.exceptionOrNull()?.let { vm.log.e("Catalog", "Import failed", it) }
+            val msg = catalogueMessage(context, r)
             scope.launch { snackbar.showSnackbar(msg) }
         }
     }
