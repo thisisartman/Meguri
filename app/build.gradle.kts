@@ -52,6 +52,8 @@ android {
             applicationIdSuffix = ".dev"
             versionNameSuffix = "-dev"
             manifestPlaceholders["appLabel"] = "Meguri (dev)"
+            // Also x86_64, so the map library runs natively on a laptop emulator instead of through ARM translation
+            ndk { abiFilters += "x86_64" }
         }
         release {
             isMinifyEnabled = true
