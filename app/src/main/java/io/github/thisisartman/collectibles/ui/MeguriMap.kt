@@ -63,6 +63,9 @@ fun MeguriMap(
     // A place whose screen position is reported as the camera moves, so a pin card can stay on its pin (#76)
     anchor: Pair<Double, Double>? = null,
     onAnchorScreen: (androidx.compose.ui.geometry.Offset?) -> Unit = {},
+    // A map inside a card on a solid page: drawn as an ordinary view, since the default surface sits behind the
+    // window and the page's background hid it completely (the profile page's map, 2026-11-07)
+    inCard: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -91,7 +94,7 @@ fun MeguriMap(
     val loadColor = androidx.compose.material3.MaterialTheme.colorScheme.background.toArgb()
     val mapView = remember {
         MapLibre.getInstance(context)
-        val options = org.maplibre.android.maps.MapLibreMapOptions.createFromAttributes(context).foregroundLoadColor(loadColor)
+        val options = org.maplibre.android.maps.MapLibreMapOptions.createFromAttributes(context).foregroundLoadColor(loadColor).textureMode(inCard)
         MapView(context, options).apply { setBackgroundColor(loadColor); onCreate(Bundle()) }
     }
     DisposableEffect(lifecycle) {

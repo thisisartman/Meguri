@@ -62,6 +62,8 @@ fun profileTotals(rows: List<ItemRow>, now: Long = System.currentTimeMillis()): 
 fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Composable () -> Unit, onBack: () -> Unit) {
     val rows by vm.rows.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
+    val lines by vm.lines.collectAsStateWithLifecycle()
+    val ja = isJapanese()
     val totals = remember(rows) { profileTotals(rows) }
     val pins = remember(rows) { rows.filter { it.collected }.mapNotNull { it.toPin() } }
 
@@ -92,7 +94,7 @@ fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Com
                 }
             } else {
                 Box(Modifier.fillMaxSize()) {
-                    MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null)
+                    MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null, inCard = true)
                     Surface(
                         Modifier.align(Alignment.BottomEnd).padding(10.dp).heightIn(min = 40.dp).clickable { nav.openMap(MapSection.COLLECTED) },
                         shape = RoundedCornerShape(20.dp), shadowElevation = 2.dp,
@@ -105,7 +107,8 @@ fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Com
 
         // 3. Progress for each collection, like My book but about you
         SectionTitle(stringResource(R.string.profile_collections))
-        summaries.forEach { s ->
+        // Collections you have started come first, then the rest, each in My book's order
+        summaries.sortedByDescending { it.collected > 0 }.forEach { s ->
             Surface(
                 Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth()
                     .clickable { if (s.lineId != null) nav.openLine(s.lineId) else nav.openBook() },
@@ -113,7 +116,9 @@ fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Com
             ) {
                 Column(Modifier.padding(16.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(s.title, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+                        // The same names as My book: "Manhole cards · Niigata", "Station stamps · Joetsu Line", "Goshuin"
+                        val lineName = lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
+                        Text(summaryTitle(s, lineName), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
                         Text(
                             if (s.total != null) "${s.collected} / ${s.total}" else "${s.collected}",
                             style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,

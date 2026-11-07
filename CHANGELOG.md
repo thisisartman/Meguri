@@ -12,6 +12,7 @@
 - Search: the sheet tucks away as soon as you tap search, and results show only in the dropdown.
 - Every Niigata manhole card is in the catalogue: 48 cards (31 new), each with its hand-out place, address, phone and hours. Cards you already had now show where they're handed out too. Shibata D has no confirmed place yet.
 - Alerts have two buttons, "Collect" and "Dismiss". "Collect" marks it collected and opens its page, where you can add photos or take it back.
+- Fixed before release: the map on the "You" page showed nothing and collection names showed as codes; a pin card for a pin under the search bar covered the bar.
 - Testing: all 26 phone-level tests now run and pass on the main laptop's emulator, including the new photo tests and the database upgrade tests.
 - Getting ready to share photos into Meguri (#80): photos taken at one place are grouped together and matched to the nearest item. Not in the app's screens yet; the design round on how several items are grouped is out.
 - Tapping a pin opens a compact one-line card that grows out of the pin and stays on it as the map moves (#76): the kind, name and distance, then Directions and Collect as icons. Tap the name for the full page.

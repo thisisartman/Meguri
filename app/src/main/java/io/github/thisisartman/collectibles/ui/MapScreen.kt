@@ -143,7 +143,8 @@ fun PinPopup(
         val pin = at ?: return@BoxWithConstraints
         val left = (pin.x - size.width / 2f).coerceIn(margin, (width - size.width - margin).coerceAtLeast(margin))
         val above = pin.y - size.height - gap >= top
-        val y = if (above) pin.y - size.height - gap else pin.y + gap
+        // A pin under the search bar puts its card just below the bar, never over it
+        val y = (if (above) pin.y - size.height - gap else pin.y + gap).coerceAtLeast(top)
         val pivot = androidx.compose.ui.graphics.TransformOrigin(
             if (size.width > 0) ((pin.x - left) / size.width).coerceIn(0f, 1f) else 0.5f, if (above) 1f else 0f,
         )
