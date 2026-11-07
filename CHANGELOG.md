@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-07: 0.3.0-beta.4
+- Sent to the owner on Telegram, to install over the current app after a backup.
 - The offline map now covers all of Niigata (with Sado), Saitama and Tokyo prefectures.
 - Restoring onto a new phone no longer risks linking a find to another picture that happens to have the same gallery number; restored pictures appear in the gallery only once fully written.
 - A test now checks that moving to the new database version keeps every find, including ones marked "had before the app".
