@@ -425,4 +425,21 @@
         <item quantity="one">Load %d region</item>
         <item quantity="other">Load %d regions</item>
     </plurals>
+    <string name="onb_have_title">What do you already have?</string>
+    <string name="onb_have_sub">Search, tap a place, tick what you have there. Ticked ones are added as "had before the app"; add photos later.</string>
+    <string name="onb_have_search">Search stations, cards, places</string>
+    <string name="onb_have_done">Done</string>
+    <string name="onb_have_skip">Skip for now</string>
+    <string name="onb_ok">OK</string>
+    <plurals name="onb_added">
+        <item quantity="one">%d added</item>
+        <item quantity="other">%d added</item>
+    </plurals>
+    <plurals name="onb_finished_title">
+        <item quantity="one">%d added to your profile</item>
+        <item quantity="other">%d added to your profile</item>
+    </plurals>
+    <string name="onb_finished_how">To add photos or details, open your profile with the round button at the top right.</string>
+    <string name="onb_finished_profile">Go to profile</string>
+    <string name="onb_finished_done">Done</string>
 </resources>

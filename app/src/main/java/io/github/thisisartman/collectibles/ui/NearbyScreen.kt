@@ -179,7 +179,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val onboarding = rememberOnboardingState()
     val ctxOnb = androidx.compose.ui.platform.LocalContext.current
     val prefectures = remember { PrefectureAsset.all(ctxOnb) }
-    val peek = if (dropdownShown) 0.dp else if (noCatalogue) onboardingPeek(onboarding) else restingPeek.coerceIn(220.dp, 480.dp)
+    // The picker and closing sheet carry on after the catalogue has loaded (#81 O3)
+    val inOnboarding = noCatalogue || onboarding.afterLoad
+    val peek = if (dropdownShown) 0.dp else if (inOnboarding) onboardingPeek(onboarding) else restingPeek.coerceIn(220.dp, 480.dp)
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -190,6 +192,26 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         sheetContainerColor = MaterialTheme.colorScheme.surface,
         sheetContent = {
             Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
+                if (onboarding.step == OnboardingStep.HAVE) {
+                    val ctxPick = androidx.compose.ui.platform.LocalContext.current
+                    OnboardingPicker(
+                        onboarding, rows, { vm.distanceTo(it) },
+                        onDone = { ids ->
+                            if (ids.isEmpty()) { onboarding.step = OnboardingStep.START; onboarding.already = false }
+                            else vm.markBeforeApp(ids.toSet()) { n ->
+                                tick(); toastAdded(ctxPick, n)
+                                onboarding.step = OnboardingStep.FINISHED
+                            }
+                        },
+                        modifier = Modifier.height(peek - 40.dp).padding(horizontal = 16.dp),
+                    )
+                    return@Column
+                }
+                if (onboarding.step == OnboardingStep.FINISHED) {
+                    val leave = { onboarding.step = OnboardingStep.START; onboarding.already = false }
+                    OnboardingFinished(onboarding.added.size, onProfile = { leave(); nav.openProfile() }, onDone = leave)
+                    return@Column
+                }
                 if (noCatalogue) {
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
                     val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
@@ -197,8 +219,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         loadCounts = { more.io.bundledPrefectures() },
                         onLoad = { regions -> more.io.importBundled(regions) },
-                        // Already have some: Collection check ticks them off until the picker is built (#81 O3)
-                        onFinished = { already -> if (already) nav.navigate("check") },
+                        // Already have some: on to the picker of what you have (#81 O3)
+                        onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
                         onLoadFile = { nav.openMore() },
                         onPermissionsAnswered = { vm.refreshPosition() },
                         // The sheet's own height, less its handle: the region list scrolls and Load stays in view

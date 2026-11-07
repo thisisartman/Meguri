@@ -422,4 +422,19 @@
     <plurals name="onb_load">
         <item quantity="other">%d地域を読み込む</item>
     </plurals>
+    <string name="onb_have_title">もう持っているものは？</string>
+    <string name="onb_have_sub">検索して場所をタップし、持っているものにチェック。「アプリ以前に取得」として追加され、写真はあとで追加できます。</string>
+    <string name="onb_have_search">駅・カード・場所を検索</string>
+    <string name="onb_have_done">完了</string>
+    <string name="onb_have_skip">今はスキップ</string>
+    <string name="onb_ok">OK</string>
+    <plurals name="onb_added">
+        <item quantity="other">%d件追加</item>
+    </plurals>
+    <plurals name="onb_finished_title">
+        <item quantity="other">マイページに%d件追加しました</item>
+    </plurals>
+    <string name="onb_finished_how">写真や詳細を追加するには、右上の丸いボタンからマイページを開きます。</string>
+    <string name="onb_finished_profile">マイページへ</string>
+    <string name="onb_finished_done">完了</string>
 </resources>

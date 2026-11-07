@@ -49,7 +49,7 @@ import io.github.thisisartman.collectibles.data.Prefectures
 import kotlinx.coroutines.launch
 
 /** Where the first-open onboarding is (#81, docs/PLAN-onboarding.md). It lives in the Nearby sheet, over the map. */
-enum class OnboardingStep { START, PERMISSIONS, ASKING, REGIONS, LOADING }
+enum class OnboardingStep { START, PERMISSIONS, ASKING, REGIONS, LOADING, HAVE, FINISHED }
 
 /**
  * The onboarding's state, hoisted so Nearby can size the sheet and shade the chosen prefectures on the map.
@@ -59,6 +59,11 @@ class OnboardingState {
     var step by mutableStateOf(OnboardingStep.START)
     var already by mutableStateOf(false)
     var chosen by mutableStateOf<Set<String>>(emptySet())
+    /** Items ticked in the picker, in the order added (the stacked circles above Done). */
+    var added by mutableStateOf<List<String>>(emptyList())
+
+    /** Still showing after the catalogue has loaded: the picker and the closing sheet. */
+    val afterLoad: Boolean get() = step == OnboardingStep.HAVE || step == OnboardingStep.FINISHED
 }
 
 @Composable
@@ -73,6 +78,9 @@ fun onboardingPeek(state: OnboardingState): Dp {
         OnboardingStep.PERMISSIONS -> (screen * 0.7f).coerceAtMost(600.dp)
         OnboardingStep.ASKING, OnboardingStep.LOADING -> 260.dp
         OnboardingStep.REGIONS -> screen * 0.55f
+        // The picker takes the screen (owner): it's a full search; pull it down to see the map
+        OnboardingStep.HAVE -> screen * 0.92f
+        OnboardingStep.FINISHED -> 380.dp
     }
 }
 
@@ -174,6 +182,8 @@ fun OnboardingSheet(
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 ) { Text(androidx.compose.ui.res.pluralStringResource(R.plurals.onb_load, state.chosen.size, state.chosen.size)) }
             }
+            // The picker and the closing sheet are drawn by Nearby, which has the rows and the profile route
+            OnboardingStep.HAVE, OnboardingStep.FINISHED -> {}
             OnboardingStep.LOADING -> Row(verticalAlignment = Alignment.CenterVertically) {
                 CircularProgressIndicator(Modifier.size(24.dp))
                 Spacer(Modifier.width(12.dp))
