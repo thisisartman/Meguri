@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-07: 0.3.0-beta.5
+## 2026-11-07: 0.3.0-beta.5 (sent to the owner on Telegram, 15:10)
 - "No stamp here": mark a station (or any place) where there was nothing to get. It stops showing as "still to get" and stops counting against its line, and "There is one" takes it back.
 - Choose which photo stands for an entry: tap a photo and "Use as this entry's picture".
 - Adding a photo: clearer full-width buttons, the camera first.
