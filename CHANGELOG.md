@@ -10,6 +10,7 @@
 - Photos: pick a photo's kind from a dropdown, "Use as display picture", "Remove photo"; the Photo button opens a list with an icon for each kind.
 - Sorting shows "near me" for Nearest and A over Z for A to Z; the hint is two lines.
 - Search: the sheet tucks away as soon as you tap search, and results show only in the dropdown.
+- Every Niigata manhole card is in the catalogue: 48 cards (31 new), each with its hand-out place, address, phone and hours. Cards you already had now show where they're handed out too. Shibata D has no confirmed place yet.
 
 ## 2026-11-07: 0.3.0-beta.5 (sent to the owner on Telegram, 15:10)
 - "No stamp here": mark a station (or any place) where there was nothing to get. It stops showing as "still to get" and stops counting against its line, and "There is one" takes it back.

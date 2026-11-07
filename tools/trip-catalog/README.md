@@ -18,6 +18,9 @@ python tools/trip-catalog/make_catalog.py tools/trip-catalog/joetsu.json tools/t
 - Niigata prefecture A: http://www.niigata-gesuikou.or.jp/manhole2017
 - Hand-out building positions: OpenStreetMap.
 
+## All Niigata cards (#65, 2026-11-07)
+`add_niigata_cards.py` edits the asset CSV in place (it is the source since phase 5 added dam rows to it directly): it adds the 31 Niigata cards that were missing and fills hand-out places into the owner's cards that had none, keyed by code. Source: Eki kara Manhole's Niigata list and its hand-out map feed (`/ext/manholecard/lmap/getJSON.cgi`), snapshot in `sources/`. Shibata D (15-206-D001, series 28) has no place in the feed or on the city's pages yet. Saitama and Tokyo next, the same way (`search.cgi?m=11`, `m=13`).
+
 ## Cards the owner already has
 Read from the owner's video of their cards (2026-11-03): the coordinates printed on each card, matched to https://ekikaramanhole.whitebeach.org/ext/manholecard/search.cgi?m=15 and ?m=13.
 
