@@ -156,9 +156,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     LaunchedEffect(request) {
         when (val r = request ?: return@LaunchedEffect) {
             is AppRequest.OpenItem -> { AlertNotifierCancel.cancel(context, r.itemId); nav.openItem(r.itemId) }
-            is AppRequest.Photo -> {
+            is AppRequest.Collect -> {
                 AlertNotifierCancel.cancel(context, r.itemId)
-                vm.logFromAlert(r.itemId, japanese) { id -> photo.capture(id) }
+                vm.logFromAlert(r.itemId, japanese, r.fix) { nav.openItem(r.itemId) }
             }
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
         }

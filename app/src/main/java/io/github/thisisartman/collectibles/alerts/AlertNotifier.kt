@@ -69,17 +69,10 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
         val open = PendingIntent.getActivity(
             context, id, MainActivity.openItemIntent(context, item.id), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val photo = PendingIntent.getActivity(
-            context, id + 1, MainActivity.photoIntent(context, item.id), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        // Collect opens the item page (owner, 2026-11-07: photos are added there, so no Photo button)
+        val collect = PendingIntent.getActivity(
+            context, id + 1, MainActivity.collectIntent(context, item.id, fix), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
         )
-        val done = broadcast(AlertReceiver.ACTION_DONE, id + 2) {
-            putExtra(AlertReceiver.EXTRA_ITEM, item.id)
-            if (fix != null) {
-                putExtra(AlertReceiver.EXTRA_LAT, fix.lat); putExtra(AlertReceiver.EXTRA_LNG, fix.lng)
-                putExtra(AlertReceiver.EXTRA_TIME, fix.timeMs)
-                fix.accuracyM?.let { putExtra(AlertReceiver.EXTRA_ACC, it) }
-            }
-        }
         val dismiss = broadcast(AlertReceiver.ACTION_DISMISS, id + 3) { putExtra(AlertReceiver.EXTRA_ITEM, item.id) }
         val where = listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.hoursText).joinToString(" · ")
         val text = if (meters < HERE_M) context.getString(R.string.alert_text_here, typeLabel(item.type))
@@ -93,14 +86,13 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(open)
             .setAutoCancel(true)
-            .addAction(0, context.getString(R.string.alert_done), done)
-            .addAction(0, context.getString(R.string.photo), photo)
+            .addAction(0, context.getString(R.string.alert_done), collect)
             .addAction(0, context.getString(R.string.alert_dismiss), dismiss)
             .build()
         post(id, n)
     }
 
-    /** Replaces the alert after Done: what was logged, with Undo for a while (M4). */
+    /** Replaces the alert after Done: what was logged, with Undo for a while (M4). Only reached from alerts posted by builds before 0.3.0-beta.6. */
     fun notifyLogged(item: Item, findId: String) {
         if (!canPost()) return
         val id = notificationId(item.id)

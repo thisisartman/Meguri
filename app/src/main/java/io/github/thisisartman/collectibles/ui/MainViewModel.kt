@@ -133,10 +133,10 @@ class MainViewModel @Inject constructor(
     }
 
     /** The Photo action on an alert: log the find, then open the camera for it. */
-    fun logFromAlert(itemId: String, japanese: Boolean, onLogged: (String) -> Unit) {
+    fun logFromAlert(itemId: String, japanese: Boolean, fix: io.github.thisisartman.collectibles.location.Fix?, onLogged: (String) -> Unit) {
         viewModelScope.launch {
             val row = repo.itemRowOnce(itemId) ?: return@launch
-            val id = repo.logFind(itemId, Via.NOTIFICATION)
+            val id = repo.logFindAt(itemId, Via.NOTIFICATION, fix)
             emit(Logged(id, if (japanese) row.item.nameJa else row.item.nameRomaji ?: row.item.nameJa, System.currentTimeMillis()))
             onLogged(id)
         }

@@ -11,6 +11,7 @@
 - Sorting shows "near me" for Nearest and A over Z for A to Z; the hint is two lines.
 - Search: the sheet tucks away as soon as you tap search, and results show only in the dropdown.
 - Every Niigata manhole card is in the catalogue: 48 cards (31 new), each with its hand-out place, address, phone and hours. Cards you already had now show where they're handed out too. Shibata D has no confirmed place yet.
+- Alerts have two buttons, "Collect" and "Dismiss". "Collect" marks it collected and opens its page, where you can add photos or take it back.
 - Research, not in the app yet: photo copies in WebP come out 14–30% smaller than JPEG on real card photos, with text just as readable. Card pictures are GKP's and the cities', so they can't ship inside the app (details in PROGRESS.md).
 
 ## 2026-11-07: 0.3.0-beta.5 (sent to the owner on Telegram, 15:10)

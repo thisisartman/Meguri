@@ -39,14 +39,25 @@ class MainActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_OPEN_ITEM = "open_item"
-        const val EXTRA_PHOTO_ITEM = "photo_item"
+        const val EXTRA_COLLECT_ITEM = "collect_item"
+        const val EXTRA_FIX_LAT = "fix_lat"
+        const val EXTRA_FIX_LNG = "fix_lng"
+        const val EXTRA_FIX_ACC = "fix_acc"
+        const val EXTRA_FIX_TIME = "fix_time"
         const val EXTRA_START_TRIP = "start_trip"
 
         fun launchIntent(context: Context) = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
         fun openItemIntent(context: Context, itemId: String) = launchIntent(context).putExtra(EXTRA_OPEN_ITEM, itemId)
-        fun photoIntent(context: Context, itemId: String) = launchIntent(context).putExtra(EXTRA_PHOTO_ITEM, itemId)
+        /** The alert's Collect button: logs the find at the position that set off the alert, then opens the item. */
+        fun collectIntent(context: Context, itemId: String, fix: io.github.thisisartman.collectibles.location.Fix?) =
+            launchIntent(context).putExtra(EXTRA_COLLECT_ITEM, itemId).apply {
+                if (fix != null) {
+                    putExtra(EXTRA_FIX_LAT, fix.lat); putExtra(EXTRA_FIX_LNG, fix.lng); putExtra(EXTRA_FIX_TIME, fix.timeMs)
+                    fix.accuracyM?.let { putExtra(EXTRA_FIX_ACC, it) }
+                }
+            }
         fun startTripIntent(context: Context) = launchIntent(context).putExtra(EXTRA_START_TRIP, true)
     }
 }
