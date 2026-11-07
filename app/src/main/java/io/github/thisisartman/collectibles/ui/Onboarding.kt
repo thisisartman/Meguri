@@ -69,18 +69,21 @@ class OnboardingState {
 @Composable
 fun rememberOnboardingState() = remember { OnboardingState() }
 
-/** How tall the sheet is for each step: just enough for what it says (owner: the sheet goes up and down to fit). */
+/**
+ * The most the sheet may cover for each step. It actually sits at its content's measured height, up to this (owner,
+ * 2026-11-08: the sheet goes up and down with what it holds and snaps there, no empty space under the buttons).
+ */
 @Composable
 fun onboardingPeek(state: OnboardingState): Dp {
     val screen = LocalConfiguration.current.screenHeightDp.dp
     return when (state.step) {
-        OnboardingStep.START -> 360.dp
-        OnboardingStep.PERMISSIONS -> (screen * 0.7f).coerceAtMost(600.dp)
-        OnboardingStep.ASKING, OnboardingStep.LOADING -> 260.dp
-        OnboardingStep.REGIONS -> screen * 0.55f
+        OnboardingStep.START -> screen * 0.6f
+        OnboardingStep.PERMISSIONS -> screen * 0.75f
+        OnboardingStep.ASKING, OnboardingStep.LOADING -> screen * 0.4f
+        OnboardingStep.REGIONS -> screen * 0.6f
         // The picker takes the screen (owner): it's a full search; pull it down to see the map
         OnboardingStep.HAVE -> screen * 0.92f
-        OnboardingStep.FINISHED -> 380.dp
+        OnboardingStep.FINISHED -> screen * 0.5f
     }
 }
 

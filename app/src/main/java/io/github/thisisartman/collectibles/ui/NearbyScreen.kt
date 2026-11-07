@@ -181,7 +181,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val prefectures = remember { PrefectureAsset.all(ctxOnb) }
     // The picker and closing sheet carry on after the catalogue has loaded (#81 O3)
     val inOnboarding = noCatalogue || onboarding.afterLoad
-    val peek = if (dropdownShown) 0.dp else if (inOnboarding) onboardingPeek(onboarding) else restingPeek.coerceIn(220.dp, 480.dp)
+    // Onboarding: the sheet sits at its content's height (measured), up to the step's cap, and snaps there
+    val onbMax = onboardingPeek(onboarding)
+    var onbContentPx by remember(onboarding.step) { mutableIntStateOf(0) }
+    val onbPeek = if (onbContentPx > 0 && onboarding.step != OnboardingStep.HAVE) with(density) { (handlePx + onbContentPx).toDp() } + 16.dp else onbMax
+    val peek = if (dropdownShown) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -191,7 +195,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         },
         sheetContainerColor = MaterialTheme.colorScheme.surface,
         sheetContent = {
-            Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
+            Column(Modifier.fillMaxWidth().heightIn(min = if (inOnboarding) 0.dp else 300.dp)) {
                 if (onboarding.step == OnboardingStep.HAVE) {
                     val ctxPick = androidx.compose.ui.platform.LocalContext.current
                     OnboardingPicker(
@@ -209,7 +213,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 if (onboarding.step == OnboardingStep.FINISHED) {
                     val leave = { onboarding.step = OnboardingStep.START; onboarding.already = false }
-                    OnboardingFinished(onboarding.added.size, onProfile = { leave(); nav.openProfile() }, onDone = leave)
+                    Box(Modifier.onSizeChanged { onbContentPx = it.height }) {
+                        OnboardingFinished(onboarding.added.size, onProfile = { leave(); nav.openProfile() }, onDone = leave)
+                    }
                     return@Column
                 }
                 if (noCatalogue) {
@@ -223,8 +229,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
                         onLoadFile = { nav.openMore() },
                         onPermissionsAnswered = { vm.refreshPosition() },
-                        // The sheet's own height, less its handle: the region list scrolls and Load stays in view
-                        modifier = Modifier.height(peek - 40.dp),
+                        // Measured for the sheet's height; capped, so the region list scrolls and Load stays in view
+                        modifier = Modifier.heightIn(max = onbMax - 40.dp).onSizeChanged { onbContentPx = it.height },
                     )
                     return@Column
                 }
