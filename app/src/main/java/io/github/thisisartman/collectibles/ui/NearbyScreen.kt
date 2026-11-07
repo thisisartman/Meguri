@@ -155,7 +155,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 
     val pickedRow = rows.firstOrNull { it.item.id == picked }
 
-    val noCatalogue = rows.none { it.item.origin != Origin.USER }
+    val loaded by vm.rowsLoaded.collectAsStateWithLifecycle()
+    val tick = rememberTick()
+    // Only once the database has answered: an empty list while it opens is not "no catalogue" (#78)
+    val noCatalogue = loaded && rows.none { it.item.origin != Origin.USER }
     val sheet = rememberBottomSheetScaffoldState()
     // The resting sheet shows the header and one whole row of tiles (name lines and distance too),
     // measured, so it fits at any text size and tile size. 300 dp until the first measure.
@@ -315,7 +318,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 RoundTile(
                                     r, tile, r.item.displayName(ja),
                                     if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
-                                    onOpen = { nav.openItem(r.item.id) },
+                                    onOpen = { tick(); nav.openItem(r.item.id) },
                                 )
                             }
                         }
@@ -328,7 +331,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             var recenter by remember { mutableIntStateOf(0) }
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
-                onPinTap = { picked = it }, onMapTap = { picked = null; focus.clearFocus(); listOpen = false },
+                onPinTap = { tick(); picked = it }, onMapTap = { picked = null; focus.clearFocus(); listOpen = false },
                 recenter = recenter,
                 fitTick = fitTick,
                 memoryKey = "nearby",

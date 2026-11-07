@@ -88,6 +88,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             .map { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
         val meters = vm.distanceTo(r)
         val context = LocalContext.current
+        val tick = rememberTick()
         // Photos go on the latest collection; with none yet, adding a photo collects the item first
         val target = finds.firstOrNull()?.find?.id
         val photoActions = remember(target, r.item.id) {
@@ -128,7 +129,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             }
             item { Actions(item, meters) }
             // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
-            if (!r.collected) item { NoneHereRow(item, r.noneHere, onSet = { vm.setNoneHere(item.id, it) }) }
+            if (!r.collected) item { NoneHereRow(item, r.noneHere, onSet = { tick(); vm.setNoneHere(item.id, it) }) }
             // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
             if (hasFacts(context, item)) {
                 item { SectionTitle(stringResource(R.string.item_where)) }
@@ -175,8 +176,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 Spacer(Modifier.width(6.dp))
                 Text(collectLabel)
             }
-            if (r.collected) InkOutlinedButton(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
-            else Button(onClick = { vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
+            if (r.collected) InkOutlinedButton(onClick = { tick(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
+            else Button(onClick = { tick(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
         }
         // While the gallery is open the dialog stays hidden; the pick result clears menuKind
         menuKind?.let { k ->

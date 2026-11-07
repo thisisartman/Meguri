@@ -90,6 +90,10 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val resolver = context.contentResolver
     val snackbar = remember { SnackbarHostState() }
     var showLog by rememberSaveable { mutableStateOf(false) }
+    // First open after an update: what changed (#77)
+    val appContext = androidx.compose.ui.platform.LocalContext.current
+    var whatsNew by rememberSaveable { mutableStateOf(WhatsNew.shouldShow(appContext)) }
+    if (whatsNew) WhatsNewDialog(onDismiss = { WhatsNew.markSeen(appContext); whatsNew = false })
     var bookMarking by remember { mutableStateOf(false) }
 
     // Pending camera capture "findId|uri", kept across process death while the camera is open (FR-9b).

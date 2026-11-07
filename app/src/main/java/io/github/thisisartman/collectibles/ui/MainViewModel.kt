@@ -71,6 +71,9 @@ class MainViewModel @Inject constructor(
 ) : ViewModel() {
 
     val rows: StateFlow<List<ItemRow>> = repo.itemRows().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
+    /** False until the database has answered once, so an empty list at start isn't read as "no catalogue" (#78). */
+    val rowsLoaded: StateFlow<Boolean> = repo.itemRows().map { true }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
     val lines: StateFlow<List<Line>> = repo.lines().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val lineStations: StateFlow<List<LineStation>> = repo.lineStations().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

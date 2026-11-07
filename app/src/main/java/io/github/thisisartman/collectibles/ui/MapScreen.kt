@@ -68,13 +68,14 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
     val here by vm.here.collectAsStateWithLifecycle()
     val shown = remember(rows, section) { rows.filter { it.item.type in section.types } }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
+    val tick = rememberTick()
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     val row = shown.firstOrNull { it.item.id == picked }
 
     Box(Modifier.fillMaxSize()) {
         MeguriMap(
             pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
-            onPinTap = { picked = it }, onMapTap = { picked = null },
+            onPinTap = { tick(); picked = it }, onMapTap = { picked = null },
         )
         Surface(
             Modifier.statusBarsPadding().padding(12.dp),

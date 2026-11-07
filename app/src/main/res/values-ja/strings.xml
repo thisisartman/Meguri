@@ -167,17 +167,17 @@
 
     <!-- Alerts (M4) -->
     <string name="alerts_title">通知</string>
-    <string name="trip_title">トリップモード</string>
+    <string name="trip_title">近接モード</string>
     <string name="trip_sub_off">当日23:59まで数分ごとに現在地を確認し、未取得のものが近くにあると知らせます。電車や散歩のときに。</string>
     <string name="trip_sub_on">%1$sまでオン。ここか通知からオフにできます。</string>
-    <string name="trip_needs_location">トリップモードには位置情報の許可が必要です。</string>
+    <string name="trip_needs_location">近接モードには位置情報の許可が必要です。</string>
     <string name="bg_title">アプリを閉じていても通知</string>
     <string name="bg_sub_off">Googleの位置情報サービスを使うため、電池の消費は少なめです。位置情報を「常に許可」にする必要があります。</string>
     <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
     <string name="bg_sub_needs">位置情報の「常に許可」が必要です。タップして許可してください。</string>
-    <string name="bg_sub_no_play">この端末では使えません(Google Play開発者サービスがありません)。トリップモードを使ってください。</string>
+    <string name="bg_sub_no_play">この端末では使えません(Google Play開発者サービスがありません)。近接モードを使ってください。</string>
     <string name="bg_dialog_title">位置情報を常に許可しますか?</string>
     <string name="bg_dialog_text">別の画面で設定します。「常に許可」を選ぶと、アプリを閉じていても通知が届きます。位置情報が外部に送られることはありません。</string>
     <string name="bg_dialog_go">続ける</string>
@@ -191,14 +191,14 @@
     <string name="notif_off">Meguriの通知がオフです。タップしてオンにしてください。</string>
     <string name="alerts_channel">未取得のものが近く</string>
     <string name="alerts_channel_sub">まだ持っていないものの近くに来たとき</string>
-    <string name="trip_channel">トリップモード</string>
-    <string name="trip_channel_sub">トリップモードがオンの間に表示</string>
+    <string name="trip_channel">近接モード</string>
+    <string name="trip_channel_sub">近接モードがオンの間に表示</string>
     <string name="alert_text">%1$s・あと%2$s</string>
     <string name="alert_text_here">%1$s・ここです</string>
     <string name="alert_done">集める</string>
     <string name="alert_dismiss">閉じる</string>
     <string name="alert_logged">%1$sを集めました</string>
-    <string name="trip_on_until">トリップモード %1$sまで</string>
+    <string name="trip_on_until">近接モード %1$sまで</string>
     <string name="trip_checking">近くの未取得を確認中</string>
     <string name="trip_nearest">最寄り：%1$s・%2$s</string>
     <string name="trip_stop">停止</string>
@@ -331,7 +331,7 @@
     <string name="trip_if_off">降りれば</string>
     <string name="trip_start">トリップ開始</string>
     <string name="trip_stop_trip">トリップ終了</string>
-    <string name="trip_on_note">トリップモードは%1$sまでオン：次に降りる駅と近くのものを知らせます。</string>
+    <string name="trip_on_note">近接モードは%1$sまでオン：次に降りる駅と近くのものを知らせます。</string>
     <string name="trip_already">行った</string>
     <string name="trip_already_title">行ったトリップ</string>
     <string name="trip_already_hint">この経路で集めたものにチェックを付けます。上の日付で記録されます。</string>
