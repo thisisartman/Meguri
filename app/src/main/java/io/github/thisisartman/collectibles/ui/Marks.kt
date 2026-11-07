@@ -122,7 +122,7 @@ fun PhotoThumb(uri: String, size: Dp, modifier: Modifier = Modifier) {
     var bmp by remember(uri) { mutableStateOf<Bitmap?>(null) }
     LaunchedEffect(uri) {
         bmp = withContext(Dispatchers.IO) {
-            runCatching { context.contentResolver.loadThumbnail(Uri.parse(uri), Size(256, 256), null) }.getOrNull()
+            io.github.thisisartman.collectibles.photo.PhotoStore.thumbnail(context, uri, 256)
         }
     }
     val shape = RoundedCornerShape(size * 0.22f)

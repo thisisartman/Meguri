@@ -21,6 +21,7 @@ class CollectiblesApp : Application() {
     @Inject lateinit var notifier: io.github.thisisartman.collectibles.alerts.AlertNotifier
     @Inject lateinit var geofences: io.github.thisisartman.collectibles.alerts.Geofences
     @Inject lateinit var catalogue: io.github.thisisartman.collectibles.data.CatalogAndBackup
+    @Inject lateinit var photoCopier: io.github.thisisartman.collectibles.photo.PhotoCopier
 
     override fun onCreate() {
         super.onCreate()
@@ -36,6 +37,7 @@ class CollectiblesApp : Application() {
         geofences.refreshInBackground()
         CoroutineScope(Dispatchers.IO).launch {
             runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
+            runCatching { photoCopier.copyAll() }.onFailure { log.e("Photo", "Copying photos into the app failed", it) }
             runCatching { catalogue.refreshBundledIfChanged() }.onFailure { log.e("Catalog", "Bundled refresh failed", it) }
         }
     }

@@ -97,7 +97,7 @@
     <string name="item_on_lines">%1$s</string>
     <string name="item_remove_find">削除</string>
     <string name="item_remove_find_title">この取得を削除しますか？</string>
-    <string name="item_remove_find_text">%1$sの取得を削除します。ほかになければ未取得に戻ります。写真はギャラリーに残ります。</string>
+    <string name="item_remove_find_text">%1$sの取得を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
     <string name="line_nearest">最寄りの未取得：%2$s・%1$s</string>
 
     <string name="log_title">記録する</string>
@@ -121,7 +121,7 @@
     <string name="more_japanese">日本語</string>
     <string name="more_backup_section">データ</string>
     <string name="more_backup">今すぐバックアップ</string>
-    <string name="more_backup_sub">すべての記録を選んだファイルに保存します。写真はギャラリーに残ります。</string>
+    <string name="more_backup_sub">すべての記録を選んだファイルに保存します（写真は含みません）。写真も含めるには「写真ごとバックアップ」を使います。</string>
     <string name="more_backup_done">バックアップ完了：%1$s</string>
     <string name="more_backup_done_named">%1$s に保存しました：%2$s</string>
     <string name="more_backup_failed">バックアップを保存できませんでした</string>
@@ -242,7 +242,7 @@
     <string name="photo_pick">ギャラリーから選ぶ</string>
     <string name="photo_edit_title">この写真</string>
     <string name="photo_remove">写真を削除</string>
-    <string name="photo_remove_note">外すだけで、写真はギャラリーに残ります。</string>
+    <string name="photo_remove_note">Meguri内の写真を削除します。カメラで撮った写真はギャラリーに残ります。</string>
     <string name="photo_done">完了</string>
     <string name="a11y_photo_kind">写真：%1$s。タップで変更・削除</string>
     <string name="menu_settings">設定</string>
@@ -304,7 +304,7 @@
     <string name="type_dam">ダムカード</string>
     <string name="collection_name_taken">同じ名前のコレクションがすでにあります。</string>
     <string name="more_backup_photos">写真ごとバックアップ</string>
-    <string name="more_backup_photos_sub">新しい端末へ移るとき用：写真もすべて含めます。新しい端末で復元すると写真がギャラリーに戻ります。</string>
+    <string name="more_backup_photos_sub">新しい端末へ移るとき用：写真もすべて含めます。新しい端末で復元すると写真がMeguriに戻ります。</string>
     <string name="menu_trip">トリップ</string>
     <string name="trip_screen">トリップ</string>
     <string name="trip_from">出発</string>

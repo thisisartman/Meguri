@@ -251,7 +251,8 @@ class BackupRestore @Inject constructor(
             },
         ) ?: error("Could not create the safety copy in Downloads")
         try {
-            resolver.openOutputStream(uri, "wt")!!.use { backup.writeBackup(it) }
+            // With photos: a restore replaces the photo rows, and their old copies are cleared once nothing points at them
+            resolver.openOutputStream(uri, "wt")!!.use { backup.writeBackup(it, withPhotos = true) }
             discard(inspect(uri))
         } catch (e: Exception) {
             runCatching { resolver.delete(uri, null, null) }
@@ -279,6 +280,8 @@ class BackupRestore @Inject constructor(
             val base = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
             db.withTransaction {
                 dao.allPhotos().forEach { p ->
+                    // Its own copy is already here (#79): nothing to find in the gallery
+                    if (io.github.thisisartman.collectibles.photo.PhotoStore.exists(context, p.contentUri)) { found++; return@forEach }
                     val m = PhotoMatcher.match(p, media)
                     if (m != null) {
                         dao.setPhotoLink(p.id, ContentUris.withAppendedId(base, m.id).toString(), m.id, false)
@@ -296,35 +299,20 @@ class BackupRestore @Inject constructor(
     }
 
     /**
-     * For each restored photo whose picture this phone can't open, writes the copy carried in the backup into the
-     * gallery (Pictures/Meguri, the app's own entries, so no gallery permission is needed) and points the photo at
-     * it. Pictures the phone already has are left alone, so a restore on the same phone adds no duplicates.
-     * Returns how many photos now have a working picture from the bundle or were already fine.
+     * For each restored photo whose picture this phone can't open, makes Meguri's own copy (#79) from the one carried
+     * in the backup and points the photo at it. A photo whose copy or gallery picture is already here is left alone,
+     * so a restore on the same phone adds nothing. Backups from before 0.3.0-beta.6 carry the gallery originals,
+     * which are resized to the app's WebP copy on the way in. Returns how many photos now have a working picture.
      */
     private suspend fun restoreBundledPhotos(dir: File): Int {
         if (!dir.isDirectory) return 0
-        val resolver = context.contentResolver
         var ok = 0
         for (p in dao.allPhotos()) {
             // On a new phone the same address can be someone else's picture: keep it only if it is this photo
             if (samePicture(p)) { ok++; continue }
             val file = File(dir, p.id).takeIf { it.isFile } ?: continue
-            val values = android.content.ContentValues().apply {
-                put(MediaStore.Images.Media.DISPLAY_NAME, p.displayName ?: "meguri-${p.id}.jpg")
-                put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
-                put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Meguri")
-                // Hidden until fully written, so a crash mid-copy leaves no broken picture in the gallery
-                put(MediaStore.Images.Media.IS_PENDING, 1)
-            }
-            val uri = runCatching { resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values) }.getOrNull() ?: continue
-            val written = runCatching { resolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }; true }.getOrDefault(false)
-            if (written) {
-                resolver.update(uri, android.content.ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
-                dao.setPhotoLink(p.id, uri.toString(), ContentUris.parseId(uri), false)
-                ok++
-            } else {
-                resolver.delete(uri, null, null)
-            }
+            val uri = runCatching { io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, file, p.id) }.getOrNull()
+            if (uri != null) { dao.setPhotoUri(p.id, uri); ok++ }
         }
         log.i("Restore", "Photos from the backup: $ok of ${dao.photoTotal()} now open")
         return ok
@@ -335,6 +323,8 @@ class BackupRestore @Inject constructor(
      * fingerprint where both are known (MediaStore can report size 0 for a fresh picture, which counts as unknown).
      */
     private fun samePicture(p: Photo): Boolean {
+        // Meguri's own copy is named by the photo's id, so if it is here it is this photo
+        if (io.github.thisisartman.collectibles.photo.PhotoStore.isApp(p.contentUri)) return io.github.thisisartman.collectibles.photo.PhotoStore.exists(context, p.contentUri)
         val uri = runCatching { Uri.parse(p.contentUri) }.getOrNull() ?: return false
         val opens = runCatching { context.contentResolver.openInputStream(uri)!!.use { it.read() }; true }.getOrDefault(false)
         if (!opens) return false

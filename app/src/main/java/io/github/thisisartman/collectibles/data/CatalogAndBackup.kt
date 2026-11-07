@@ -125,7 +125,7 @@ class CatalogAndBackup @Inject constructor(
         result
     }
 
-    suspend fun writeBackupLocked(out: OutputStream): BackupResult = lock.withLock { writeBackup(out) }
+    suspend fun writeBackupLocked(out: OutputStream, withPhotos: Boolean = false): BackupResult = lock.withLock { writeBackup(out, withPhotos) }
 
     /**
      * Caller holds [lock]. [withPhotos] (#66, moving to a new phone): each photo's picture goes into the zip as
@@ -153,7 +153,7 @@ class CatalogAndBackup @Inject constructor(
                 if (withPhotos) photos.forEach { p ->
                     // A picture that can't be read (deleted from the gallery) is left out; the row still travels
                     runCatching {
-                        context.contentResolver.openInputStream(Uri.parse(p.contentUri))!!.use { input ->
+                        io.github.thisisartman.collectibles.photo.PhotoStore.open(context, p.contentUri)!!.use { input ->
                             zip.putNextEntry(ZipEntry("photos/${p.id}")); input.copyTo(zip); zip.closeEntry()
                         }
                         files++

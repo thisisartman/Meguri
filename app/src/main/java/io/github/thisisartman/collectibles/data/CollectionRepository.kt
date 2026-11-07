@@ -14,6 +14,7 @@ import javax.inject.Singleton
 
 @Singleton
 class CollectionRepository @Inject constructor(
+    @dagger.hilt.android.qualifiers.ApplicationContext private val context: android.content.Context,
     private val db: CollectiblesDb,
     private val location: LocationSource,
     private val log: FileLog,
@@ -201,26 +202,39 @@ class CollectionRepository @Inject constructor(
     }
 
     /**
-     * A picture chosen from the gallery (a screenshot of an Ekitag, say) is copied into Meguri's own photo folder, so
-     * it relinks after a restore like a camera photo, and the picker's short-lived access does not matter.
+     * A picture chosen from the gallery (a screenshot of an Ekitag, say) gets only Meguri's own copy (#79), with no
+     * second copy in the gallery; the picker's short-lived access does not matter once it is copied.
      */
     suspend fun attachFromGallery(context: android.content.Context, findId: String, picked: android.net.Uri, kind: String): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
-            val resolver = context.contentResolver
-            val target = io.github.thisisartman.collectibles.photo.CameraCapture.newPhotoUri(resolver) ?: return@withContext false
-            val ok = runCatching {
-                resolver.openInputStream(picked)!!.use { input -> resolver.openOutputStream(target, "w")!!.use { input.copyTo(it) } }
-            }.isSuccess
-            val info = if (ok) io.github.thisisartman.collectibles.photo.CameraCapture.describe(resolver, target) else null
-            if (info == null) {
-                io.github.thisisartman.collectibles.photo.CameraCapture.discardIfEmpty(resolver, target)
+            val info = pickedInfo(picked)
+            val id = newId()
+            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id)
+            if (uri == null) {
                 log.w("Photo", "Could not copy a gallery photo for find $findId")
                 return@withContext false
             }
             nextKind[findId] = kind
-            attachPhoto(findId, info)
+            insertPhoto(id, findId, info.copy(uri = uri))
             true
         }
+
+    /** What the picker tells about a picked picture: its name, size and, where it says, when it was taken. */
+    private fun pickedInfo(picked: android.net.Uri): PhotoInfo {
+        val cols = arrayOf(android.provider.MediaStore.MediaColumns.DISPLAY_NAME, android.provider.MediaStore.MediaColumns.SIZE)
+        var name: String? = null
+        var size: Long? = null
+        runCatching {
+            context.contentResolver.query(picked, cols, null, null, null)?.use { c ->
+                if (c.moveToFirst()) { name = c.getString(0); size = if (c.isNull(1)) null else c.getLong(1) }
+            }
+        }
+        val taken = runCatching {
+            context.contentResolver.query(picked, arrayOf(android.provider.MediaStore.Images.Media.DATE_TAKEN), null, null, null)
+                ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getLong(0).takeIf { it > 0 } else null }
+        }.getOrNull()
+        return PhotoInfo(picked.toString(), null, name, null, size, taken ?: now())
+    }
 
     suspend fun setPhotoKind(photoId: String, kind: String) {
         dao.setPhotoRole(photoId, kind)
@@ -228,14 +242,23 @@ class CollectionRepository @Inject constructor(
     }
 
     suspend fun removePhoto(photoId: String) {
+        val p = dao.allPhotos().firstOrNull { it.id == photoId }
         dao.deletePhoto(photoId)
-        log.i("Photo", "Removed photo $photoId from its find (the picture stays in the gallery)")
+        p?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri) }
+        log.i("Photo", "Removed photo $photoId from its find, with Meguri's copy (a camera original stays in the gallery)")
     }
 
-    suspend fun attachPhoto(findId: String, photo: PhotoInfo) {
+    /** A camera photo: Meguri keeps its own copy (#79); if the copy fails, the photo points at the gallery and a later start copies it. */
+    suspend fun attachPhoto(findId: String, photo: PhotoInfo) = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val id = newId()
+        val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, android.net.Uri.parse(photo.uri), id)
+        insertPhoto(id, findId, if (uri != null) photo.copy(uri = uri) else photo)
+    }
+
+    private suspend fun insertPhoto(id: String, findId: String, photo: PhotoInfo) {
         dao.insertPhoto(
             Photo(
-                id = newId(), acquisitionId = findId, contentUri = photo.uri, takenAt = photo.takenAt,
+                id = id, acquisitionId = findId, contentUri = photo.uri, takenAt = photo.takenAt,
                 role = nextKind.remove(findId) ?: PhotoKind.OTHER,
                 mediastoreId = photo.mediastoreId, displayName = photo.displayName, relativePath = photo.relativePath,
                 sizeBytes = photo.sizeBytes, createdAt = now(),

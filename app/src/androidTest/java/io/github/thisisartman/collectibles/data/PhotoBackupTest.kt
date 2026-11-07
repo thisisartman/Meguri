@@ -11,7 +11,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import io.github.thisisartman.collectibles.debug.FileLog
 import kotlinx.coroutines.runBlocking
 import org.junit.After
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
@@ -21,6 +20,8 @@ import org.junit.runner.RunWith
 import java.io.File
 import java.util.UUID
 import java.util.zip.ZipInputStream
+import io.github.thisisartman.collectibles.photo.PhotoCopier
+import io.github.thisisartman.collectibles.photo.PhotoStore
 
 /** "Back up with photos" (#66): the pictures travel inside the backup and come back on a phone that lacks them. */
 @RunWith(AndroidJUnit4::class)
@@ -32,10 +33,11 @@ class PhotoBackupTest {
     private lateinit var io: CatalogAndBackup
     private lateinit var restore: BackupRestore
     private lateinit var work: File
-    private val bytes = ByteArray(4096) { (it * 31 % 251).toByte() }
     private val marker = "meguri-test-${UUID.randomUUID()}"
 
     @Before fun setUp() {
+        // The copier clears unused copies in the app's own photo folder: never on a phone's dev copy, only on an emulator
+        org.junit.Assume.assumeTrue("emulator only", android.os.Build.FINGERPRINT.contains("generic") || android.os.Build.PRODUCT.contains("sdk"))
         context.getSharedPreferences("backup", Context.MODE_PRIVATE).edit().clear().commit()
         work = File(context.cacheDir, "pt-${UUID.randomUUID()}").apply { mkdirs() }
         db = Room.databaseBuilder(context, CollectiblesDb::class.java, name).addMigrations(*CollectiblesDb.MIGRATIONS).build()
@@ -45,6 +47,7 @@ class PhotoBackupTest {
     }
 
     @After fun tearDown() {
+        runBlocking { db.dao().allPhotos().forEach { PhotoStore.delete(context, it.contentUri) } }
         db.close()
         context.deleteDatabase(name)
         work.deleteRecursively()
@@ -61,7 +64,9 @@ class PhotoBackupTest {
             put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/MeguriTest")
         }
         val uri = resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)!!
-        resolver.openOutputStream(uri)!!.use { it.write(bytes) }
+        // A real 3000 × 2000 JPEG: copies are decoded and resized, so random bytes would not do
+        val bmp = android.graphics.Bitmap.createBitmap(3000, 2000, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(200, 80, 40)) }
+        resolver.openOutputStream(uri)!!.use { bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
         return uri
     }
 
@@ -89,10 +94,52 @@ class PhotoBackupTest {
         val info = restore.inspect(Uri.fromFile(backup))
         restore.restore(info)
 
+        // It comes back as Meguri's own copy (#79), not as a new gallery entry
         val p = db.dao().allPhotos().single()
-        assertNotEquals("points at a new gallery entry", image.toString(), p.contentUri)
-        val back = resolver.openInputStream(Uri.parse(p.contentUri))!!.use { it.readBytes() }
-        assertArrayEquals(bytes, back)
+        assertNotEquals(image.toString(), p.contentUri)
+        assertTrue(p.contentUri, PhotoStore.exists(context, p.contentUri))
+        val back = android.graphics.BitmapFactory.decodeFile(PhotoStore.file(context, p.contentUri).path)
+        assertEquals(1600, back.width)
+        assertEquals(1066, back.height)
+    }
+
+    @Test fun copierMovesGalleryPhotosIntoTheAppAndKeepsTheRow() = runBlocking {
+        val image = galleryImage()
+        seed(image)
+        val r = PhotoCopier(context, db, io, FileLog(work)).copyAll()
+        assertEquals(1, r.copied)
+        val p = db.dao().allPhotos().single()
+        assertTrue(PhotoStore.isApp(p.contentUri))
+        assertEquals("the gallery fingerprint stays", "$marker.jpg", p.displayName)
+        // The gallery picture can now go: the photo still opens
+        resolver.delete(image, null, null)
+        assertTrue(PhotoStore.thumbnail(context, p.contentUri, 256) != null)
+        // A second start has nothing left to copy
+        assertEquals(0, PhotoCopier(context, db, io, FileLog(work)).copyAll().copied)
+    }
+
+    @Test fun copierRemovesOnlySettledUnusedCopies() = runBlocking {
+        val dir = PhotoStore.dir(context)
+        val old = File(dir, "gone-${UUID.randomUUID()}.webp").apply { writeText("x"); setLastModified(System.currentTimeMillis() - 3_600_000) }
+        val fresh = File(dir, "new-${UUID.randomUUID()}.webp").apply { writeText("x") }
+        PhotoCopier(context, db, io, FileLog(work)).copyAll()
+        assertTrue("an hour-old unused copy is removed", !old.exists())
+        assertTrue("a copy written just now may be a photo being added", fresh.exists())
+        fresh.delete()
+    }
+
+    @Test fun backupCarriesTheAppCopyAndRestoresItOnANewPhone() = runBlocking {
+        val image = galleryImage()
+        seed(image)
+        PhotoCopier(context, db, io, FileLog(work)).copyAll()
+        val backup = File(work, "with-photos.zip")
+        assertEquals(1, io.exportBackup(Uri.fromFile(backup), withPhotos = true).photoFiles)
+        // The new phone: neither the gallery picture nor the app copy is there
+        resolver.delete(image, null, null)
+        PhotoStore.delete(context, db.dao().allPhotos().single().contentUri)
+        restore.restore(restore.inspect(Uri.fromFile(backup)))
+        val p = db.dao().allPhotos().single()
+        assertTrue(PhotoStore.exists(context, p.contentUri))
     }
 
     @Test fun samePhoneRestoreAddsNoDuplicate() = runBlocking {

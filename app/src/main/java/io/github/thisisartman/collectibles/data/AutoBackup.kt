@@ -103,7 +103,7 @@ class AutoBackup @Inject constructor(
             return Outcome.Failed
         }
         try {
-            context.contentResolver.openOutputStream(file.uri, "wt")!!.use { out -> backup.writeBackupLocked(out) }
+            context.contentResolver.openOutputStream(file.uri, "wt")!!.use { out -> backup.writeBackupLocked(out, withPhotos = true) }
             val info = restore.inspect(file.uri)
             restore.discard(info)
             val previousFinds = prefs.getInt(KEY_FINDS, 0)

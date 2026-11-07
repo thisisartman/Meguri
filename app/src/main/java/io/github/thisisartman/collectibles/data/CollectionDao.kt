@@ -206,6 +206,9 @@ interface CollectionDao {
     @Query("UPDATE photo SET content_uri = :uri, mediastore_id = :mediastoreId, missing = :missing WHERE id = :id")
     suspend fun setPhotoLink(id: String, uri: String, mediastoreId: Long, missing: Boolean)
 
+    @Query("UPDATE photo SET content_uri = :uri, missing = 0 WHERE id = :id")
+    suspend fun setPhotoUri(id: String, uri: String)
+
     @Query("UPDATE photo SET missing = :missing WHERE id = :id")
     suspend fun setPhotoMissing(id: String, missing: Boolean)
 

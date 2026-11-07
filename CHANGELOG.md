@@ -12,6 +12,7 @@
 - Search: the sheet tucks away as soon as you tap search, and results show only in the dropdown.
 - Every Niigata manhole card is in the catalogue: 48 cards (31 new), each with its hand-out place, address, phone and hours. Cards you already had now show where they're handed out too. Shibata D has no confirmed place yet.
 - Alerts have two buttons, "Collect" and "Dismiss". "Collect" marks it collected and opens its page, where you can add photos or take it back.
+- Photos are kept inside Meguri (#79): each photo gets Meguri's own copy, 1600 px and saved as WebP, so clearing the gallery loses nothing. Photos you already have are copied in on the first start. A picture picked from the gallery no longer shows up twice there; one you take with the camera keeps its full-size original in the gallery. Weekly backups and the safety copy made before a restore now include photos.
 - Roadmap brought up to date (`docs/ROADMAP.md`): what's done, what's in this beta, and what's next.
 - Research, not in the app yet: photo copies in WebP come out 14–30% smaller than JPEG on real card photos, with text just as readable. Card pictures are GKP's and the cities', so they can't ship inside the app (details in PROGRESS.md).
 

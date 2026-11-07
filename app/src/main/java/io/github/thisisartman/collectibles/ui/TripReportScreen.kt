@@ -233,7 +233,7 @@ private fun render(context: Context, s: ReportSpec): Bitmap {
     y += 50f
     // Up to six photos in a 3 × 2 grid
     val thumbs = s.photos.mapNotNull { uri ->
-        runCatching { context.contentResolver.loadThumbnail(Uri.parse(uri), Size(400, 400), null) }.getOrNull()
+        io.github.thisisartman.collectibles.photo.PhotoStore.thumbnail(context, uri, 400)
     }
     if (thumbs.isNotEmpty()) {
         val gap = 18f

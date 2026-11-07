@@ -97,7 +97,7 @@
     <string name="item_on_lines">On %1$s</string>
     <string name="item_remove_find">Remove</string>
     <string name="item_remove_find_title">Remove this collection?</string>
-    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Photos stay in the gallery.</string>
+    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
     <string name="line_nearest">Nearest uncollected: %2$s · %1$s</string>
 
     <string name="log_title">Log a find</string>
@@ -121,7 +121,7 @@
     <string name="more_japanese">日本語</string>
     <string name="more_backup_section">Your data</string>
     <string name="more_backup">Back up now</string>
-    <string name="more_backup_sub">Saves all finds to a file you choose. Photos stay in the gallery.</string>
+    <string name="more_backup_sub">Saves all finds to a file you choose, without photos. To carry photos too, use \"Back up with photos\".</string>
     <string name="more_backup_done">Backup saved: %1$s</string>
     <string name="more_backup_done_named">Saved %1$s: %2$s</string>
     <string name="more_backup_failed">Couldn\'t save the backup</string>
@@ -242,7 +242,7 @@
     <string name="photo_pick">Choose from the gallery</string>
     <string name="photo_edit_title">This photo</string>
     <string name="photo_remove">Remove photo</string>
-    <string name="photo_remove_note">Removing only unlinks it: the picture stays in your gallery.</string>
+    <string name="photo_remove_note">Removes Meguri\'s copy. A photo you took with the camera stays in your gallery.</string>
     <string name="photo_done">Done</string>
     <string name="a11y_photo_kind">Photo: %1$s. Tap to change or remove.</string>
     <string name="menu_settings">Settings</string>
@@ -304,7 +304,7 @@
     <string name="type_dam">Dam card</string>
     <string name="collection_name_taken">You already have a collection with this name.</string>
     <string name="more_backup_photos">Back up with photos</string>
-    <string name="more_backup_photos_sub">For a new phone: the same backup with every photo inside. Restore it there and the photos go back in the gallery.</string>
+    <string name="more_backup_photos_sub">For a new phone: the same backup with every photo inside. Restore it there and the photos come back in Meguri.</string>
     <string name="menu_trip">Trip</string>
     <string name="trip_screen">Trip</string>
     <string name="trip_from">From</string>
