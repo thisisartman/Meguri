@@ -442,4 +442,23 @@
         <item quantity="other">コレクション</item>
     </plurals>
     <string name="profile_recent">最近集めたもの</string>
+    <string name="edit_title">詳細を編集</string>
+    <string name="edit_name_ja">名前（日本語）</string>
+    <string name="edit_name_en">名前（英語）</string>
+    <string name="edit_place">入手場所</string>
+    <string name="edit_address">住所</string>
+    <string name="edit_hours">時間</string>
+    <string name="edit_notes">メモ</string>
+    <string name="edit_position">地図上の位置</string>
+    <string name="edit_position_none">未設定</string>
+    <string name="edit_use_here">現在地を使う</string>
+    <string name="edit_link">Googleマップのリンク</string>
+    <string name="edit_read">読み取る</string>
+    <string name="edit_search">場所を検索</string>
+    <string name="edit_find">検索</string>
+    <string name="edit_save">保存</string>
+    <string name="edit_link_failed">このリンクからは場所を読み取れません（短縮リンクは一度ネット接続が必要です）。</string>
+    <string name="edit_no_position">まだ現在地がありません。</string>
+    <string name="edit_search_none">見つかりませんでした。</string>
+    <string name="edit_kept_note">カタログを更新しても、編集した内容はそのまま残ります。</string>
 </resources>

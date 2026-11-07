@@ -65,4 +65,19 @@ class OwnerLinksTest {
         assertEquals("minami", MapsLink.matchStation("南吉田駅", stations))
         assertNull(MapsLink.matchStation("Mirai-e Nagaoka", stations))
     }
+
+    @Test fun anyMapsLinkGivesAnItemPosition() {
+        // Editing an item (2026-11-08): a bare map view, a ?q= position, a place, and a name to search
+        val view = MapsLink.point("https://www.google.com/maps/@37.7064,138.8256,15z")!!
+        assertEquals(37.7064, view.lat!!, 1e-9); assertEquals(138.8256, view.lng!!, 1e-9)
+        val q = MapsLink.point("https://maps.google.com/?q=37.70,138.82")!!
+        assertEquals(37.70, q.lat!!, 1e-9)
+        val place = MapsLink.point("https://www.google.com/maps/place/Yahiko/@37.69,138.80,14z/data=!3d37.7064!4d138.8256")!!
+        assertEquals(37.7064, place.lat!!, 1e-9)
+        val named = MapsLink.point("https://www.google.com/maps/search/?api=1&query=Yahiko+Shrine")!!
+        assertEquals("Yahiko Shrine", named.name); assertNull(named.lat)
+        assertNull(MapsLink.point("https://example.com/maps/@37.7,138.8,15z"))
+        // A bare map view is still not a trip
+        assertNull(MapsLink.parse("https://www.google.com/maps/@37.7064,138.8256,15z"))
+    }
 }

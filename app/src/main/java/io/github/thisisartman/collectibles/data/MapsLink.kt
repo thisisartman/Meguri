@@ -90,6 +90,24 @@ object MapsLink {
         return MapsTrip(withPos.firstOrNull()?.takeIf { it.name != null || it.hasPosition }, withPos.lastOrNull()?.takeIf { withPos.size >= 2 && (it.name != null || it.hasPosition) }, mode)
     }
 
+    /**
+     * One position from any Google Maps link, for setting where an item is (owner, 2026-11-08): a place's own point,
+     * `?q=` / `?query=` / `?ll=` with a position (or a name to search), else the map centre after "@". Null when none.
+     */
+    fun point(url: String): LinkEnd? {
+        val uri = runCatching { URI(url.trim()) }.getOrNull() ?: return null
+        val h = uri.host?.lowercase() ?: return null
+        if (h.startsWith("consent.")) return query(uri.rawQuery)["continue"]?.let(::point)
+        if (!(h.startsWith("google.") || h.contains(".google.") || h == "maps.google.com")) return null
+        val path = uri.rawPath.orEmpty()
+        PLACE_POINT.find(path)?.let { return LinkEnd(null, it.groupValues[1].toDouble(), it.groupValues[2].toDouble()) }
+        val q = query(uri.rawQuery)
+        val asked = listOf("q", "query", "ll").firstNotNullOfOrNull { k -> q[k]?.let(::end) }
+        if (asked?.hasPosition == true) return asked
+        path.split('/').firstNotNullOfOrNull { AT_CENTRE.find(it) }?.let { return LinkEnd(null, it.groupValues[1].toDouble(), it.groupValues[2].toDouble()) }
+        return asked
+    }
+
     private fun query(raw: String?): Map<String, String> = raw.orEmpty().split('&').mapNotNull { kv ->
         val i = kv.indexOf('=')
         if (i <= 0) null else kv.substring(0, i) to decode(kv.substring(i + 1).replace('+', ' '))

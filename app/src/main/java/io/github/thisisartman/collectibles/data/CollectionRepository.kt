@@ -236,6 +236,12 @@ class CollectionRepository @Inject constructor(
         return PhotoInfo(picked.toString(), null, name, null, size, taken ?: now())
     }
 
+    suspend fun editItem(item: Item) {
+        val now = now()
+        dao.upsertItem(item.copy(editedAt = now, updatedAt = now))
+        log.i("Item", "Edited ${item.id}: name, place or position")
+    }
+
     suspend fun setPhotoKind(photoId: String, kind: String) {
         dao.setPhotoRole(photoId, kind)
         log.i("Photo", "Kind of $photoId is now $kind")

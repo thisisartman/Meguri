@@ -250,6 +250,21 @@ class MainViewModel @Inject constructor(
      * the bundled lines), then by looking the name up on OpenStreetMap. [LinkRead.Ends] carries how far each
      * matched station is from the place in the link, so the screen can say when an end is off the bundled lines.
      */
+    /** Where a shared Google Maps link points (its destination, else its start), for editing an item's position. */
+    suspend fun positionFromLink(text: String, japanese: Boolean): Pair<Double, Double>? {
+        val raw = MapsLink.findUrl(text) ?: return null
+        val url = if (MapsLink.isShort(raw)) MapsLink.resolve(raw) ?: return null else raw
+        val t = MapsLink.parse(url)
+        val e = t?.to ?: t?.from ?: MapsLink.point(url) ?: return null
+        if (e.hasPosition) return e.lat!! to e.lng!!
+        return e.name?.let { n -> PlaceLookup.search(n, here.value.fix?.lat, here.value.fix?.lng, japanese).firstOrNull()?.let { it.lat to it.lng } }
+    }
+
+    /** Saves your edits to an item's details; catalogue updates leave it as you made it (owner, 2026-11-08). */
+    fun editItem(item: io.github.thisisartman.collectibles.data.Item) {
+        viewModelScope.launch { repo.editItem(item) }
+    }
+
     suspend fun readLink(text: String, japanese: Boolean): LinkRead {
         val raw = MapsLink.findUrl(text) ?: return LinkRead.NotALink
         val url = if (MapsLink.isShort(raw)) MapsLink.resolve(raw) ?: return LinkRead.Offline else raw

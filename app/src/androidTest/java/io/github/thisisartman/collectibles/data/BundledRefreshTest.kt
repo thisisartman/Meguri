@@ -90,4 +90,21 @@ class BundledRefreshTest {
         assertNotNull(io.refreshBundledIfChanged())
         assertTrue(db.dao().allLines().any { it.id == RailGraph.SHINKANSEN })
     }
+
+    /** Edits you make to an item's details stay when the catalogue is loaded again (owner, 2026-11-08). */
+    @Test fun anEditedItemKeepsYourEditsThroughAReload() = runBlocking {
+        io.importBundled()
+        val dao = db.dao()
+        val card = dao.allItems().first { it.code == "15-213-E001" }
+        dao.upsertItem(card.copy(placeName = "My own note on where", lat = 37.0, lng = 138.0, editedAt = 1))
+        // A changed bundled file forces a full reload
+        context.getSharedPreferences("catalogue", Context.MODE_PRIVATE).edit().clear().commit()
+        io.importBundled()
+        val after = dao.allItems().first { it.code == "15-213-E001" }
+        assertEquals("My own note on where", after.placeName)
+        assertEquals(37.0, after.lat!!, 0.0)
+        // Items you did not edit are still updated as usual
+        assertNotNull(dao.allItems().first { it.code == "15-213-A001" }.placeName)
+        Unit
+    }
 }

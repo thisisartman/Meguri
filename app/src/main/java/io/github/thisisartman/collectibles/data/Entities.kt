@@ -90,6 +90,8 @@ data class Item(
     @ColumnInfo(name = "none_here_at") val noneHereAt: Long? = null,
     // Schema v3: the photo you chose to stand for this item; null = the latest one
     @ColumnInfo(name = "cover_photo_id") val coverPhotoId: String? = null,
+    // Schema v4: when you last edited its details (name, place, position...); a catalogue update leaves it alone (owner, 2026-11-08)
+    @ColumnInfo(name = "edited_at") val editedAt: Long? = null,
 )
 
 /**

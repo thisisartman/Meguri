@@ -157,7 +157,8 @@ class CatalogAndBackup @Inject constructor(
                 // A station on two lines is two rows of one item: the first row makes it, the second reuses it
                 val item = items.getOrPut(row.catalogKey) {
                     val before = existing[row.catalogKey]
-                    val made = row.toItem(before, UUID.randomUUID().toString(), now)
+                    // You edited it: the catalogue leaves it as you made it (owner, 2026-11-08)
+                    val made = if (before?.editedAt != null) before else row.toItem(before, UUID.randomUUID().toString(), now)
                     val changes = catalogRowChanges(before, made)
                     // Unchanged rows are left alone, so their update time (and "recent" order) stays put
                     if (changes) toWrite += made

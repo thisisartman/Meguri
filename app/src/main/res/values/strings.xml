@@ -448,4 +448,23 @@
         <item quantity="other">collections</item>
     </plurals>
     <string name="profile_recent">Recently collected</string>
+    <string name="edit_title">Edit details</string>
+    <string name="edit_name_ja">Name in Japanese</string>
+    <string name="edit_name_en">Name in English</string>
+    <string name="edit_place">Where to get it</string>
+    <string name="edit_address">Address</string>
+    <string name="edit_hours">Hours</string>
+    <string name="edit_notes">Notes</string>
+    <string name="edit_position">Position on the map</string>
+    <string name="edit_position_none">Not set</string>
+    <string name="edit_use_here">Use where I am</string>
+    <string name="edit_link">Google Maps link</string>
+    <string name="edit_read">Read</string>
+    <string name="edit_search">Search for the place</string>
+    <string name="edit_find">Find</string>
+    <string name="edit_save">Save</string>
+    <string name="edit_link_failed">That link has no place Meguri can read (a short link needs the network once).</string>
+    <string name="edit_no_position">No position yet.</string>
+    <string name="edit_search_none">Nothing found.</string>
+    <string name="edit_kept_note">Your changes stay when the catalogue is updated.</string>
 </resources>

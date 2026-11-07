@@ -121,5 +121,6 @@ data class CatalogRow(
         customTypeId = existing?.customTypeId,
         noneHereAt = existing?.noneHereAt,
         coverPhotoId = existing?.coverPhotoId,
+        editedAt = existing?.editedAt,
     )
 }

@@ -26,7 +26,7 @@ abstract class CollectiblesDb : RoomDatabase() {
 
     companion object {
         const val NAME = "collectibles.db"
-        const val VERSION = 3
+        const val VERSION = 4
 
         /**
          * v1 to v2 (2026-11-07), additions only, so every v1 row and every v1 backup stays as it is:
@@ -51,8 +51,15 @@ abstract class CollectiblesDb : RoomDatabase() {
             }
         }
 
+        /** v3 to v4 (2026-11-08): when you edited an item's details, so catalogue updates keep your edits. */
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `item` ADD COLUMN `edited_at` INTEGER")
+            }
+        }
+
         /** Used by the app and by restore, so an older backup migrates the same way the app does. */
-        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3)
+        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
     }
 }
 

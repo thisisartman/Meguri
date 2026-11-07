@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Info
@@ -73,14 +74,22 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
     val stations by vm.lineStations.collectAsStateWithLifecycle()
     val photo = LocalPhoto.current
     val r = row
+    var editing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
             title = { Text(r?.item?.type?.let { stringResource(it.label()) } ?: "") },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
+            // Edit its name, place or position (owner, 2026-11-08)
+            actions = {
+                if (r != null) IconButton(onClick = { editing = true }) {
+                    Icon(androidx.compose.material.icons.Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_title))
+                }
+            },
         )
         if (r == null) return@Column
+        if (editing) ItemEditSheet(r.item, vm, onDismiss = { editing = false })
         val item = r.item
         val name = item.displayName(ja)
         // A station says which lines it is on (round 5, D2)
