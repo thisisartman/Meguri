@@ -42,6 +42,11 @@ fun MenuButton(nav: NavHostController, modifier: Modifier = Modifier) {
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             DropdownMenuItem(
+                text = { Text(stringResource(R.string.profile_title)) },
+                leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
+                onClick = { open = false; nav.openProfile() },
+            )
+            DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_trip)) },
                 leadingIcon = { Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_route), contentDescription = null) },
                 onClick = { open = false; nav.navigate("trip") },

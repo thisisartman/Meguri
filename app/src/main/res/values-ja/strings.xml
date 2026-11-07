@@ -374,10 +374,22 @@
     <string name="settings_catalogue_note">新潟のカタログと、新潟・埼玉・東京のオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
-    <string name="settings_collections_sub">自分のコレクションと新しいコレクションの作成</string>
+    <string name="settings_collections_sub">マイページへ：自分のコレクションと新しいコレクションの作成</string>
     <string name="photo_kind_label">種類</string>
     <string name="sort_tip_near">近い順</string>
     <string name="sort_tip_near_text">：各項目までの距離</string>
     <string name="sort_tip_az">名前順</string>
     <string name="sort_tip_az_text">：名前のアルファベット・五十音順</string>
+    <string name="profile_title">マイページ</string>
+    <string name="profile_today">今日</string>
+    <string name="profile_open_map">地図を開く</string>
+    <string name="profile_collections">コレクション</string>
+    <string name="profile_map_empty">集めると、その場所がここに表示されます。</string>
+    <string name="map_title_collected">集めた場所</string>
+    <plurals name="profile_finds">
+        <item quantity="other">取得</item>
+    </plurals>
+    <plurals name="profile_kinds">
+        <item quantity="other">種類</item>
+    </plurals>
 </resources>

@@ -73,7 +73,7 @@ class MoreViewModel @Inject constructor(
 @Composable
 fun MoreScreen(
     snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {},
-    myCollections: @Composable () -> Unit = {},
+    onProfile: () -> Unit = {},
     vm: MoreViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -240,7 +240,7 @@ fun MoreScreen(
         when (section) {
             null -> {
                 // Each line says what is set now, so nothing needs opening just to check (round, option B)
-                SectionLine(titles.getValue(S_COLLECTIONS), stringResource(R.string.settings_collections_sub)) { section = S_COLLECTIONS }
+                SectionLine(titles.getValue(S_COLLECTIONS), stringResource(R.string.settings_collections_sub)) { onProfile() }
                 SectionLine(titles.getValue(S_ALERTS), stringResource(R.string.settings_alerts_sub)) { section = S_ALERTS }
                 SectionLine(titles.getValue(S_DATA), autoSub) { section = S_DATA }
                 SectionLine(
@@ -251,7 +251,6 @@ fun MoreScreen(
                 SectionLine(titles.getValue(S_CATALOGUE), stringResource(R.string.settings_catalogue_sub)) { section = S_CATALOGUE }
                 SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME)) { section = S_HELP }
             }
-            S_COLLECTIONS -> myCollections()
             S_ALERTS -> AlertsSection()
             S_LOOK -> {
                 SectionTitle(stringResource(R.string.more_language))

@@ -374,10 +374,24 @@
     <string name="settings_catalogue_note">The app comes with the Niigata catalogue and an offline map of Niigata, Saitama and Tokyo. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">Logs · version %1$s · credits</string>
-    <string name="settings_collections_sub">Your own collections, and making a new one</string>
+    <string name="settings_collections_sub">On the You page: your own collections, and making a new one</string>
     <string name="photo_kind_label">Kind</string>
     <string name="sort_tip_near">Nearest</string>
     <string name="sort_tip_near_text">: how far each item is from you</string>
     <string name="sort_tip_az">A to Z</string>
     <string name="sort_tip_az_text">: names in alphabetical order</string>
+    <string name="profile_title">You</string>
+    <string name="profile_today">today</string>
+    <string name="profile_open_map">Open map</string>
+    <string name="profile_collections">Collections</string>
+    <string name="profile_map_empty">Places show up here as you collect.</string>
+    <string name="map_title_collected">Where you collected</string>
+    <plurals name="profile_finds">
+        <item quantity="one">find</item>
+        <item quantity="other">finds</item>
+    </plurals>
+    <plurals name="profile_kinds">
+        <item quantity="one">kind</item>
+        <item quantity="other">kinds</item>
+    </plurals>
 </resources>

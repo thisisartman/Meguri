@@ -51,6 +51,8 @@ enum class MapSection(val types: Set<ItemType>) {
     CARDS(setOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD)),
     // Your own collections (#64); the tab shows only when you have any
     MINE(setOf(ItemType.CUSTOM)),
+    // Everything you have collected, from the profile page (#72)
+    COLLECTED(ItemType.entries.toSet()),
 }
 
 fun ItemRow.toPin(): MapPin? {
@@ -66,7 +68,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
     val context = LocalContext.current
     val rows by vm.rows.collectAsStateWithLifecycle()
     val here by vm.here.collectAsStateWithLifecycle()
-    val shown = remember(rows, section) { rows.filter { it.item.type in section.types } }
+    val shown = remember(rows, section) { rows.filter { it.item.type in section.types && (section != MapSection.COLLECTED || it.collected) } }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
     val tick = rememberTick()
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
@@ -92,6 +94,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
                             MapSection.STAMPS -> R.string.map_title_stamps
                             MapSection.CARDS -> R.string.map_title_cards
                             MapSection.MINE -> R.string.more_my_collections
+                            MapSection.COLLECTED -> R.string.map_title_collected
                         },
                     ),
                     style = MaterialTheme.typography.titleMedium,

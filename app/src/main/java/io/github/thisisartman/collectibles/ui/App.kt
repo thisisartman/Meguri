@@ -61,6 +61,7 @@ val LocalPhoto = staticCompositionLocalOf<PhotoLauncher> { PhotoLauncher { } }
 private const val NEARBY = "nearby"
 private const val BOOK = "book"
 private const val MORE = "more"
+private const val PROFILE = "profile"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
 fun NavHostController.openMap(section: MapSection = MapSection.ALL) = navigate("map/${section.name}")
@@ -72,6 +73,7 @@ fun NavHostController.openTab(route: String) = navigate(route) {
 }
 // Settings is a page of its own now (opened from the top-right menu), not a tab
 fun NavHostController.openMore() = navigate(MORE) { launchSingleTop = true }
+fun NavHostController.openProfile() = navigate(PROFILE) { launchSingleTop = true }
 fun NavHostController.openBook() = openTab(BOOK)
 
 /** A page on the app's background colour, so nothing behind it (the map's surface) shows through while it loads. */
@@ -257,14 +259,21 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         Page {
                             MoreScreen(
                                 snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() },
-                                myCollections = {
-                                    MyCollectionsSection(
-                                        customTypes,
-                                        rows.mapNotNull { it.item.customTypeId }.groupingBy { it }.eachCount(),
-                                        onNew = { newCollection = true },
-                                    )
-                                },
+                                // Your own collections moved to the profile page (#72, pick A); Settings points there
+                                onProfile = { nav.openProfile() },
                             )
+                        }
+                    }
+                    composable(PROFILE) {
+                        val rows by vm.rows.collectAsStateWithLifecycle()
+                        Page {
+                            ProfileScreen(vm, nav, onBack = { nav.popBackStack() }, myCollections = {
+                                MyCollectionsSection(
+                                    customTypes,
+                                    rows.mapNotNull { it.item.customTypeId }.groupingBy { it }.eachCount(),
+                                    onNew = { newCollection = true },
+                                )
+                            })
                         }
                     }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
