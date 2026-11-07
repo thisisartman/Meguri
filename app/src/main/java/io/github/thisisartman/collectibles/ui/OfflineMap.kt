@@ -4,19 +4,41 @@ import android.content.Context
 import java.io.File
 
 /**
- * The offline map pack (#9): OpenStreetMap data for the Niigata trip area from Protomaps (build 2026-11-06,
- * zoom 0 to 14), shipped in the app with its styles, Noto Sans glyphs and icons. Japanese names are drawn with
+ * The offline map pack (#9, #65): OpenStreetMap data for Niigata, Saitama and Tokyo prefectures from Protomaps
+ * (build 2026-11-06, zoom 0 to 14), shipped in the app with its styles, Noto Sans glyphs and icons. Japanese names are drawn with
  * the phone's own fonts. Outside the pack's area the map uses online tiles.
  */
 object OfflineMap {
-    // west, south, east, north of the pack
-    private const val WEST = 138.45
-    private const val SOUTH = 36.95
-    private const val EAST = 139.35
-    private const val NORTH = 38.05
-    private const val ASSET = "map/niigata.pmtiles"
+    private const val ASSET = "map/region.pmtiles"
+    private const val COVERAGE = "map/coverage.json"
+    @Volatile private var rings: List<DoubleArray>? = null
 
-    fun covers(lat: Double, lng: Double) = lat in SOUTH..NORTH && lng in WEST..EAST
+    /** Inside Niigata, Saitama or Tokyo (the prefecture outlines the pack was cut along, simplified). */
+    fun covers(context: Context, lat: Double, lng: Double): Boolean = coverage(context).any { inside(it, lng, lat) }
+
+    // Each ring is x0,y0,x1,y1,... (longitude, latitude), read once from the outline file
+    private fun coverage(context: Context): List<DoubleArray> = rings ?: synchronized(this) {
+        rings ?: runCatching {
+            val arr = org.json.JSONArray(context.assets.open(COVERAGE).bufferedReader().use { it.readText() })
+            List(arr.length()) { r ->
+                val ring = arr.getJSONArray(r)
+                DoubleArray(ring.length() * 2) { k -> ring.getJSONArray(k / 2).getDouble(k % 2) }
+            }
+        }.getOrDefault(emptyList()).also { rings = it }
+    }
+
+    /** Even-odd ray casting. */
+    private fun inside(ring: DoubleArray, x: Double, y: Double): Boolean {
+        var c = false
+        val n = ring.size / 2
+        var j = n - 1
+        for (i in 0 until n) {
+            val xi = ring[2 * i]; val yi = ring[2 * i + 1]; val xj = ring[2 * j]; val yj = ring[2 * j + 1]
+            if ((yi > y) != (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c
+            j = i
+        }
+        return c
+    }
 
     /** The pack as a file: MapLibre reads PMTiles from files, not from app assets. Copied once per app version. */
     @Synchronized

@@ -68,7 +68,7 @@ fun MeguriMap(
     // Offline inside the trip area, online elsewhere; decided once, from where you are or the first pin
     val offline = remember {
         val c = here ?: pins.firstOrNull()?.let { it.lat to it.lng }
-        c == null || OfflineMap.covers(c.first, c.second)
+        c == null || OfflineMap.covers(context, c.first, c.second)
     }
     val types = LocalTypeColors.current
     val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()

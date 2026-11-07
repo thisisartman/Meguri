@@ -127,7 +127,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             }
             item { Actions(item, meters) }
             // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
-            if (hasFacts(item)) {
+            if (hasFacts(context, item)) {
                 item { SectionTitle(stringResource(R.string.item_where)) }
                 item { Facts(item) }
             }
@@ -232,13 +232,13 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
 }
 
 /** The map for this item's area is not on the phone (outside the offline pack), so it needs internet there. */
-private fun offlineMissing(item: Item): Boolean =
-    item.lat != null && item.lng != null && !OfflineMap.covers(item.lat, item.lng)
+private fun offlineMissing(context: android.content.Context, item: Item): Boolean =
+    item.lat != null && item.lng != null && !OfflineMap.covers(context, item.lat, item.lng)
 
 /** Whether "Where to get it" has anything to show; a goshuin added by hand often has nothing yet. */
-private fun hasFacts(item: Item): Boolean =
+private fun hasFacts(context: android.content.Context, item: Item): Boolean =
     listOfNotNull(item.hoursText, item.closedDays, item.placeName?.takeIf { it != item.nameJa }, item.address, item.notes, item.placePhone).any { it.isNotBlank() } ||
-        offlineMissing(item)
+        offlineMissing(context, item)
 
 /**
  * "Where to get it", right under the header as one grouped card of one-line icon rows (map-app study, 2026-11-07:
@@ -272,7 +272,7 @@ private fun Facts(item: Item) {
                 }
             }
             item.notes?.let { FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Info), "", localNote(it, isJapanese())) }
-            if (offlineMissing(item)) {
+            if (offlineMissing(LocalContext.current, item)) {
                 FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Info), "", stringResource(R.string.item_map_not_saved))
             }
         }

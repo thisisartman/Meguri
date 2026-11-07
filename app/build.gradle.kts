@@ -130,3 +130,27 @@ listOf("debug" to "dev", "release" to "release").forEach { (type, label) ->
         rename { prefix + SimpleDateFormat("yyyyMMdd-HHmm").format(Date()) + ".apk" }
     }
 }
+
+// The offline map (#9, #65) is over GitHub's 100 MB file limit, so the repo keeps it in parts
+// (map-pack/region.pmtiles.part*) and every build joins them into assets/map/region.pmtiles.
+abstract class JoinMapPack : DefaultTask() {
+    @get:InputFiles abstract val parts: ConfigurableFileCollection
+    @get:OutputDirectory abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun join() {
+        val out = outputDir.get().file("map/region.pmtiles").asFile
+        out.parentFile.mkdirs()
+        out.outputStream().use { o -> parts.files.sortedBy { it.name }.forEach { p -> p.inputStream().use { it.copyTo(o) } } }
+    }
+}
+
+val joinMapPack = tasks.register<JoinMapPack>("joinMapPack") {
+    parts.from(rootProject.fileTree("map-pack") { include("region.pmtiles.part*") })
+}
+
+androidComponents {
+    onVariants { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(joinMapPack, JoinMapPack::outputDir)
+    }
+}
