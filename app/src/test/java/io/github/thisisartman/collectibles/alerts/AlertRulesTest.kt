@@ -73,4 +73,14 @@ class AlertRulesTest {
     }
 
     private companion object { const val HOUR = 3_600_000L }
+
+    @Test fun eachKindHasItsOwnDistance() {
+        // #73: a station 300 m away is out of a 200 m station radius, a manhole card 400 m away is inside 500 m
+        val p = prefs.copy(radii = mapOf(ItemType.EKI_STAMP to 200, ItemType.MANHOLE_CARD to 500), types = setOf(ItemType.EKI_STAMP, ItemType.MANHOLE_CARD))
+        val lat = 37.0; val lng = 138.0
+        val station = Candidate("s", ItemType.EKI_STAMP, lat + 300 / 111_000.0, lng)
+        val card = Candidate("c", ItemType.MANHOLE_CARD, lat + 400 / 111_000.0, lng)
+        val due = AlertRules.due(lat, lng, listOf(station, card), p, emptyMap(), 0L, 12).map { it.first.id }
+        assertEquals(listOf("c"), due)
+    }
 }

@@ -52,7 +52,12 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getBoolean(KEY_QUIET, true)
         set(v) = prefs.edit().putBoolean(KEY_QUIET, v).apply()
 
-    fun snapshot() = AlertPrefs(radiusM, types, quietOn, QUIET_FROM, QUIET_TO, COOLDOWN_MS)
+    /** The alert distance for one kind (#73): what you chose for it, else its default. */
+    fun radiusFor(type: ItemType): Int = prefs.getInt(KEY_RADIUS_PREFIX + type.name, DEFAULT_RADII[type] ?: radiusM)
+
+    fun setRadiusFor(type: ItemType, meters: Int) = prefs.edit().putInt(KEY_RADIUS_PREFIX + type.name, meters).apply()
+
+    fun snapshot() = AlertPrefs(radiusM, types, quietOn, QUIET_FROM, QUIET_TO, COOLDOWN_MS, ItemType.entries.associateWith { radiusFor(it) })
 
     fun lastAlerts(): Map<String, Long> =
         prefs.all.filterKeys { it.startsWith(COOL) }.mapNotNull { (k, v) -> (v as? Long)?.let { k.removePrefix(COOL) to it } }.toMap()
@@ -76,6 +81,13 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
     companion object {
         const val DEFAULT_RADIUS_M = 300
         val RADIUS_CHOICES = listOf(200, 300, 500, 1000)
+
+        /** Per kind (#73): stations are close together on a line, dams sit far out of town. */
+        val DEFAULT_RADII = mapOf(
+            ItemType.EKI_STAMP to 200, ItemType.EKITAG to 200, ItemType.MANHOLE_CARD to 500,
+            ItemType.GOSHUIN to 300, ItemType.DAM_CARD to 1000, ItemType.MUSEUM_STAMP to 300,
+        )
+        private const val KEY_RADIUS_PREFIX = "radius_"
         val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP)
         val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2
         private const val MARK_V2 = "_kinds_v2"

@@ -11,7 +11,11 @@ data class AlertPrefs(
     val quietFromHour: Int,
     val quietToHour: Int,
     val cooldownMs: Long,
-)
+    // A distance per kind (#73); a kind not in the map uses [radiusM]
+    val radii: Map<ItemType, Int> = emptyMap(),
+) {
+    fun radiusFor(type: ItemType): Int = radii[type] ?: radiusM
+}
 
 /** Something still to get, with where you get it. */
 data class Candidate(val id: String, val type: ItemType, val lat: Double, val lng: Double)
@@ -48,7 +52,7 @@ object AlertRules {
             .filter { it.type in prefs.types }
             .filter { c -> lastAlertMs[c.id]?.let { nowMs - it >= prefs.cooldownMs } ?: true }
             .map { it to distanceM(lat, lng, it.lat, it.lng) }
-            .filter { it.second <= prefs.radiusM }
+            .filter { it.second <= prefs.radiusFor(it.first.type) }
             .sortedBy { it.second }
             .toList()
     }

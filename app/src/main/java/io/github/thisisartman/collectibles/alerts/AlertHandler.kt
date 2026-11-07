@@ -53,7 +53,7 @@ class AlertHandler @Inject constructor(
             if (p.quietOn && AlertRules.inQuietHours(hour, p.quietFromHour, p.quietToHour)) return@withLock
             val last = settings.lastAlerts()
             val due = items.filter { it.type in p.types && (last[it.id]?.let { t -> now - t >= p.cooldownMs } ?: true) }.take(MAX_PER_CHECK)
-            due.forEach { notifier.notifyNear(it, p.radiusM.toDouble(), null) }
+            due.forEach { notifier.notifyNear(it, p.radiusFor(it.type).toDouble(), null) }
             settings.recordAlerts(due.map { it.id }, now)
             if (due.isNotEmpty()) log.i("Alert", "geofence (no position): ${due.size} alerts")
         }

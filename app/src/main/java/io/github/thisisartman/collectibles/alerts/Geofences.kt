@@ -81,7 +81,7 @@ class Geofences @Inject constructor(
         val fences = chosen.map {
             Geofence.Builder()
                 .setRequestId(it.id)
-                .setCircularRegion(it.lat!!, it.lng!!, settings.radiusM.toFloat())
+                .setCircularRegion(it.lat!!, it.lng!!, settings.radiusFor(it.type).toFloat())
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
                 .setNotificationResponsiveness(RESPONSIVENESS_MS)
@@ -106,7 +106,7 @@ class Geofences @Inject constructor(
         runCatching { client.addGeofences(request, pendingIntent).await() }
             .onSuccess {
                 settings.geofenceError = 0
-                log.i("Geofence", "Registered ${fences.size} fences, radius ${settings.radiusM} m")
+                log.i("Geofence", "Registered ${fences.size} fences, a distance per kind")
             }
             .onFailure {
                 // 1000 means Google Location Accuracy is off; More says how to fix it

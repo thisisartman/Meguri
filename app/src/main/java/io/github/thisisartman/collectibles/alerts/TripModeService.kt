@@ -106,7 +106,7 @@ class TripModeService : Service() {
         prev = fix
         scope.launch {
             val nearest = handler.onPosition(fix, "trip")
-            val edge = nearest?.let { it.second - settings.radiusM }
+            val edge = nearest?.let { it.second - settings.radiusFor(it.first.type) }
             val next = AlertRules.nextIntervalMs(edge, speed)
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             val quiet = settings.quietOn && AlertRules.inQuietHours(hour, AlertSettings.QUIET_FROM, AlertSettings.QUIET_TO)
