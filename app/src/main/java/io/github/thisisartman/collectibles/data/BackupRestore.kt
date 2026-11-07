@@ -185,6 +185,8 @@ class BackupRestore @Inject constructor(
             // A "with photos" backup (#66): pictures this phone can't open are put back in its gallery first
             val placed = restoreBundledPhotos(File(info.dir, "photos"))
             val relink = if (rows.photos.isEmpty() || placed == rows.photos.size) null else relinkPhotos()
+            // Every photo already has its picture: nothing left to find, so a later start mustn't relink them
+            if (rows.photos.isNotEmpty() && placed == rows.photos.size) prefs.edit().putBoolean(KEY_RELINK, false).commit()
             RestoreResult(rows.items.size, rows.finds.size, rows.photos.size, safety, rows.photos.isNotEmpty() && relink == null)
         } finally {
             discard(info)
@@ -304,17 +306,20 @@ class BackupRestore @Inject constructor(
         val resolver = context.contentResolver
         var ok = 0
         for (p in dao.allPhotos()) {
-            val readable = runCatching { resolver.openInputStream(Uri.parse(p.contentUri))!!.use { it.read() } ; true }.getOrDefault(false)
-            if (readable) { ok++; continue }
+            // On a new phone the same address can be someone else's picture: keep it only if it is this photo
+            if (samePicture(p)) { ok++; continue }
             val file = File(dir, p.id).takeIf { it.isFile } ?: continue
             val values = android.content.ContentValues().apply {
                 put(MediaStore.Images.Media.DISPLAY_NAME, p.displayName ?: "meguri-${p.id}.jpg")
                 put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
                 put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Meguri")
+                // Hidden until fully written, so a crash mid-copy leaves no broken picture in the gallery
+                put(MediaStore.Images.Media.IS_PENDING, 1)
             }
             val uri = runCatching { resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values) }.getOrNull() ?: continue
             val written = runCatching { resolver.openOutputStream(uri)!!.use { out -> file.inputStream().use { it.copyTo(out) } }; true }.getOrDefault(false)
             if (written) {
+                resolver.update(uri, android.content.ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
                 dao.setPhotoLink(p.id, uri.toString(), ContentUris.parseId(uri), false)
                 ok++
             } else {
@@ -323,6 +328,25 @@ class BackupRestore @Inject constructor(
         }
         log.i("Restore", "Photos from the backup: $ok of ${dao.photoTotal()} now open")
         return ok
+    }
+
+    /**
+     * Whether the picture at the photo's stored address is that photo: it opens, and its name and size match the
+     * fingerprint where both are known (MediaStore can report size 0 for a fresh picture, which counts as unknown).
+     */
+    private fun samePicture(p: Photo): Boolean {
+        val uri = runCatching { Uri.parse(p.contentUri) }.getOrNull() ?: return false
+        val opens = runCatching { context.contentResolver.openInputStream(uri)!!.use { it.read() }; true }.getOrDefault(false)
+        if (!opens) return false
+        val cols = arrayOf(MediaStore.Images.Media.DISPLAY_NAME, MediaStore.Images.Media.SIZE)
+        val (name, size) = runCatching {
+            context.contentResolver.query(uri, cols, null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) to (if (c.isNull(1)) null else c.getLong(1)) else null
+            }
+        }.getOrNull() ?: return false
+        val nameOk = p.displayName == null || name == null || name == p.displayName
+        val sizeOk = p.sizeBytes == null || size == null || size == 0L || size == p.sizeBytes
+        return nameOk && sizeOk
     }
 
     /** After a restart that cut a relink short. */
