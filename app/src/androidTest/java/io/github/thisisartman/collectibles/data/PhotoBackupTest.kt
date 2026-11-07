@@ -126,6 +126,7 @@ class PhotoBackupTest {
         assertTrue("an hour-old unused copy is removed", !old.exists())
         assertTrue("a copy written just now may be a photo being added", fresh.exists())
         fresh.delete()
+        Unit
     }
 
     @Test fun backupCarriesTheAppCopyAndRestoresItOnANewPhone() = runBlocking {

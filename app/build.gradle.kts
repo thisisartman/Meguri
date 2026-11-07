@@ -111,6 +111,8 @@ dependencies {
     testImplementation(libs.junit)
     // The real org.json for JVM unit tests (Android's copy is only a stub there)
     testImplementation("org.json:json:20240303")
+    // room-testing needs serialization 1.8; the test APK has to match the app, which got 1.7.3 through navigation
+    implementation(libs.kotlinx.serialization.core)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.room.testing)
