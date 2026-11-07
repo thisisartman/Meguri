@@ -3,6 +3,14 @@
 ## 2026-11-08: next beta (not released)
 - Meguri opens on a map of Japan and flies in to where you are a moment after your position arrives; without a position it stays on Japan.
 - First open (#81): instead of the welcome card, the Nearby sheet asks whether you're starting fresh or already have some, lists the permissions Meguri needs and why, then asks for them. Then you pick where you collect: your own prefecture first, then popular choices, shaded on the map as you tick them, or all of Japan. Only the chosen regions are loaded, and later catalogue updates keep to them. "Already have some" then opens a picker: search, a grid of places, tap one and tick what you have there (a station's stamp and Ekitag on one card). After each pick the search text is selected, so one backspace clears it for the next name. What you add stacks up above Done; Done marks them as had before the app, with a vibration, and the sheet says how many went to your profile, with "Go to profile".
+- Onboarding:
+  - On the very first open, "Meguri / 巡り" fades into the map of Japan.
+  - In the picker, the keyboard stays up after OK, with the search text selected, so typing the next name replaces it.
+  - The card opens beside a tile in the outer columns, and above or below one in the middle columns.
+  - The last thing added shows by name and kind.
+  - Pulling the picker down shows the map with what the search found, framed above the sheet.
+  - Back steps through the onboarding instead of leaving it.
+  - The search bar is hidden while it runs.
 - My book and the You page are one page, called My book: your finds, collections started and today's finds, the map of where you collected and what you collected last are at the top, with the collections below. Your own collections are back in Settings.
 - The search bar is only search now; the menu (Trip, Collection check, Settings, Logs) is the ⋮ button on My book.
 - The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.

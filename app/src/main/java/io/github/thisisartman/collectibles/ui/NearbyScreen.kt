@@ -87,6 +87,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalDensity
@@ -152,7 +153,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             else k.sortedWith(compareBy<ItemRow> { it.noneHere }.thenBy { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
         }
     }
-    val pins = remember(shown) { shown.filter { !it.noneHere }.mapNotNull { it.toPin() } }
+    val pinsNearby = remember(shown) { shown.filter { !it.noneHere }.mapNotNull { it.toPin() } }
 
     val pickedRow = rows.firstOrNull { it.item.id == picked }
 
@@ -186,6 +187,21 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var onbContentPx by remember(onboarding.step) { mutableIntStateOf(0) }
     val onbPeek = if (onbContentPx > 0 && onboarding.step != OnboardingStep.HAVE) with(density) { (handlePx + onbContentPx).toDp() } + 16.dp else onbMax
     val peek = if (dropdownShown && !inOnboarding) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
+    // The picker (#81 O3) opens expanded; pulled down, the map shows what it lists and frames it (idle while covered)
+    val picking = onboarding.step == OnboardingStep.HAVE
+    // Back steps through the onboarding (seen on the emulator: it left the app mid-picker and the picks were lost)
+    androidx.activity.compose.BackHandler(enabled = inOnboarding && onboarding.step != OnboardingStep.START) {
+        when (onboarding.step) {
+            OnboardingStep.PERMISSIONS, OnboardingStep.REGIONS -> onboarding.step = OnboardingStep.START
+            else -> {} // picker, loading, finish: stay
+        }
+    }
+    LaunchedEffect(picking) { if (picking) runCatching { sheet.bottomSheetState.expand() } }
+    val sheetDown = sheet.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.PartiallyExpanded
+    val pins = if (picking) remember(onboarding.pickerShown) { onboarding.pickerShown.mapNotNull { it.toPin() } } else pinsNearby
+    LaunchedEffect(picking, sheetDown, onboarding.pickerShown) {
+        if (picking && sheetDown) fitTick++
+    }
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -207,7 +223,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 onboarding.step = OnboardingStep.FINISHED
                             }
                         },
-                        modifier = Modifier.height(peek - 40.dp).padding(horizontal = 16.dp),
+                        modifier = Modifier.height(androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp * 0.9f).padding(horizontal = 16.dp),
                     )
                     return@Column
                 }
@@ -391,7 +407,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 startOnJapan = true,
                 holdOnJapan = noCatalogue,
                 highlight = if (noCatalogue) prefectures.filter { it.ja in onboarding.chosen } else emptyList(),
-                bottomInset = if (noCatalogue) peek else 0.dp,
+                bottomInset = if (noCatalogue || onboarding.step == OnboardingStep.HAVE) peek else 0.dp,
             )
             // Back to where you are (owner, 2026-11-06), just above the sheet on the right
             if (here.fix != null) {
@@ -532,6 +548,33 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             // Grows out of the tapped pin and stays on it (#76); below the search bar
             pickedRow?.let { r ->
                 PinPopup(r, pinAt, vm, nav, here.fix?.let { it.lat to it.lng }, topLimit = 120.dp, onCollected = { picked = null })
+            }
+        }
+    }
+    // First open only: "Meguri" fades into the map of Japan (owner's onboarding spec, #81). A saved flag says at once
+    // whether this is a first open, so the splash also covers the moment before the database answers (otherwise the
+    // ordinary Nearby showed for a second, empty)
+    val onbPrefs = remember { ctxOnb.getSharedPreferences("onboarding", android.content.Context.MODE_PRIVATE) }
+    val firstOpen = remember { !onbPrefs.getBoolean("has_catalogue", false) }
+    LaunchedEffect(loadedRows != null, noCatalogue) {
+        if (loadedRows != null && !noCatalogue) onbPrefs.edit().putBoolean("has_catalogue", true).apply()
+    }
+    var splashDone by rememberSaveable { mutableStateOf(false) }
+    if (firstOpen && !splashDone) {
+        val fade = remember { androidx.compose.animation.core.Animatable(1f) }
+        LaunchedEffect(loadedRows != null) {
+            if (loadedRows == null) return@LaunchedEffect
+            kotlinx.coroutines.delay(400)
+            fade.animateTo(0f, androidx.compose.animation.core.tween(900))
+            splashDone = true
+        }
+        Box(
+            Modifier.fillMaxSize().graphicsLayer { alpha = fade.value }.background(MaterialTheme.colorScheme.background),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Meguri", style = MaterialTheme.typography.displayMedium, color = MaterialTheme.colorScheme.primary)
+                Text("巡り", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

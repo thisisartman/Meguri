@@ -48,6 +48,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.layout.boundsInParent
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -90,6 +92,12 @@ fun OnboardingPicker(
         sortPlaces(hits, ja, nearest, distance)
     }
     val byId = remember(rows) { rows.associateBy { it.item.id } }
+    androidx.compose.runtime.LaunchedEffect(shown) { state.pickerShown = shown.map { it.first } }
+    // Back closes an open card; with none open, Nearby's handler keeps you in the picker (picks aren't lost)
+    androidx.activity.compose.BackHandler(enabled = open != null) { open = null }
+    // After a pick the keyboard stays up, so one backspace clears the selected text for the next name (owner)
+    val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
+    val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
 
     Column(modifier.fillMaxWidth()) {
         Text(stringResource(R.string.onb_have_title), style = MaterialTheme.typography.headlineSmall)
@@ -98,7 +106,7 @@ fun OnboardingPicker(
         Row(verticalAlignment = Alignment.CenterVertically) {
             OutlinedTextField(
                 value = query, onValueChange = { query = it; open = null },
-                modifier = Modifier.weight(1f), singleLine = true,
+                modifier = Modifier.weight(1f).focusRequester(searchFocus), singleLine = true,
                 placeholder = { Text(stringResource(R.string.onb_have_search)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 shape = RoundedCornerShape(24.dp),
@@ -136,22 +144,35 @@ fun OnboardingPicker(
                     }
                 }
             }
-            // The card beside the tapped place: to its left in the right half, to its right in the left half
+            // The card next to the tapped place (owner: above, below, left or right, by where it sits): the outer
+            // columns open beside the tile, toward the middle; the middle columns open below a tile in the upper half
+            // and above one in the lower half
             val place = shown.firstOrNull { it.key == open }
             val at = open?.let { tiles[it] }
+            val boxH = with(LocalDensity.current) { maxHeight.toPx() }
+            var cardH by remember { mutableStateOf(0) }
             if (place != null && at != null) {
                 val cardW = with(LocalDensity.current) { 220.dp.toPx() }
-                val right = at.center.x < boxW / 2
-                val x = if (right) at.right else at.left - cardW
+                val col = (at.center.x / (boxW / 4)).toInt().coerceIn(0, 3)
+                val (x, y) = when (col) {
+                    0 -> at.right to at.top
+                    3 -> at.left - cardW to at.top
+                    else -> (at.center.x - cardW / 2) to (if (at.center.y < boxH / 2) at.bottom else at.top - cardH)
+                }
                 PlaceCard(
                     place, state.added, ja,
-                    modifier = Modifier.offset { IntOffset(x.toInt().coerceIn(0, (boxW - cardW).toInt()), at.top.toInt()) }.widthIn(max = 220.dp),
+                    modifier = Modifier
+                        .offset { IntOffset(x.toInt().coerceIn(0, (boxW - cardW).toInt().coerceAtLeast(0)), y.toInt().coerceIn(0, (boxH - cardH).toInt().coerceAtLeast(0))) }
+                        .widthIn(max = 220.dp)
+                        .onSizeChanged { cardH = it.height },
                     onOk = { ids ->
                         state.added = state.added.filter { it !in place.rows.map { r -> r.item.id } } + ids
                         open = null
                         tick()
                         // Select the whole search text, so one backspace clears it for the next name (owner)
                         query = query.copy(selection = TextRange(0, query.text.length))
+                        searchFocus.requestFocus()
+                        keyboard?.show()
                     },
                 )
             }
@@ -168,7 +189,17 @@ fun OnboardingPicker(
                     }
                 }
             }
-            Text(pluralStringResource(R.plurals.onb_added, state.added.size, state.added.size), style = MaterialTheme.typography.labelLarge)
+            Column(horizontalAlignment = Alignment.End) {
+                Text(pluralStringResource(R.plurals.onb_added, state.added.size, state.added.size), style = MaterialTheme.typography.labelLarge)
+                // The last one added, by name and kind, so the stack says what it holds (owner's review)
+                state.added.lastOrNull()?.let { byId[it] }?.let { r ->
+                    Text(
+                        r.item.displayName(ja) + " · " + stringResource(r.item.type.label()),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                        overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp),
+                    )
+                }
+            }
         }
         Button(onClick = { onDone(state.added) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
             Text(stringResource(if (state.added.isEmpty()) R.string.onb_have_skip else R.string.onb_have_done))

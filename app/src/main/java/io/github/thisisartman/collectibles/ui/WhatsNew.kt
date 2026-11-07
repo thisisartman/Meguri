@@ -31,18 +31,17 @@ object WhatsNew {
         Section(
             "New", "新機能",
             listOf(
-                "You: your finds, kinds and today, a map of where you collected, progress per collection" to "マイページ：取得数・種類・今日の数、集めた場所の地図、コレクションごとの進み具合",
-                "Catalogue: every Niigata card, plus Saitama and Tokyo, with where and when to get them" to "カタログ：新潟の全カードと埼玉・東京のカード、配布場所と時間つき",
-                "Pin card: one line, grows out of the pin" to "ピンのカード：1行で、ピンから開きます",
-                "Alerts: Collect opens the item; Dismiss closes it" to "通知：「集める」で項目を開き、「閉じる」で閉じます",
-                "Settings: a short list of sections" to "設定：短いセクションの一覧",
+                "My book: your finds and collections, a map of where you collected, and what you got last, all on one page" to "マイブック：取得数・コレクション・集めた場所の地図・最近のものを1ページに",
+                "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
+                "Menu: on My book (⋮); the search bar is only search" to "メニュー：マイブックの「⋮」に。検索バーは検索だけに",
+                "Pin card: icons all one size" to "ピンのカード：アイコンを同じ大きさに",
             ),
         ),
         Section(
-            "Photos", "写真",
+            "Faster", "高速化",
             listOf(
-                "Kept in Meguri: clearing the gallery loses nothing" to "Meguri内に保存：ギャラリーを消しても失われません",
-                "Weekly backups include photos" to "毎週のバックアップに写真も含まれます",
+                "Opening: the catalogue isn't read again on every start" to "起動：毎回カタログを読み直さなくなりました",
+                "Loading a region: written in one go" to "地域の読み込み：一度にまとめて保存",
             ),
         ),
     )

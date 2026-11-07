@@ -62,6 +62,9 @@ class OnboardingState {
     /** Items ticked in the picker, in the order added (the stacked circles above Done). */
     var added by mutableStateOf<List<String>>(emptyList())
 
+    /** What the picker shows now, for the map under it when the sheet is pulled down (owner's spec). */
+    var pickerShown by mutableStateOf<List<io.github.thisisartman.collectibles.data.ItemRow>>(emptyList())
+
     /** Still showing after the catalogue has loaded: the picker and the closing sheet. */
     val afterLoad: Boolean get() = step == OnboardingStep.HAVE || step == OnboardingStep.FINISHED
 }
@@ -82,7 +85,8 @@ fun onboardingPeek(state: OnboardingState): Dp {
         OnboardingStep.ASKING, OnboardingStep.LOADING -> screen * 0.4f
         OnboardingStep.REGIONS -> screen * 0.6f
         // The picker takes the screen (owner): it's a full search; pull it down to see the map
-        OnboardingStep.HAVE -> screen * 0.92f
+        // Opens fully expanded (a full search); pulled down, it rests here and the map above shows the results
+        OnboardingStep.HAVE -> screen * 0.45f
         OnboardingStep.FINISHED -> screen * 0.5f
     }
 }

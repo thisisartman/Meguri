@@ -329,8 +329,9 @@ fun MeguriMap(
             // Room for the search bar above and the sheet's top edge below, so no pin sits under either
             pts.size >= 2 -> {
                 val d = context.resources.displayMetrics.density
+                // Above whatever covers the map's lower part (the onboarding picker's sheet, #81)
                 m.animateCamera(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(pts).build(),
-                    (40 * d).toInt(), (130 * d).toInt(), (40 * d).toInt(), (60 * d).toInt()), 700)
+                    (40 * d).toInt(), (130 * d).toInt(), (40 * d).toInt(), maxOf((60 * d).toInt(), insetPx + (40 * d).toInt())), 700)
             }
             pts.size == 1 -> m.animateCamera(CameraUpdateFactory.newLatLngZoom(pts.first(), 15.0), 700)
         }
