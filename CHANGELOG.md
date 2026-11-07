@@ -16,6 +16,7 @@
 - The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.
 - The pin card's icons are all one size.
 - Edit an item's details: the pencil on an item page opens its names, where to get it, address, hours, notes and position. The position can be where you are, a pasted Google Maps link (a map view, a place or a short link) or a place search. Your edits stay when the catalogue is updated. (Database version 4; existing items move over unchanged.)
+- Roadmap brought up to date (`docs/ROADMAP.md`): beta.6 in Done, what beta.7 holds, and the order of what's next.
 - Faster start: the catalogue file is no longer read on every start when nothing has changed, and the counts on the tabs stay blank (not 0 / 0) until your list has loaded. Loading a catalogue writes in one batch, and the region list's counts are kept after the first time.
 - The onboarding sheet sits at the height of what it shows and snaps there, with no empty space under its buttons.
 - Testing: after the onboarding, all 97 unit tests and 26 phone-level tests still pass; both onboarding paths were walked through on the emulator.
