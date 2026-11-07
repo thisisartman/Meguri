@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.unit.dp
 import android.graphics.Color as AColor
 import android.os.Bundle
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -69,6 +70,11 @@ fun MeguriMap(
     // Map-first start (#81, owner 2026-11-07): open on all of Japan, then fly in to you a moment after your
     // position arrives; without a position it stays on Japan. Pins alone never place the camera.
     startOnJapan: Boolean = false,
+    // While true (the onboarding), stay on Japan and the chosen prefectures; fly in to you once it turns false
+    holdOnJapan: Boolean = false,
+    // Prefectures shaded on the map (the onboarding's region step, #81); the camera fits them above [bottomInset]
+    highlight: List<io.github.thisisartman.collectibles.data.Prefecture> = emptyList(),
+    bottomInset: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -163,6 +169,15 @@ fun MeguriMap(
                         PropertyFactory.circleStrokeColor(Expression.color(AColor.WHITE)),
                     ),
                 )
+                // Chosen prefectures, shaded under everything else
+                s.addSource(GeoJsonSource(SRC_HIGHLIGHT))
+                s.addLayer(
+                    org.maplibre.android.style.layers.FillLayer(LAYER_HIGHLIGHT, SRC_HIGHLIGHT).withProperties(
+                        PropertyFactory.fillColor(Expression.color(routeColor)),
+                        PropertyFactory.fillOpacity(Expression.literal(0.28f)),
+                        PropertyFactory.fillOutlineColor(Expression.color(routeColor)),
+                    ),
+                )
                 // The trip's line, under the pins, in the theme's primary colour
                 s.addSource(GeoJsonSource(SRC_ROUTE))
                 s.addLayer(
@@ -221,8 +236,8 @@ fun MeguriMap(
         if (startOnJapan && !placed && style != null) m.moveCamera(CameraUpdateFactory.newLatLngBounds(JAPAN, 0))
     }
     val hasHere = here != null
-    LaunchedEffect(style, hasHere) {
-        if (!startOnJapan || placed || style == null || !hasHere) return@LaunchedEffect
+    LaunchedEffect(style, hasHere, holdOnJapan) {
+        if (!startOnJapan || holdOnJapan || placed || style == null || !hasHere) return@LaunchedEffect
         // A short pause once the position is known, so the map doesn't jump the moment it arrives
         kotlinx.coroutines.delay(300)
         val m = map ?: return@LaunchedEffect
@@ -279,6 +294,27 @@ fun MeguriMap(
             }
         }
     }
+    val insetPx = with(androidx.compose.ui.platform.LocalDensity.current) { bottomInset.roundToPx() }
+    LaunchedEffect(style, highlight, insetPx) {
+        val s = style ?: return@LaunchedEffect
+        val m = map ?: return@LaunchedEffect
+        s.getSourceAs<GeoJsonSource>(SRC_HIGHLIGHT)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                highlight.map { p ->
+                    Feature.fromGeometry(
+                        org.maplibre.geojson.MultiPolygon.fromLngLats(p.rings.map { ring -> listOf(ring.map { (x, y) -> Point.fromLngLat(x, y) }) }),
+                    )
+                },
+            ),
+        )
+        // Fit what is chosen (or all of Japan) into the space above the sheet
+        if (startOnJapan && !placed) {
+            // Framed by each prefecture's main outline: Tokyo's islands reach 24.7°N and would frame most of Japan
+            val pts = highlight.flatMap { it.mainRing() }.map { (x, y) -> LatLng(y, x) }
+            val bounds = if (pts.size >= 2) LatLngBounds.Builder().includes(pts).build() else JAPAN
+            m.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 40, 140, 40, insetPx + 40), 600)
+        }
+    }
     LaunchedEffect(fitTick) {
         if (fitTick == 0) return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
@@ -323,4 +359,7 @@ private const val STYLE_LIGHT = "https://tiles.openfreemap.org/styles/liberty"
 private const val STYLE_DARK = "https://tiles.openfreemap.org/styles/dark"
 
 /** The four main islands and Okinawa's north, for the map-first start (#81). */
+private const val SRC_HIGHLIGHT = "meguri-highlight"
+private const val LAYER_HIGHLIGHT = "meguri-highlight-fill"
+
 private val JAPAN: LatLngBounds = LatLngBounds.Builder().include(LatLng(30.0, 129.3)).include(LatLng(45.6, 146.0)).build()

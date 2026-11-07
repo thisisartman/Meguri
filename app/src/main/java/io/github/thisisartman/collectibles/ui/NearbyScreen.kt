@@ -175,7 +175,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     // Search owns the screen (owner, 2026-11-07): the sheet tucks away as soon as search is tapped, and while its
     // results show in the dropdown
     val dropdownShown = searchFocused || (searching && listOpen)
-    val peek = if (dropdownShown) 0.dp else if (noCatalogue) 520.dp else restingPeek.coerceIn(220.dp, 480.dp)
+    // The onboarding (#81) runs in this sheet while there is no catalogue; it sizes the sheet step by step
+    val onboarding = rememberOnboardingState()
+    val ctxOnb = androidx.compose.ui.platform.LocalContext.current
+    val prefectures = remember { PrefectureAsset.all(ctxOnb) }
+    val peek = if (dropdownShown) 0.dp else if (noCatalogue) onboardingPeek(onboarding) else restingPeek.coerceIn(220.dp, 480.dp)
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -187,13 +191,18 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         sheetContent = {
             Column(Modifier.fillMaxWidth().heightIn(min = 300.dp)) {
                 if (noCatalogue) {
-                    // #58: a proper welcome, with the bundled Niigata catalogue one tap away
+                    // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
                     val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
-                    val scope = androidx.compose.runtime.rememberCoroutineScope()
-                    WelcomeCard(
-                        onLoadBundled = { scope.launch { runCatching { more.io.importBundled() } } },
+                    OnboardingSheet(
+                        onboarding, prefectures, here.fix?.let { it.lat to it.lng },
+                        loadCounts = { more.io.bundledPrefectures() },
+                        onLoad = { regions -> more.io.importBundled(regions) },
+                        // Already have some: Collection check ticks them off until the picker is built (#81 O3)
+                        onFinished = { already -> if (already) nav.navigate("check") },
                         onLoadFile = { nav.openMore() },
-                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+                        onPermissionsAnswered = { vm.refreshPosition() },
+                        // The sheet's own height, less its handle: the region list scrolls and Load stays in view
+                        modifier = Modifier.height(peek - 40.dp),
                     )
                     return@Column
                 }
@@ -351,6 +360,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 fitTick = fitTick,
                 memoryKey = "nearby",
                 startOnJapan = true,
+                holdOnJapan = noCatalogue,
+                highlight = if (noCatalogue) prefectures.filter { it.ja in onboarding.chosen } else emptyList(),
+                bottomInset = if (noCatalogue) peek else 0.dp,
             )
             // Back to where you are (owner, 2026-11-06), just above the sheet on the right
             if (here.fix != null) {
@@ -462,7 +474,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                     val fix = here.fix
-                    if (fix == null || !here.live) {
+                    // Not during the onboarding: it asks for location itself, after saying why (#81)
+                    if ((fix == null || !here.live) && !noCatalogue) {
                         Row(Modifier.padding(start = 16.dp, end = 8.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                             val allowed = LocationAccess.has(ctx)
                             val where = when {

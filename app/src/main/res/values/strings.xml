@@ -394,4 +394,35 @@
         <item quantity="one">kind</item>
         <item quantity="other">kinds</item>
     </plurals>
+    <string name="onb_welcome">Welcome to Meguri</string>
+    <string name="onb_question">Are you starting fresh, or do you already have cards, stamps or goshuin to put in?</string>
+    <string name="onb_fresh">I\'m starting fresh</string>
+    <string name="onb_fresh_sub">Pick where you collect and start</string>
+    <string name="onb_already">I already have some</string>
+    <string name="onb_already_sub">Pick where you collect, then tick off what you have</string>
+    <string name="onb_file">I have a catalogue file</string>
+    <string name="onb_perm_title">What Meguri needs</string>
+    <string name="onb_perm_sub">Android asks for each one next. You can change them any time in Settings.</string>
+    <string name="onb_perm_location">Location</string>
+    <string name="onb_perm_location_why">To show what is near you and how far. Precise or approximate both work; approximate shows the area around you.</string>
+    <string name="onb_perm_notify">Notifications</string>
+    <string name="onb_perm_notify_why">To tell you when you are near something you don\'t have yet.</string>
+    <string name="onb_perm_background">Location all the time (later)</string>
+    <string name="onb_perm_background_why">Only if you want alerts while Meguri is closed. Asked later, from Alerts.</string>
+    <string name="onb_perm_photos">Photos and camera</string>
+    <string name="onb_perm_photos_why">Nothing to allow: you pick each photo or open the camera yourself, and Meguri keeps its own copy.</string>
+    <string name="onb_next">Next</string>
+    <string name="onb_asking">Allow what you\'re comfortable with</string>
+    <string name="onb_asking_sub">Android\'s own questions appear on top of this.</string>
+    <string name="onb_regions_title">Where do you collect?</string>
+    <string name="onb_regions_sub">Meguri loads what\'s in each region: cards, stamps and where to get them. Chosen ones are shaded on the map.</string>
+    <string name="onb_regions_here">Where you are</string>
+    <string name="onb_regions_popular">Popular choices</string>
+    <string name="onb_regions_all">Select all of Japan</string>
+    <string name="onb_regions_more">More prefectures are coming.</string>
+    <string name="onb_loading">Loading…</string>
+    <plurals name="onb_load">
+        <item quantity="one">Load %d region</item>
+        <item quantity="other">Load %d regions</item>
+    </plurals>
 </resources>

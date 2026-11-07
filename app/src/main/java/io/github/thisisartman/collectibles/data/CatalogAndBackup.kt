@@ -43,10 +43,31 @@ class CatalogAndBackup @Inject constructor(
         importCatalogText(text)
     }
 
-    /** The Niigata catalogue that ships inside the app (#58), so a first start needs no file. */
-    suspend fun importBundled(): ImportResult = withContext(Dispatchers.IO) {
+    /**
+     * The catalogue that ships inside the app (#58), so a first start needs no file. [regions] limits it to those
+     * prefectures (onboarding, #81) and is remembered, so later refreshes keep to them; null loads everything.
+     */
+    suspend fun importBundled(regions: Set<String>? = null): ImportResult = withContext(Dispatchers.IO) {
         val text = bundledText()
-        importCatalogText(text).also { bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply() }
+        bundledPrefs.edit().apply { if (regions == null) remove(KEY_REGIONS) else putStringSet(KEY_REGIONS, regions) }.apply()
+        importRegions(text, regions).also { bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply() }
+    }
+
+    /** Prefectures in the bundled catalogue and how many things each has, for the onboarding's region list. */
+    suspend fun bundledPrefectures(): Map<String, Map<ItemType, Int>> = withContext(Dispatchers.IO) {
+        Csv.parseWithHeader(bundledText())
+            .mapNotNull { m -> m["prefecture"]?.trim()?.ifEmpty { null }?.let { it to m } }
+            // A station on several lines is one item: count it once
+            .distinctBy { (_, m) -> m["catalog_key"].orEmpty().ifEmpty { m["code"].orEmpty().ifEmpty { m["name_ja"].orEmpty() } } + m["type"] }
+            .groupBy({ it.first }, { it.second["type"].orEmpty() })
+            .mapValues { (_, types) -> types.mapNotNull { t -> runCatching { ItemType.valueOf(t) }.getOrNull() }.groupingBy { it }.eachCount() }
+    }
+
+    private val savedRegions: Set<String>? get() = bundledPrefs.getStringSet(KEY_REGIONS, null)
+
+    private suspend fun importRegions(text: String, regions: Set<String>?): ImportResult {
+        val maps = Csv.parseWithHeader(text).let { all -> if (regions == null) all else all.filter { it["prefecture"]?.trim() in regions } }
+        return lock.withLock { importRows(maps) }
     }
 
     /**
@@ -58,12 +79,15 @@ class CatalogAndBackup @Inject constructor(
         val text = bundledText()
         val sha = sha(text)
         val have = dao.allLines().map { it.id }.toSet()
-        val loadedBefore = have.any { it in BUNDLED_LINE_IDS }
+        // Loaded before: its lines are here, or regions were chosen (a Tokyo-only choice has no lines)
+        val loadedBefore = have.any { it in BUNDLED_LINE_IDS } || savedRegions != null
         if (!loadedBefore) return@withContext null
         // Also after restoring a backup made before a line was added: the file is the same, a line is missing
-        val missing = Csv.parseWithHeader(text).mapNotNull { it["line_id"]?.trim()?.ifEmpty { null } }.toSet() - have
+        val regions = savedRegions
+        val missing = Csv.parseWithHeader(text).filter { regions == null || it["prefecture"]?.trim() in regions }
+            .mapNotNull { it["line_id"]?.trim()?.ifEmpty { null } }.toSet() - have
         if (bundledPrefs.getString(KEY_BUNDLED_SHA, null) == sha && missing.isEmpty()) return@withContext null
-        importCatalogText(text).also {
+        importRegions(text, savedRegions).also {
             bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha).apply()
             log.i("Catalog", "Bundled catalogue updated: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
         }
@@ -229,5 +253,6 @@ class CatalogAndBackup @Inject constructor(
 /** Built by tools/trip-catalog/make_catalog.py; copy the new CSV here when it changes. */
 const val BUNDLED_CATALOGUE = "catalogue/trip-niigata.csv"
 private const val KEY_BUNDLED_SHA = "bundled_sha"
+private const val KEY_REGIONS = "regions"
 /** Lines only the bundled catalogue brings: one of them in the database means it was loaded. */
 private val BUNDLED_LINE_IDS = setOf("JR_JOETSU", "JR_SHINETSU", "JR_ECHIGO", "JR_YAHIKO")

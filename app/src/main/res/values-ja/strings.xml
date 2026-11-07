@@ -392,4 +392,34 @@
     <plurals name="profile_kinds">
         <item quantity="other">種類</item>
     </plurals>
+    <string name="onb_welcome">Meguriへようこそ</string>
+    <string name="onb_question">はじめから始めますか？それとも、持っているカード・スタンプ・御朱印を登録しますか？</string>
+    <string name="onb_fresh">はじめから始める</string>
+    <string name="onb_fresh_sub">集める地域を選んで始めます</string>
+    <string name="onb_already">もう持っているものがある</string>
+    <string name="onb_already_sub">地域を選んでから、持っているものにチェックします</string>
+    <string name="onb_file">カタログファイルがある</string>
+    <string name="onb_perm_title">Meguriに必要な許可</string>
+    <string name="onb_perm_sub">このあとAndroidが一つずつ確認します。設定からいつでも変更できます。</string>
+    <string name="onb_perm_location">位置情報</string>
+    <string name="onb_perm_location_why">近くにあるものと距離を表示するため。正確・おおよそ、どちらでも使えます（おおよそでは周辺の範囲を表示）。</string>
+    <string name="onb_perm_notify">通知</string>
+    <string name="onb_perm_notify_why">まだ持っていないものの近くに来たときにお知らせするため。</string>
+    <string name="onb_perm_background">常に位置情報を使用（あとで）</string>
+    <string name="onb_perm_background_why">Meguriを閉じていても通知したい場合のみ。あとで「通知」から確認します。</string>
+    <string name="onb_perm_photos">写真とカメラ</string>
+    <string name="onb_perm_photos_why">許可は不要です。写真はその都度選ぶかカメラで撮り、Meguriが自分用のコピーを保存します。</string>
+    <string name="onb_next">次へ</string>
+    <string name="onb_asking">許可できるものを選んでください</string>
+    <string name="onb_asking_sub">この上にAndroidの確認が表示されます。</string>
+    <string name="onb_regions_title">どこで集めますか？</string>
+    <string name="onb_regions_sub">地域ごとに、カード・スタンプとその入手場所を読み込みます。選んだ地域は地図に色がつきます。</string>
+    <string name="onb_regions_here">現在地</string>
+    <string name="onb_regions_popular">人気の地域</string>
+    <string name="onb_regions_all">日本全国を選ぶ</string>
+    <string name="onb_regions_more">ほかの都道府県も順次追加します。</string>
+    <string name="onb_loading">読み込み中…</string>
+    <plurals name="onb_load">
+        <item quantity="other">%d地域を読み込む</item>
+    </plurals>
 </resources>

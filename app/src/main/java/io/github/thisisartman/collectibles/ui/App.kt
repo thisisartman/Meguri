@@ -94,7 +94,11 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     var showLog by rememberSaveable { mutableStateOf(false) }
     // First open after an update: what changed (#77)
     val appContext = androidx.compose.ui.platform.LocalContext.current
-    var whatsNew by rememberSaveable { mutableStateOf(WhatsNew.shouldShow(appContext)) }
+    // Not during the onboarding (#81): a phone with no catalogue yet has nothing "new" to read
+    val loadedRows by vm.rowsOrNull.collectAsStateWithLifecycle()
+    val hasCatalogue = loadedRows?.any { it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }
+    var whatsNew by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(hasCatalogue) { if (hasCatalogue == true && WhatsNew.shouldShow(appContext)) whatsNew = true }
     if (whatsNew) WhatsNewDialog(onDismiss = { WhatsNew.markSeen(appContext); whatsNew = false })
     var bookMarking by remember { mutableStateOf(false) }
 
@@ -139,9 +143,10 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             else -> askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
         }
     }
-    LaunchedEffect(Unit) {
-        CameraCapture.cleanEmptyRows(resolver)
-        askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+    LaunchedEffect(Unit) { CameraCapture.cleanEmptyRows(resolver) }
+    // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81)
+    LaunchedEffect(hasCatalogue) {
+        if (hasCatalogue == true) askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
     LifecycleResumeEffect(Unit) {
         // Back from Settings with location allowed: the blocked note no longer applies

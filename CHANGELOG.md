@@ -2,6 +2,8 @@
 
 ## 2026-11-08: next beta (not released)
 - Meguri opens on a map of Japan and flies in to where you are a moment after your position arrives; without a position it stays on Japan.
+- First open (#81): instead of the welcome card, the Nearby sheet asks whether you're starting fresh or already have some, lists the permissions Meguri needs and why, then asks for them. Then you pick where you collect: your own prefecture first, then popular choices, shaded on the map as you tick them, or all of Japan. Only the chosen regions are loaded, and later catalogue updates keep to them. "Already have some" then opens Collection check, until the tick-off picker is built.
+- Location is no longer asked for the moment the app opens on a new phone; the onboarding asks after saying why. "What's new" waits until there is a catalogue.
 - Fixed: the welcome card no longer flashes on every start (it read "loaded" before the list had arrived), and "Nothing here yet" waits for the list too.
 - Fixed: "What's new" now lists this version's changes; beta.6 showed beta.5's list.
 
