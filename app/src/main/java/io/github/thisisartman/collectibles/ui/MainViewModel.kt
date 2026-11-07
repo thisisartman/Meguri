@@ -70,10 +70,9 @@ class MainViewModel @Inject constructor(
     private val trips: TripStore,
 ) : ViewModel() {
 
-    val rows: StateFlow<List<ItemRow>> = repo.itemRows().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
-
-    /** False until the database has answered once, so an empty list at start isn't read as "no catalogue" (#78). */
-    val rowsLoaded: StateFlow<Boolean> = repo.itemRows().map { true }.stateIn(viewModelScope, SharingStarted.Eagerly, false)
+    /** Null until the database has answered once (#78). One query: "loaded" and the rows arrive together. */
+    val rowsOrNull: StateFlow<List<ItemRow>?> = repo.itemRows().stateIn(viewModelScope, SharingStarted.Eagerly, null)
+    val rows: StateFlow<List<ItemRow>> = rowsOrNull.map { it.orEmpty() }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val lines: StateFlow<List<Line>> = repo.lines().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     val lineStations: StateFlow<List<LineStation>> = repo.lineStations().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 

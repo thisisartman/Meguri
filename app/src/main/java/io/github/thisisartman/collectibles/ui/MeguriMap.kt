@@ -66,6 +66,9 @@ fun MeguriMap(
     // A map inside a card on a solid page: drawn as an ordinary view, since the default surface sits behind the
     // window and the page's background hid it completely (the profile page's map, 2026-11-07)
     inCard: Boolean = false,
+    // Map-first start (#81, owner 2026-11-07): open on all of Japan, then fly in to you a moment after your
+    // position arrives; without a position it stays on Japan. Pins alone never place the camera.
+    startOnJapan: Boolean = false,
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -213,6 +216,25 @@ fun MeguriMap(
     var placedAt by remember { mutableStateOf(if (placed) memoryKey?.let { CameraMemory.placedAt[it] } else null) }
     LaunchedEffect(placedAt) { memoryKey?.let { k -> placedAt?.let { CameraMemory.placedAt[k] = it } } }
     var fittedRoute by remember { mutableStateOf<List<Pair<Double, Double>>>(emptyList()) }
+    LaunchedEffect(style) {
+        val m = map ?: return@LaunchedEffect
+        if (startOnJapan && !placed && style != null) m.moveCamera(CameraUpdateFactory.newLatLngBounds(JAPAN, 0))
+    }
+    val hasHere = here != null
+    LaunchedEffect(style, hasHere) {
+        if (!startOnJapan || placed || style == null || !hasHere) return@LaunchedEffect
+        // A short pause once the position is known, so the map doesn't jump the moment it arrives
+        kotlinx.coroutines.delay(300)
+        val m = map ?: return@LaunchedEffect
+        val h = here ?: return@LaunchedEffect
+        placed = true
+        placedAt = h
+        val focus = pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second)
+        // Before the pins have loaded there is only you to frame; a bounds of one point throws
+        val update = if (focus.size >= 2) CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(focus).build(), 80)
+        else CameraUpdateFactory.newLatLngZoom(LatLng(h.first, h.second), 14.0)
+        m.animateCamera(update, 1400)
+    }
     LaunchedEffect(style, pins, here, route) {
         val s = style ?: return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
@@ -245,7 +267,7 @@ fun MeguriMap(
         }
         // Place once, and again when you have moved far (over about 5 km) from where it was placed
         val movedFar = here != null && placedAt != null && dist2(MapPin("", placedAt!!.first, placedAt!!.second, ItemType.EKI_STAMP, false), here) > 0.0025
-        if ((!placed || movedFar) && (here != null || pins.isNotEmpty())) {
+        if ((!placed || movedFar) && (here != null || pins.isNotEmpty()) && !(startOnJapan && !placed)) {
             placed = true
             placedAt = here
             val focus = (here?.let { h -> pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second) }
@@ -299,3 +321,6 @@ private const val LAYER_HERE = "here-dot"
 private const val LAYER_HERE_HALO = "here-halo"
 private const val STYLE_LIGHT = "https://tiles.openfreemap.org/styles/liberty"
 private const val STYLE_DARK = "https://tiles.openfreemap.org/styles/dark"
+
+/** The four main islands and Okinawa's north, for the map-first start (#81). */
+private val JAPAN: LatLngBounds = LatLngBounds.Builder().include(LatLng(30.0, 129.3)).include(LatLng(45.6, 146.0)).build()

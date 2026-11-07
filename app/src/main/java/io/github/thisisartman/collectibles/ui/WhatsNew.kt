@@ -31,17 +31,18 @@ object WhatsNew {
         Section(
             "New", "新機能",
             listOf(
-                "No stamp here: mark a place where there was nothing to get" to "スタンプなし：何もなかった場所を記録",
-                "Entry picture: tap a photo and choose it" to "表示写真：写真をタップして選択",
-                "Proximity mode: the new name for Trip mode" to "近接モード：トリップモードの新しい名前",
-                "Taps: a short vibration on pins, tiles and Collect" to "タップ：ピン・タイル・取得で短く振動",
+                "You: your finds, kinds and today, a map of where you collected, progress per collection" to "マイページ：取得数・種類・今日の数、集めた場所の地図、コレクションごとの進み具合",
+                "Catalogue: every Niigata card, plus Saitama and Tokyo, with where and when to get them" to "カタログ：新潟の全カードと埼玉・東京のカード、配布場所と時間つき",
+                "Pin card: one line, grows out of the pin" to "ピンのカード：1行で、ピンから開きます",
+                "Alerts: Collect opens the item; Dismiss closes it" to "通知：「集める」で項目を開き、「閉じる」で閉じます",
+                "Settings: a short list of sections" to "設定：短いセクションの一覧",
             ),
         ),
         Section(
-            "Fixed", "修正",
+            "Photos", "写真",
             listOf(
-                "Opening after an update: no more flash of the welcome screen" to "更新後の起動：ようこそ画面が一瞬出なくなりました",
-                "Google Maps links: shared places and station names match" to "Googleマップのリンク：共有した場所と駅名が一致",
+                "Kept in Meguri: clearing the gallery loses nothing" to "Meguri内に保存：ギャラリーを消しても失われません",
+                "Weekly backups include photos" to "毎週のバックアップに写真も含まれます",
             ),
         ),
     )

@@ -156,10 +156,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 
     val pickedRow = rows.firstOrNull { it.item.id == picked }
 
-    val loaded by vm.rowsLoaded.collectAsStateWithLifecycle()
+    // Read from the one query that also carries the rows: a separate "loaded" flag could arrive first, while the rows
+    // were still the empty start value, and flashed the welcome card on every cold start (seen on the emulator, 2026-11-08)
+    val loadedRows by vm.rowsOrNull.collectAsStateWithLifecycle()
     val tick = rememberTick()
-    // Only once the database has answered: an empty list while it opens is not "no catalogue" (#78)
-    val noCatalogue = loaded && rows.none { it.item.origin != Origin.USER }
+    val noCatalogue = loadedRows?.none { it.item.origin != Origin.USER } ?: false
     val sheet = rememberBottomSheetScaffoldState()
     // The resting sheet shows the header and one whole row of tiles (name lines and distance too),
     // measured, so it fits at any text size and tile size. 300 dp until the first measure.
@@ -300,7 +301,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                 }
-                if (shown.isEmpty()) {
+                if (shown.isEmpty() && loadedRows != null) {
                     Text(
                         stringResource(R.string.nearby_empty_kind),
                         Modifier.padding(16.dp),
@@ -349,6 +350,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 recenter = recenter,
                 fitTick = fitTick,
                 memoryKey = "nearby",
+                startOnJapan = true,
             )
             // Back to where you are (owner, 2026-11-06), just above the sheet on the right
             if (here.fix != null) {
@@ -413,7 +415,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 }
                             }
                         }
-                        if (shown.isEmpty()) {
+                        if (shown.isEmpty() && loadedRows != null) {
                             Text(stringResource(R.string.nearby_empty_kind), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                         androidx.compose.foundation.lazy.LazyColumn(Modifier.fillMaxWidth().heightIn(max = 320.dp)) {

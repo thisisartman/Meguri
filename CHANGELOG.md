@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08: next beta (not released)
+- Meguri opens on a map of Japan and flies in to where you are a moment after your position arrives; without a position it stays on Japan.
+- Fixed: the welcome card no longer flashes on every start (it read "loaded" before the list had arrived), and "Nothing here yet" waits for the list too.
+- Fixed: "What's new" now lists this version's changes; beta.6 showed beta.5's list.
+
 ## 2026-11-07: 0.3.0-beta.6 (versionCode 8, sent to the owner on Telegram, 23:58)
 - No more flash of the welcome screen on the first open after an update.
 - A short vibration when you tap a pin, a tile, Collect or "No stamp here".
