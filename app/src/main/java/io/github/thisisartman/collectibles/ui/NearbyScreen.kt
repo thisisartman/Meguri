@@ -171,8 +171,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         with(density) { (handlePx + gridTopPx + rowPx).toDp() } + 12.dp
     } else 300.dp
     // Taller while the welcome shows, so both of its buttons are in view without dragging
-    // Searching shows its results in the dropdown only (owner, 2026-11-07): the sheet steps out of the way
-    val dropdownShown = searching && (searchFocused || listOpen)
+    // Search owns the screen (owner, 2026-11-07): the sheet tucks away as soon as search is tapped, and while its
+    // results show in the dropdown
+    val dropdownShown = searchFocused || (searching && listOpen)
     val peek = if (dropdownShown) 0.dp else if (noCatalogue) 520.dp else restingPeek.coerceIn(220.dp, 480.dp)
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
