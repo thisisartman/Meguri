@@ -1,5 +1,11 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.clickable
+import androidx.compose.runtime.LaunchedEffect
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Box
@@ -74,10 +80,12 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     val row = shown.firstOrNull { it.item.id == picked }
 
+    var pinAt by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
     Box(Modifier.fillMaxSize()) {
         MeguriMap(
             pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
             onPinTap = { tick(); picked = it }, onMapTap = { picked = null },
+            anchor = row?.item?.lat?.let { lat -> row.item.lng?.let { lat to it } }, onAnchorScreen = { pinAt = it },
         )
         Surface(
             Modifier.statusBarsPadding().padding(12.dp),
@@ -103,82 +111,78 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
             }
         }
         if (row != null) {
-            Surface(
-                Modifier.align(Alignment.BottomCenter).fillMaxWidth().navigationBarsPadding().padding(12.dp),
-                shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    PinHeader(row, vm.distanceTo(row), here.fix?.let { it.lat to it.lng })
-                    Spacer(Modifier.height(12.dp))
-                    PinActions(row, vm, nav, onCollected = { picked = null })
+            PinPopup(row, pinAt, vm, nav, here.fix?.let { it.lat to it.lng }, topLimit = 72.dp, onCollected = { picked = null })
+        }
+    }
+}
+
+/**
+ * A tapped pin's card, compact on one line (owner's pick C, Telegram 408): type icon, name, distance with an arrow,
+ * then Directions and, while still to get, Collect as icons. Tapping the text opens the item. It grows out of the
+ * tapped pin and stays on it while the map moves (#76): above the pin, or below it when there is no room above.
+ */
+@Composable
+fun PinPopup(
+    row: ItemRow, at: androidx.compose.ui.geometry.Offset?, vm: MainViewModel, nav: NavHostController,
+    here: Pair<Double, Double>?, topLimit: androidx.compose.ui.unit.Dp, onCollected: () -> Unit,
+) {
+    val context = LocalContext.current
+    val ja = isJapanese()
+    val name = row.item.displayName(ja)
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    var size by remember { mutableStateOf(androidx.compose.ui.unit.IntSize.Zero) }
+    val grow = remember(row.item.id) { androidx.compose.animation.core.Animatable(0f) }
+    LaunchedEffect(row.item.id) {
+        grow.animateTo(1f, androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = 520f))
+    }
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxSize()) {
+        val width = with(density) { maxWidth.toPx() }
+        val margin = with(density) { 12.dp.toPx() }
+        val gap = with(density) { 14.dp.toPx() }
+        val top = with(density) { topLimit.toPx() }
+        val pin = at ?: return@BoxWithConstraints
+        val left = (pin.x - size.width / 2f).coerceIn(margin, (width - size.width - margin).coerceAtLeast(margin))
+        val above = pin.y - size.height - gap >= top
+        val y = if (above) pin.y - size.height - gap else pin.y + gap
+        val pivot = androidx.compose.ui.graphics.TransformOrigin(
+            if (size.width > 0) ((pin.x - left) / size.width).coerceIn(0f, 1f) else 0.5f, if (above) 1f else 0f,
+        )
+        Surface(
+            Modifier
+                .offset { androidx.compose.ui.unit.IntOffset(left.toInt(), y.toInt()) }
+                .widthIn(max = 360.dp)
+                .onSizeChanged { size = it }
+                .graphicsLayer {
+                    val g = grow.value
+                    scaleX = 0.2f + 0.8f * g; scaleY = 0.2f + 0.8f * g
+                    alpha = if (size == androidx.compose.ui.unit.IntSize.Zero) 0f else g.coerceIn(0f, 1f)
+                    transformOrigin = pivot
+                },
+            shape = RoundedCornerShape(24.dp), shadowElevation = 6.dp,
+        ) {
+            Row(Modifier.heightIn(min = 56.dp).padding(start = 12.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    Modifier.weight(1f, fill = false).heightIn(min = 48.dp).clickable { nav.openItem(row.item.id) },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    ItemTypeIcon(row.item, 20.dp)
+                    Spacer(Modifier.width(8.dp))
+                    Text(name, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                    distanceText(vm.distanceTo(row))?.let { d ->
+                        Spacer(Modifier.width(8.dp))
+                        DistanceArrow(d, here, row.item.lat?.let { lat -> row.item.lng?.let { lat to it } }, MaterialTheme.typography.labelMedium)
+                    }
+                }
+                IconButton(onClick = { openDirections(context, row.item, vm.distanceTo(row)) }) {
+                    Icon(painterResource(R.drawable.ic_directions), contentDescription = stringResource(R.string.item_directions_plain))
+                }
+                if (row.findCount == 0) {
+                    androidx.compose.material3.FilledIconButton(
+                        onClick = { vm.gotIt(row, name); onCollected() },
+                        modifier = Modifier.spoken(stringResource(R.string.a11y_got_it, name)),
+                    ) { Icon(painterResource(R.drawable.ic_collect), contentDescription = stringResource(R.string.got_it)) }
                 }
             }
-        }
-    }
-}
-
-/**
- * A tapped pin's buttons, the same on Nearby and the full-screen map. Owner, 2026-11-06: collect straight from
- * the map. Still to get: Directions, Details, and Collected as the main action on the right, as everywhere else.
- * Collected already: Directions and Details.
- */
-@Composable
-fun PinActions(row: ItemRow, vm: MainViewModel, nav: NavHostController, onCollected: () -> Unit) {
-    val context = LocalContext.current
-    val name = row.item.displayName(isJapanese())
-    // Owner, 2026-11-07: icon plus word, so a later compact card can drop the words and keep the icons;
-    // "Collect" (a verb) with a plus-on-stack icon, since "Collected" read as already collected
-    val pad = androidx.compose.foundation.layout.PaddingValues(start = 12.dp, end = 14.dp)
-    @Composable fun Lead(res: Int) { Icon(painterResource(res), contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)) }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        InkOutlinedButton(onClick = { openDirections(context, row.item, vm.distanceTo(row)) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad) {
-            Lead(R.drawable.ic_directions); Text(stringResource(R.string.item_directions_plain), maxLines = 1)
-        }
-        val details: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
-            Icon(Icons.Filled.Info, contentDescription = null, modifier = Modifier.size(18.dp)); Spacer(Modifier.width(6.dp))
-            Text(stringResource(R.string.map_details), maxLines = 1)
-        }
-        if (row.findCount > 0) {
-            Button(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad, content = details)
-        } else {
-            InkOutlinedButton(onClick = { nav.openItem(row.item.id) }, modifier = Modifier.heightIn(min = 48.dp), contentPadding = pad, content = details)
-            Button(
-                onClick = { vm.gotIt(row, name); onCollected() },
-                modifier = Modifier.heightIn(min = 48.dp).spoken(stringResource(R.string.a11y_got_it, name)),
-                contentPadding = pad,
-            ) { Lead(R.drawable.ic_collect); Text(stringResource(R.string.got_it), maxLines = 1) }
-        }
-    }
-}
-
-/**
- * A tapped pin's title and status: type icon, name, the Japanese name, then the state as a word on the left and the
- * distance with an arrow pointing at the place on the right (map-app study, 2026-11-07).
- */
-@Composable
-fun PinHeader(row: ItemRow, meters: Double?, here: Pair<Double, Double>?) {
-    val ja = isJapanese()
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        ItemTypeIcon(row.item, 22.dp)
-        Spacer(Modifier.width(8.dp))
-        Column {
-            Text(row.item.displayName(ja), style = MaterialTheme.typography.titleMedium, maxLines = 2)
-            // The Japanese name lives here and on the item page, not on the map labels (owner, 2026-11-07)
-            if (!ja && row.item.nameJa != row.item.displayName(ja)) {
-                Text(row.item.nameJa, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-            }
-        }
-    }
-    Row(Modifier.fillMaxWidth().padding(start = 30.dp, top = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-        val collected = row.findCount > 0
-        Text(
-            stringResource(if (collected) R.string.map_collected else R.string.map_not_collected),
-            style = MaterialTheme.typography.labelLarge,
-            color = if (collected) LocalTypeColors.current.of(row.item.type) else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
-        distanceText(meters)?.let { d ->
-            DistanceArrow(d, here, row.item.lat?.let { lat -> row.item.lng?.let { lat to it } })
         }
     }
 }

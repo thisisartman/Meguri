@@ -341,9 +341,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     ) { inner ->
         Box(Modifier.fillMaxSize().padding(bottom = inner.calculateBottomPadding() - peek.coerceAtMost(inner.calculateBottomPadding()))) {
             var recenter by remember { mutableIntStateOf(0) }
+            var pinAt by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
                 onPinTap = { tick(); picked = it }, onMapTap = { picked = null; focus.clearFocus(); listOpen = false },
+                anchor = pickedRow?.item?.lat?.let { lat -> pickedRow.item.lng?.let { lat to it } }, onAnchorScreen = { pinAt = it },
                 recenter = recenter,
                 fitTick = fitTick,
                 memoryKey = "nearby",
@@ -483,17 +485,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
             }
             // A tapped pin: what it is, with Details and Directions (#52)
+            // Grows out of the tapped pin and stays on it (#76); below the search bar
             pickedRow?.let { r ->
-                Surface(
-                    Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 84.dp, start = 12.dp, end = 12.dp).fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp), shadowElevation = 6.dp,
-                ) {
-                    Column(Modifier.padding(14.dp)) {
-                        PinHeader(r, vm.distanceTo(r), here.fix?.let { it.lat to it.lng })
-                        Spacer(Modifier.height(10.dp))
-                        PinActions(r, vm, nav, onCollected = { picked = null })
-                    }
-                }
+                PinPopup(r, pinAt, vm, nav, here.fix?.let { it.lat to it.lng }, topLimit = 120.dp, onCollected = { picked = null })
             }
         }
     }

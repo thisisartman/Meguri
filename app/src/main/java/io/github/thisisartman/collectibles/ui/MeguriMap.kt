@@ -60,6 +60,9 @@ fun MeguriMap(
     memoryKey: String? = null,
     // A planned trip's line, station to station (#46); the camera fits it when the map first opens
     route: List<Pair<Double, Double>> = emptyList(),
+    // A place whose screen position is reported as the camera moves, so a pin card can stay on its pin (#76)
+    anchor: Pair<Double, Double>? = null,
+    onAnchorScreen: (androidx.compose.ui.geometry.Offset?) -> Unit = {},
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -75,6 +78,12 @@ fun MeguriMap(
     val routeColor = androidx.compose.material3.MaterialTheme.colorScheme.primary.toArgb()
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
+    val anchorNow by rememberUpdatedState(anchor)
+    val reportAnchor by rememberUpdatedState(onAnchorScreen)
+    fun emitAnchor(m: MapLibreMap) {
+        val a = anchorNow
+        reportAnchor(a?.let { m.projection.toScreenLocation(LatLng(it.first, it.second)).let { p -> androidx.compose.ui.geometry.Offset(p.x, p.y) } })
+    }
     var map by remember { mutableStateOf<MapLibreMap?>(null) }
     var style by remember { mutableStateOf<Style?>(null) }
     // Until the style has drawn, the map shows this colour: the page's own background, not MapLibre's light grey,
@@ -104,6 +113,7 @@ fun MeguriMap(
         } else null
         mapView.getMapAsync { m ->
             map = m
+            m.addOnCameraMoveListener { emitAnchor(m) }
             memoryKey?.let { key ->
                 CameraMemory.saved[key]?.let { m.cameraPosition = it }
                 m.addOnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }
@@ -193,6 +203,7 @@ fun MeguriMap(
             }
         }
     }
+    LaunchedEffect(map, anchor) { map?.let { emitAnchor(it) } }
     // Pins and position follow the data; the camera is placed once, around you and the nearest pins.
     // A remembered camera counts as placed (it was placed on an earlier visit)
     var placed by remember { mutableStateOf(memoryKey != null && CameraMemory.saved[memoryKey] != null) }
