@@ -357,4 +357,11 @@
     <string name="trip_report_footer">Meguri</string>
     <string name="type_dam_plural">ダムカード</string>
     <string name="type_museum_plural">博物館スタンプ</string>
+    <string name="none_here_stamp">スタンプなし</string>
+    <string name="none_here">ここにはなし</string>
+    <string name="none_here_ask">%1$s？</string>
+    <string name="none_here_marked">%1$s・確認日 %2$s</string>
+    <string name="none_here_undo">あった</string>
+    <string name="photo_cover_set">この項目の表示写真にする</string>
+    <string name="photo_cover_clear">最新の写真を表示する</string>
 </resources>

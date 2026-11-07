@@ -146,9 +146,16 @@ class MapsLinkTest {
     }
 
     @Test fun notADirectionsLink() {
-        assertNull(MapsLink.parse("https://www.google.com/maps/place/Niigata/@37.9,139.0,12z"))
+        // A place link is a destination since 2026-11-07 (the owner shares places from Maps): see placeLinkIsADestination
         assertNull(MapsLink.parse("https://example.com/maps/dir/a/b"))
         assertNull(MapsLink.parse("not a link"))
+    }
+
+    @Test fun placeLinkIsADestination() {
+        val t = MapsLink.parse("https://www.google.com/maps/place/Niigata/@37.9,139.0,12z")!!
+        assertNull(t.from)
+        assertEquals("Niigata", t.to?.name)
+        assertEquals(37.9, t.to!!.lat!!, 1e-9)
     }
 
     @Test fun shortLinkInSharedText() {

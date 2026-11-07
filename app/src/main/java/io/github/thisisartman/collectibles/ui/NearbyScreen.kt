@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.draw.alpha
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -145,11 +146,12 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 .map { it.first }
         } else {
             val k = inTab.filter { kind == null || it.item.type == kind }
-            if (byName) k.sortedBy { it.item.displayName(ja).lowercase() }
-            else k.sortedWith(compareBy<ItemRow> { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
+            // Places where you found nothing go last
+            if (byName) k.sortedWith(compareBy<ItemRow> { it.noneHere }.thenBy { it.item.displayName(ja).lowercase() })
+            else k.sortedWith(compareBy<ItemRow> { it.noneHere }.thenBy { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
         }
     }
-    val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
+    val pins = remember(shown) { shown.filter { !it.noneHere }.mapNotNull { it.toPin() } }
 
     val pickedRow = rows.firstOrNull { it.item.id == picked }
 
@@ -310,7 +312,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             // The first row's tallest tile sets the resting height; top padding 4 dp
                             val m = if (i == 0) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
                             Box(m) {
-                                RoundTile(r, tile, r.item.displayName(ja), distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
+                                RoundTile(
+                                    r, tile, r.item.displayName(ja),
+                                    if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
+                                    onOpen = { nav.openItem(r.item.id) },
+                                )
                             }
                         }
                     }
@@ -485,7 +491,8 @@ private const val TIP_SORT = "sort"
 @Composable
 private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
     Column(
-        Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp),
+        // Faded when you found nothing there
+        Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (row.noneHere) 0.45f else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Mark(row, size)

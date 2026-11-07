@@ -202,10 +202,10 @@ class CatalogAndBackup @Inject constructor(
     companion object {
         fun itemsCsv(items: List<Item>) = buildString {
             append(Csv.line("id", "type", "catalog_key", "code", "name_ja", "name_romaji", "series", "release_date", "prefecture", "municipality",
-                "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url", "origin", "created_at", "updated_at"))
+                "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url", "origin", "created_at", "updated_at", "none_here_at", "cover_photo_id"))
             items.forEach { i ->
                 append(Csv.line(i.id, i.type, i.catalogKey, i.code, i.nameJa, i.nameRomaji, i.series, i.releaseDate, i.prefecture, i.municipality,
-                    i.placeName, i.address, i.placePhone, i.lat, i.lng, i.hoursText, i.closedDays, i.notes, i.sourceUrl, i.origin, i.createdAt, i.updatedAt))
+                    i.placeName, i.address, i.placePhone, i.lat, i.lng, i.hoursText, i.closedDays, i.notes, i.sourceUrl, i.origin, i.createdAt, i.updatedAt, i.noneHereAt, i.coverPhotoId))
             }
         }
 

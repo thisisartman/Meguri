@@ -29,6 +29,9 @@ object MapsLink {
     private val LAT_LNG = Regex("""^\s*(-?\d{1,3}(?:\.\d+)?)\s*,\s*(-?\d{1,3}(?:\.\d+)?)\s*$""")
     private val DATA_POINT = Regex("""!1d(-?\d+(?:\.\d+)?)!2d(-?\d+(?:\.\d+)?)""")
     private val DATA_MODE = Regex("""!3e(\d)""")
+    // A place's own position in a place link's data part (latitude !3d, longitude !4d), and the map centre after "@"
+    private val PLACE_POINT = Regex("""!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)""")
+    private val AT_CENTRE = Regex("""^@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)""")
     private val MODES = mapOf("0" to "driving", "1" to "bicycling", "2" to "walking", "3" to "transit")
 
     /** The first web address in pasted text (Share adds a title before the link). */
@@ -63,6 +66,15 @@ object MapsLink {
         }
         // Empty parts are kept after "dir": "dir//B" means from your location to B
         val parts = path.split('/')
+        // A place link (what Share gives for one place, often behind a short link): go there from where you are
+        val place = parts.indexOf("place").takeIf { it >= 0 }
+        if (place != null && parts.indexOf("dir") < 0) {
+            val name = parts.getOrNull(place + 1)?.let { decode(it.replace('+', ' ')) }?.trim()?.ifEmpty { null }
+            val pos = PLACE_POINT.find(path)?.let { it.groupValues[1].toDouble() to it.groupValues[2].toDouble() }
+                ?: parts.firstNotNullOfOrNull { AT_CENTRE.find(it) }?.let { it.groupValues[1].toDouble() to it.groupValues[2].toDouble() }
+            if (name == null && pos == null) return null
+            return MapsTrip(null, LinkEnd(name, pos?.first, pos?.second), null)
+        }
         val dir = parts.indexOf("dir").takeIf { it >= 0 } ?: return null
         val after = parts.drop(dir + 1).dropLastWhile { it.isEmpty() }
         val stop = after.indexOfFirst { it.startsWith("@") || it.startsWith("data=") || it.startsWith("am=") }
@@ -99,6 +111,24 @@ object MapsLink {
             }
             u.takeIf { !isShort(it) }
         }.getOrNull()
+    }
+
+    /**
+     * The station a link's name means: an exact match, else the longest station name the link's name starts with
+     * ("Nagaoka Station Niigata" is Nagaoka, not Kita-Nagaoka). [stations] are id to names (Japanese, romaji).
+     */
+    fun matchStation(name: String, stations: List<Pair<String, List<String>>>): String? {
+        val k = stationKey(name)
+        if (k.isEmpty()) return null
+        var best: String? = null
+        var bestLen = 0
+        for ((id, names) in stations) for (n in names) {
+            val sk = stationKey(n)
+            if (sk.length < 2) continue
+            if (sk == k) return id
+            if (k.startsWith(sk) && sk.length > bestLen) { best = id; bestLen = sk.length }
+        }
+        return best
     }
 
     /**

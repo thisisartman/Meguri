@@ -1,5 +1,9 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.Icons
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -182,6 +186,7 @@ fun NewItemDialog(
     var place by remember { mutableStateOf<io.github.thisisartman.collectibles.data.PlaceHit?>(null) }
     var hits by remember { mutableStateOf<List<io.github.thisisartman.collectibles.data.PlaceHit>?>(null) }
     var searching by remember { mutableStateOf(false) }
+    var placeQuery by rememberSaveable { mutableStateOf("") }
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val custom = customTypes.firstOrNull { it.id == customId }
     val hasCost = if (type == ItemType.CUSTOM) custom?.hasCost == true else type == ItemType.GOSHUIN
@@ -223,24 +228,41 @@ fun NewItemDialog(
                     }
                 } else {
                     Text(stringResource(R.string.new_where_position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(
-                        enabled = name.isNotBlank() && !searching,
-                        // OpenStreetMap often has only the Japanese name (燕市産業史料館 found, "Tsubame Industrial
-                        // Museum" not): search the Japanese name first, then the romaji one
-                        onClick = {
+                    // Search straight away, no name needed first (owner, 2026-11-07): picking a place fills the names
+                    val runSearch = {
+                        val q = placeQuery.ifBlank { name }
+                        if (q.isNotBlank() && !searching) {
                             searching = true
-                            scope.launch {
-                                val first = nameJa.takeIf { it.isNotBlank() }?.let { lookUp(it) }.orEmpty()
-                                hits = first.ifEmpty { romaji.takeIf { it.isNotBlank() }?.let { lookUp(it) }.orEmpty() }
-                                searching = false
+                            scope.launch { hits = lookUp(q); searching = false }
+                        }
+                    }
+                    OutlinedTextField(
+                        value = placeQuery,
+                        onValueChange = { placeQuery = it },
+                        label = { Text(stringResource(R.string.new_find_place)) },
+                        placeholder = { if (name.isNotBlank()) Text(name, maxLines = 1) },
+                        singleLine = true,
+                        trailingIcon = {
+                            IconButton(onClick = { runSearch() }, enabled = !searching && (placeQuery.isNotBlank() || name.isNotBlank())) {
+                                Icon(Icons.Filled.Search, contentDescription = stringResource(R.string.new_find_place))
                             }
                         },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    ) { Text(stringResource(if (searching) R.string.new_finding_place else R.string.new_find_place)) }
+                        keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(imeAction = androidx.compose.ui.text.input.ImeAction.Search),
+                        keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { runSearch() }),
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    if (searching) Text(stringResource(R.string.new_finding_place), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     hits?.let { list ->
                         if (list.isEmpty()) Text(stringResource(R.string.new_no_place), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         list.forEach { h ->
-                            Column(Modifier.fillMaxWidth().clickable { place = h; hits = null }.heightIn(min = 48.dp).padding(vertical = 6.dp)) {
+                            Column(
+                                Modifier.fillMaxWidth().clickable {
+                                    place = h; hits = null
+                                    // Fill only empty name fields, so nothing you typed is overwritten
+                                    if (nameJa.isBlank()) nameJa = h.nameJa ?: h.name.takeIf { n -> n.any { it.code >= 0x3000 } }.orEmpty()
+                                    if (romaji.isBlank()) romaji = h.nameEn ?: h.name.takeIf { n -> n.all { it.code < 0x3000 } }.orEmpty()
+                                }.heightIn(min = 48.dp).padding(vertical = 6.dp),
+                            ) {
                                 Text(h.name, style = MaterialTheme.typography.bodyMedium)
                                 h.address?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
                             }

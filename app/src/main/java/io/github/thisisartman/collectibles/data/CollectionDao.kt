@@ -14,9 +14,11 @@ private const val ITEM_ROW = """
       (SELECT MAX(a.acquired_at) FROM acquisition a WHERE a.item_id = i.id) AS last_at,
       (SELECT a.before_app FROM acquisition a WHERE a.item_id = i.id
          ORDER BY COALESCE(a.acquired_at, 0) DESC, a.created_at DESC LIMIT 1) AS last_before_app,
-      (SELECT p.content_uri FROM photo p JOIN acquisition a ON p.acquisition_id = a.id
-         WHERE a.item_id = i.id AND p.missing = 0
-         ORDER BY COALESCE(a.acquired_at, 0) DESC, p.created_at DESC LIMIT 1) AS photo_uri
+      COALESCE(
+        (SELECT c.content_uri FROM photo c WHERE c.id = i.cover_photo_id AND c.missing = 0),
+        (SELECT p.content_uri FROM photo p JOIN acquisition a ON p.acquisition_id = a.id
+           WHERE a.item_id = i.id AND p.missing = 0
+           ORDER BY COALESCE(a.acquired_at, 0) DESC, p.created_at DESC LIMIT 1)) AS photo_uri
     FROM item i
 """
 
@@ -205,4 +207,10 @@ interface CollectionDao {
 
     @Query("UPDATE photo SET missing = :missing WHERE id = :id")
     suspend fun setPhotoMissing(id: String, missing: Boolean)
+
+    @Query("UPDATE item SET none_here_at = :at, updated_at = :now WHERE id = :id")
+    suspend fun setNoneHere(id: String, at: Long?, now: Long)
+
+    @Query("UPDATE item SET cover_photo_id = :photoId, updated_at = :now WHERE id = :id")
+    suspend fun setCover(id: String, photoId: String?, now: Long)
 }

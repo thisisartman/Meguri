@@ -32,7 +32,7 @@ class MigrationTest {
             close()
         }
 
-        val db = helper.runMigrationsAndValidate(name, 2, true, *CollectiblesDb.MIGRATIONS)
+        val db = helper.runMigrationsAndValidate(name, 3, true, *CollectiblesDb.MIGRATIONS)
 
         fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
         assertEquals("2", one("SELECT COUNT(*) FROM item"))
@@ -52,6 +52,21 @@ class MigrationTest {
         // New column is empty for old items; the new table starts empty
         assertEquals(null, one("SELECT custom_type_id FROM item WHERE id = 'i1'"))
         assertEquals("0", one("SELECT COUNT(*) FROM collection_type"))
+        db.close()
+    }
+
+    @Test
+    fun v2ItemsGetEmptyNewColumns() {
+        helper.createDatabase("migration-test-2.db", 2).apply {
+            execSQL("INSERT INTO item (id, type, catalog_key, name_ja, origin, created_at, updated_at) VALUES ('s1', 'EKI_STAMP', 'EKI_STAMP:南吉田駅', '南吉田駅', 'CSV_IMPORT', 1, 2)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('f1', 's1', 5, 0, 'MANUAL', 5, 2)")
+            close()
+        }
+        val db = helper.runMigrationsAndValidate("migration-test-2.db", 3, true, *CollectiblesDb.MIGRATIONS)
+        fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
+        assertEquals(null, one("SELECT none_here_at FROM item WHERE id = 's1'"))
+        assertEquals(null, one("SELECT cover_photo_id FROM item WHERE id = 's1'"))
+        assertEquals("2", one("SELECT quantity FROM acquisition WHERE id = 'f1'"))
         db.close()
     }
 }

@@ -117,5 +117,9 @@ data class CatalogRow(
         parentItemId = existing?.parentItemId,
         createdAt = existing?.createdAt ?: now,
         updatedAt = now,
+        // Yours, not the catalogue's: a reload keeps them
+        customTypeId = existing?.customTypeId,
+        noneHereAt = existing?.noneHereAt,
+        coverPhotoId = existing?.coverPhotoId,
     )
 }

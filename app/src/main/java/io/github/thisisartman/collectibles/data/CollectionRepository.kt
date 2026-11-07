@@ -172,6 +172,18 @@ class CollectionRepository @Inject constructor(
     }
 
     /** Removes only "had before the app" finds of an item; real finds stay. */
+    /** The photo that stands for the item in lists, on tiles and on the map (null: the latest one). */
+    suspend fun setCover(itemId: String, photoId: String?) {
+        dao.setCover(itemId, photoId, System.currentTimeMillis())
+        log.i("Photo", "Cover of item $itemId: ${photoId ?: "latest"}")
+    }
+
+    /** You checked and there was nothing here (true), or there is after all (false). */
+    suspend fun setNoneHere(itemId: String, none: Boolean) {
+        dao.setNoneHere(itemId, if (none) System.currentTimeMillis() else null, System.currentTimeMillis())
+        log.i("Log", (if (none) "Marked nothing here: item " else "Cleared nothing here: item ") + itemId)
+    }
+
     suspend fun unmarkBeforeApp(itemId: String): Int {
         val removed = dao.deleteBeforeAppFinds(itemId)
         log.i("Log", "Removed had-before-the-app from item $itemId: $removed finds")

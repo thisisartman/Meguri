@@ -14,6 +14,8 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -51,6 +53,8 @@ class FindPhotoActions(
     val pickPhoto: (uri: Uri, kind: String) -> Unit,
     val setKind: (photoId: String, kind: String) -> Unit,
     val remove: (photoId: String) -> Unit,
+    // Choose the photo that stands for the item (owner, 2026-11-07); null goes back to the latest
+    val setCover: (photoId: String?) -> Unit = {},
 )
 
 /**
@@ -99,7 +103,7 @@ private val SLOT = 96.dp
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
+fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null) {
     var adding by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Photo?>(null) }
     var pendingKind by remember { mutableStateOf(PhotoKind.STAMP) }
@@ -122,10 +126,10 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
     ) {
         slots.forEach { (kind, p) ->
             val label = stringResource(kindLabel(type, kind))
-            if (p != null) PhotoSquare(p, label) { editing = p }
+            if (p != null) PhotoSquare(p, if (p.id == coverId) label + " ★" else label) { editing = p }
             else EmptySquare(label) { adding = kind }
         }
-        extra.forEach { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role))) { editing = p } }
+        extra.forEach { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role)) + if (p.id == coverId) " ★" else "") { editing = p } }
         EmptySquare(stringResource(R.string.photo_kind_other)) { adding = PhotoKind.OTHER }
     }
 
@@ -151,6 +155,17 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     PhotoThumb(p.contentUri, 120.dp)
                     KindChips(type, kind) { kind = it }
+                    // The photo shown for this item on tiles, in lists and on its page
+                    val isCover = p.id == coverId
+                    if (isCover) {
+                        InkOutlinedButton(onClick = { actions.setCover(null); editing = null }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.photo_cover_clear))
+                        }
+                    } else {
+                        androidx.compose.material3.FilledTonalButton(onClick = { actions.setCover(p.id); editing = null }, modifier = Modifier.fillMaxWidth()) {
+                            Text(stringResource(R.string.photo_cover_set))
+                        }
+                    }
                     Text(stringResource(R.string.photo_remove_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
@@ -166,18 +181,25 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions) {
     }
 }
 
-/** Camera or gallery, for one kind of photo. */
+/** Camera or gallery, for one kind of photo: full-width buttons, the camera first (owner, 2026-11-07). */
 @Composable
 fun PhotoSourceDialog(title: String, onCamera: () -> Unit, onGallery: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(title) },
-        confirmButton = {
-            Column(horizontalAlignment = Alignment.End) {
-                TextButton(onClick = onCamera) { Text(stringResource(R.string.photo_take)) }
-                TextButton(onClick = onGallery) { Text(stringResource(R.string.photo_pick)) }
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.Button(onClick = onCamera, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.photo_take))
+                }
+                androidx.compose.material3.FilledTonalButton(onClick = onGallery, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.photo_pick))
+                }
             }
         },
+        confirmButton = {},
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

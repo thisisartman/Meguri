@@ -82,7 +82,7 @@ class MainViewModel @Inject constructor(
 
     /** Uncollected items with a position, nearest first; null distance when there is no fix. */
     val nearest: StateFlow<List<Ranked>> = combine(rows, here) { r, h ->
-        val todo = r.filter { !it.collected && it.item.type != ItemType.EKITAG }
+        val todo = r.filter { !it.collected && !it.noneHere && it.item.type != ItemType.EKITAG }
         val fix = h.fix
         if (fix == null) {
             todo.sortedByDescending { it.item.updatedAt }.map { Ranked(it, null) }
@@ -215,6 +215,10 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { onDone(repo.markBeforeApp(ids)) }
     }
 
+    fun setCover(itemId: String, photoId: String?) { viewModelScope.launch { repo.setCover(itemId, photoId) } }
+
+    fun setNoneHere(itemId: String, none: Boolean) { viewModelScope.launch { repo.setNoneHere(itemId, none) } }
+
     fun unmarkBeforeApp(itemId: String) {
         viewModelScope.launch { repo.unmarkBeforeApp(itemId) }
     }
@@ -253,9 +257,9 @@ class MainViewModel @Inject constructor(
         suspend fun snap(e: LinkEnd?): Pair<String, Double>? {
             e ?: return null
             e.name?.let { n ->
-                val k = MapsLink.stationKey(n)
-                stations.firstOrNull { MapsLink.stationKey(it.item.nameJa) == k || it.item.nameRomaji?.let(MapsLink::stationKey) == k }
-                    ?.let { return it.item.id to 0.0 }
+                // Google adds the town ("Nagaoka Station Niigata"): take the longest station name the link's name starts with
+                MapsLink.matchStation(n, stations.map { it.item.id to listOfNotNull(it.item.nameJa, it.item.nameRomaji) })
+                    ?.let { return it to 0.0 }
             }
             val pos = if (e.hasPosition) e.lat!! to e.lng!! else e.name?.let { n ->
                 PlaceLookup.search(n, here.value.fix?.lat, here.value.fix?.lng, japanese).firstOrNull()?.let { it.lat to it.lng }
@@ -286,7 +290,7 @@ class MainViewModel @Inject constructor(
 
             rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }
                 .toSortedMap().forEach { (pref, list) ->
-                    out += CollectionSummary("m:$pref", ItemType.MANHOLE_CARD, pref, list.count { it.collected }, list.size, last(list), memberIds = list.ids())
+                    out += CollectionSummary("m:$pref", ItemType.MANHOLE_CARD, pref, list.count { it.collected }, list.count { !it.noneHere }, last(list), memberIds = list.ids())
                 }
 
             val byId = rows.associateBy { it.item.id }
@@ -295,7 +299,7 @@ class MainViewModel @Inject constructor(
                 val stations = ls.filter { it.lineId == line.id }.sortedBy { it.seq }.mapNotNull { byId[it.itemId] }
                 onLine += stations.map { it.item.id }
                 if (stations.isNotEmpty()) {
-                    out += CollectionSummary("l:${line.id}", ItemType.EKI_STAMP, line.id, stations.count { it.collected }, stations.size, last(stations), lineId = line.id, memberIds = stations.ids())
+                    out += CollectionSummary("l:${line.id}", ItemType.EKI_STAMP, line.id, stations.count { it.collected }, stations.count { !it.noneHere }, last(stations), lineId = line.id, memberIds = stations.ids())
                 }
             }
             val other = rows.filter { it.item.type == ItemType.EKI_STAMP && it.item.id !in onLine }

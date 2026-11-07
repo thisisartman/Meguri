@@ -102,6 +102,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 },
                 setKind = vm::setPhotoKind,
                 remove = vm::removePhoto,
+                setCover = { id -> vm.setCover(r.item.id, id) },
             )
         }
         // Owner, 2026-11-07: one layout for collected and uncollected, like a map app's place page:
@@ -117,7 +118,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                             ItemTypeIcon(item, 16.dp)
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get),
+                                stringResource(if (r.collected) R.string.state_collected else if (r.noneHere) noneHereLabel(item.type) else R.string.state_to_get),
                                 style = MaterialTheme.typography.labelLarge,
                                 color = if (r.collected) LocalTypeColors.current.of(item.type) else MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -126,13 +127,15 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 }
             }
             item { Actions(item, meters) }
+            // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
+            if (!r.collected) item { NoneHereRow(item, r.noneHere, onSet = { vm.setNoneHere(item.id, it) }) }
             // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
             if (hasFacts(context, item)) {
                 item { SectionTitle(stringResource(R.string.item_where)) }
                 item { Facts(item) }
             }
             item { SectionTitle(stringResource(R.string.item_photos)) }
-            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions) }
+            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId) }
             if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
@@ -402,6 +405,34 @@ private fun CollectionRow(
         }
         IconButton(onClick = { confirmRemove = true }) {
             Icon(Icons.Filled.Delete, contentDescription = stringResource(R.string.a11y_remove_find, whenText), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+
+/** "No stamp here" for stamps, "None here" for the rest. */
+fun noneHereLabel(type: ItemType): Int =
+    if (type == ItemType.EKI_STAMP || type == ItemType.MUSEUM_STAMP) R.string.none_here_stamp else R.string.none_here
+
+@Composable
+private fun NoneHereRow(item: Item, marked: Boolean, onSet: (Boolean) -> Unit) {
+    val ja = isJapanese()
+    if (marked) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Text(
+                stringResource(R.string.none_here_marked, stringResource(noneHereLabel(item.type)), formatDate(item.noneHereAt ?: 0L, ja)),
+                Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            TextButton(onClick = { onSet(false) }) { Text(stringResource(R.string.none_here_undo)) }
+        }
+    } else {
+        TextButton(onClick = { onSet(true) }, modifier = Modifier.padding(horizontal = 8.dp)) {
+            Text(stringResource(R.string.none_here_ask, stringResource(noneHereLabel(item.type))))
         }
     }
 }

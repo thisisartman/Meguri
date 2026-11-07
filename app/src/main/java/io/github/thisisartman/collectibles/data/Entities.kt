@@ -86,6 +86,10 @@ data class Item(
     @ColumnInfo(name = "updated_at") val updatedAt: Long,
     // Schema v2: the collection_type an item of type CUSTOM belongs to (#64)
     @ColumnInfo(name = "custom_type_id") val customTypeId: String? = null,
+    // Schema v3: when you checked and there was nothing to get here (no stamp at the station); null = not checked
+    @ColumnInfo(name = "none_here_at") val noneHereAt: Long? = null,
+    // Schema v3: the photo you chose to stand for this item; null = the latest one
+    @ColumnInfo(name = "cover_photo_id") val coverPhotoId: String? = null,
 )
 
 /**
@@ -176,6 +180,9 @@ data class ItemRow(
     @ColumnInfo(name = "photo_uri") val photoUri: String?,
 ) {
     val collected: Boolean get() = findCount > 0
+
+    /** Checked and nothing there, and not collected since: left out of "still to get", the pins and the totals. */
+    val noneHere: Boolean get() = !collected && item.noneHereAt != null
 }
 
 data class StationRow(

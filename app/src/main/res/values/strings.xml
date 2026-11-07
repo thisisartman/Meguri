@@ -357,4 +357,11 @@
     <string name="trip_report_footer">Meguri</string>
     <string name="type_dam_plural">Dam cards</string>
     <string name="type_museum_plural">Museum stamps</string>
+    <string name="none_here_stamp">No stamp here</string>
+    <string name="none_here">None here</string>
+    <string name="none_here_ask">%1$s?</string>
+    <string name="none_here_marked">%1$s · checked %2$s</string>
+    <string name="none_here_undo">There is one</string>
+    <string name="photo_cover_set">Use as this entry\'s picture</string>
+    <string name="photo_cover_clear">Show the latest photo instead</string>
 </resources>
