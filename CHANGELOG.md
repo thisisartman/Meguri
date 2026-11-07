@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-07: 0.3.0-beta.4
+- The offline map now covers all of Niigata (with Sado), Saitama and Tokyo prefectures.
+- Restoring onto a new phone no longer risks linking a find to another picture that happens to have the same gallery number; restored pictures appear in the gallery only once fully written.
+- A test now checks that moving to the new database version keeps every find, including ones marked "had before the app".
+
 ## 2026-11-06: Version 0.3.0, from the owner's trip feedback (built, not yet on a phone)
 - Planned: a map on Nearby, in the layout the owner picked (the map fills the screen, with a sheet of Stamps and Cards on top), a colour setting, a welcome screen, several photos per find and plain English names. Plan in `docs/V0.3_PLAN.md`.
 - Tried on an emulator, not yet on a phone: Nearby is now a map with a sheet of round tiles (Stamps and Cards tabs, filters by kind, nearest or A to Z, three sizes); tap a pin for Details and Directions; a full-screen map per tab.
