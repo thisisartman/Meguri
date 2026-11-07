@@ -19,8 +19,8 @@ class BundledRailTest {
         // Transfer stations must be one item, or changes of train silently break
         listOf("宮内駅", "東三条駅", "吉田駅", "新潟駅", "長岡駅", "浦佐駅").forEach { assertTrue(it, graph.has(key(it))) }
         val keys = rows.filter { it.type == ItemType.EKI_STAMP }.map { it.catalogKey }.toSet()
-        // 92 stations before the Shinkansen (96 rows, four of them a second line's row) plus Jomo-Kogen
-        assertEquals(93, keys.size)
+        // 92 stations before the Shinkansen (96 rows, four of them a second line's row) plus Jomo-Kogen, plus Kamitokoro (opened 2025-03)
+        assertEquals(94, keys.size)
     }
 
     @Test fun damCardsFromTheMlitList() {

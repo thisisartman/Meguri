@@ -1,0 +1,11 @@
+{
+ "about": "Station rows for the Niigata stamp books. Orders were checked against the 駅一覧 tables of ja.wikipedia 弥彦線, 越後線, 信越本線, 上越線 and 上越新幹線 (read 2026-11-08); positions against OpenStreetMap station nodes (sources/osm-niigata-stations-2026-11-08.json). All 76 Niigata stations were within 100 m of their node.",
+ "new_stations": [
+  {"name_ja": "上所駅", "name_romaji": "Kamitokoro Station", "line_id": "JR_ECHIGO", "after": "白山駅",
+   "lat": "37.906960", "lng": "139.045242", "osm_node": 12528951672,
+   "notes": "Opened 2025-03-15 (unstaffed). Paper stamp not confirmed at this station. Map data © OpenStreetMap contributors.",
+   "source_url": "https://www.openstreetmap.org", "opening_source": "https://www.jreast.co.jp/press/2024/niigata/20241213_ni02.pdf (cited by ja.wikipedia 越後線)"}
+ ],
+ "no_stamp_note": "スタンプなし（2026-11 確認）",
+ "no_stamp": []
+}

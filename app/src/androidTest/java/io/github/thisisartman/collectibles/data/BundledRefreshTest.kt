@@ -52,7 +52,7 @@ class BundledRefreshTest {
     @Test fun olderCataloguePhoneGetsTheShinkansenAndKeepsEverything() = runBlocking {
         io.importCatalogText(olderCatalogue())
         val d = db.dao()
-        val urasa = d.allItems().single { it.nameJa == "浦佐駅" }
+        val urasa = d.allItems().single { it.nameJa == "浦佐駅" && it.type == ItemType.EKI_STAMP }
         d.insertFind(Acquisition(id = "f1", itemId = urasa.id, acquiredAt = 1000, via = Via.MANUAL, createdAt = 1000))
         val itemsBefore = d.allItems().associateBy { it.id }
         assertTrue(d.allLines().none { it.id == RailGraph.SHINKANSEN })
@@ -69,7 +69,7 @@ class BundledRefreshTest {
         assertEquals(7, sk.size)
         assertEquals(urasa.id, sk[3].itemId) // Takasaki, Jomo-Kogen, Echigo-Yuzawa, Urasa
         // The planner now rides it
-        assertEquals(RailGraph.SHINKANSEN, RailGraph.from(d.allLineStations()).route(urasa.id, after.single { it.nameJa == "新潟駅" }.id)!!.single().lineId)
+        assertEquals(RailGraph.SHINKANSEN, RailGraph.from(d.allLineStations()).route(urasa.id, after.single { it.nameJa == "新潟駅" && it.type == ItemType.EKI_STAMP }.id)!!.single().lineId)
 
         // A second start changes nothing
         assertNull(io.refreshBundledIfChanged())

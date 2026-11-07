@@ -1,0 +1,12 @@
+{
+ "about": "Ekitag (エキタグ, jeki's NFC digital station stamps) at stations on the catalogue's five lines in Niigata, from JR East Niigata branch press releases. ekitag.jp publishes only counts per prefecture (新潟県 50駅 on 2026-07-31), so stations added after the last release here are not covered. Snapshot: sources/ekitag-niigata-2026-11-08.txt.",
+ "batches": [
+  {"from": "2024-03-26", "source_url": "https://www.jreast.co.jp/press/2023/niigata/20240318_ni04.pdf",
+   "stations": ["越後湯沢駅", "浦佐駅", "長岡駅", "燕三条駅", "新潟駅", "柏崎駅", "吉田駅", "新津駅"]},
+  {"from": "2024-07-12", "source_url": "https://www.jreast.co.jp/press/2024/niigata/20240705_ni02.pdf",
+   "stations": ["宮内駅", "小千谷駅", "越後川口駅", "小出駅", "六日町駅", "塩沢駅", "見附駅", "東三条駅", "加茂駅"]},
+  {"from": "2024-11-01", "source_url": "https://www.jreast.co.jp/press/2024/niigata/20241024_ni02.pdf",
+   "stations": ["弥彦駅", "分水駅", "帯織駅"]}
+ ],
+ "also_listed_not_on_these_lines": ["ガーラ湯沢駅", "上越妙高駅", "十日町駅", "新発田駅", "村上駅", "小国駅", "潟町駅", "柿崎駅", "青海川駅", "来迎寺駅", "中条駅", "坂町駅", "桑川駅", "府屋駅", "豊栄駅", "大白川駅", "五泉駅", "咲花駅", "三川駅", "津川駅", "日出谷駅"]
+}

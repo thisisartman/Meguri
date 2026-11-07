@@ -36,6 +36,14 @@ Read from the owner's video of their cards (2026-11-03): the coordinates printed
 ## Lines
 Positions come from OpenStreetMap `railway=station` nodes by name (route relations for these lines are not tagged under these names; large Overpass queries time out, so query 0.25-degree tiles of `37.30,138.50,38.05,139.25`).
 
-The Yahiko, Echigo and Shin'etsu orders were written from memory and checked only geographically (each station lies between its neighbours), not against a timetable. A station on two lines (吉田, 東三条, 新潟, 宮内) is one item in several line stamp books. The Shin'etsu list covers Miyauchi to Niigata only.
+The Yahiko, Echigo and Shin'etsu orders were written from memory; on 2026-11-08 all five orders were checked against the 駅一覧 tables on ja.wikipedia and matched, except that Kamitokoro (上所, opened 2025-03-15) was missing from the Echigo Line. A station on two lines (吉田, 東三条, 新潟, 宮内) is one item in several line stamp books. The Shin'etsu list covers Miyauchi to Niigata only.
 
 Goshuin and the light-up stamp rally are not in the catalogue; add ad-hoc in the app.
+
+## Niigata refinement (2026-11-08)
+`refine_niigata.py <csv>` edits the Niigata rows in place and leaves every other prefecture's rows alone (it refuses to write if one changed). `--check` writes nothing; it reports stations more than 300 m from their OSM node and dam rows that differ from the MLIT list. Data: `data/niigata-stations.json`, `data/niigata-ekitag.json`, `data/niigata-dams.json`. Snapshots in `sources/`: `osm-niigata-stations-2026-11-08.json`, `osm-niigata-dams-2026-11-08.json`, `mlit-damcard-niigata-2026-01-16.json`, `ekitag-niigata-2026-11-08.txt`.
+
+- Stations: Kamitokoro (上所) added to the Echigo Line between Hakusan and Niigata, which moves Niigata to line_seq 33. All 76 Niigata stations are within 100 m of their OSM node. No source lists paper stamps for the Niigata branch, so no station is marked "スタンプなし". The `no_stamp` list in the data file is empty until someone checks a station in person.
+- Ekitag: 20 EKITAG rows, one for each station on these lines named in JR East Niigata branch releases (2024-03-18, 2024-07-05, 2024-10-24). ekitag.jp only gives counts per prefecture (新潟県 50駅, 2026-07-31), so a station added after 2024-11 is missing. jreast.co.jp returns 403 to scripts; the PDFs were read from Wayback Machine captures.
+- Dam cards: the 2026-01-16 MLIT list was still the latest on 2026-11-08, and the 32 rows already matched it. Okumiomote (奥三面) stays out because distribution is suspended. Shirokawa (城川) and Yamamoto Choseichi (山本調整池) have no position.
+- Museum stamps: none added. The only Niigata lists found were summer rallies that have ended (Niigata University museum, 2025 and 2026).

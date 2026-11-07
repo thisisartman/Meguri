@@ -1,0 +1,5 @@
+{
+ "about": "Checks the DAM_CARD rows against MLIT's dam card list (sources/mlit-damcard-niigata-2026-01-16.json; the 2026-01-16 list was still the latest on 2026-11-08). The rows already match it field by field, so there is nothing to change; this file records the deliberate gaps.",
+ "not_added": {"奥三面ダム": "listed, but 配布を中止（災害によりアクセス道路が通行止め）; BundledRailTest expects it left out"},
+ "no_position": {"城川ダム": "no OSM object and no ja.wikipedia article", "山本調整池ダム": "OSM has only a reservoir named 第一調整池 (37.29074,138.80193); the name does not settle that it is this dam"}
+}
