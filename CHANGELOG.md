@@ -5,6 +5,8 @@
 - A short vibration when you tap a pin, a tile, Collect or "No stamp here".
 - Trip mode is now called Proximity mode.
 - After an update, the app shows what's new, once.
+- Alerts: a distance for each kind, and station stamps alert only at stations you get off at in today's trip.
+- Settings is a short list of sections, each showing what is set and opening its own page.
 
 ## 2026-11-07: 0.3.0-beta.5 (sent to the owner on Telegram, 15:10)
 - "No stamp here": mark a station (or any place) where there was nothing to get. It stops showing as "still to get" and stops counting against its line, and "There is one" takes it back.
