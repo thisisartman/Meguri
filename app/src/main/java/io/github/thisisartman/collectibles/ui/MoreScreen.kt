@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -202,86 +204,145 @@ fun MoreScreen(
             },
         )
     }
+    // Settings as a short list of sections, each its own page (owner's pick B, #71, 2026-11-07). The dialogs and
+    // file pickers above stay here, so each section's rows work exactly as before.
+    var section by rememberSaveable { mutableStateOf<String?>(null) }
+    androidx.activity.compose.BackHandler(enabled = section != null) { section = null }
+    val autoOn = remember(autoTick) { vm.auto.folder != null }
+    val autoLast = remember(autoTick) { vm.auto.lastSuccessMs }
+    val autoFailed = remember(autoTick) { vm.auto.lastFailed }
+    val autoSub = when {
+        !autoOn -> stringResource(R.string.more_auto_sub_off)
+        autoFailed -> stringResource(R.string.more_auto_sub_failed)
+        else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it))) }
+            ?: stringResource(R.string.more_auto_sub_on)
+    }
+    val titles = mapOf(
+        S_COLLECTIONS to stringResource(R.string.more_my_collections),
+        S_ALERTS to stringResource(R.string.settings_alerts),
+        S_DATA to stringResource(R.string.settings_data),
+        S_LOOK to stringResource(R.string.settings_look),
+        S_CATALOGUE to stringResource(R.string.settings_catalogue),
+        S_HELP to stringResource(R.string.settings_help),
+    )
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
         Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            androidx.compose.material3.IconButton(onClick = onBack) {
+            androidx.compose.material3.IconButton(onClick = { if (section != null) section = null else onBack() }) {
                 androidx.compose.material3.Icon(
                     androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back),
                 )
             }
-            Text(stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
+            Text(section?.let { titles[it] } ?: stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
         }
 
-        // Your own collections first: making one is the reason to come here (#64)
-        SectionTitle(stringResource(R.string.more_my_collections))
-        myCollections()
-
-        SectionTitle(stringResource(R.string.more_language))
-        Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
-            InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
-        }
-        if (AppLook.available()) {
-            var device by remember { mutableStateOf(AppLook.deviceColours(context)) }
-            Row(
-                Modifier.fillMaxWidth()
-                    .toggleable(value = device, role = Role.Switch, onValueChange = { device = it; AppLook.setDeviceColours(context, it) })
-                    .heightIn(min = 56.dp)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-            ) {
-                Column(Modifier.weight(1f)) {
-                    Text(stringResource(R.string.look_device_colours), style = MaterialTheme.typography.bodyLarge)
-                    Text(stringResource(R.string.look_device_colours_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        when (section) {
+            null -> {
+                // Each line says what is set now, so nothing needs opening just to check (round, option B)
+                SectionLine(titles.getValue(S_COLLECTIONS), stringResource(R.string.settings_collections_sub)) { section = S_COLLECTIONS }
+                SectionLine(titles.getValue(S_ALERTS), stringResource(R.string.settings_alerts_sub)) { section = S_ALERTS }
+                SectionLine(titles.getValue(S_DATA), autoSub) { section = S_DATA }
+                SectionLine(
+                    titles.getValue(S_LOOK),
+                    stringResource(if (ja) R.string.more_japanese else R.string.more_english) +
+                        if (AppLook.available() && AppLook.deviceColours(context)) " · " + stringResource(R.string.look_device_colours) else "",
+                ) { section = S_LOOK }
+                SectionLine(titles.getValue(S_CATALOGUE), stringResource(R.string.settings_catalogue_sub)) { section = S_CATALOGUE }
+                SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME)) { section = S_HELP }
+            }
+            S_COLLECTIONS -> myCollections()
+            S_ALERTS -> AlertsSection()
+            S_LOOK -> {
+                SectionTitle(stringResource(R.string.more_language))
+                Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
+                    InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
                 }
-                androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
-                androidx.compose.material3.Switch(checked = device, onCheckedChange = null)
+                if (AppLook.available()) {
+                    var device by remember { mutableStateOf(AppLook.deviceColours(context)) }
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .toggleable(value = device, role = Role.Switch, onValueChange = { device = it; AppLook.setDeviceColours(context, it) })
+                            .heightIn(min = 56.dp)
+                            .padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(stringResource(R.string.look_device_colours), style = MaterialTheme.typography.bodyLarge)
+                            Text(stringResource(R.string.look_device_colours_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+                        androidx.compose.material3.Switch(checked = device, onCheckedChange = null)
+                    }
+                }
+            }
+            S_DATA -> {
+                MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
+                    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+                    withPhotos = false
+                    saveBackup.launch("collectibles-backup-$stamp.zip")
+                }
+                // Moving to a new phone (#66): the same backup with every photo inside, so nothing depends on the gallery
+                MoreRow(stringResource(R.string.more_backup_photos), stringResource(R.string.more_backup_photos_sub)) {
+                    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+                    withPhotos = true
+                    saveBackup.launch("collectibles-backup-photos-$stamp.zip")
+                }
+                MoreRow(stringResource(R.string.more_auto), autoSub) {
+                    if (autoOn) autoDialog = true else pickFolder.launch(STARTING_FOLDER)
+                }
+                MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
+                    openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
+                }
+                if (relinkPending) {
+                    MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
+                        askPhotos.launch(BackupRestore.photoPermission())
+                    }
+                }
+            }
+            S_CATALOGUE -> {
+                MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
+                    openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
+                }
+                Text(
+                    stringResource(R.string.settings_catalogue_note),
+                    Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            S_HELP -> {
+                MoreRow(stringResource(R.string.more_logs), null, onLogs)
+                MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}
             }
         }
-        HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
-
-        SectionTitle(stringResource(R.string.more_backup_section))
-
-        MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
-            val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-            withPhotos = false
-            saveBackup.launch("collectibles-backup-$stamp.zip")
-        }
-        // Moving to a new phone (#66): the same backup with every photo inside, so nothing depends on the gallery
-        MoreRow(stringResource(R.string.more_backup_photos), stringResource(R.string.more_backup_photos_sub)) {
-            val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-            withPhotos = true
-            saveBackup.launch("collectibles-backup-photos-$stamp.zip")
-        }
-        MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
-            openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
-        }
-        if (relinkPending) {
-            MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
-                askPhotos.launch(BackupRestore.photoPermission())
-            }
-        }
-        val autoOn = remember(autoTick) { vm.auto.folder != null }
-        val autoLast = remember(autoTick) { vm.auto.lastSuccessMs }
-        val autoFailed = remember(autoTick) { vm.auto.lastFailed }
-        val autoSub = when {
-            !autoOn -> stringResource(R.string.more_auto_sub_off)
-            autoFailed -> stringResource(R.string.more_auto_sub_failed)
-            else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it))) }
-                ?: stringResource(R.string.more_auto_sub_on)
-        }
-        MoreRow(stringResource(R.string.more_auto), autoSub) {
-            if (autoOn) autoDialog = true else pickFolder.launch(STARTING_FOLDER)
-        }
-        MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
-            openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
-        }
-        AlertsSection()
-        MoreRow(stringResource(R.string.more_logs), null, onLogs)
-        MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}
     }
+}
+
+private const val S_COLLECTIONS = "collections"
+private const val S_ALERTS = "alerts"
+private const val S_DATA = "data"
+private const val S_LOOK = "look"
+private const val S_CATALOGUE = "catalogue"
+private const val S_HELP = "help"
+
+/** One section on the Settings list: its name, what is set now, and an arrow. */
+@Composable
+private fun SectionLine(title: String, sub: String, onClick: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+        }
+        androidx.compose.material3.Icon(
+            androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight,
+            contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 /** The picker's storage root is refused by Android, so open it somewhere it accepts. */

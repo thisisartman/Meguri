@@ -365,4 +365,14 @@
     <string name="photo_cover_set">Use as this entry\'s picture</string>
     <string name="photo_cover_clear">Show the latest photo instead</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
+    <string name="settings_alerts">Alerts</string>
+    <string name="settings_alerts_sub">Distance for each kind, what alerts, Proximity mode, quiet hours</string>
+    <string name="settings_data">Backup and data</string>
+    <string name="settings_look">Appearance and language</string>
+    <string name="settings_catalogue">Catalogue</string>
+    <string name="settings_catalogue_sub">Niigata built in · load a CSV for more</string>
+    <string name="settings_catalogue_note">The app comes with the Niigata catalogue and an offline map of Niigata, Saitama and Tokyo. Load a CSV to add or update items; your finds are never removed.</string>
+    <string name="settings_help">Help and about</string>
+    <string name="settings_help_sub">Logs · version %1$s · credits</string>
+    <string name="settings_collections_sub">Your own collections, and making a new one</string>
 </resources>

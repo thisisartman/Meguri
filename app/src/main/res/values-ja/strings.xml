@@ -365,4 +365,14 @@
     <string name="photo_cover_set">この項目の表示写真にする</string>
     <string name="photo_cover_clear">最新の写真を表示する</string>
     <string name="alert_station_rule">駅スタンプは、今日のトリップで降りる駅でだけ通知します（メニューのトリップ）。通過する駅では通知せず、トリップを計画していなければ駅の通知はありません。</string>
+    <string name="settings_alerts">通知</string>
+    <string name="settings_alerts_sub">種類ごとの距離、通知するもの、近接モード、夜間</string>
+    <string name="settings_data">バックアップとデータ</string>
+    <string name="settings_look">表示と言語</string>
+    <string name="settings_catalogue">カタログ</string>
+    <string name="settings_catalogue_sub">新潟を内蔵・CSVで追加</string>
+    <string name="settings_catalogue_note">新潟のカタログと、新潟・埼玉・東京のオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
+    <string name="settings_help">ヘルプと情報</string>
+    <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
+    <string name="settings_collections_sub">自分のコレクションと新しいコレクションの作成</string>
 </resources>
