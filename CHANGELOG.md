@@ -1,6 +1,6 @@
 # Changelog
 
-## 2026-11-07: next beta (not released)
+## 2026-11-07: 0.3.0-beta.6 (versionCode 8, sent to the owner on Telegram, 23:58)
 - No more flash of the welcome screen on the first open after an update.
 - A short vibration when you tap a pin, a tile, Collect or "No stamp here".
 - Trip mode is now called Proximity mode.

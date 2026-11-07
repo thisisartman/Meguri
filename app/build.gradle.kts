@@ -19,7 +19,7 @@ val signingProps: Properties? = providers.gradleProperty("COLLECTIBLES_SIGNING")
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
 // Owner, 2026-11-07: this version is the beta, under testing
-val appVersionName = "0.3.0-beta.5"
+val appVersionName = "0.3.0-beta.6"
 
 android {
     namespace = "io.github.thisisartman.collectibles"
@@ -30,7 +30,7 @@ android {
         applicationId = "io.github.thisisartman.collectibles"
         minSdk = 29
         targetSdk = 37
-        versionCode = 7
+        versionCode = 8
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "Meguri"
