@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.alerts
 
+import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.data.CollectiblesDb
 import io.github.thisisartman.collectibles.data.Item
 import io.github.thisisartman.collectibles.debug.FileLog
@@ -21,6 +22,7 @@ class AlertHandler @Inject constructor(
     private val settings: AlertSettings,
     private val notifier: AlertNotifier,
     private val log: FileLog,
+    private val trips: io.github.thisisartman.collectibles.data.TripStore,
 ) {
     private val dao = db.dao()
     private val lock = Mutex()
@@ -30,8 +32,15 @@ class AlertHandler @Inject constructor(
         dao.item(id)?.let { i -> if (i.lat != null && i.lng != null) i to (i.lat to i.lng) else null }
     }
 
-    /** Items still to get that have a place, as alert candidates. */
-    suspend fun candidates(): List<Item> = dao.uncollectedPlaces()
+    /**
+     * Items still to get that have a place, as alert candidates. Station stamps only at stations you get off at in
+     * today's planned trip (owner's pick B, #73, 2026-11-07): riding through a station never alerts, and with no
+     * trip planned no station alerts at all. Places marked "No stamp here" never alert.
+     */
+    suspend fun candidates(): List<Item> {
+        val getOff = trips.current()?.getOff.orEmpty()
+        return dao.uncollectedPlaces().filter { it.type != ItemType.EKI_STAMP || it.id in getOff }
+    }
 
     /** A position from Trip mode. Returns the nearest item still to get and its distance, for the status line. */
     suspend fun onPosition(fix: Fix, source: String): Pair<Item, Double>? = lock.withLock {

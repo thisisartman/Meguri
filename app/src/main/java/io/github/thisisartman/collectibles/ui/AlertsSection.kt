@@ -204,6 +204,13 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
             }
         }
 
+    // Owner's pick B (#73): stations alert only where you plan to get off
+    Text(
+        stringResource(R.string.alert_station_rule),
+        Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
     Text(stringResource(R.string.alert_for), Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.bodyLarge)
     val types = remember(tick) { s.types }
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {

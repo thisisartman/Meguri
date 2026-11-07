@@ -43,6 +43,7 @@ interface CollectionDao {
         SELECT * FROM item i
         WHERE i.lat IS NOT NULL AND i.lng IS NOT NULL AND i.type != 'EKITAG'
           AND NOT EXISTS (SELECT 1 FROM acquisition a WHERE a.item_id = i.id)
+          AND i.none_here_at IS NULL
         """,
     )
     suspend fun uncollectedPlaces(): List<Item>

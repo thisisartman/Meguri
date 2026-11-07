@@ -364,4 +364,5 @@
     <string name="none_here_undo">あった</string>
     <string name="photo_cover_set">この項目の表示写真にする</string>
     <string name="photo_cover_clear">最新の写真を表示する</string>
+    <string name="alert_station_rule">駅スタンプは、今日のトリップで降りる駅でだけ通知します（メニューのトリップ）。通過する駅では通知せず、トリップを計画していなければ駅の通知はありません。</string>
 </resources>

@@ -134,7 +134,7 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     LaunchedEffect(from, to, localOnly, getOff, legs) {
         val f = from; val t = to; val l = legs
         if (f != null && t != null && l != null) {
-            vm.saveTrip(SavedTrip(f, t, localOnly && local != null, getOff.toSet(), l.passed().map { it.first }, AlertSettings.endOfDay()))
+            vm.saveTrip(SavedTrip(f, t, localOnly && local != null, getOff.toSet(), l.passed().map { it.first }, AlertSettings.endOfDay())); alerts.geofences.refreshInBackground()
         }
     }
 
@@ -148,7 +148,7 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             title = { Text(stringResource(R.string.trip_screen)) },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             actions = {
-                if (from != null || to != null) IconButton(onClick = { setEnds(null, null); localOnly = false; vm.clearTrip() }) {
+                if (from != null || to != null) IconButton(onClick = { setEnds(null, null); localOnly = false; vm.clearTrip(); alerts.geofences.refreshInBackground() }) {
                     Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.trip_clear))
                 }
                 IconButton(onClick = { nav.navigate("trip-report") }) {

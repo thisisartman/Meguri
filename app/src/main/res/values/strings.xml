@@ -364,4 +364,5 @@
     <string name="none_here_undo">There is one</string>
     <string name="photo_cover_set">Use as this entry\'s picture</string>
     <string name="photo_cover_clear">Show the latest photo instead</string>
+    <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
 </resources>
