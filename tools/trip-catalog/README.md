@@ -19,7 +19,16 @@ python tools/trip-catalog/make_catalog.py tools/trip-catalog/joetsu.json tools/t
 - Hand-out building positions: OpenStreetMap.
 
 ## All Niigata cards (#65, 2026-11-07)
-`add_niigata_cards.py` edits the asset CSV in place (it is the source since phase 5 added dam rows to it directly): it adds the 31 Niigata cards that were missing and fills hand-out places into the owner's cards that had none, keyed by code. Source: Eki kara Manhole's Niigata list and its hand-out map feed (`/ext/manholecard/lmap/getJSON.cgi`), snapshot in `sources/`. Shibata D (15-206-D001, series 28) has no place in the feed or on the city's pages yet. Saitama and Tokyo next, the same way (`search.cgi?m=11`, `m=13`).
+`add_niigata_cards.py` edits the asset CSV in place (it is the source since phase 5 added dam rows to it directly): it adds the 31 Niigata cards that were missing and fills hand-out places into the owner's cards that had none, keyed by code. Source: Eki kara Manhole's Niigata list and its hand-out map feed (`/ext/manholecard/lmap/getJSON.cgi`), snapshot in `sources/`. Shibata D (15-206-D001, series 28) has no place in the feed or on the city's pages yet. Saitama and Tokyo followed, see below.
+
+## Saitama and Tokyo cards (#65, 2026-11-07)
+`add_cards_by_prefecture.py <code> <csv>` is the rerunnable version of the Niigata script; the same merge rules apply. The curated cards are in `data/cards-11.json` (Saitama, 73) and `data/cards-13.json` (Tokyo, 101), and the feed snapshots are in `sources/ekikaramanhole-{saitama,tokyo}-2026-11-07.json`. To refresh a snapshot, run `add_cards_by_prefecture.py <code> --fetch <out.json>`. It also prints any listed codes that the data file does not cover yet.
+
+- The position is the main hand-out place, taken from the feed's "ここに行く" link. Second places, places used on closed days and seasonal places go in notes. Hours were condensed by hand.
+- Left out: the promotion cards (13-100-P001, 13-203-P001) and the gold special editions (`S-`), which are no longer handed out. Each one is listed under `skipped` in the data file.
+- Setagaya G001 and Higashiyamato A001 appear on the site only as `S-13-100-G001` and `S-13-220-A001`. They are added under their plain codes, on the assumption that the regular card is the one handed out now.
+- Tokorozawa's English cards (`E-11-208-C001`, `E-11-208-D001`) are rows of their own at the same place as the Japanese card.
+- Hachioji A001 (13-201-A001) has no place in the feed.
 
 ## Cards the owner already has
 Read from the owner's video of their cards (2026-11-03): the coordinates printed on each card, matched to https://ekikaramanhole.whitebeach.org/ext/manholecard/search.cgi?m=15 and ?m=13.
