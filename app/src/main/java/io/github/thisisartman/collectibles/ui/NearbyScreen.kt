@@ -185,7 +185,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val onbMax = onboardingPeek(onboarding)
     var onbContentPx by remember(onboarding.step) { mutableIntStateOf(0) }
     val onbPeek = if (onbContentPx > 0 && onboarding.step != OnboardingStep.HAVE) with(density) { (handlePx + onbContentPx).toDp() } + 16.dp else onbMax
-    val peek = if (dropdownShown) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
+    val peek = if (dropdownShown && !inOnboarding) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
     LaunchedEffect(dropdownShown) { if (dropdownShown) runCatching { sheet.bottomSheetState.partialExpand() } }
     BottomSheetScaffold(
         scaffoldState = sheet,
@@ -249,7 +249,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(stringResource(when (t) { MapSection.STAMPS -> R.string.nearby_tab_stamps; MapSection.CARDS -> R.string.nearby_tab_cards; else -> R.string.nearby_tab_mine }), maxLines = 1)
                                 Text(
-                                    stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
+                                    // Blank until the list has loaded, never a false 0 / 0 (owner, 2026-11-08)
+                                    if (loadedRows == null) " " else stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
                                     style = MaterialTheme.typography.labelSmall, maxLines = 1,
                                 )
                             }
@@ -402,8 +403,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 ) { Icon(painterResource(R.drawable.ic_my_location), contentDescription = stringResource(R.string.nearby_recenter)) }
             }
             // Search (owner, 2026-11-06: in place of the map button, since dragging the sheet down shows the whole map),
-            // the menu, and a line about your position only when something needs doing
-            Surface(
+            // and a line about your position only when something needs doing. Not during the onboarding: a tap on it
+            // opened the keyboard and the sheet tucked away, hiding the onboarding (emulator, 2026-11-08)
+            if (!inOnboarding) Surface(
                 Modifier.statusBarsPadding().padding(12.dp).fillMaxWidth(),
                 shape = RoundedCornerShape(28.dp), shadowElevation = 3.dp,
             ) {
@@ -431,8 +433,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.nearby_search_clear))
                             }
                         }
-                        // Log a find is the middle of the bottom bar now; the top right is the menu (owner, 2026-11-06)
-                        MenuButton(nav)
+                        // Only search here (owner, 2026-11-08); the menu lives on My book
                     }
                     // While typing, the keyboard hides the sheet, so results drop down under the search bar,
                     // with chips for All and each type found (owner, 2026-11-07)

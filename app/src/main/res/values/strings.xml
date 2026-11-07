@@ -374,7 +374,7 @@
     <string name="settings_catalogue_note">The app comes with the Niigata catalogue and an offline map of Niigata, Saitama and Tokyo. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">Logs · version %1$s · credits</string>
-    <string name="settings_collections_sub">On the You page: your own collections, and making a new one</string>
+    <string name="settings_collections_sub">Your own collections, and making a new one</string>
     <string name="photo_kind_label">Kind</string>
     <string name="sort_tip_near">Nearest</string>
     <string name="sort_tip_near_text">: how far each item is from you</string>
@@ -439,7 +439,13 @@
         <item quantity="one">%d added to your profile</item>
         <item quantity="other">%d added to your profile</item>
     </plurals>
-    <string name="onb_finished_how">To add photos or details, open your profile with the round button at the top right.</string>
-    <string name="onb_finished_profile">Go to profile</string>
+    <string name="onb_finished_how">Your finds are in My book (bottom right), with your photos and details; open one there to add photos.</string>
+    <string name="onb_finished_profile">Go to My book</string>
     <string name="onb_finished_done">Done</string>
+    <string name="profile_collected">Collected</string>
+    <plurals name="profile_collections">
+        <item quantity="one">collection</item>
+        <item quantity="other">collections</item>
+    </plurals>
+    <string name="profile_recent">Recently collected</string>
 </resources>

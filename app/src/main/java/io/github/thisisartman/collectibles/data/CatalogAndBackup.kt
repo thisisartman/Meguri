@@ -49,25 +49,47 @@ class CatalogAndBackup @Inject constructor(
      */
     suspend fun importBundled(regions: Set<String>? = null): ImportResult = withContext(Dispatchers.IO) {
         val text = bundledText()
-        bundledPrefs.edit().apply { if (regions == null) remove(KEY_REGIONS) else putStringSet(KEY_REGIONS, regions) }.apply()
+        val edit = bundledPrefs.edit()
+        if (regions == null) edit.remove(KEY_REGIONS) else edit.putStringSet(KEY_REGIONS, regions)
+        edit.apply()
         importRegions(text, regions).also { bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply() }
     }
 
-    /** Prefectures in the bundled catalogue and how many things each has, for the onboarding's region list. */
+    private fun linesIn(maps: List<Map<String, String>>, regions: Set<String>?): Set<String> =
+        maps.filter { regions == null || it["prefecture"]?.trim() in regions }.mapNotNull { it["line_id"]?.trim()?.ifEmpty { null } }.toSet()
+
+    /**
+     * Prefectures in the bundled catalogue and how many things each has, for the onboarding's region list. Worked out
+     * once per catalogue file and kept, since parsing the file is slow on a phone.
+     */
     suspend fun bundledPrefectures(): Map<String, Map<ItemType, Int>> = withContext(Dispatchers.IO) {
-        Csv.parseWithHeader(bundledText())
+        val text = bundledText()
+        val sha = sha(text)
+        bundledPrefs.getString(KEY_COUNTS, null)?.takeIf { bundledPrefs.getString(KEY_COUNTS_SHA, null) == sha }?.let { return@withContext decodeCounts(it) }
+        countPrefectures(text).also { bundledPrefs.edit().putString(KEY_COUNTS, encodeCounts(it)).putString(KEY_COUNTS_SHA, sha).apply() }
+    }
+
+    private fun countPrefectures(text: String): Map<String, Map<ItemType, Int>> =
+        Csv.parseWithHeader(text)
             .mapNotNull { m -> m["prefecture"]?.trim()?.ifEmpty { null }?.let { it to m } }
             // A station on several lines is one item: count it once
             .distinctBy { (_, m) -> m["catalog_key"].orEmpty().ifEmpty { m["code"].orEmpty().ifEmpty { m["name_ja"].orEmpty() } } + m["type"] }
             .groupBy({ it.first }, { it.second["type"].orEmpty() })
             .mapValues { (_, types) -> types.mapNotNull { t -> runCatching { ItemType.valueOf(t) }.getOrNull() }.groupingBy { it }.eachCount() }
-    }
 
     private val savedRegions: Set<String>? get() = bundledPrefs.getStringSet(KEY_REGIONS, null)
 
     private suspend fun importRegions(text: String, regions: Set<String>?): ImportResult {
+        val tParse = System.currentTimeMillis()
         val maps = Csv.parseWithHeader(text).let { all -> if (regions == null) all else all.filter { it["prefecture"]?.trim() in regions } }
-        return lock.withLock { importRows(maps) }
+        log.i("Catalog", "Parsed the catalogue in ${System.currentTimeMillis() - tParse} ms")
+        bundledPrefs.edit().putStringSet(KEY_BUNDLED_LINES, linesIn(maps, null)).apply()
+        val asked = System.currentTimeMillis()
+        return lock.withLock {
+            val waited = System.currentTimeMillis() - asked
+            if (waited > 200) log.w("Catalog", "Import waited ${waited} ms for the database lock")
+            importRows(maps)
+        }
     }
 
     /**
@@ -82,11 +104,14 @@ class CatalogAndBackup @Inject constructor(
         // Loaded before: its lines are here, or regions were chosen (a Tokyo-only choice has no lines)
         val loadedBefore = have.any { it in BUNDLED_LINE_IDS } || savedRegions != null
         if (!loadedBefore) return@withContext null
-        // Also after restoring a backup made before a line was added: the file is the same, a line is missing
-        val regions = savedRegions
-        val missing = Csv.parseWithHeader(text).filter { regions == null || it["prefecture"]?.trim() in regions }
-            .mapNotNull { it["line_id"]?.trim()?.ifEmpty { null } }.toSet() - have
-        if (bundledPrefs.getString(KEY_BUNDLED_SHA, null) == sha && missing.isEmpty()) return@withContext null
+        // Same file and every line it brings is here: nothing to do, without parsing the file (owner, 2026-11-08:
+        // parsing it on every start was part of the delay before the catalogue showed). A restored backup made before
+        // a line was added still gets it back, since that line is missing from the database.
+        if (bundledPrefs.getString(KEY_BUNDLED_SHA, null) == sha) {
+            val expected = bundledPrefs.getStringSet(KEY_BUNDLED_LINES, null)
+                ?: linesIn(Csv.parseWithHeader(text), savedRegions).also { bundledPrefs.edit().putStringSet(KEY_BUNDLED_LINES, it).apply() }
+            if ((expected - have).isEmpty()) return@withContext null
+        }
         importRegions(text, savedRegions).also {
             bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha).apply()
             log.i("Catalog", "Bundled catalogue updated: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
@@ -109,33 +134,55 @@ class CatalogAndBackup @Inject constructor(
         var updated = 0
         var unchanged = 0
         val lineIds = mutableSetOf<String>()
-        val seen = mutableSetOf<String>()
         val skipped = mutableListOf<String>()
         val now = System.currentTimeMillis()
+        val t0 = System.currentTimeMillis()
+        val stages = mutableListOf<String>()
+        val parsed = maps.mapIndexedNotNull { i, m -> CatalogRow.from(m).getOrElse { skipped += "row ${i + 2}: ${it.message}"; null } }
+        // A handful of queries for the whole file, not three per row: one row at a time took 36 s for 156 rows on the
+        // emulator (2026-11-08), the "opening delay" the owner timed at 8 s on the S23
+        stages += "rows ${System.currentTimeMillis() - t0}"
+        val tTx = System.currentTimeMillis()
         db.withTransaction {
-            maps.forEachIndexed { i, m ->
-                val row = CatalogRow.from(m).getOrElse { skipped += "row ${i + 2}: ${it.message}"; return@forEachIndexed }
-                val existing = dao.itemByCatalogKey(row.catalogKey)
-                val item = row.toItem(existing, UUID.randomUUID().toString(), now)
-                val changes = catalogRowChanges(existing, item)
-                // Unchanged rows are left alone, so their update time (and "recent" order) stays put
-                if (changes) dao.upsertItem(item)
-                // A station on two lines is two rows of one item: count the item once.
-                if (seen.add(row.catalogKey)) {
+            stages += "open ${System.currentTimeMillis() - tTx}"
+            val keys = parsed.map { it.catalogKey }.distinct()
+            val tLookup = System.currentTimeMillis()
+            val existing = keys.chunked(500).flatMap { dao.itemsByCatalogKeys(it) }.associateBy { it.catalogKey }
+            stages += "lookup ${System.currentTimeMillis() - tLookup}"
+            val items = LinkedHashMap<String, Item>()
+            val toWrite = mutableListOf<Item>()
+            val lines = LinkedHashMap<String, Line>()
+            val stations = mutableListOf<LineStation>()
+            parsed.forEach { row ->
+                // A station on two lines is two rows of one item: the first row makes it, the second reuses it
+                val item = items.getOrPut(row.catalogKey) {
+                    val before = existing[row.catalogKey]
+                    val made = row.toItem(before, UUID.randomUUID().toString(), now)
+                    val changes = catalogRowChanges(before, made)
+                    // Unchanged rows are left alone, so their update time (and "recent" order) stays put
+                    if (changes) toWrite += made
                     when {
-                        existing == null -> added++
+                        before == null -> added++
                         changes -> updated++
                         else -> unchanged++
                     }
+                    made
                 }
                 if (row.lineId != null && row.lineSeq != null) {
-                    dao.upsertLine(Line(row.lineId, row.lineNameJa ?: row.lineId, row.lineNameRomaji))
-                    dao.upsertLineStation(LineStation(row.lineId, item.id, row.lineSeq))
+                    lines.getOrPut(row.lineId) { Line(row.lineId, row.lineNameJa ?: row.lineId, row.lineNameRomaji) }
+                    stations += LineStation(row.lineId, item.id, row.lineSeq)
                     lineIds += row.lineId
                 }
             }
+            val tWrite = System.currentTimeMillis()
+            if (toWrite.isNotEmpty()) dao.upsertItems(toWrite)
+            stages += "items ${System.currentTimeMillis() - tWrite}"
+            val tLines = System.currentTimeMillis()
+            if (lines.isNotEmpty()) dao.upsertLines(lines.values.toList())
+            if (stations.isNotEmpty()) dao.upsertLineStations(stations)
+            stages += "lines ${System.currentTimeMillis() - tLines}"
         }
-        log.i("Catalog", "Import: $added added, $updated updated, $unchanged unchanged, ${lineIds.size} lines, ${skipped.size} skipped ${skipped.take(5)}")
+        log.i("Catalog", "Import: $added added, $updated updated, $unchanged unchanged, ${lineIds.size} lines, ${skipped.size} skipped ${skipped.take(5)} in ${System.currentTimeMillis() - t0} ms (${stages.joinToString()})")
         return ImportResult(added, updated, lineIds.size, skipped, unchanged)
     }
 
@@ -254,5 +301,18 @@ class CatalogAndBackup @Inject constructor(
 const val BUNDLED_CATALOGUE = "catalogue/trip-niigata.csv"
 private const val KEY_BUNDLED_SHA = "bundled_sha"
 private const val KEY_REGIONS = "regions"
+private const val KEY_BUNDLED_LINES = "bundled_lines"
+private const val KEY_COUNTS = "region_counts"
+private const val KEY_COUNTS_SHA = "region_counts_sha"
+
+/** "新潟県|EKI_STAMP=76,MANHOLE_CARD=48;…": small, and no JSON library needed in unit tests. */
+internal fun encodeCounts(c: Map<String, Map<ItemType, Int>>): String =
+    c.entries.joinToString(";") { (p, m) -> p + "|" + m.entries.joinToString(",") { (t, n) -> "${t.name}=$n" } }
+
+internal fun decodeCounts(s: String): Map<String, Map<ItemType, Int>> =
+    s.split(";").filter { "|" in it }.associate { e ->
+        val (p, rest) = e.split("|", limit = 2)
+        p to rest.split(",").filter { "=" in it }.mapNotNull { kv -> kv.split("=").let { (t, n) -> runCatching { ItemType.valueOf(t) to n.toInt() }.getOrNull() } }.toMap()
+    }
 /** Lines only the bundled catalogue brings: one of them in the database means it was loaded. */
 private val BUNDLED_LINE_IDS = setOf("JR_JOETSU", "JR_SHINETSU", "JR_ECHIGO", "JR_YAHIKO")

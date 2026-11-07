@@ -88,6 +88,11 @@ fun MeguriMap(
     val types = LocalTypeColors.current
     val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
     val routeColor = androidx.compose.material3.MaterialTheme.colorScheme.primary.toArgb()
+    // A flat map (owner, 2026-11-08: the textures looked odd): land in the page colour, water in the accent, faded
+    val landColor = androidx.compose.material3.MaterialTheme.colorScheme.background.toArgb()
+    val waterColor = androidx.compose.ui.graphics.lerp(
+        androidx.compose.material3.MaterialTheme.colorScheme.background, androidx.compose.material3.MaterialTheme.colorScheme.primary, if (dark) 0.22f else 0.16f,
+    ).toArgb()
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
     val anchorNow by rememberUpdatedState(anchor)
@@ -149,6 +154,7 @@ fun MeguriMap(
                     Expression.coalesce(Expression.get("name:ja"), Expression.get("name:nonlatin"), Expression.get("name"))
                 else
                     Expression.coalesce(Expression.get("name:en"), Expression.get("name:latin"), Expression.get("name"))
+                flatten(s, landColor, waterColor)
                 s.layers.filterIsInstance<org.maplibre.android.style.layers.SymbolLayer>().forEach { layer ->
                     val tf = layer.textField.expression?.toString() ?: layer.textField.value?.toString() ?: return@forEach
                     if ("name" in tf && "ref" !in tf) layer.setProperties(PropertyFactory.textField(oneName))
@@ -363,3 +369,26 @@ private const val SRC_HIGHLIGHT = "meguri-highlight"
 private const val LAYER_HIGHLIGHT = "meguri-highlight-fill"
 
 private val JAPAN: LatLngBounds = LatLngBounds.Builder().include(LatLng(30.0, 129.3)).include(LatLng(45.6, 146.0)).build()
+
+/**
+ * One flat look for every map source (OpenFreeMap online, Protomaps offline): hill shading, land cover textures,
+ * parks, woods and buildings off; land and water in two flat colours. Roads and labels stay as the style draws them.
+ */
+private fun flatten(s: Style, land: Int, water: Int) {
+    val hide = Regex("hillshade|landcover|landuse|park|wood|forest|grass|scrub|wetland|sand|glacier|ice|building|aeroway|pitch|cemetery|military|zoo|hospital|school|beach|farmland|orchard|vineyard")
+    s.layers.forEach { l ->
+        val id = l.id.lowercase()
+        when {
+            // Shaded relief: a hillshade layer (Protomaps) or a raster image (OpenFreeMap's natural_earth)
+            l is org.maplibre.android.style.layers.HillshadeLayer || l is org.maplibre.android.style.layers.RasterLayer ->
+                l.setProperties(PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
+            l is org.maplibre.android.style.layers.BackgroundLayer -> l.setProperties(PropertyFactory.backgroundColor(land))
+            l is org.maplibre.android.style.layers.FillLayer && (id == "earth" || id.startsWith("earth") || id == "land") ->
+                l.setProperties(PropertyFactory.fillColor(land), PropertyFactory.fillPattern(Expression.literal("")))
+            l is org.maplibre.android.style.layers.FillLayer && "water" in id -> l.setProperties(PropertyFactory.fillColor(water), PropertyFactory.fillOpacity(1f))
+            l is org.maplibre.android.style.layers.LineLayer && "water" in id -> l.setProperties(PropertyFactory.lineColor(water))
+            hide.containsMatchIn(id) && (l is org.maplibre.android.style.layers.FillLayer || l is org.maplibre.android.style.layers.FillExtrusionLayer || l is org.maplibre.android.style.layers.LineLayer) ->
+                l.setProperties(PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
+        }
+    }
+}

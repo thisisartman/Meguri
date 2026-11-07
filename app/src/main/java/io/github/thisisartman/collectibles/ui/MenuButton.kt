@@ -3,7 +3,7 @@ package io.github.thisisartman.collectibles.ui
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Settings
@@ -33,19 +33,10 @@ fun MenuButton(nav: NavHostController, modifier: Modifier = Modifier) {
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
         IconButton(onClick = { open = true }) {
-            Icon(
-                Icons.Filled.AccountCircle,
-                contentDescription = stringResource(R.string.menu_open),
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(32.dp),
-            )
+            // A plain "more" menu: the profile it stood for is now My book itself (owner, 2026-11-08)
+            Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.menu_open), modifier = Modifier.size(26.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.profile_title)) },
-                leadingIcon = { Icon(Icons.Filled.AccountCircle, contentDescription = null) },
-                onClick = { open = false; nav.openProfile() },
-            )
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_trip)) },
                 leadingIcon = { Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_route), contentDescription = null) },

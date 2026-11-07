@@ -101,6 +101,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
         val customLabel = stringResource(R.string.type_custom)
         // No floating button any more (Log is in the bottom bar), so the list only needs a little room at the end
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
+            // What used to be the profile page (owner, 2026-11-08: one page, called My book)
+            if (!marking) item(key = "summary") { BookSummary(vm, nav) }
             // Manhole cards by prefecture
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->

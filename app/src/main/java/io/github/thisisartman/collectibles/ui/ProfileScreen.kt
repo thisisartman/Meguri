@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -55,44 +56,35 @@ fun profileTotals(rows: List<ItemRow>, now: Long = System.currentTimeMillis()): 
 }
 
 /**
- * The profile page (#72, owner's pick A "at a glance"): totals, a small map of where you collected, progress per
- * collection, and your own collections (moved here from Settings). Opened from the top-right menu.
+ * The top of My book (was the profile page, #72; merged into My book, owner 2026-11-08): totals, a small map of where
+ * you collected, and what you collected last, each opening its page (where photos are added). The collections and
+ * their progress follow below, in My book's own sections.
  */
 @Composable
-fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Composable () -> Unit, onBack: () -> Unit) {
+fun BookSummary(vm: MainViewModel, nav: NavHostController) {
+    val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
-    val lines by vm.lines.collectAsStateWithLifecycle()
-    val ja = isJapanese()
     val totals = remember(rows) { profileTotals(rows) }
     val pins = remember(rows) { rows.filter { it.collected }.mapNotNull { it.toPin() } }
+    val recent = remember(rows) { rows.filter { it.collected }.sortedByDescending { it.lastAt ?: 0L }.take(20) }
 
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
-            Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
-        }
-
-        // 1. Totals
+    Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         Surface(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
-            Row(Modifier.padding(vertical = 16.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
+            Row(Modifier.padding(vertical = 14.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Total(totals.finds, pluralStringResource(R.plurals.profile_finds, totals.finds), Modifier.weight(1f))
-                Total(totals.kinds, pluralStringResource(R.plurals.profile_kinds, totals.kinds), Modifier.weight(1f))
+                // Collections started (owner, 2026-11-08: "kinds" didn't say anything)
+                val started = summaries.count { it.collected > 0 }
+                Total(started, pluralStringResource(R.plurals.profile_collections, started), Modifier.weight(1f))
                 Total(totals.today, stringResource(R.string.profile_today), Modifier.weight(1f))
             }
         }
-
-        // 2. Where you collected; tap for the full map of collected things
-        Spacer(Modifier.height(12.dp))
-        Surface(
-            Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(200.dp),
-            shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant,
-        ) {
-            if (pins.isEmpty()) {
-                Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.profile_map_empty), color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
-                }
-            } else {
+        if (pins.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            Surface(
+                Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(170.dp),
+                shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant,
+            ) {
                 Box(Modifier.fillMaxSize()) {
                     MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null, inCard = true)
                     Surface(
@@ -104,42 +96,26 @@ fun ProfileScreen(vm: MainViewModel, nav: NavHostController, myCollections: @Com
                 }
             }
         }
-
-        // 3. Progress for each collection, like My book but about you
-        SectionTitle(stringResource(R.string.profile_collections))
-        // Collections you have started come first, then the rest, each in My book's order
-        summaries.sortedByDescending { it.collected > 0 }.forEach { s ->
-            Surface(
-                Modifier.padding(horizontal = 16.dp, vertical = 4.dp).fillMaxWidth()
-                    .clickable { if (s.lineId != null) nav.openLine(s.lineId) else nav.openBook() },
-                shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceVariant,
-            ) {
-                Column(Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        // The same names as My book: "Manhole cards · Niigata", "Station stamps · Joetsu Line", "Goshuin"
-                        val lineName = lines.firstOrNull { it.id == s.lineId }?.let { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
-                        Text(summaryTitle(s, lineName), Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        if (recent.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.profile_recent))
+            androidx.compose.foundation.lazy.LazyRow(contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) {
+                items(recent.size) { i ->
+                    val r = recent[i]
+                    Column(
+                        Modifier.width(80.dp).clickable { nav.openItem(r.item.id) }.padding(vertical = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Mark(r, 52.dp)
                         Text(
-                            if (s.total != null) "${s.collected} / ${s.total}" else "${s.collected}",
-                            style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
-                        )
-                    }
-                    if (s.total != null && s.total > 0) {
-                        Spacer(Modifier.height(8.dp))
-                        LinearProgressIndicator(
-                            progress = { s.collected.toFloat() / s.total },
-                            modifier = Modifier.fillMaxWidth(),
-                            color = LocalTypeColors.current.of(s.type),
+                            tileName(r.item.displayName(ja)), style = MaterialTheme.typography.labelMedium,
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
                         )
                     }
                 }
             }
         }
-
-        // 4. Your own collections
-        SectionTitle(stringResource(R.string.more_my_collections))
-        myCollections()
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(8.dp))
     }
 }
 

@@ -3,6 +3,11 @@
 ## 2026-11-08: next beta (not released)
 - Meguri opens on a map of Japan and flies in to where you are a moment after your position arrives; without a position it stays on Japan.
 - First open (#81): instead of the welcome card, the Nearby sheet asks whether you're starting fresh or already have some, lists the permissions Meguri needs and why, then asks for them. Then you pick where you collect: your own prefecture first, then popular choices, shaded on the map as you tick them, or all of Japan. Only the chosen regions are loaded, and later catalogue updates keep to them. "Already have some" then opens a picker: search, a grid of places, tap one and tick what you have there (a station's stamp and Ekitag on one card). After each pick the search text is selected, so one backspace clears it for the next name. What you add stacks up above Done; Done marks them as had before the app, with a vibration, and the sheet says how many went to your profile, with "Go to profile".
+- My book and the You page are one page, called My book: your finds, collections started and today's finds, the map of where you collected and what you collected last are at the top, with the collections below. Your own collections are back in Settings.
+- The search bar is only search now; the menu (Trip, Collection check, Settings, Logs) is the ⋮ button on My book.
+- The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.
+- The pin card's icons are all one size.
+- Faster start: the catalogue file is no longer read on every start when nothing has changed, and the counts on the tabs stay blank (not 0 / 0) until your list has loaded. Loading a catalogue writes in one batch, and the region list's counts are kept after the first time.
 - The onboarding sheet sits at the height of what it shows and snaps there, with no empty space under its buttons.
 - Testing: after the onboarding, all 97 unit tests and 26 phone-level tests still pass; both onboarding paths were walked through on the emulator.
 - Location is no longer asked for the moment the app opens on a new phone; the onboarding asks after saying why. "What's new" waits until there is a catalogue.

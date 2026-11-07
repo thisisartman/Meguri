@@ -51,6 +51,19 @@ interface CollectionDao {
     @Query("SELECT * FROM item WHERE catalog_key = :key")
     suspend fun itemByCatalogKey(key: String): Item?
 
+    /** Up to 999 keys per call (SQLite's limit): callers chunk. */
+    @Query("SELECT * FROM item WHERE catalog_key IN (:keys)")
+    suspend fun itemsByCatalogKeys(keys: List<String>): List<Item>
+
+    @Upsert
+    suspend fun upsertItems(items: List<Item>)
+
+    @Upsert
+    suspend fun upsertLines(lines: List<Line>)
+
+    @Upsert
+    suspend fun upsertLineStations(ls: List<LineStation>)
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertItem(item: Item)
 

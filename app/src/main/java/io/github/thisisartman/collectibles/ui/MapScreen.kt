@@ -166,7 +166,7 @@ fun PinPopup(
                     Modifier.weight(1f, fill = false).heightIn(min = 48.dp).clickable { nav.openItem(row.item.id) },
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    ItemTypeIcon(row.item, 20.dp)
+                    ItemTypeIcon(row.item, PIN_ICON)
                     Spacer(Modifier.width(8.dp))
                     Text(name, Modifier.weight(1f, fill = false), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
                     distanceText(vm.distanceTo(row))?.let { d ->
@@ -175,15 +175,18 @@ fun PinPopup(
                     }
                 }
                 IconButton(onClick = { openDirections(context, row.item, vm.distanceTo(row)) }) {
-                    Icon(painterResource(R.drawable.ic_directions), contentDescription = stringResource(R.string.item_directions_plain))
+                    Icon(painterResource(R.drawable.ic_directions), contentDescription = stringResource(R.string.item_directions_plain), modifier = Modifier.size(PIN_ICON))
                 }
                 if (row.findCount == 0) {
                     androidx.compose.material3.FilledIconButton(
                         onClick = { vm.gotIt(row, name); onCollected() },
                         modifier = Modifier.spoken(stringResource(R.string.a11y_got_it, name)),
-                    ) { Icon(painterResource(R.drawable.ic_collect), contentDescription = stringResource(R.string.got_it)) }
+                    ) { Icon(painterResource(R.drawable.ic_collect), contentDescription = stringResource(R.string.got_it), modifier = Modifier.size(PIN_ICON)) }
                 }
             }
         }
     }
 }
+
+/** One size for every icon on the pin card (owner, 2026-11-08: they looked different sizes). */
+private val PIN_ICON = 22.dp
