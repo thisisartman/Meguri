@@ -241,7 +241,7 @@
     <string name="photo_take">写真を撮る</string>
     <string name="photo_pick">ギャラリーから選ぶ</string>
     <string name="photo_edit_title">この写真</string>
-    <string name="photo_remove">この記録から外す</string>
+    <string name="photo_remove">写真を削除</string>
     <string name="photo_remove_note">外すだけで、写真はギャラリーに残ります。</string>
     <string name="photo_done">完了</string>
     <string name="a11y_photo_kind">写真：%1$s。タップで変更・削除</string>
@@ -362,8 +362,8 @@
     <string name="none_here_ask">%1$s？</string>
     <string name="none_here_marked">%1$s・確認日 %2$s</string>
     <string name="none_here_undo">あった</string>
-    <string name="photo_cover_set">この項目の表示写真にする</string>
-    <string name="photo_cover_clear">最新の写真を表示する</string>
+    <string name="photo_cover_set">表示写真にする</string>
+    <string name="photo_cover_clear">表示写真をやめる</string>
     <string name="alert_station_rule">駅スタンプは、今日のトリップで降りる駅でだけ通知します（メニューのトリップ）。通過する駅では通知せず、トリップを計画していなければ駅の通知はありません。</string>
     <string name="settings_alerts">通知</string>
     <string name="settings_alerts_sub">種類ごとの距離、通知するもの、近接モード、夜間</string>
@@ -375,4 +375,9 @@
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
     <string name="settings_collections_sub">自分のコレクションと新しいコレクションの作成</string>
+    <string name="photo_kind_label">種類</string>
+    <string name="sort_tip_near">近い順</string>
+    <string name="sort_tip_near_text">：各項目までの距離</string>
+    <string name="sort_tip_az">名前順</string>
+    <string name="sort_tip_az_text">：名前のアルファベット・五十音順</string>
 </resources>

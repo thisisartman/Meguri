@@ -1,5 +1,8 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.background
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -208,16 +211,26 @@ fun PhotoSourceDialog(title: String, onCamera: () -> Unit, onGallery: () -> Unit
  * The Photo button's menu (owner, 2026-11-07): a vertical list of the kinds for this type; picking one asks camera
  * or gallery. [anchor] is the button that opens it.
  */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PhotoKindMenu(type: ItemType, expanded: Boolean, onDismiss: () -> Unit, onPick: (String) -> Unit) {
-    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+    // A Material bottom sheet with a list, not a floating menu (owner, 2026-11-07)
+    if (!expanded) return
+    androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss) {
+        Text(
+            stringResource(R.string.photo_add_title),
+            Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
+            style = MaterialTheme.typography.titleMedium,
+        )
         (photoKinds(type) + PhotoKind.OTHER).forEach { k ->
-            DropdownMenuItem(
-                text = { Text(stringResource(kindLabel(type, k))) },
-                leadingIcon = { Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null) },
-                onClick = { onDismiss(); onPick(k) },
+            androidx.compose.material3.ListItem(
+                headlineContent = { Text(stringResource(kindLabel(type, k))) },
+                leadingContent = { KindAddIcon(type, k) },
+                modifier = Modifier.clickable { onDismiss(); onPick(k) }.padding(horizontal = 8.dp),
+                colors = androidx.compose.material3.ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent),
             )
         }
+        androidx.compose.foundation.layout.Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -258,12 +271,67 @@ private fun EmptySquare(label: String, onClick: () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun KindChips(type: ItemType, selected: String, onSelect: (String) -> Unit) {
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        (photoKinds(type) + PhotoKind.OTHER).forEach { k ->
-            InkFilterChip(selected = selected == k, onClick = { onSelect(k) }, label = { Text(stringResource(kindLabel(type, k))) })
+    // A compact dropdown, not a row of chips (owner, 2026-11-07)
+    var open by remember { mutableStateOf(false) }
+    androidx.compose.material3.ExposedDropdownMenuBox(expanded = open, onExpandedChange = { open = it }) {
+        androidx.compose.material3.OutlinedTextField(
+            value = stringResource(kindLabel(type, selected)),
+            onValueChange = {},
+            readOnly = true,
+            label = { Text(stringResource(R.string.photo_kind_label)) },
+            leadingIcon = { Icon(painterResource(kindIcon(type, selected)), contentDescription = null, modifier = Modifier.size(20.dp)) },
+            trailingIcon = { androidx.compose.material3.ExposedDropdownMenuDefaults.TrailingIcon(expanded = open) },
+            modifier = Modifier.fillMaxWidth().menuAnchor(androidx.compose.material3.MenuAnchorType.PrimaryNotEditable),
+        )
+        ExposedDropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            (photoKinds(type) + PhotoKind.OTHER).forEach { k ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(kindLabel(type, k))) },
+                    leadingIcon = { Icon(painterResource(kindIcon(type, k)), contentDescription = null, modifier = Modifier.size(20.dp)) },
+                    onClick = { onSelect(k); open = false },
+                )
+            }
+        }
+    }
+}
+
+/** The icon for a kind of photo: the collectible's own symbol, the station, the Ekitag, or a plain photo. */
+fun kindIcon(type: ItemType, kind: String): Int = when (kind) {
+    PhotoKind.STAMP -> when (type) {
+        ItemType.EKI_STAMP, ItemType.EKITAG -> R.drawable.ic_type_station
+        ItemType.MANHOLE_CARD -> R.drawable.ic_type_manhole
+        ItemType.GOSHUIN -> R.drawable.ic_type_goshuin
+        ItemType.DAM_CARD -> R.drawable.ic_type_dam
+        ItemType.MUSEUM_STAMP -> R.drawable.ic_type_museum
+        ItemType.CUSTOM -> R.drawable.ic_add_photo
+    }
+    PhotoKind.EKITAG -> R.drawable.ic_type_ekitag
+    PhotoKind.MANHOLE -> R.drawable.ic_type_manhole
+    PhotoKind.PLACE -> when (type) {
+        ItemType.EKI_STAMP, ItemType.EKITAG -> R.drawable.ic_type_station
+        ItemType.GOSHUIN -> R.drawable.ic_type_shrine
+        ItemType.DAM_CARD -> R.drawable.ic_type_dam
+        ItemType.MUSEUM_STAMP -> R.drawable.ic_type_museum
+        else -> R.drawable.ic_add_photo
+    }
+    PhotoKind.PROOF -> if (type == ItemType.EKI_STAMP || type == ItemType.EKITAG) R.drawable.ic_type_ekitag else R.drawable.ic_add_photo
+    else -> R.drawable.ic_add_photo
+}
+
+/** A kind's icon with a small plus: "add a photo of this". */
+@Composable
+fun KindAddIcon(type: ItemType, kind: String) {
+    Box(Modifier.size(28.dp)) {
+        Icon(painterResource(kindIcon(type, kind)), contentDescription = null, modifier = Modifier.size(24.dp).align(Alignment.Center))
+        if (kindIcon(type, kind) != R.drawable.ic_add_photo) {
+            Box(
+                Modifier.align(Alignment.BottomEnd).size(13.dp)
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, androidx.compose.foundation.shape.CircleShape),
+                contentAlignment = Alignment.Center,
+            ) { Icon(androidx.compose.material.icons.Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(11.dp)) }
         }
     }
 }

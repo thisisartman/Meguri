@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.draw.alpha
 import kotlinx.coroutines.launch
 import androidx.compose.foundation.horizontalScroll
@@ -234,17 +235,16 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     }
                     Box {
                         IconButton(onClick = { sortOpen = true; if (!tips.getBoolean(TIP_SORT, false)) sortTip = true }) {
-                            Icon(painterResource(R.drawable.ic_sort), contentDescription = stringResource(R.string.nearby_sort))
+                            // The button shows the order in use: nearest, or A over Z
+                            Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
                         }
                         DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
                             listOf(false to R.string.nearby_sort_near, true to R.string.nearby_sort_az).forEach { (az, label) ->
                                 DropdownMenuItem(
                                     text = { Text(stringResource(label)) },
                                     onClick = { byName = az; sortOpen = false },
-                                    leadingIcon = {
-                                        if (byName == az) Icon(Icons.Filled.Check, contentDescription = null)
-                                        else Spacer(Modifier.size(24.dp))
-                                    },
+                                    leadingIcon = { Icon(painterResource(if (az) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = null) },
+                                    trailingIcon = { if (byName == az) Icon(Icons.Filled.Check, contentDescription = null) },
                                 )
                             }
                         }
@@ -281,7 +281,15 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
                     ) {
                         Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(stringResource(R.string.sort_tip), Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
+                            Text(
+                                androidx.compose.ui.text.buildAnnotatedString {
+                                    val bold = androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                    withStyle(bold) { append(stringResource(R.string.sort_tip_near)) }
+                                    append(stringResource(R.string.sort_tip_near_text))
+                                    append("\n")
+                                    withStyle(bold) { append(stringResource(R.string.sort_tip_az)) }
+                                    append(stringResource(R.string.sort_tip_az_text))
+                                }, Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
                             IconButton(onClick = { sortTip = false; tips.edit().putBoolean(TIP_SORT, true).apply() }) {
                                 Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.tip_dismiss))
                             }

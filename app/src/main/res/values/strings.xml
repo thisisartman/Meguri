@@ -241,7 +241,7 @@
     <string name="photo_take">Take a photo</string>
     <string name="photo_pick">Choose from the gallery</string>
     <string name="photo_edit_title">This photo</string>
-    <string name="photo_remove">Remove from this find</string>
+    <string name="photo_remove">Remove photo</string>
     <string name="photo_remove_note">Removing only unlinks it: the picture stays in your gallery.</string>
     <string name="photo_done">Done</string>
     <string name="a11y_photo_kind">Photo: %1$s. Tap to change or remove.</string>
@@ -362,8 +362,8 @@
     <string name="none_here_ask">%1$s?</string>
     <string name="none_here_marked">%1$s · checked %2$s</string>
     <string name="none_here_undo">There is one</string>
-    <string name="photo_cover_set">Use as this entry\'s picture</string>
-    <string name="photo_cover_clear">Show the latest photo instead</string>
+    <string name="photo_cover_set">Use as display picture</string>
+    <string name="photo_cover_clear">Stop using as display picture</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
     <string name="settings_alerts">Alerts</string>
     <string name="settings_alerts_sub">Distance for each kind, what alerts, Proximity mode, quiet hours</string>
@@ -375,4 +375,9 @@
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">Logs · version %1$s · credits</string>
     <string name="settings_collections_sub">Your own collections, and making a new one</string>
+    <string name="photo_kind_label">Kind</string>
+    <string name="sort_tip_near">Nearest</string>
+    <string name="sort_tip_near_text">: how far each item is from you</string>
+    <string name="sort_tip_az">A to Z</string>
+    <string name="sort_tip_az_text">: names in alphabetical order</string>
 </resources>
