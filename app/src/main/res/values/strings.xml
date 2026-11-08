@@ -520,6 +520,15 @@
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
     <string name="scan_card">Scan a card or cover</string>
     <string name="scan_or_maybe">Or is it %1$s?</string>
+    <string name="scan_type_code">Type code</string>
+    <string name="scan_retake">Retake photo</string>
+    <string name="scan_type_code_title">Type the card\'s code</string>
+    <string name="scan_type_code_hint">Like 15-202-A001. Dashes are optional.</string>
+    <string name="scan_type_code_none">No card with this code in Meguri.</string>
+    <string name="scan_type_code_find">Find</string>
+    <string name="scan_tutorial_title">Where the code is</string>
+    <string name="scan_tutorial_text">Every manhole card prints its code in the top right corner, in small letters like 15-202-A001.</string>
+    <string name="scan_tutorial_ok">Got it</string>
     <string name="add_scan">Scan</string>
     <string name="add_search">Search</string>
     <string name="add_new">Add</string>
@@ -541,7 +550,7 @@
     <string name="scan_no_match">Which card is this?</string>
     <string name="scan_found">Code %1$s</string>
     <string name="scan_unknown_code">Code %1$s is not in your catalogue yet. Pick the card by hand, or load its region.</string>
-    <string name="scan_no_code">No card code could be read. Pick the card by hand.</string>
+    <string name="scan_no_code">No card code could be read. Retake the photo, or type the code.</string>
     <string name="scan_collect">Collect with this photo</string>
     <string name="scan_add_photo">Add this photo</string>
     <string name="scan_open">Open</string>

@@ -31,6 +31,13 @@ class CardCodeTest {
         assertEquals("15-202-A099", CardCode.best(text, setOf("15-202-A099")))
     }
 
+    @Test fun aTypedCodeIsTidied() {
+        assertEquals("15-202-A001", CardCode.fromTyped("15202a001"))
+        assertEquals("15-202-A001", CardCode.fromTyped(" 15 - 202 - A001 "))
+        assertEquals("13-100-L101", CardCode.fromTyped("１３－１００－Ｌ１０１"))
+        assertEquals(null, CardCode.fromTyped("15-202"))
+    }
+
     @Test fun anIMayBeAnL() = assertEquals(listOf("13-100-L101"), CardCode.lookalikes("13-100-I101", setOf("13-100-I101", "13-100-L101", "13-100-J101")))
 
     @Test fun noLookalikeWhenNoneIsKnown() = assertEquals(emptyList<String>(), CardCode.lookalikes("15-202-A001", setOf("15-202-A001", "15-202-B001")))

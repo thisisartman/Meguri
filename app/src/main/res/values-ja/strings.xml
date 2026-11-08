@@ -514,6 +514,15 @@
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
     <string name="scan_card">カード・ふたをスキャン</string>
     <string name="scan_or_maybe">%1$sですか？</string>
+    <string name="scan_type_code">コードを入力</string>
+    <string name="scan_retake">撮り直す</string>
+    <string name="scan_type_code_title">カードのコードを入力</string>
+    <string name="scan_type_code_hint">例：15-202-A001（ハイフンはなくても可）</string>
+    <string name="scan_type_code_none">このコードのカードはありません。</string>
+    <string name="scan_type_code_find">検索</string>
+    <string name="scan_tutorial_title">コードの場所</string>
+    <string name="scan_tutorial_text">マンホールカードのコードは、右上に小さく「15-202-A001」のように書かれています。</string>
+    <string name="scan_tutorial_ok">わかった</string>
     <string name="add_scan">スキャン</string>
     <string name="add_search">検索</string>
     <string name="add_new">追加</string>
@@ -535,7 +544,7 @@
     <string name="scan_no_match">どのカードですか？</string>
     <string name="scan_found">コード %1$s</string>
     <string name="scan_unknown_code">コード %1$s はまだカタログにありません。手で選ぶか、その地域を読み込んでください。</string>
-    <string name="scan_no_code">カードのコードを読み取れませんでした。手で選んでください。</string>
+    <string name="scan_no_code">カードのコードを読み取れませんでした。撮り直すか、コードを入力してください。</string>
     <string name="scan_collect">この写真で集める</string>
     <string name="scan_add_photo">この写真を追加</string>
     <string name="scan_open">開く</string>

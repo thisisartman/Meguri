@@ -51,6 +51,16 @@ object CardCode {
         return group.filter { it != code[i] }.map { code.substring(0, i) + it + code.substring(i + 1) }.filter { it in known }
     }
 
+    /**
+     * A code typed by hand, however it was typed ("15-202-a001", "15202A001", "15 202 A001"), as `NN-NNN-ANNN`;
+     * null if it can't be one.
+     */
+    fun fromTyped(input: String): String? {
+        val t = Normalizer.normalize(input, Normalizer.Form.NFKC).uppercase().filter { it.isLetterOrDigit() }
+        val m = Regex("^([0-9]{2})([0-9]{3})([A-Z0-9])([0-9]{3})$").find(t) ?: return null
+        return "${m.groupValues[1]}-${m.groupValues[2]}-${m.groupValues[3]}${m.groupValues[4]}"
+    }
+
     /** The first code in [text] that is in [known] (catalogue codes), or else the first code found at all. */
     fun best(text: String, known: Set<String>): String? {
         val all = findAll(text)

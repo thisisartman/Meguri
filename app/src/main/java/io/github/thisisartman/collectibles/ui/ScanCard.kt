@@ -47,6 +47,12 @@ import io.github.thisisartman.collectibles.data.CardCode
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
 import kotlinx.coroutines.launch
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
@@ -116,6 +122,11 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     var reading by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<Scan?>(null) }
     var fullscreen by remember { mutableStateOf<String?>(null) }
+    // No code read (owner, 2026-11-09): retake the photo, or type the code (a short tutorial the first time)
+    var retake by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    var typing by remember { mutableStateOf<Scan?>(null) }
+    var tutorial by remember { mutableStateOf(false) }
+    val tips = remember { context.getSharedPreferences("tips", Context.MODE_PRIVATE) }
     var failed by remember { mutableStateOf(false) }
     var notReady by remember { mutableStateOf(false) }
     // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background)
@@ -230,8 +241,8 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         }
     }
     // Lives in the app frame, not the + sheet: the sheet closes while the scanner is open, and the result must land
-    androidx.compose.runtime.LaunchedEffect(trigger) {
-        if (trigger == 0) return@LaunchedEffect
+    androidx.compose.runtime.LaunchedEffect(trigger, retake) {
+        if (trigger == 0 && retake == 0) return@LaunchedEffect
         val activity = context.activity() ?: return@LaunchedEffect
         val options = GmsDocumentScannerOptions.Builder()
             .setPageLimit(1).setGalleryImportAllowed(true)
@@ -306,16 +317,139 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                     // A scan is the card itself
                     vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
                 }) { Text(stringResource(if (row.collected) R.string.scan_add_photo else R.string.scan_collect)) }
+                // No code read: the person can usually read it, so type it (owner, 2026-11-09)
+                else if (s.code == null && !s.cover) TextButton(onClick = {
+                    result = null; typing = s
+                    if (!tips.getBoolean("code_tutorial_seen", false)) tutorial = true
+                }) { Text(stringResource(R.string.scan_type_code)) }
                 else TextButton(onClick = { result = null; vm.openShare(listOf(s.photo)); nav.navigate("share") }) {
                     Text(stringResource(R.string.scan_pick))
                 }
             },
             dismissButton = {
                 if (row != null) TextButton(onClick = { result = null; nav.openItem(row.item.id) }) { Text(stringResource(R.string.scan_open)) }
+                else if (s.code == null && !s.cover) TextButton(onClick = { result = null; retake++ }) { Text(stringResource(R.string.scan_retake)) }
                 else TextButton(onClick = { result = null }) { Text(stringResource(android.R.string.cancel)) }
+            },
+        )
+    }
+    // Typing the code by hand, after the tutorial the first time
+    if (tutorial) CodeTutorial(onDone = { tips.edit().putBoolean("code_tutorial_seen", true).apply(); tutorial = false })
+    else typing?.let { s ->
+        val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
+        TypeCodeDialog(
+            onDismiss = { typing = null },
+            onCode = { code ->
+                val match = cards.firstOrNull { it.item.code == code }
+                if (match != null) {
+                    typing = null
+                    val known = cards.mapNotNull { it.item.code }.toSet()
+                    result = s.copy(code = code, row = match, lookalikes = CardCode.lookalikes(code, known).mapNotNull { k -> cards.firstOrNull { it.item.code == k } })
+                }
+                match != null
             },
         )
     }
     // After the result dialog, so it opens on top of it
     fullscreen?.let { u -> FullscreenPhoto(u, onClose = { fullscreen = null }) }
 }
+
+/** Type a card's code by hand. [onCode] gets the tidied code and says whether a card has it. */
+@Composable
+private fun TypeCodeDialog(onDismiss: () -> Unit, onCode: (String) -> Boolean) {
+    var text by remember { mutableStateOf("") }
+    var notFound by remember { mutableStateOf(false) }
+    val code = CardCode.fromTyped(text)
+    val focus = remember { androidx.compose.ui.focus.FocusRequester() }
+    androidx.compose.runtime.LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.scan_type_code_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                androidx.compose.material3.OutlinedTextField(
+                    value = text, onValueChange = { text = it.take(16); notFound = false }, singleLine = true,
+                    placeholder = { Text("15-202-A001") },
+                    supportingText = { Text(stringResource(if (notFound) R.string.scan_type_code_none else R.string.scan_type_code_hint)) },
+                    isError = notFound,
+                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(
+                        capitalization = androidx.compose.ui.text.input.KeyboardCapitalization.Characters,
+                        keyboardType = androidx.compose.ui.text.input.KeyboardType.Ascii,
+                        imeAction = androidx.compose.ui.text.input.ImeAction.Done,
+                    ),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { code?.let { notFound = !onCode(it) } }),
+                    modifier = Modifier.fillMaxWidth().focusRequester(focus),
+                )
+            }
+        },
+        confirmButton = { TextButton(enabled = code != null, onClick = { code?.let { notFound = !onCode(it) } }) { Text(stringResource(R.string.scan_type_code_find)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(android.R.string.cancel)) } },
+    )
+}
+
+/**
+ * The first time someone types a code: where it is on a card (owner, 2026-11-09). A small card is drawn, then the
+ * view zooms into its top right corner, where every manhole card prints its code, and the code pulses.
+ */
+@Composable
+private fun CodeTutorial(onDone: () -> Unit) {
+    val anim = androidx.compose.animation.core.rememberInfiniteTransition(label = "tutorial")
+    // 0 to 1: the whole card, then zoomed into the corner; holds there, then starts again
+    val t by anim.animateFloat(
+        0f, 1f,
+        androidx.compose.animation.core.infiniteRepeatable(
+            androidx.compose.animation.core.keyframes {
+                durationMillis = 3600
+                0f at 0; 0f at 700; 1f at 1700 using androidx.compose.animation.core.FastOutSlowInEasing; 1f at 3600
+            },
+        ),
+        label = "zoom",
+    )
+    val pulse by anim.animateFloat(
+        0.35f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(600), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulse",
+    )
+    val measurer = androidx.compose.ui.text.rememberTextMeasurer()
+    val blue = androidx.compose.ui.graphics.Color(0xFF1E4FA8)
+    val accent = MaterialTheme.colorScheme.primary
+    AlertDialog(
+        onDismissRequest = onDone,
+        title = { Text(stringResource(R.string.scan_tutorial_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                androidx.compose.foundation.Canvas(Modifier.size(width = 220.dp, height = 220.dp).androidx_clip()) {
+                    val cw = size.height * 0.62f * 63f / 88f * 1.4f
+                    val ch = size.height * 0.62f * 1.4f
+                    // Zoom towards the code: the corner ends up in the middle, 2.6 times as large
+                    val zoom = 1f + 1.6f * t
+                    val cx = size.width / 2; val cy = size.height / 2
+                    // Inside the blue top band, clear of the card's right edge (it ran over it on the Poco)
+                    val codeX = cx + cw * 0.22f; val codeY = cy - ch * 0.42f
+                    val pivotX = cx + (codeX - cx) * t; val pivotY = cy + (codeY - cy) * t
+                    withTransform({
+                        translate(cx - pivotX, cy - pivotY)
+                        scale(zoom, zoom, androidx.compose.ui.geometry.Offset(pivotX, pivotY))
+                    }) {
+                        val left = cx - cw / 2; val top = cy - ch / 2
+                        drawRoundRect(androidx.compose.ui.graphics.Color.White, androidx.compose.ui.geometry.Offset(left, top), androidx.compose.ui.geometry.Size(cw, ch), androidx.compose.ui.geometry.CornerRadius(cw * 0.05f))
+                        drawRoundRect(androidx.compose.ui.graphics.Color.LightGray, androidx.compose.ui.geometry.Offset(left, top), androidx.compose.ui.geometry.Size(cw, ch), androidx.compose.ui.geometry.CornerRadius(cw * 0.05f), style = androidx.compose.ui.graphics.drawscope.Stroke(2f))
+                        val fl = left + cw * 0.06f; val ft = top + ch * 0.05f; val fw = cw * 0.88f; val fh = ch * 0.90f
+                        drawRect(blue, androidx.compose.ui.geometry.Offset(fl, ft), androidx.compose.ui.geometry.Size(fw, fh))
+                        drawRect(androidx.compose.ui.graphics.Color(0xFF8A8A8A), androidx.compose.ui.geometry.Offset(fl + fw * 0.04f, ft + fh * 0.17f), androidx.compose.ui.geometry.Size(fw * 0.92f, fh * 0.62f))
+                        drawCircle(androidx.compose.ui.graphics.Color(0xFF333333), radius = fw * 0.36f, center = androidx.compose.ui.geometry.Offset(fl + fw / 2, ft + fh * 0.48f))
+                        // The code, top right, in a pale box that pulses
+                        val box = androidx.compose.ui.geometry.Size(fw * 0.38f, fh * 0.055f)
+                        val boxAt = androidx.compose.ui.geometry.Offset(codeX - box.width / 2, codeY - box.height / 2)
+                        drawRoundRect(accent.copy(alpha = pulse), boxAt - androidx.compose.ui.geometry.Offset(3f, 3f), androidx.compose.ui.geometry.Size(box.width + 6f, box.height + 6f), androidx.compose.ui.geometry.CornerRadius(4f), style = androidx.compose.ui.graphics.drawscope.Stroke(3f / zoom))
+                        val label = measurer.measure("15-202-A001", androidx.compose.ui.text.TextStyle(color = androidx.compose.ui.graphics.Color.White, fontSize = (box.height * 0.62f / density).sp, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold))
+                        drawText(label, topLeft = androidx.compose.ui.geometry.Offset(codeX - label.size.width / 2f, codeY - label.size.height / 2f))
+                    }
+                }
+                Text(stringResource(R.string.scan_tutorial_text), style = MaterialTheme.typography.bodyMedium)
+            }
+        },
+        confirmButton = { TextButton(onClick = onDone) { Text(stringResource(R.string.scan_tutorial_ok)) } },
+    )
+}
+
+/** Keeps the zoomed drawing inside its square. */
+private fun Modifier.androidx_clip(): Modifier = this.then(Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(16.dp)))
