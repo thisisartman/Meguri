@@ -8,7 +8,7 @@
 - Tested on the Poco: card photos from its own camera app, run through Meguri's scanner, read 5 of 6 codes (the miss had glare across the card).
 - The word "kind" is gone from the app: they are types (the owner's word).
 - Add form: "New type: ..." is a label now, not a button that did nothing.
-- Next: notebook stamps (find, review, clean, match the station), then fuzzy search in every search box.
+- Notebook stamps, step 1 of 4: Meguri finds the stamps on a notebook page and makes a cleaned copy (not yet on a screen). Next: review, matching, saving; then fuzzy search in every search box.
 - Scan a card: when the code can't be read, choose Retake photo or Type code. The first time you type one, a short animation shows where the code is (top right of the card).
 - Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").
 - Nearby: your own types sit under Stamps or Cards; the third tab, Other, is only for types that are neither.
