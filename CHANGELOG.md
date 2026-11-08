@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-09: Commit history cleaned
+- Claude lines removed from every commit message on every branch. Code unchanged. Commit IDs changed: see the map in `Backups/`.
+- Draft PR #70 is now #82.
+
 ## 2026-11-08: Poco updated to beta.9, test checklist
 - The Poco real app went to beta.9 after another backup: 21 finds kept, no crash.
 - `docs/TEST_CHECKLIST.md`: 31 things to test, for the owner and friends.
