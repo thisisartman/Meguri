@@ -62,12 +62,10 @@ fun profileTotals(rows: List<ItemRow>, now: Long = System.currentTimeMillis()): 
  */
 @Composable
 fun BookSummary(vm: MainViewModel, nav: NavHostController) {
-    val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val summaries by vm.summaries.collectAsStateWithLifecycle()
     val totals = remember(rows) { profileTotals(rows) }
     val pins = remember(rows) { rows.filter { it.collected }.mapNotNull { it.toPin() } }
-    val recent = remember(rows) { rows.filter { it.collected }.sortedByDescending { it.lastAt ?: 0L }.take(20) }
 
     Column(Modifier.fillMaxWidth().padding(top = 8.dp)) {
         Surface(Modifier.padding(horizontal = 16.dp).fillMaxWidth(), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
@@ -96,25 +94,7 @@ fun BookSummary(vm: MainViewModel, nav: NavHostController) {
                 }
             }
         }
-        if (recent.isNotEmpty()) {
-            SectionTitle(stringResource(R.string.profile_recent))
-            androidx.compose.foundation.lazy.LazyRow(contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp)) {
-                items(recent.size) { i ->
-                    val r = recent[i]
-                    Column(
-                        Modifier.width(80.dp).clickable { nav.openItem(r.item.id) }.padding(vertical = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Mark(r, 52.dp)
-                        Text(
-                            tileName(r.item.displayName(ja)), style = MaterialTheme.typography.labelMedium,
-                            textAlign = androidx.compose.ui.text.style.TextAlign.Center, maxLines = 2,
-                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-            }
-        }
+        // Recently collected moved into each kind's page (B1, 2026-11-08)
         Spacer(Modifier.height(8.dp))
     }
 }

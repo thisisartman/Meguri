@@ -102,7 +102,23 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
         // No floating button any more (Log is in the bottom bar), so the list only needs a little room at the end
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             // What used to be the profile page (owner, 2026-11-08: one page, called My book)
-            if (!marking) item(key = "summary") { BookSummary(vm, nav) }
+            if (!marking) {
+                item(key = "summary") { BookSummary(vm, nav) }
+                // B1 (owner, 2026-11-08): one tile per kind; each kind's collections and finds are a tap away
+                item(key = "kinds") {
+                    val lineStations by vm.lineStations.collectAsStateWithLifecycle()
+                    val kinds = remember(rows, lineStations, customTypes) {
+                        val m = lineStations.groupBy({ it.itemId }, { it.lineId })
+                        BookKinds.kinds(rows, { m[it].orEmpty().toSet() }, { customTypes[it]?.createdAt ?: Long.MAX_VALUE })
+                    }
+                    if (kinds.isNotEmpty()) {
+                        SectionTitle(stringResource(R.string.book_your_collections))
+                        KindTiles(kinds, nav)
+                    }
+                }
+            }
+            // The long list is only for marking what you already have
+            if (marking) {
             // Manhole cards by prefecture
             val manhole = rows.filter { it.item.type == ItemType.MANHOLE_CARD }.groupBy { it.item.prefecture.orEmpty() }.toSortedMap()
             manhole.forEach { (pref, list) ->
@@ -164,6 +180,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                             onOpen = { nav.openItem(r.item.id) })
                     }
                 }
+            }
             if (rows.isEmpty()) {
                 item { Text(stringResource(R.string.nearby_empty_book), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant) }
             }

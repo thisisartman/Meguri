@@ -16,6 +16,7 @@
 - The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.
 - The pin card's icons are all one size.
 - Edit an item's details: the pencil on an item page opens its names, where to get it, address, hours, notes and position. The position can be where you are, a pasted Google Maps link (a map view, a place or a short link) or a place search. Your edits stay when the catalogue is updated. (Database version 4; existing items move over unchanged.)
+- My book in sections (your pick B1): under the totals and the map, one tile per kind (Manhole cards, Station stamps, Ekitag, Goshuin, Dam cards, Museum stamps, and each of your own collections), each with a ring for how far you are. A tile opens that kind: its own map, its collections as rings (by line for stamps, by prefecture for the rest) with the next one to get, and what you collected last. A ring opens the full book. No long lists on My book itself.
 - Share photos to Meguri (#80, your pick "Groups, then a sheet"):
   - Meguri is in Android's share sheet for one photo or several.
   - The photos are grouped by where they were taken, and each group shows its best guess: the nearest stamp, card or goshuin. "Change" opens a sheet with search, kinds and what's near where they were taken; "Leave these out" skips a group.

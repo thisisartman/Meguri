@@ -289,6 +289,12 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
                         MapScreen(vm, nav, section)
                     }
+                    composable("kind/{key}", listOf(navArgument("key") { type = NavType.StringType })) {
+                        Page { KindScreen(vm, it.arguments?.getString("key").orEmpty(), nav, onBack = { nav.popBackStack() }) }
+                    }
+                    composable("group/{kind}/{group}", listOf(navArgument("kind") { type = NavType.StringType }, navArgument("group") { type = NavType.StringType })) {
+                        Page { GroupScreen(vm, it.arguments?.getString("kind").orEmpty(), it.arguments?.getString("group").orEmpty(), nav, onBack = { nav.popBackStack() }) }
+                    }
                     composable("share") {
                         Page {
                             ShareScreen(vm, onClose = { nav.popBackStack() }, onAdded = { n, items ->

@@ -487,4 +487,10 @@
     <string name="share_leave_out">Leave these out</string>
     <plurals name="share_hidden"><item quantity="one">Your gallery hid where %d photo was taken, so it can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item><item quantity="other">Your gallery hid where %d photos were taken, so they can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item></plurals>
     <string name="share_allow_places">Allow</string>
+    <!-- My book as kinds (B1) -->
+    <string name="book_your_collections">Your collections</string>
+    <string name="kind_your_own">your own</string>
+    <plurals name="kind_lines"><item quantity="one">%d line</item><item quantity="other">%d lines</item></plurals>
+    <plurals name="kind_prefectures"><item quantity="one">%d prefecture</item><item quantity="other">%d prefectures</item></plurals>
+    <string name="kind_next">Next: %s</string>
 </resources>

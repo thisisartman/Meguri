@@ -481,4 +481,10 @@
     <string name="share_leave_out">この写真は追加しない</string>
     <plurals name="share_hidden"><item quantity="other">ギャラリーが %d 枚の撮影場所を隠しているため、場所ごとにまとめられません。写真へのアクセスと位置情報を許可すると読み取れます。</item></plurals>
     <string name="share_allow_places">許可する</string>
+    <!-- My book as kinds (B1) -->
+    <string name="book_your_collections">コレクション</string>
+    <string name="kind_your_own">自分のコレクション</string>
+    <plurals name="kind_lines"><item quantity="other">%d 路線</item></plurals>
+    <plurals name="kind_prefectures"><item quantity="other">%d 都道府県</item></plurals>
+    <string name="kind_next">次: %s</string>
 </resources>
