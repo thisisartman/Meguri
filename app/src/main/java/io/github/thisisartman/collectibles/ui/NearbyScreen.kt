@@ -586,7 +586,7 @@ private const val TIP_SORT = "sort"
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable
-private fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
+internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
     Column(
         // Faded when you found nothing there
         Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (row.noneHere) 0.45f else 1f),

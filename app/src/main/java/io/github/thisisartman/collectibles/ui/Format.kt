@@ -19,6 +19,15 @@ fun Item.displayName(japanese: Boolean): String = if (japanese) nameJa else name
 fun Item.tileLabel(japanese: Boolean): String =
     if (type == ItemType.EKITAG) displayName(japanese) + " · " + androidx.compose.ui.res.stringResource(R.string.type_ekitag) else displayName(japanese)
 
+/**
+ * A short name for lists inside one collection (owner, 2026-11-08): a manhole card loses the part in brackets,
+ * so "Saitama-ken (Ryuiki Gesuido) A001" reads "Saitama-ken A001"; everything else keeps its tile name.
+ */
+@androidx.compose.runtime.Composable
+fun Item.shortName(japanese: Boolean): String =
+    if (type == ItemType.MANHOLE_CARD) displayName(japanese).replace(Regex("\\s*[(（][^)）]*[)）]\\s*"), " ").trim()
+    else tileLabel(japanese)
+
 /** The other script, shown on the item page in English mode only. */
 fun Item.secondaryName(japanese: Boolean): String? = if (japanese) null else nameJa.takeIf { nameRomaji != null && it != nameRomaji }
 

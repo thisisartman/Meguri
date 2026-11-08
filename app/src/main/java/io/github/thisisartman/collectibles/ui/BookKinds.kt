@@ -288,32 +288,29 @@ fun GroupScreen(vm: MainViewModel, kindKey: String, groupKey: String, nav: NavHo
             },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
         )
-        // Filters (M6): what you have or still need, and the card series where a prefecture has several
-        var show by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) } // 0 all, 1 to get, 2 have
-        var series by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
-        val allSeries = remember(group) { group?.rows.orEmpty().mapNotNull { it.item.series?.trim()?.ifEmpty { null } }.distinct().sorted() }
-        androidx.compose.foundation.lazy.LazyRow(
-            contentPadding = PaddingValues(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            val labels = listOf(R.string.filter_all, R.string.filter_to_get, R.string.filter_have)
-            items(labels.size) { i ->
-                androidx.compose.material3.FilterChip(selected = show == i, onClick = { show = i }, label = { Text(stringResource(labels[i])) },
-                    modifier = Modifier.heightIn(min = 48.dp))
-            }
-            if (allSeries.size > 1) items(allSeries.size) { i ->
-                val s = allSeries[i]
-                androidx.compose.material3.FilterChip(selected = series == s, onClick = { series = if (series == s) null else s },
-                    label = { Text(stringResource(R.string.filter_series, s)) }, modifier = Modifier.heightIn(min = 48.dp))
-            }
+        // Owner, 2026-11-08 (S23): a grid like everywhere else, short names, and only two filters you switch on or off:
+        // collected and uncollected (both on, the default, is everything). No "All", no series
+        var showHave by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(true) }
+        var showToGet by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf(true) }
+        Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // The last one on can't be switched off: both off would show nothing
+            androidx.compose.material3.FilterChip(selected = showHave, onClick = { if (!showHave || showToGet) showHave = !showHave },
+                label = { Text(stringResource(R.string.filter_have)) }, modifier = Modifier.heightIn(min = 48.dp))
+            androidx.compose.material3.FilterChip(selected = showToGet, onClick = { if (!showToGet || showHave) showToGet = !showToGet },
+                label = { Text(stringResource(R.string.filter_to_get)) }, modifier = Modifier.heightIn(min = 48.dp))
         }
         val list = group?.rows.orEmpty()
-            .filter { r -> when (show) { 1 -> !r.collected; 2 -> r.collected; else -> true } }
-            .filter { r -> series == null || r.item.series?.trim() == series }
-            .sortedWith(compareByDescending<ItemRow> { it.collected }.thenByDescending { it.lastAt ?: 0L }.thenBy { it.item.code ?: it.item.displayName(ja) })
-        LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
-            items(list, key = { it.item.id }) { r ->
-                ItemListRow(r, ja, vm.distanceTo(r), false, false, onToggle = {}, onOpen = { nav.openItem(r.item.id) })
+            .filter { r -> (r.collected && showHave) || (!r.collected && showToGet) }
+            .sortedWith(compareBy<ItemRow> { it.item.code ?: it.item.displayName(ja) })
+        androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
+            columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(88.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 8.dp, bottom = 24.dp),
+            modifier = Modifier.weight(1f),
+        ) {
+            items(list.size, key = { list[it].item.id }) { i ->
+                val r = list[i]
+                RoundTile(r, 64.dp, r.item.shortName(ja), if (r.noneHere) null else distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
             }
         }
     }
