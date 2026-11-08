@@ -80,7 +80,11 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-            title = { Text(r?.item?.type?.let { stringResource(it.label()) } ?: "") },
+            // Your own kinds by their own name ("Aquarium stamp"), not "My collection"
+            title = {
+                val custom = r?.item?.customTypeId?.let { LocalCustomTypes.current[it]?.name }
+                Text(custom ?: r?.item?.type?.let { stringResource(it.label()) } ?: "")
+            },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             // Edit its name, place or position (owner, 2026-11-08)
             actions = {
