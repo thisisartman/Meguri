@@ -45,8 +45,10 @@ class CollectionRepository @Inject constructor(
         log.i("Log", "Find $id for item $itemId")
         scope.launch {
             val fix = location.currentOrRecent()
-            if (fix != null) dao.setFindLocation(id, fix.lat, fix.lng, fix.accuracyM)
-            else log.w("Log", "No position for find $id")
+            if (fix != null) {
+                dao.setFindLocation(id, fix.lat, fix.lng, fix.accuracyM)
+                log.d("Log", "Position for find $id: ${fix.accuracyM?.let { "±${it.toInt()} m" } ?: "no accuracy"}, ${(now() - fix.timeMs) / 1000} s old")
+            } else log.w("Log", "No position for find $id")
         }
         return id
     }
@@ -134,9 +136,15 @@ class CollectionRepository @Inject constructor(
         return id
     }
 
-    suspend fun setQuantity(findId: String, quantity: Int) = dao.setFindQuantity(findId, quantity.coerceIn(1, 99))
+    suspend fun setQuantity(findId: String, quantity: Int) {
+        dao.setFindQuantity(findId, quantity.coerceIn(1, 99))
+        log.d("Log", "Find $findId: quantity ${quantity.coerceIn(1, 99)}")
+    }
 
-    suspend fun setCost(findId: String, yen: Int?) = dao.setFindCost(findId, yen?.coerceAtLeast(0))
+    suspend fun setCost(findId: String, yen: Int?) {
+        dao.setFindCost(findId, yen?.coerceAtLeast(0))
+        log.d("Log", "Find $findId: cost ${yen?.coerceAtLeast(0) ?: "none"}")
+    }
 
     /**
      * A trip that already happened (#46, #68): a find on that day for each item, no place or photo. Skips items
@@ -156,7 +164,10 @@ class CollectionRepository @Inject constructor(
         return made
     }
 
-    suspend fun removeFinds(findIds: Collection<String>) = db.withTransaction { findIds.forEach { dao.deleteFind(it) } }
+    suspend fun removeFinds(findIds: Collection<String>) {
+        db.withTransaction { findIds.forEach { dao.deleteFind(it) } }
+        log.i("Log", "Removed ${findIds.size} finds")
+    }
 
     /** Marks items as "had before the app": a find with no date, place or photo. Skips items already collected. */
     suspend fun markBeforeApp(itemIds: Collection<String>): Int {

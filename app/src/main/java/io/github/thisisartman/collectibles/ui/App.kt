@@ -89,6 +89,15 @@ private fun Page(content: @Composable () -> Unit) {
 fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val vm: MainViewModel = hiltViewModel()
     val nav = rememberNavController()
+    // Every page change, in the detailed log: the route and its id, line, section or key
+    androidx.compose.runtime.DisposableEffect(nav) {
+        val listener = androidx.navigation.NavController.OnDestinationChangedListener { _, dest, args ->
+            val arg = listOf("id", "section", "key", "kind", "group").mapNotNull { k -> args?.getString(k)?.let { "$k=$it" } }
+            vm.log.d("Nav", (dest.route ?: "?") + if (arg.isEmpty()) "" else " (" + arg.joinToString() + ")")
+        }
+        nav.addOnDestinationChangedListener(listener)
+        onDispose { nav.removeOnDestinationChangedListener(listener) }
+    }
     val context = LocalContext.current
     val resolver = context.contentResolver
     val snackbar = remember { SnackbarHostState() }

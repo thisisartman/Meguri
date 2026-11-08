@@ -107,6 +107,7 @@ class Geofences @Inject constructor(
             .onSuccess {
                 settings.geofenceError = 0
                 log.i("Geofence", "Registered ${fences.size} fences, a distance per kind")
+                log.d("Geofence", "Fences: ${chosen.size} items" + (if (fences.size > chosen.size) " and the refresh area" else "") + (here?.let { " around %.3f, %.3f".format(java.util.Locale.US, it.lat, it.lng) } ?: ", no position"))
             }
             .onFailure {
                 // 1000 means Google Location Accuracy is off; More says how to fix it
@@ -150,6 +151,7 @@ class GeofenceReceiver : BroadcastReceiver() {
         }
         val fix = event.triggeringLocation?.let { Fix(it.latitude, it.longitude, if (it.hasAccuracy()) it.accuracy else null, it.time) }
         val ids = event.triggeringGeofences.orEmpty().map { it.requestId }
+        log.d("Geofence", (if (event.geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) "Exit" else "Enter") + ": ${ids.joinToString()}" + (fix?.accuracyM?.let { ", ±${it.toInt()} m" } ?: ""))
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

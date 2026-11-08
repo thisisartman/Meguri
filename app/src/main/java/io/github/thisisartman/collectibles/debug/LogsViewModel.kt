@@ -61,5 +61,6 @@ class LogsViewModel @Inject constructor(private val log: FileLog) : ViewModel() 
 
     private fun header(): String =
         "${BuildConfig.APPLICATION_ID} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n" +
-            "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}) · ${Build.DISPLAY}\n\n"
+            "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}) · ${Build.DISPLAY}\n" +
+            "Detailed log: ${if (log.isDetailed) "on" else "off"}\n\n"
 }

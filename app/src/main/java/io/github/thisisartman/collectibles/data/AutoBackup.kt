@@ -66,6 +66,7 @@ class AutoBackup @Inject constructor(
     }
 
     fun enable(tree: Uri) {
+        log.i("AutoBackup", "Weekly backup on")
         context.contentResolver.takePersistableUriPermission(tree, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
         folder?.takeIf { it != tree }?.let { old ->
             runCatching { context.contentResolver.releasePersistableUriPermission(old, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
@@ -80,6 +81,7 @@ class AutoBackup @Inject constructor(
     }
 
     fun disable() {
+        log.i("AutoBackup", "Weekly backup off")
         folder?.let { old ->
             runCatching { context.contentResolver.releasePersistableUriPermission(old, Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION) }
         }
@@ -88,6 +90,7 @@ class AutoBackup @Inject constructor(
     }
 
     fun runNow() {
+        log.d("AutoBackup", "Backup now queued")
         work.enqueueUniqueWork(WORK_NOW, ExistingWorkPolicy.KEEP, OneTimeWorkRequestBuilder<AutoBackupWorker>().build())
     }
 
@@ -99,7 +102,9 @@ class AutoBackup @Inject constructor(
 
     /** Writes one backup, checks it by reading it back, then removes old ones. False if it failed. */
     suspend fun runOnce(now: Long = System.currentTimeMillis()): Outcome {
-        val tree = folder ?: return Outcome.NoFolder
+        val t0 = System.currentTimeMillis()
+        val tree = folder ?: return Outcome.NoFolder.also { log.d("AutoBackup", "No folder chosen: nothing to do") }
+        log.d("AutoBackup", "Start")
         val dir = DocumentFile.fromTreeUri(context, tree)
         if (dir == null || !dir.canWrite()) {
             log.w("AutoBackup", "No access to the folder any more")
@@ -120,10 +125,10 @@ class AutoBackup @Inject constructor(
             prefs.edit().putLong(KEY_LAST, now).putInt(KEY_FINDS, info.finds).putBoolean(KEY_FAILED, false).apply()
             // Fewer finds than last time may mean something went wrong: keep the older copies.
             if (info.finds >= previousFinds) prune(dir) else log.w("AutoBackup", "Finds fell from $previousFinds to ${info.finds}; keeping all backups")
-            log.i("AutoBackup", "Saved ${file.name}: ${info.finds} finds, ${info.items} items")
+            log.i("AutoBackup", "Saved ${file.name}: ${info.finds} finds, ${info.items} items, ${info.photos} photos in ${System.currentTimeMillis() - t0} ms")
             return Outcome.Saved
         } catch (e: Exception) {
-            log.e("AutoBackup", "Backup failed", e)
+            log.e("AutoBackup", "Backup failed after ${System.currentTimeMillis() - t0} ms", e)
             runCatching { file.delete() }
             prefs.edit().putBoolean(KEY_FAILED, true).apply()
             return Outcome.Failed
@@ -159,12 +164,16 @@ class AutoBackup @Inject constructor(
 @InstallIn(SingletonComponent::class)
 interface AutoBackupEntryPoint {
     fun autoBackup(): AutoBackup
+    fun log(): FileLog
 }
 
 class AutoBackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val auto = EntryPointAccessors.fromApplication(applicationContext, AutoBackupEntryPoint::class.java).autoBackup()
-        return when (auto.runOnce()) {
+        val outcome = auto.runOnce()
+        EntryPointAccessors.fromApplication(applicationContext, AutoBackupEntryPoint::class.java).log()
+            .d("AutoBackup", "Worker attempt ${runAttemptCount + 1}: $outcome")
+        return when (outcome) {
             AutoBackup.Outcome.Saved, AutoBackup.Outcome.NoFolder -> Result.success()
             AutoBackup.Outcome.LostAccess -> Result.failure()
             AutoBackup.Outcome.Failed -> if (runAttemptCount < 2) Result.retry() else Result.failure()

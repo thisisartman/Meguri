@@ -39,8 +39,15 @@ class CatalogAndBackup @Inject constructor(
 
     /** Adds or updates items by catalogue key; never deletes an item or a find. */
     suspend fun importCatalog(uri: Uri): ImportResult = withContext(Dispatchers.IO) {
+        val t0 = System.currentTimeMillis()
+        log.d("Catalog", "Import from a file: start")
         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
-        importCatalogText(text)
+        log.d("Catalog", "Read ${text.length} characters in ${System.currentTimeMillis() - t0} ms")
+        // A failure here is logged as an error by the screen that started it
+        runCatching { importCatalogText(text) }
+            .onFailure { log.d("Catalog", "Import from a file failed after ${System.currentTimeMillis() - t0} ms: $it") }
+            .getOrThrow()
+            .also { log.d("Catalog", "Import from a file done in ${System.currentTimeMillis() - t0} ms") }
     }
 
     /**
@@ -48,11 +55,22 @@ class CatalogAndBackup @Inject constructor(
      * prefectures (onboarding, #81) and is remembered, so later refreshes keep to them; null loads everything.
      */
     suspend fun importBundled(regions: Set<String>? = null): ImportResult = withContext(Dispatchers.IO) {
-        val text = bundledText()
-        val edit = bundledPrefs.edit()
-        if (regions == null) edit.remove(KEY_REGIONS) else edit.putStringSet(KEY_REGIONS, regions)
-        edit.apply()
-        importRegions(text, regions).also { bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply() }
+        val t0 = System.currentTimeMillis()
+        log.d("Catalog", "Bundled catalogue: start, ${regions?.let { "${it.size} prefectures" } ?: "everything"}")
+        try {
+            val text = bundledText()
+            val edit = bundledPrefs.edit()
+            if (regions == null) edit.remove(KEY_REGIONS) else edit.putStringSet(KEY_REGIONS, regions)
+            edit.apply()
+            importRegions(text, regions).also {
+                bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply()
+                log.i("Catalog", "Bundled catalogue loaded in ${System.currentTimeMillis() - t0} ms: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
+            }
+        } catch (e: Exception) {
+            // The onboarding and the welcome card show a message but do not log it
+            log.e("Catalog", "Loading the bundled catalogue failed after ${System.currentTimeMillis() - t0} ms", e)
+            throw e
+        }
     }
 
     private fun linesIn(maps: List<Map<String, String>>, regions: Set<String>?): Set<String> =
@@ -192,8 +210,13 @@ class CatalogAndBackup @Inject constructor(
      * Photos are not included; they stay in the gallery and are relinked by their fingerprint.
      */
     suspend fun exportBackup(uri: Uri, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
-        val result = context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> lock.withLock { writeBackup(out, withPhotos) } }
-        log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos (${result.photoFiles} files) to $uri")
+        val t0 = System.currentTimeMillis()
+        log.d("Backup", "Export: start${if (withPhotos) ", with photos" else ""}")
+        // A failure here is logged as an error by the screen that started it
+        val result = runCatching {
+            context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> lock.withLock { writeBackup(out, withPhotos) } }
+        }.onFailure { log.d("Backup", "Export failed after ${System.currentTimeMillis() - t0} ms: $it") }.getOrThrow()
+        log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos (${result.photoFiles} files) to $uri in ${System.currentTimeMillis() - t0} ms")
         result
     }
 

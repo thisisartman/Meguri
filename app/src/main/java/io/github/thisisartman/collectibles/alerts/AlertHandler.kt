@@ -59,10 +59,11 @@ class AlertHandler @Inject constructor(
             val now = System.currentTimeMillis()
             val p = settings.snapshot()
             val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-            if (p.quietOn && AlertRules.inQuietHours(hour, p.quietFromHour, p.quietToHour)) return@withLock
+            if (p.quietOn && AlertRules.inQuietHours(hour, p.quietFromHour, p.quietToHour)) return@withLock log.d("Alert", "geofence (no position): ${items.size} items, quiet hours")
             val last = settings.lastAlerts()
             val due = items.filter { it.type in p.types && (last[it.id]?.let { t -> now - t >= p.cooldownMs } ?: true) }.take(MAX_PER_CHECK)
-            due.forEach { notifier.notifyNear(it, p.radiusFor(it.type).toDouble(), null) }
+            due.forEach { notifier.notifyNear(it, p.radiusFor(it.type).toDouble(), null); log.d("Alert", "Alert for ${it.id} (${it.type}), within ${p.radiusFor(it.type)} m, no position") }
+            if (due.isEmpty()) log.d("Alert", "geofence (no position): ${items.size} items, none due (kind off or cooldown)")
             settings.recordAlerts(due.map { it.id }, now)
             if (due.isNotEmpty()) log.i("Alert", "geofence (no position): ${due.size} alerts")
         }
@@ -74,7 +75,9 @@ class AlertHandler @Inject constructor(
         val byId = items.associateBy { it.id }
         val cands = items.map { Candidate(it.id, it.type, it.lat!!, it.lng!!) }
         val due = AlertRules.due(fix.lat, fix.lng, cands, settings.snapshot(), settings.lastAlerts(), now, hour).take(MAX_PER_CHECK)
-        due.forEach { (c, m) -> byId[c.id]?.let { notifier.notifyNear(it, m, fix) } }
+        due.forEach { (c, m) -> byId[c.id]?.let { notifier.notifyNear(it, m, fix); log.d("Alert", "Alert for ${c.id} (${c.type}) at ${m.toInt()} m via $source") } }
+        // Trip mode sends a position every few seconds: only geofence checks that alert nothing are written
+        if (due.isEmpty() && source == "geofence") log.d("Alert", "geofence: ${items.size} items, none due (distance, kind, cooldown or quiet hours)")
         settings.recordAlerts(due.map { it.first.id }, now)
         if (due.isNotEmpty()) log.i("Alert", "$source: ${due.size} alerts, nearest ${due.first().second.toInt()} m")
     }

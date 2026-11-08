@@ -68,6 +68,8 @@ class MainViewModel @Inject constructor(
     private val repo: CollectionRepository,
     private val location: LocationSource,
     private val trips: TripStore,
+    /** The app log; screens use it for one-line detailed entries (screen changes, scans). */
+    val log: io.github.thisisartman.collectibles.debug.FileLog,
 ) : ViewModel() {
 
     /** Null until the database has answered once (#78). One query: "loaded" and the rows arrive together. */
@@ -122,7 +124,8 @@ class MainViewModel @Inject constructor(
     fun gotIt(row: ItemRow, name: String, onLogged: (String) -> Unit = {}) {
         // A double tap must not log the same find twice (overnight review round 13)
         val now = android.os.SystemClock.elapsedRealtime()
-        if (isRepeatTap(lastGotIt, row.item.id, now)) return
+        if (isRepeatTap(lastGotIt, row.item.id, now)) { log.d("Tap", "Got it on ${row.item.id} again within ${REPEAT_TAP_MS} ms: ignored"); return }
+        log.d("Tap", "Got it on ${row.item.id} (${row.item.type})")
         lastGotIt = row.item.id to now
         viewModelScope.launch {
             val id = repo.logFind(row.item.id, Via.MANUAL)
@@ -133,8 +136,9 @@ class MainViewModel @Inject constructor(
 
     /** The Photo action on an alert: log the find, then open the camera for it. */
     fun logFromAlert(itemId: String, japanese: Boolean, fix: io.github.thisisartman.collectibles.location.Fix?, onLogged: (String) -> Unit) {
+        log.d("Tap", "Photo on the alert for $itemId")
         viewModelScope.launch {
-            val row = repo.itemRowOnce(itemId) ?: return@launch
+            val row = repo.itemRowOnce(itemId) ?: return@launch log.w("Alert", "Photo on an alert for $itemId, which is gone")
             val id = repo.logFindAt(itemId, Via.NOTIFICATION, fix)
             emit(Logged(id, if (japanese) row.item.nameJa else row.item.nameRomaji ?: row.item.nameJa, System.currentTimeMillis()))
             onLogged(id)
@@ -186,12 +190,14 @@ class MainViewModel @Inject constructor(
     }
 
     fun undo(findId: String) {
+        log.d("Tap", "Undo on the snackbar for find $findId")
         viewModelScope.launch { repo.undoFind(findId) }
         _logged.value = null
     }
 
     /** "Remove this find" on the item page, after its confirm: the same removal as Undo. */
     fun removeFind(findId: String) {
+        log.d("Tap", "Remove this find: $findId")
         viewModelScope.launch { repo.undoFind(findId) }
     }
 
@@ -206,8 +212,12 @@ class MainViewModel @Inject constructor(
     fun retryPosition(findId: String) = repo.retryPosition(findId)
 
     // Several photos per find, each with a kind (#54)
-    fun nextPhotoKind(findId: String, kind: String) = repo.setNextPhotoKind(findId, kind)
+    fun nextPhotoKind(findId: String, kind: String) {
+        log.d("Photo", "Camera for find $findId, kind $kind")
+        repo.setNextPhotoKind(findId, kind)
+    }
     fun addGalleryPhoto(context: android.content.Context, findId: String, uri: android.net.Uri, kind: String) {
+        log.d("Photo", "Gallery photo picked for find $findId, kind $kind")
         viewModelScope.launch { repo.attachFromGallery(context, findId, uri, kind) }
     }
     fun setPhotoKind(photoId: String, kind: String) { viewModelScope.launch { repo.setPhotoKind(photoId, kind) } }
@@ -241,8 +251,14 @@ class MainViewModel @Inject constructor(
     val findTimes: StateFlow<List<Long>> = repo.findTimes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
     fun findsBetween(from: Long, to: Long) = repo.findsBetween(from, to)
 
-    fun saveTrip(t: SavedTrip) = trips.save(t)
-    fun clearTrip() = trips.clear()
+    fun saveTrip(t: SavedTrip) {
+        log.d("Trip", "Route trip saved: ${t.getOff.size} stations to get off at")
+        trips.save(t)
+    }
+    fun clearTrip() {
+        log.d("Trip", "Route trip cleared")
+        trips.clear()
+    }
     fun currentTrip() = trips.current()
 
     /**
@@ -267,6 +283,7 @@ class MainViewModel @Inject constructor(
     val shareCount: StateFlow<Int> = sharedUris.map { it.size }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
     fun openShare(uris: List<android.net.Uri>) {
+        log.d("Share", "${uris.size} photos shared into Meguri")
         sharedUris.value = uris
         _shared.value = null
     }
@@ -276,7 +293,9 @@ class MainViewModel @Inject constructor(
     fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, onDone: (Int) -> Unit) {
         viewModelScope.launch {
             var n = 0
+            val t0 = System.currentTimeMillis()
             for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, null)) n++
+            log.d("Notebook", "Saved $n of ${stamps.size} stamps from the page in ${System.currentTimeMillis() - t0} ms")
             onDone(n)
         }
     }

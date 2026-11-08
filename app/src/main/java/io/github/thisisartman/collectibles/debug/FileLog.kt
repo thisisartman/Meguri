@@ -11,12 +11,17 @@ import java.util.Locale
  * Append-only log on disk with a size cap. When the current file passes [maxBytes] it is
  * rotated to `app.1.log`, `app.1.log` to `app.2.log`, and so on; files beyond [keep] are
  * deleted. Plain Kotlin, no Android types, so it runs in JVM unit tests.
+ *
+ * [detailed] gates the DEBUG level ([d]): every screen change, tap that changes data, scan and alert step.
+ * It is asked on every line, so turning developer mode on or off takes effect at once. INFO, WARN, ERROR and
+ * FATAL (crashes) are always written.
  */
 class FileLog(
     private val dir: File,
     private val maxBytes: Long = 512 * 1024,
     private val keep: Int = 2,
     private val clock: () -> Long = System::currentTimeMillis,
+    private val detailed: () -> Boolean = { true },
 ) {
     private val current = File(dir, "app.log")
     private val stampFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", Locale.US)
@@ -25,8 +30,12 @@ class FileLog(
         dir.mkdirs()
     }
 
+    /** Whether detailed (DEBUG) lines are written now. */
+    val isDetailed: Boolean get() = detailed()
+
     @Synchronized
     fun log(level: Level, tag: String, message: String, error: Throwable? = null) {
+        if (level == Level.DEBUG && !detailed()) return
         val line = buildString {
             append(stampFormat.format(Date(clock())))
             append(' ').append(level.letter).append('/').append(tag).append(": ").append(message)
@@ -37,7 +46,13 @@ class FileLog(
         if (current.length() > maxBytes) rotate()
     }
 
-    fun d(tag: String, message: String) = log(Level.DEBUG, tag, message)
+    /**
+     * A detailed line, written only while [detailed] is true (dev build, or developer mode on). Never throws:
+     * these calls sit in screen code and taps, where a full disk must not crash the app.
+     */
+    fun d(tag: String, message: String) {
+        runCatching { log(Level.DEBUG, tag, message) }
+    }
     fun i(tag: String, message: String) = log(Level.INFO, tag, message)
     fun w(tag: String, message: String, error: Throwable? = null) = log(Level.WARN, tag, message, error)
     fun e(tag: String, message: String, error: Throwable? = null) = log(Level.ERROR, tag, message, error)

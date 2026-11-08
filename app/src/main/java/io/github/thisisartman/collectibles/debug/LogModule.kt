@@ -14,5 +14,7 @@ import javax.inject.Singleton
 object LogModule {
     @Provides
     @Singleton
-    fun fileLog(@ApplicationContext context: Context): FileLog = FileLog(File(context.filesDir, "logs"))
+    // Three files of 512 KB: the detailed log fills them faster, and the lines before a crash must still be there
+    fun fileLog(@ApplicationContext context: Context): FileLog =
+        FileLog(File(context.filesDir, "logs"), keep = 3, detailed = { DevMode.detailed(context) })
 }

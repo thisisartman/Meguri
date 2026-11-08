@@ -205,12 +205,13 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             }
             // The reader comes through Play services and downloads on first use: say so instead of "no code" (Poco, 2026-11-08)
             if ((failure as? com.google.mlkit.common.MlKitException)?.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) {
-                reading = false; notReady = true; return@launch
+                vm.log.w("Scan", "The text reader is not ready yet (Play services download)"); reading = false; notReady = true; return@launch
             }
             // A card that was read: upright, then trimmed to the top card by its blue frame (owner, 2026-11-09: the
             // scanner took in the cards under it or the box's edge). No clean frame: the upright page as it was
             val src = page1
             val trimmed = if (code != null && src != null) cardCopy(context, src, turn) else null
+            vm.log.d("Scan", "Card code ${code ?: "not read"}, turn $turn°, card-only read ${src !== page0}, trim ${trimmed?.second ?: "not tried"}" + (failure?.let { ", reader failed: $it" } ?: ""))
             val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) uprightCopy(context, src, turn) ?: page.imageUri else page.imageUri
             // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
             if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
@@ -232,6 +233,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 if (small != null && px != null && io.github.thisisartman.collectibles.photo.StampFind.isPage(px)) {
                     val boxes = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { io.github.thisisartman.collectibles.photo.StampFind.find(px, small.width, small.height) }
                     small.recycle(); if (page1 !== page0) page1?.recycle(); page0?.recycle()
+                    vm.log.d("Scan", "Notebook page: ${boxes.size} stamps found")
                     NotebookSession.start(page.imageUri, boxes)
                     reading = false
                     nav.navigate("stamps")
@@ -250,6 +252,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             if (page1 !== page0) page1?.recycle()
             page0?.recycle()
             val alike = code?.let { c -> CardCode.lookalikes(c, known).mapNotNull { k -> cards.firstOrNull { it.item.code == k } } } ?: emptyList()
+            vm.log.d("Scan", "Result: ${match?.item?.id ?: "no match"}, cover $cover, card without a code $isCard, ${alike.size} look-alikes")
             result = Scan(photo, code, match, cover, near, alike)
             reading = false
         }

@@ -52,6 +52,46 @@ class FileLogTest {
     }
 
     @Test
+    fun detailedLinesOnlyWhileDetailed() {
+        var detailed = false
+        val log = FileLog(File(tmp.root, "logs"), clock = { 0L }, detailed = { detailed })
+        log.d("Nav", "hidden")
+        assertFalse(log.readAll().contains("hidden"))
+        detailed = true
+        log.d("Nav", "shown")
+        assertTrue(log.tail(1).single().endsWith(" D/Nav: shown"))
+        // Switching it off again (developer mode turned off in About) takes effect at once
+        detailed = false
+        log.d("Nav", "hidden again")
+        assertFalse(log.readAll().contains("hidden again"))
+        assertFalse(log.isDetailed)
+    }
+
+    @Test
+    fun errorsWarningsAndInfoAreWrittenWithoutDetailed() {
+        val log = FileLog(File(tmp.root, "logs"), clock = { 0L }, detailed = { false })
+        log.i("App", "start")
+        log.w("Geofence", "warned")
+        log.e("Backup", "failed", IllegalStateException("disk full"))
+        log.log(FileLog.Level.FATAL, "Crash", "fatal")
+        val text = log.readAll()
+        assertTrue(text.contains("I/App: start"))
+        assertTrue(text.contains("W/Geofence: warned"))
+        assertTrue(text.contains("E/Backup: failed"))
+        assertTrue(text.contains("F/Crash: fatal"))
+    }
+
+    @Test
+    fun detailedLineNeverThrows() {
+        // The log folder is gone and a file sits in its place: writing fails, the tap that logged must not crash
+        val dir = File(tmp.root, "logs")
+        val log = FileLog(dir, clock = { 0L })
+        dir.deleteRecursively()
+        dir.writeText("not a folder")
+        log.d("Tap", "Got it")
+    }
+
+    @Test
     fun crashLoggerWritesFatalAndCallsPreviousHandler() {
         val log = newLog()
         var previousCalled = false

@@ -31,7 +31,8 @@ class CollectiblesApp : Application() {
         log.i(
             "App",
             "Start ${BuildConfig.APPLICATION_ID} ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE}) · " +
-                "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})",
+                "${Build.MANUFACTURER} ${Build.MODEL} · Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT}) · " +
+                "detailed log ${if (log.isDetailed) "on" else "off"}",
         )
         autoBackup.catchUpIfOverdue()
         notifier.createChannels()

@@ -78,6 +78,8 @@ class BackupRestore @Inject constructor(
 
     /** Reads and checks a backup file without changing anything. Throws [BackupError]. */
     suspend fun inspect(uri: Uri): BackupInfo = withContext(Dispatchers.IO) {
+        val t0 = System.currentTimeMillis()
+        log.d("Restore", "Checking a backup file: start")
         val dir = File(context.noBackupFilesDir, "restore-${UUID.randomUUID()}").apply { mkdirs() }
         try {
             val dbFile = File(dir, CollectiblesDb.NAME)
@@ -106,8 +108,11 @@ class BackupRestore @Inject constructor(
                 throw BackupError.NotABackup()
             }
             if (!dbFile.exists() || dbFile.length() == 0L) throw BackupError.NotABackup()
-            checkDatabase(dbFile, createdMs, dir)
+            checkDatabase(dbFile, createdMs, dir).also {
+                log.d("Restore", "Backup checked in ${System.currentTimeMillis() - t0} ms: schema ${it.schema}, ${it.items} items, ${it.finds} finds, ${it.photos} photos, ${it.lines} lines")
+            }
         } catch (e: Exception) {
+            log.d("Restore", "Backup refused after ${System.currentTimeMillis() - t0} ms: $e")
             dir.deleteRecursively()
             throw e
         }
@@ -173,6 +178,8 @@ class BackupRestore @Inject constructor(
      * copy; if it can't be saved, nothing is replaced. Throws on failure, with the current data intact.
      */
     suspend fun restore(info: BackupInfo): RestoreResult = withContext(Dispatchers.IO) {
+        val t0 = System.currentTimeMillis()
+        log.d("Restore", "Restore: start, ${info.items} items, ${info.finds} finds, ${info.photos} photos")
         try {
             val rows = readBackup(info)
             val safety = backup.lock.withLock {
@@ -187,7 +194,12 @@ class BackupRestore @Inject constructor(
             val relink = if (rows.photos.isEmpty() || placed == rows.photos.size) null else relinkPhotos()
             // Every photo already has its picture: nothing left to find, so a later start mustn't relink them
             if (rows.photos.isNotEmpty() && placed == rows.photos.size) prefs.edit().putBoolean(KEY_RELINK, false).commit()
+            log.i("Restore", "Restore done in ${System.currentTimeMillis() - t0} ms: $placed photos put back from the backup")
             RestoreResult(rows.items.size, rows.finds.size, rows.photos.size, safety, rows.photos.isNotEmpty() && relink == null)
+        } catch (e: Exception) {
+            // Logged as an error by the screen that started it
+            log.d("Restore", "Restore failed after ${System.currentTimeMillis() - t0} ms: $e")
+            throw e
         } finally {
             discard(info)
         }

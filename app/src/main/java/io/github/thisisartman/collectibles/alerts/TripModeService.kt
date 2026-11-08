@@ -96,6 +96,7 @@ class TripModeService : Service() {
         val providers = candidates.filter { runCatching { m.isProviderEnabled(it) }.getOrDefault(false) }.take(if (fine) 2 else 1)
         providers.forEach { runCatching { m.requestLocationUpdates(it, ms, 0f, listener, Looper.getMainLooper()) } }
         if (providers.isEmpty()) log.w("Trip", "No location provider is on")
+        else log.d("Trip", "A position every ${ms / 1000} s from ${providers.joinToString()}")
     }
 
     private fun onLocation(loc: Location) {

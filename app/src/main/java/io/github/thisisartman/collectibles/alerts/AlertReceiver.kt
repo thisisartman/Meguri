@@ -59,8 +59,8 @@ class AlertReceiver : BroadcastReceiver() {
                 itemId?.let { notifier.cancel(it) }
                 log.i("Alert", "Undo from the notification for $itemId")
             }
-            ACTION_DISMISS -> itemId?.let { notifier.cancel(it) }
-            ACTION_STOP_TRIP -> TripModeService.stop(context)
+            ACTION_DISMISS -> { log.d("Alert", "Dismissed from the notification: $itemId"); itemId?.let { notifier.cancel(it) } }
+            ACTION_STOP_TRIP -> { log.i("Trip", "Stopped from the notification"); TripModeService.stop(context) }
         }
     }
 
