@@ -497,6 +497,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                         Text(boldMatch(r.item.displayName(ja), query), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         Text(
                                             listOfNotNull(
+                                                // A card named by its design ("Kaen doki") shows its code, so a code search shows why it matched
+                                                r.item.code?.takeIf { c -> r.item.type == ItemType.MANHOLE_CARD && !r.item.displayName(ja).contains(c.takeLast(4)) },
                                                 r.item.nameJa.takeIf { !ja && it != r.item.displayName(ja) },
                                                 r.item.prefecture?.let { prefectureName(it, ja) },
                                                 stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
@@ -622,7 +624,9 @@ internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, 
             // Break after a hyphen or between words, never inside one ("Tsubame-Sanjo" broke as "Tsubam / e-Sanjo"),
             // and never start a line with the " · " separator
             tileName(name),
-            style = MaterialTheme.typography.labelMedium.copy(lineBreak = androidx.compose.ui.text.style.LineBreak.Simple), textAlign = TextAlign.Center,
+            // A single long word ("Minamiuonuma") was split mid-word: such names get the smaller size, so the word fits
+            style = (if (name.split(' ', '-').any { it.length > 10 }) MaterialTheme.typography.labelSmall else MaterialTheme.typography.labelMedium)
+                .copy(lineBreak = androidx.compose.ui.text.style.LineBreak.Simple), textAlign = TextAlign.Center,
             minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis,
         )
         distance?.let {
