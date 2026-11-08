@@ -3,7 +3,10 @@ package io.github.thisisartman.collectibles.data
 import io.github.thisisartman.collectibles.location.distanceM
 
 /** A photo shared into Meguri (#80), with what its file says about where and when it was taken. */
-data class SharedPhoto(val uri: String, val lat: Double? = null, val lng: Double? = null, val takenAt: Long? = null) {
+/** [placeHidden]: the gallery hid where it was taken, and Meguri could see it if allowed (see SharedPhotoReader). */
+data class SharedPhoto(
+    val uri: String, val lat: Double? = null, val lng: Double? = null, val takenAt: Long? = null, val placeHidden: Boolean = false,
+) {
     val hasPlace: Boolean get() = lat != null && lng != null
 }
 
@@ -58,7 +61,8 @@ object ShareGrouping {
                 r to distanceM(at.first, at.second, lat, lng)
             }
             .filter { it.second <= maxM }
-            .sortedBy { it.second }
+            // At one spot a station's stamp and its Ekitag tie; a shared photo is more likely the paper stamp
+            .sortedWith(compareBy({ it.second }, { it.first.item.type == ItemType.EKITAG }))
             .take(limit)
             .toList()
     }

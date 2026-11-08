@@ -467,4 +467,24 @@
     <string name="edit_no_position">No position yet.</string>
     <string name="edit_search_none">Nothing found.</string>
     <string name="edit_kept_note">Your changes stay when the catalogue is updated.</string>
+    <!-- Share to Meguri (#80) -->
+    <plurals name="share_title"><item quantity="one">Add %d photo</item><item quantity="other">Add %d photos</item></plurals>
+    <string name="share_grouped">Grouped by where they were taken</string>
+    <plurals name="share_photos"><item quantity="one">%d photo</item><item quantity="other">%d photos</item></plurals>
+    <string name="share_near">Near %s</string>
+    <string name="share_no_place">No location</string>
+    <string name="share_somewhere">Where these were taken</string>
+    <string name="share_choose">Choose what this is</string>
+    <string name="share_change">Change</string>
+    <plurals name="share_add_all"><item quantity="one">Add · %d item</item><item quantity="other">Add all · %d items</item></plurals>
+    <plurals name="share_added"><item quantity="one">Added %1$d photo to %2$s</item><item quantity="other">Added %1$d photos to %2$s</item></plurals>
+    <plurals name="share_items"><item quantity="one">%d item</item><item quantity="other">%d items</item></plurals>
+    <string name="share_search">Search stations, cards, places</string>
+    <string name="share_near_taken">Near where these were taken</string>
+    <string name="share_near_you">Near you</string>
+    <string name="share_results">Results</string>
+    <string name="share_nothing">Nothing here. Try a search.</string>
+    <string name="share_leave_out">Leave these out</string>
+    <plurals name="share_hidden"><item quantity="one">Your gallery hid where %d photo was taken, so it can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item><item quantity="other">Your gallery hid where %d photos were taken, so they can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item></plurals>
+    <string name="share_allow_places">Allow</string>
 </resources>

@@ -16,6 +16,12 @@
 - The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.
 - The pin card's icons are all one size.
 - Edit an item's details: the pencil on an item page opens its names, where to get it, address, hours, notes and position. The position can be where you are, a pasted Google Maps link (a map view, a place or a short link) or a place search. Your edits stay when the catalogue is updated. (Database version 4; existing items move over unchanged.)
+- Share photos to Meguri (#80, your pick "Groups, then a sheet"):
+  - Meguri is in Android's share sheet for one photo or several.
+  - The photos are grouped by where they were taken, and each group shows its best guess: the nearest stamp, card or goshuin. "Change" opens a sheet with search, kinds and what's near where they were taken; "Leave these out" skips a group.
+  - "Add all" puts each group's photos on that item, filed as Other photos to sort later. An item you already have keeps its find and gains the photos; one you don't have is collected on the day and at the place the photos were taken.
+  - Photos with no location get no guess; you choose. Some galleries hide where a photo was taken; Meguri then says so and offers "Allow" (photo access and photo locations) instead of asking by itself.
+- An Ekitag's tile says so ("Niitsu Station · Ekitag"), since it shares its station's name and spot.
 - Niigata catalogue checked against the official sources:
   - Ekitag: 20 Niigata stations added, from JR East's Niigata branch announcements (2024-03, 2024-07 and 2024-11).
   - Kamitokoro Station (opened 2025-03) added to the Echigo Line, between Hakusan and Niigata.

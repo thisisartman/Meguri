@@ -9,10 +9,18 @@ sealed interface AppRequest {
     data class OpenItem(val itemId: String) : AppRequest
     data class Collect(val itemId: String, val fix: Fix?) : AppRequest
     data object StartTrip : AppRequest
+    data class Share(val uris: List<android.net.Uri>) : AppRequest
 
     companion object {
         fun from(intent: Intent?): AppRequest? {
             intent ?: return null
+            // Photos shared from the gallery (#80): one, or several at once
+            when (intent.action) {
+                Intent.ACTION_SEND -> androidx.core.content.IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
+                    ?.let { return Share(listOf(it)) }
+                Intent.ACTION_SEND_MULTIPLE -> androidx.core.content.IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
+                    ?.takeIf { it.isNotEmpty() }?.let { return Share(it.toList()) }
+            }
             intent.getStringExtra(MainActivity.EXTRA_COLLECT_ITEM)?.let { id ->
                 val fix = if (intent.hasExtra(MainActivity.EXTRA_FIX_LAT)) Fix(
                     intent.getDoubleExtra(MainActivity.EXTRA_FIX_LAT, 0.0), intent.getDoubleExtra(MainActivity.EXTRA_FIX_LNG, 0.0),

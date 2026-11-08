@@ -14,6 +14,11 @@ import java.util.Locale
 /** English mode: romaji everywhere (Japanese if no romaji); Japanese mode: Japanese. */
 fun Item.displayName(japanese: Boolean): String = if (japanese) nameJa else nameRomaji ?: nameJa
 
+/** A tile's name: an Ekitag shares its station's name and both sit on one spot, so it says which ("Niitsu Station · Ekitag"). */
+@androidx.compose.runtime.Composable
+fun Item.tileLabel(japanese: Boolean): String =
+    if (type == ItemType.EKITAG) displayName(japanese) + " · " + androidx.compose.ui.res.stringResource(R.string.type_ekitag) else displayName(japanese)
+
 /** The other script, shown on the item page in English mode only. */
 fun Item.secondaryName(japanese: Boolean): String? = if (japanese) null else nameJa.takeIf { nameRomaji != null && it != nameRomaji }
 

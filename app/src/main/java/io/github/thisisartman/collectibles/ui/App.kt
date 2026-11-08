@@ -48,6 +48,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import io.github.thisisartman.collectibles.R
+import kotlinx.coroutines.launch
 import io.github.thisisartman.collectibles.debug.LogsScreen
 import io.github.thisisartman.collectibles.photo.CameraCapture
 
@@ -91,6 +92,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val context = LocalContext.current
     val resolver = context.contentResolver
     val snackbar = remember { SnackbarHostState() }
+    // For messages that outlive the page that sent them (shared photos added)
+    val appScope = androidx.compose.runtime.rememberCoroutineScope()
     var showLog by rememberSaveable { mutableStateOf(false) }
     // First open after an update: what changed (#77)
     val appContext = androidx.compose.ui.platform.LocalContext.current
@@ -168,6 +171,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                 vm.logFromAlert(r.itemId, japanese, r.fix) { nav.openItem(r.itemId) }
             }
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
+            is AppRequest.Share -> { vm.openShare(r.uris); nav.navigate("share") }
         }
         onRequestHandled()
     }
@@ -284,6 +288,15 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     composable("map/{section}", listOf(navArgument("section") { type = NavType.StringType })) {
                         val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
                         MapScreen(vm, nav, section)
+                    }
+                    composable("share") {
+                        Page {
+                            ShareScreen(vm, onClose = { nav.popBackStack() }, onAdded = { n, items ->
+                                val res = context.resources
+                                val text = res.getQuantityString(R.plurals.share_added, n, n, res.getQuantityString(R.plurals.share_items, items, items))
+                                appScope.launch { snackbar.showSnackbar(text) }
+                            })
+                        }
                     }
                     composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
                     composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }

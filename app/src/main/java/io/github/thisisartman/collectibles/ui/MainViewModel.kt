@@ -260,6 +260,32 @@ class MainViewModel @Inject constructor(
         return e.name?.let { n -> PlaceLookup.search(n, here.value.fix?.lat, here.value.fix?.lng, japanese).firstOrNull()?.let { it.lat to it.lng } }
     }
 
+    /** Photos shared into Meguri (#80): their addresses as they arrive, then what their files say, once read. */
+    private val sharedUris = MutableStateFlow<List<android.net.Uri>>(emptyList())
+    private val _shared = MutableStateFlow<List<io.github.thisisartman.collectibles.data.SharedPhoto>?>(null)
+    val shared: StateFlow<List<io.github.thisisartman.collectibles.data.SharedPhoto>?> = _shared.asStateFlow()
+    val shareCount: StateFlow<Int> = sharedUris.map { it.size }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
+
+    fun openShare(uris: List<android.net.Uri>) {
+        sharedUris.value = uris
+        _shared.value = null
+    }
+
+    /** Reads where and when each shared photo was taken; called once "photo locations" has been asked for. */
+    fun readShare() {
+        val uris = sharedUris.value
+        viewModelScope.launch { _shared.value = uris.map { repo.readShared(it) } }
+    }
+
+    /** Adds each group's photos to the item chosen for it. Returns photos copied and items they went to. */
+    suspend fun addShared(choices: List<Pair<String, io.github.thisisartman.collectibles.data.PhotoGroup>>): Pair<Int, Int> {
+        var photos = 0
+        for ((itemId, group) in choices) photos += repo.addShared(itemId, group.photos, group.centre)
+        sharedUris.value = emptyList()
+        _shared.value = null
+        return photos to choices.map { it.first }.distinct().size
+    }
+
     /** Saves your edits to an item's details; catalogue updates leave it as you made it (owner, 2026-11-08). */
     fun editItem(item: io.github.thisisartman.collectibles.data.Item) {
         viewModelScope.launch { repo.editItem(item) }

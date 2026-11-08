@@ -98,6 +98,10 @@ interface CollectionDao {
     @Query("SELECT COUNT(*) FROM acquisition WHERE item_id = :itemId")
     suspend fun findCount(itemId: String): Int
 
+    /** The item's most recent find, where shared photos go (#80). */
+    @Query("SELECT id FROM acquisition WHERE item_id = :itemId ORDER BY COALESCE(acquired_at, created_at) DESC LIMIT 1")
+    suspend fun latestFindId(itemId: String): String?
+
     @Transaction
     @Query("SELECT * FROM acquisition WHERE item_id = :itemId ORDER BY COALESCE(acquired_at, 0) DESC, created_at DESC")
     fun observeFinds(itemId: String): Flow<List<FindWithPhotos>>

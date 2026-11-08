@@ -20,6 +20,8 @@
 
     <!-- Finding photos again after a restore (PRD FR-9a). Asked for only at that moment. -->
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <!-- Where a shared photo was taken (#80); the gallery hides it otherwise -->
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
     <uses-permission
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
@@ -44,6 +46,13 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Share photos to Meguri (#80) -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <action android:name="android.intent.action.SEND_MULTIPLE" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
 

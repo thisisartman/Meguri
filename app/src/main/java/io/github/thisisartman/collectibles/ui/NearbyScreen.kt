@@ -383,7 +383,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             val m = if (i == 0) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
                             Box(m) {
                                 RoundTile(
-                                    r, tile, r.item.displayName(ja),
+                                    r, tile, r.item.tileLabel(ja),
                                     if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
                                 )

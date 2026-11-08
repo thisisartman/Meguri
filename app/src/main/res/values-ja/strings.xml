@@ -461,4 +461,24 @@
     <string name="edit_no_position">まだ現在地がありません。</string>
     <string name="edit_search_none">見つかりませんでした。</string>
     <string name="edit_kept_note">カタログを更新しても、編集した内容はそのまま残ります。</string>
+    <!-- Share to Meguri (#80) -->
+    <plurals name="share_title"><item quantity="other">%d 枚の写真を追加</item></plurals>
+    <string name="share_grouped">撮った場所ごとにまとめました</string>
+    <plurals name="share_photos"><item quantity="other">%d 枚</item></plurals>
+    <string name="share_near">%s 付近</string>
+    <string name="share_no_place">場所のない写真</string>
+    <string name="share_somewhere">撮った場所</string>
+    <string name="share_choose">何の写真か選ぶ</string>
+    <string name="share_change">変更</string>
+    <plurals name="share_add_all"><item quantity="other">まとめて追加 · %d 件</item></plurals>
+    <plurals name="share_added"><item quantity="other">%1$d 枚を %2$s に追加しました</item></plurals>
+    <plurals name="share_items"><item quantity="other">%d 件</item></plurals>
+    <string name="share_search">駅、カード、場所を検索</string>
+    <string name="share_near_taken">撮った場所の近く</string>
+    <string name="share_near_you">現在地の近く</string>
+    <string name="share_results">検索結果</string>
+    <string name="share_nothing">見つかりません。検索してみてください。</string>
+    <string name="share_leave_out">この写真は追加しない</string>
+    <plurals name="share_hidden"><item quantity="other">ギャラリーが %d 枚の撮影場所を隠しているため、場所ごとにまとめられません。写真へのアクセスと位置情報を許可すると読み取れます。</item></plurals>
+    <string name="share_allow_places">許可する</string>
 </resources>

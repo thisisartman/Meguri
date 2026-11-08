@@ -72,4 +72,19 @@ class ShareGroupingTest {
         assertTrue(ShareGrouping.suggestions(rows, null).isEmpty())
         assertEquals("goshuin", ShareGrouping.suggestions(rows, null, fallback = yahiko).single().first.item.id)
     }
+
+    @Test fun atOneSpotTheStampComesBeforeItsEkitag() {
+        // The Ekitag row sits on the station's own position (2026-11-08 catalogue); listed first, it must still lose
+        val rows = listOf(item("tag", ItemType.EKITAG, niitsu), item("stamp", ItemType.EKI_STAMP, niitsu))
+        assertEquals(listOf("stamp", "tag"), ShareGrouping.suggestions(rows, niitsu).map { it.first.item.id })
+    }
+
+    @Test fun exifTimeUsesItsOffsetElseTheZone() {
+        val withOffset = SharedPhotoReader.exifMillis("2026:11:07 14:03:22", "+09:00", java.time.ZoneId.of("UTC"))
+        assertEquals(java.time.Instant.parse("2026-11-07T05:03:22Z").toEpochMilli(), withOffset)
+        val inZone = SharedPhotoReader.exifMillis("2026:11:07 14:03:22", null, java.time.ZoneId.of("Asia/Tokyo"))
+        assertEquals(withOffset, inZone)
+        assertNull(SharedPhotoReader.exifMillis("    :  :     :  :  ", null))
+        assertNull(SharedPhotoReader.exifMillis(null, "+09:00"))
+    }
 }

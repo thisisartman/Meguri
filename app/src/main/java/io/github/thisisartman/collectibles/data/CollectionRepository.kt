@@ -236,6 +236,29 @@ class CollectionRepository @Inject constructor(
         return PhotoInfo(picked.toString(), null, name, null, size, taken ?: now())
     }
 
+    suspend fun readShared(uri: android.net.Uri): SharedPhoto =
+        kotlinx.coroutines.withContext(Dispatchers.IO) { SharedPhotoReader.read(context, uri) }
+
+    /**
+     * Photos shared into Meguri for one item (#80): they go on its latest find, or on a new find dated when the first
+     * was taken and placed where they were taken. Each gets Meguri's own copy, filed as Other to sort later. Returns
+     * how many were copied.
+     */
+    suspend fun addShared(itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?): Int {
+        val findId = dao.latestFindId(itemId) ?: newId().also { f ->
+            dao.insertFind(
+                Acquisition(
+                    id = f, itemId = itemId, acquiredAt = photos.mapNotNull { it.takenAt }.minOrNull() ?: now(),
+                    lat = centre?.first, lng = centre?.second, via = Via.MANUAL, createdAt = now(),
+                ),
+            )
+        }
+        var copied = 0
+        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), PhotoKind.OTHER)) copied++
+        log.i("Share", "Added $copied of ${photos.size} shared photos to item $itemId")
+        return copied
+    }
+
     suspend fun editItem(item: Item) {
         val now = now()
         dao.upsertItem(item.copy(editedAt = now, updatedAt = now))
