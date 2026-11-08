@@ -639,4 +639,7 @@
     <string name="alerts_target_same">共通の距離を使っています。スライダーを動かすと、このカテゴリーだけの距離になります。</string>
     <string name="alerts_use_main">共通の距離に戻す</string>
     <string name="cat_save">保存</string>
+    <string name="about_dev_mode">開発者モード</string>
+    <string name="about_dev_mode_sub">タップ、画面、読み込み、バックアップ、スキャンをすべて記録し、不具合を追えるようにします。「ヘルプと情報」の「ログ」で見られます。</string>
+    <string name="about_dev_mode_dev">開発版では常にオン：タップ、画面、読み込み、バックアップ、スキャンをすべて記録します。</string>
 </resources>

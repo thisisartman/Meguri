@@ -175,7 +175,6 @@ class MoreViewModel @Inject constructor(
 @Composable
 fun MoreScreen(
     snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {},
-    myCollections: @Composable () -> Unit = {},
     vm: MoreViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -202,7 +201,6 @@ fun MoreScreen(
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val r = runCatching { vm.io.importCatalog(uri) }
-            r.exceptionOrNull()?.let { vm.log.e("Catalog", "Import failed", it) }
             val msg = catalogueMessage(context, r)
             scope.launch { snackbar.showSnackbar(msg) }
         }
@@ -571,6 +569,28 @@ fun MoreScreen(
                     stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME),
                     Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
                 )
+                // Developer mode (owner, 2026-11-09): the release writes the detailed log only with this on.
+                // The dev build always does, so there it shows on and cannot be changed.
+                var dev by remember { mutableStateOf(BuildConfig.DEBUG || io.github.thisisartman.collectibles.debug.DevMode.on(context)) }
+                Row(
+                    Modifier.fillMaxWidth()
+                        .toggleable(value = dev, enabled = !BuildConfig.DEBUG, role = Role.Switch, onValueChange = {
+                            dev = it; io.github.thisisartman.collectibles.debug.DevMode.set(context, it, vm.log)
+                        })
+                        .heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.weight(1f)) {
+                        Text(stringResource(R.string.about_dev_mode), style = MaterialTheme.typography.bodyLarge)
+                        Text(
+                            stringResource(if (BuildConfig.DEBUG) R.string.about_dev_mode_dev else R.string.about_dev_mode_sub),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+                    androidx.compose.material3.Switch(checked = dev, onCheckedChange = null, enabled = !BuildConfig.DEBUG)
+                }
+                HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
         }
     }

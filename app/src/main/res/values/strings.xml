@@ -653,4 +653,7 @@
     <string name="alerts_target_same">Uses the main distance. Move the slider to give it its own.</string>
     <string name="alerts_use_main">Use the main distance</string>
     <string name="cat_save">Save</string>
+    <string name="about_dev_mode">Developer mode</string>
+    <string name="about_dev_mode_sub">Logs every tap, page, import, backup and scan, so a problem can be traced. Open them in Help and about, then Logs.</string>
+    <string name="about_dev_mode_dev">Always on in the dev build: every tap, page, import, backup and scan is logged.</string>
 </resources>

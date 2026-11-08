@@ -246,24 +246,3 @@ fun NewCollectionDialog(
 /** Card, stamp or other, as a word (Settings > Categories). */
 @androidx.annotation.StringRes
 fun Category.label(): Int = when (this) { Category.CARD -> R.string.add_cat_card; Category.STAMP -> R.string.add_cat_stamp; Category.OTHER -> R.string.add_cat_other }
-
-/** Settings: your own collections, and making a new one. */
-@Composable
-fun MyCollectionsSection(types: List<CollectionType>, itemCounts: Map<String, Int>, onNew: () -> Unit) {
-    types.forEach { t ->
-        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(painterResource(customIconRes(t.icon)), contentDescription = null, tint = Color(t.color), modifier = Modifier.size(22.dp))
-            Spacer(Modifier.width(14.dp))
-            Text(t.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                androidx.compose.ui.res.pluralStringResource(R.plurals.items, itemCounts[t.id] ?: 0, itemCounts[t.id] ?: 0),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-        }
-    }
-    TextButton(onClick = onNew, modifier = Modifier.padding(horizontal = 8.dp).heightIn(min = 48.dp)) {
-        Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
-        Spacer(Modifier.width(8.dp))
-        Text(stringResource(R.string.collection_new))
-    }
-}

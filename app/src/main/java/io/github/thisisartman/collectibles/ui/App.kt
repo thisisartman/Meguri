@@ -205,7 +205,6 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val topLevel = route == null || route in setOf(NEARBY, BOOK)
 
     val customTypes by vm.collectionTypes.collectAsStateWithLifecycle()
-    var newCollection by remember { mutableStateOf(false) }
     CompositionLocalProvider(LocalPhoto provides photo, LocalCustomTypes provides customTypes.associateBy { it.id }) {
         Scaffold(
             // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
@@ -284,13 +283,6 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         Page {
                             MoreScreen(
                                 snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() },
-                                myCollections = {
-                                    MyCollectionsSection(
-                                        customTypes,
-                                        rows.mapNotNull { it.item.customTypeId }.groupingBy { it }.eachCount(),
-                                        onNew = { newCollection = true },
-                                    )
-                                },
                             )
                         }
                     }
@@ -372,12 +364,6 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     },
                     onAdd = { showLog = false; nav.navigate("new") },
                 )
-            }
-        }
-        if (newCollection) {
-            NewCollectionDialog(onDismiss = { newCollection = false }, existingNames = customTypes.map { it.name }.toSet()) { name, color, icon, hasCost ->
-                vm.addCollectionType(name, color, icon, hasCost)
-                newCollection = false
             }
         }
     }
