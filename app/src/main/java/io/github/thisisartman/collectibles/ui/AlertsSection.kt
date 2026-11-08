@@ -190,7 +190,20 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
 
     val main = remember(tick) { s.radiusM }
     // A slider with three stops (owner, 2026-11-09: "maybe a slider would help")
-    DistanceSlider(main) { r -> s.radiusM = r; vm.geofences.refreshInBackground(); tick++ }
+    // Owner, 2026-11-09: one slider, and a menu above it says what it sets: every category, or one of them
+    var target by remember { mutableStateOf<ItemType?>(null) }
+    val own = remember(tick, target) { target?.let { s.ownRadius(it) } }
+    DistanceSlider(
+        value = own ?: main,
+        target = target,
+        targetIsOwn = own != null,
+        onTarget = { target = it },
+        onReset = { target?.let { s.setRadiusFor(it, null) }; vm.geofences.refreshInBackground(); tick++ },
+    ) { r ->
+        val t = target
+        if (t == null) s.radiusM = r else s.setRadiusFor(t, r)
+        vm.geofences.refreshInBackground(); tick++
+    }
 
     val types = remember(tick) { s.types }
     val on = ALERT_TYPES.filter { it.first in types }
@@ -327,16 +340,45 @@ private fun DistanceRow(title: String, sub: String?, value: Int?, sameAs: Int?, 
 /** "200 m", "500 m", "1 km": the alert distances as the owner wrote them. */
 fun radiusText(m: Int): String = if (m % 1000 == 0) "${m / 1000} km" else "$m m"
 
-/** How close, for every category: three stops, the chosen one written on the right. */
+/**
+ * How close: three stops, the chosen one written on the right. The menu under the title picks what the slider sets:
+ * every category (the main distance) or one category, which then has its own until "Use the main distance".
+ */
 @Composable
-private fun DistanceSlider(value: Int, onPick: (Int) -> Unit) {
+private fun DistanceSlider(
+    value: Int, target: ItemType?, targetIsOwn: Boolean,
+    onTarget: (ItemType?) -> Unit, onReset: () -> Unit, onPick: (Int) -> Unit,
+) {
     val choices = AlertSettings.RADIUS_CHOICES
-    var pos by remember(value) { mutableStateOf(choices.indexOf(value).coerceAtLeast(0).toFloat()) }
+    var pos by remember(value, target) { mutableStateOf(choices.indexOf(value).coerceAtLeast(0).toFloat()) }
+    var menu by remember { mutableStateOf(false) }
+    val every = stringResource(R.string.alerts_every)
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.alerts_how_close), style = MaterialTheme.typography.bodyLarge)
-                Text(stringResource(R.string.alerts_every), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Box {
+                    Row(
+                        Modifier.clickable { menu = true }.heightIn(min = 40.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (target != null) { TypeDot(target); Spacer(Modifier.width(6.dp)) }
+                        Text(
+                            target?.let { t -> stringResource(ALERT_TYPES.first { it.first == t }.second) } ?: every,
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary,
+                        )
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                    DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                        DropdownMenuItem(text = { Text(every) }, onClick = { menu = false; onTarget(null) })
+                        ALERT_TYPES.forEach { (t, label) ->
+                            DropdownMenuItem(
+                                text = { Text(stringResource(label)) }, leadingIcon = { TypeDot(t) },
+                                onClick = { menu = false; onTarget(t) },
+                            )
+                        }
+                    }
+                }
             }
             Text(radiusText(choices[pos.toInt()]), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
         }
@@ -355,6 +397,14 @@ private fun DistanceSlider(value: Int, onPick: (Int) -> Unit) {
                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+        if (target != null) {
+            Text(
+                stringResource(if (targetIsOwn) R.string.alerts_target_own else R.string.alerts_target_same),
+                Modifier.padding(top = 6.dp),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (targetIsOwn) TextButton(onClick = onReset, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.alerts_use_main)) }
         }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

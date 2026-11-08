@@ -143,7 +143,7 @@
     <string name="more_relink">Find my photos again</string>
     <string name="more_relink_sub">Needs access to all photos, to match them to your finds.</string>
     <string name="more_auto">Weekly backup</string>
-    <string name="more_auto_sub_off">Off. Tap to pick a folder.</string>
+    <string name="more_auto_sub_off">Off. Turn it on to choose a folder.</string>
     <string name="more_auto_sub_on">On. The first backup is on its way.</string>
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
     <string name="more_auto_sub_failed">The last backup failed. Tap to pick the folder again.</string>
@@ -614,4 +614,43 @@
     <string name="alerts_distance_for">Distance</string>
     <string name="alerts_station_short">Only where you get off today</string>
     <string name="settings_alerts_live">%1$s · %2$s · %3$d of %4$d categories</string>
+    <string name="backup_section">Backup</string>
+    <string name="backup_now_photos">Saves a file with your finds and their photos</string>
+    <string name="backup_now_plain">Saves a file with your finds (no photos)</string>
+    <string name="photos_section">Photos</string>
+    <string name="photos_kept">Photos kept in Meguri</string>
+    <string name="photos_kept_sub">%1$d photos · %2$s</string>
+    <string name="photos_kept_note">Meguri keeps its own copy of each photo you add, so it stays even if you delete it from the gallery. Backups with photos carry them to a new phone. %1$d photos, %2$s.</string>
+    <string name="photos_none">No photos yet. Photos you add to a find show here.</string>
+    <plurals name="photos_count">
+        <item quantity="one">%1$d photo</item>
+        <item quantity="other">%1$d photos</item>
+    </plurals>
+    <plurals name="photos_linked">
+        <item quantity="one">%1$d more photo is a link to your gallery, from before Meguri kept copies.</item>
+        <item quantity="other">%1$d more photos are links to your gallery, from before Meguri kept copies.</item>
+    </plurals>
+    <plurals name="photos_missing">
+        <item quantity="one">%1$d photo can no longer be found.</item>
+        <item quantity="other">%1$d photos can no longer be found.</item>
+    </plurals>
+    <string name="weekly_explain">Once a week Meguri saves a backup to a folder you choose, and keeps the last few.</string>
+    <string name="weekly_folder">Folder</string>
+    <string name="weekly_photos">Include photos</string>
+    <string name="weekly_photos_sub">Bigger files, and the photos come back on a new phone</string>
+    <string name="weekly_keep">Keep</string>
+    <string name="weekly_keep_n">Last %1$d</string>
+    <string name="weekly_keep_sub">Older backups are removed, unless the newest has fewer finds than the one before.</string>
+    <string name="weekly_started">Backing up…</string>
+    <string name="cat_edit_title">Edit category</string>
+    <string name="cat_remove">Remove</string>
+    <plurals name="cat_remove_blocked">
+        <item quantity="one">It has %1$d item. To remove the category, move or delete it first.</item>
+        <item quantity="other">It has %1$d items. To remove the category, move or delete them first.</item>
+    </plurals>
+    <string name="cat_empty">Categories you add yourself show here. Add one below, or from + then Add.</string>
+    <string name="alerts_target_own">Its own distance. The others keep the main one.</string>
+    <string name="alerts_target_same">Uses the main distance. Move the slider to give it its own.</string>
+    <string name="alerts_use_main">Use the main distance</string>
+    <string name="cat_save">Save</string>
 </resources>

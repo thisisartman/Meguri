@@ -167,15 +167,19 @@ fun ItemTypeIcon(item: Item, size: Dp = 20.dp, modifier: Modifier = Modifier) {
 fun NewCollectionDialog(
     onDismiss: () -> Unit,
     existingNames: Set<String> = emptySet(),
+    initial: CollectionType? = null,
+    itemCount: Int = 0,
+    onRemove: (() -> Unit)? = null,
     onSave: (name: String, color: Long, icon: String, hasCost: Boolean) -> Unit,
 ) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var color by rememberSaveable { mutableStateOf(CUSTOM_COLORS.first()) }
-    var icon by rememberSaveable { mutableStateOf(CUSTOM_ICONS.first()) }
-    var hasCost by rememberSaveable { mutableStateOf(true) }
+    // With [initial], the same dialog edits a category (Settings > Categories, owner 2026-11-09)
+    var name by rememberSaveable { mutableStateOf(initial?.name ?: "") }
+    var color by rememberSaveable { mutableStateOf(initial?.color ?: CUSTOM_COLORS.first()) }
+    var icon by rememberSaveable { mutableStateOf(initial?.icon ?: CUSTOM_ICONS.first()) }
+    var hasCost by rememberSaveable { mutableStateOf(initial?.hasCost ?: true) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.collection_new_title)) },
+        title = { Text(stringResource(if (initial == null) R.string.collection_new_title else R.string.cat_edit_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 val taken = name.trim().lowercase() in existingNames.map { it.trim().lowercase() }
@@ -220,15 +224,28 @@ fun NewCollectionDialog(
                     Text(stringResource(R.string.collection_has_cost), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                     Switch(checked = hasCost, onCheckedChange = null)
                 }
+                if (initial != null && itemCount > 0) Text(
+                    androidx.compose.ui.res.pluralStringResource(R.plurals.cat_remove_blocked, itemCount, itemCount),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
             }
         },
         confirmButton = {
             val taken = name.trim().lowercase() in existingNames.map { it.trim().lowercase() }
-            TextButton(enabled = name.isNotBlank() && !taken, onClick = { onSave(name, color, icon, hasCost) }) { Text(stringResource(R.string.new_save)) }
+            TextButton(enabled = name.isNotBlank() && !taken, onClick = { onSave(name, color, icon, hasCost) }) { Text(stringResource(R.string.cat_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+        dismissButton = {
+            Row {
+                if (onRemove != null && itemCount == 0) TextButton(onClick = onRemove) { Text(stringResource(R.string.cat_remove), color = MaterialTheme.colorScheme.error) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
+            }
+        },
     )
 }
+
+/** Card, stamp or other, as a word (Settings > Categories). */
+@androidx.annotation.StringRes
+fun Category.label(): Int = when (this) { Category.CARD -> R.string.add_cat_card; Category.STAMP -> R.string.add_cat_stamp; Category.OTHER -> R.string.add_cat_other }
 
 /** Settings: your own collections, and making a new one. */
 @Composable

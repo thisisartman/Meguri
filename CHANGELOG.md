@@ -13,6 +13,11 @@
 - Settings: Theme (Phone, Light or Dark; the map and the status bar follow it), Colours (Meguri or Wallpaper) and Language as one-tap choices. On Android 12 and older, Language opens the phone's language settings.
 - Alerts, simpler (owner's pick C): When to alert is Off, Travelling or Always; How close is one slider for every category (200 m, 500 m, 1 km); Categories, one tap in, switches each on or off and can give it its own distance ("Same" uses the main one). Quiet at night and Keep alerts working stay. A distance saved before (300 m) reads as 200 m.
 - Suggest new photos moved from Alerts to Backup and data.
+- Alerts: a menu under How close picks what the slider sets: every category, or one category, which then keeps its own distance ("Use the main distance" puts it back).
+- Backup and data: Back up now (with or without photos, as the weekly setting), Weekly backup as one row (the words open its page, the switch turns it on or off), Restore; a Photos group with Suggest new photos and Photos kept in Meguri.
+- Weekly backup page: the folder, Include photos, Keep the last 2, 4 or 8, and Back up now.
+- Photos kept in Meguri: how many photos and how much space, by collectible and by what the photo shows (cover, card, stamp, where you got it).
+- Categories: tap one to rename it or change its colour or icon (the icon also makes it a card, a stamp or other); Remove when nothing is in it.
 - Settings list: an icon for each section, and what is set now under it (theme, colours, language; your categories; the prefectures loaded). Order: Appearance, Alerts, Backup, Categories, Catalogue, Help.
 - Catalogue: the prefectures sit one tap in, under Installed catalogues, each with how many of each category it has, next to Load catalogue (CSV). Card pictures stay on the Catalogue page.
 - Help and about: What's new opens from here; About opens a page with the version, licences and credits (the About line did nothing before).

@@ -3,6 +3,9 @@ package io.github.thisisartman.collectibles.ui
 import io.github.thisisartman.collectibles.photo.CardPictures
 import io.github.thisisartman.collectibles.data.CollectiblesDb
 import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.CollectionType
+import io.github.thisisartman.collectibles.photo.PhotoStore
+import io.github.thisisartman.collectibles.data.Photo
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -17,6 +20,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.Box
+import kotlinx.coroutines.flow.stateIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.ui.semantics.Role
@@ -88,6 +94,63 @@ class MoreViewModel @Inject constructor(
                 .groupBy { it.prefecture!! }.toSortedMap()
                 .mapValues { (_, l) -> l.groupingBy { it.type }.eachCount() }
             customNames.value = db.dao().allCollectionTypes().map { it.name }
+            customCounts.value = db.dao().allItems().mapNotNull { it.customTypeId }.groupingBy { it }.eachCount()
+        }
+    }
+
+    /** Your own categories, live, and how many items each has (Settings > Categories). */
+    val customTypes = db.dao().observeCollectionTypes()
+        .stateIn(viewModelScope, kotlinx.coroutines.flow.SharingStarted.Eagerly, emptyList())
+    val customCounts = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Int>>(emptyMap())
+
+    fun saveCategory(t: CollectionType) = viewModelScope.launch {
+        db.dao().upsertCollectionType(t.copy(name = t.name.trim()))
+        log.i("Categories", "Saved category ${t.id}")
+        refresh()
+    }
+
+    fun addCategory(name: String, color: Long, icon: String, hasCost: Boolean) = saveCategory(
+        CollectionType(
+            id = java.util.UUID.randomUUID().toString(), name = name, color = color, icon = icon, hasCost = hasCost,
+            createdAt = System.currentTimeMillis(),
+        ),
+    )
+
+    /** Removes a category only when nothing is in it. */
+    fun removeCategory(id: String) = viewModelScope.launch {
+        if (db.dao().allItems().none { it.customTypeId == id }) {
+            db.dao().deleteCollectionType(id)
+            log.i("Categories", "Removed category $id")
+        }
+        refresh()
+    }
+
+    /** Photos kept in Meguri, by collectible then by what the photo shows. */
+    data class PhotoLine(val kindLabel: Int, val count: Int, val bytes: Long)
+    data class PhotoGroup(val type: ItemType, val customName: String?, val lines: List<PhotoLine>)
+    data class PhotoSummary(val groups: List<PhotoGroup>, val kept: Int, val bytes: Long, val linked: Int, val missing: Int)
+    val photos = kotlinx.coroutines.flow.MutableStateFlow<PhotoSummary?>(null)
+
+    fun loadPhotos(context: android.content.Context) = viewModelScope.launch {
+        photos.value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val items = db.dao().allItems().associateBy { it.id }
+            val itemOfFind = db.dao().allFinds().associate { it.id to it.itemId }
+            val names = db.dao().allCollectionTypes().associate { it.id to it.name }
+            val all = db.dao().allPhotos()
+            val kept = all.filter { PhotoStore.isApp(it.contentUri) }
+            fun size(p: Photo) =
+                PhotoStore.file(context, p.contentUri).length()
+            val groups = kept.mapNotNull { p -> itemOfFind[p.acquisitionId]?.let { items[it] }?.let { it to p } }
+                .groupBy { (item, _) -> item.type to (if (item.type == ItemType.CUSTOM) item.customTypeId else null) }
+                .toList()
+                .sortedWith(compareBy({ it.first.first.ordinal }, { names[it.first.second] ?: "" }))
+                .map { (key, list) ->
+                    val lines = list.groupBy { (item, p) -> kindLabel(item.type, p.role) }
+                        .map { (label, ps) -> PhotoLine(label, ps.size, ps.sumOf { size(it.second) }) }
+                        .sortedByDescending { it.count }
+                    PhotoGroup(key.first, key.second?.let { names[it] }, lines)
+                }
+            PhotoSummary(groups, kept.size, kept.sumOf { size(it) }, all.size - kept.size, all.count { it.missing })
         }
     }
 
@@ -145,7 +208,6 @@ fun MoreScreen(
         }
     }
     var pendingRestore by remember { mutableStateOf<PendingRestore?>(null) }
-    var autoDialog by remember { mutableStateOf(false) }
     var autoTick by remember { mutableIntStateOf(0) }
     var relinkPending by remember { mutableStateOf(vm.restore.relinkPending) }
     val restoreDone = stringResource(R.string.more_restore_done)
@@ -218,31 +280,6 @@ fun MoreScreen(
             },
         )
     }
-    if (autoDialog) {
-        AlertDialog(
-            onDismissRequest = { autoDialog = false },
-            title = { Text(stringResource(R.string.more_auto)) },
-            text = {
-                val folderName = remember(autoTick) {
-                    vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
-                }
-                val last = remember(autoTick) { vm.auto.lastSuccessMs?.let { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it)) } }
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(stringResource(R.string.more_auto_body, folderName ?: "?", AutoBackup.KEEP))
-                    if (last != null) Text(stringResource(R.string.more_auto_sub_last, last), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = { autoDialog = false; vm.auto.runNow() }) { Text(stringResource(R.string.more_auto_now)) }
-            },
-            dismissButton = {
-                Row {
-                    TextButton(onClick = { autoDialog = false; pickFolder.launch(STARTING_FOLDER) }) { Text(stringResource(R.string.more_auto_change)) }
-                    TextButton(onClick = { autoDialog = false; vm.auto.disable(); autoTick++ }) { Text(stringResource(R.string.more_auto_off)) }
-                }
-            },
-        )
-    }
     // Settings as a short list of sections, each its own page (owner's pick B, #71, 2026-11-07). The dialogs and
     // file pickers above stay here, so each section's rows work exactly as before.
     var section by rememberSaveable { mutableStateOf<String?>(null) }
@@ -266,6 +303,8 @@ fun MoreScreen(
         S_INSTALLED to stringResource(R.string.settings_installed),
         S_ABOUT to stringResource(R.string.more_about),
         S_ALERT_CATS to stringResource(R.string.alerts_categories),
+        S_WEEKLY to stringResource(R.string.more_auto),
+        S_PHOTOS to stringResource(R.string.photos_kept),
     )
     var whatsNew by remember { mutableStateOf(false) }
     if (whatsNew) WhatsNewDialog(onDismiss = { whatsNew = false })
@@ -325,7 +364,55 @@ fun MoreScreen(
                 ) { section = S_CATALOGUE }
                 SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME), R.drawable.ic_settings_help) { section = S_HELP }
             }
-            S_COLLECTIONS -> myCollections()
+            S_COLLECTIONS -> {
+                // Owner, 2026-11-09: "categories you added yourself"; tap one to change it, remove it when empty
+                val types by vm.customTypes.collectAsState()
+                val counts by vm.customCounts.collectAsState()
+                var editing by remember { mutableStateOf<CollectionType?>(null) }
+                var adding by remember { mutableStateOf(false) }
+                if (types.isEmpty()) Note(stringResource(R.string.cat_empty))
+                types.forEach { t ->
+                    Row(
+                        Modifier.fillMaxWidth().clickable { editing = t }.heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+                    ) {
+                        androidx.compose.material3.Icon(
+                            androidx.compose.ui.res.painterResource(customIconRes(t.icon)), contentDescription = null,
+                            tint = androidx.compose.ui.graphics.Color(t.color),
+                        )
+                        androidx.compose.foundation.layout.Spacer(Modifier.width(16.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(t.name, style = MaterialTheme.typography.bodyLarge)
+                            val n = counts[t.id] ?: 0
+                            Text(
+                                stringResource(t.category().label()) + " · " + pluralStringResource(R.plurals.items, n, n),
+                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                        androidx.compose.material3.Icon(
+                            androidx.compose.material.icons.Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                }
+                TextButton(onClick = { adding = true }, modifier = Modifier.padding(horizontal = 8.dp).heightIn(min = 48.dp)) {
+                    Text(stringResource(R.string.collection_new))
+                }
+                editing?.let { t ->
+                    NewCollectionDialog(
+                        onDismiss = { editing = null },
+                        existingNames = types.filter { it.id != t.id }.map { it.name }.toSet(),
+                        initial = t, itemCount = counts[t.id] ?: 0,
+                        onRemove = { vm.removeCategory(t.id); editing = null },
+                    ) { name, color, icon, hasCost ->
+                        vm.saveCategory(t.copy(name = name, color = color, icon = icon, hasCost = hasCost)); editing = null
+                    }
+                }
+                if (adding) NewCollectionDialog(onDismiss = { adding = false }, existingNames = types.map { it.name }.toSet()) { name, color, icon, hasCost ->
+                    vm.addCategory(name, color, icon, hasCost); adding = false
+                }
+            }
             S_ALERTS -> AlertsSection(onCategories = { section = S_ALERT_CATS })
             S_ALERT_CATS -> AlertCategoriesSection()
             S_LOOK -> {
@@ -354,28 +441,82 @@ fun MoreScreen(
                 if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) Note(stringResource(R.string.look_language_old))
             }
             S_DATA -> {
-                MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
+                // Owner, 2026-11-09: weekly backup as a row with its own switch; its details one tap in. Photos grouped.
+                SectionTitle(stringResource(R.string.backup_section))
+                MoreRow(
+                    stringResource(R.string.more_backup),
+                    stringResource(if (vm.auto.includePhotos) R.string.backup_now_photos else R.string.backup_now_plain),
+                ) {
                     val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-                    withPhotos = false
-                    saveBackup.launch("collectibles-backup-$stamp.zip")
+                    withPhotos = vm.auto.includePhotos
+                    saveBackup.launch(if (withPhotos) "collectibles-backup-photos-$stamp.zip" else "collectibles-backup-$stamp.zip")
                 }
-                // Moving to a new phone (#66): the same backup with every photo inside, so nothing depends on the gallery
-                MoreRow(stringResource(R.string.more_backup_photos), stringResource(R.string.more_backup_photos_sub)) {
-                    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-                    withPhotos = true
-                    saveBackup.launch("collectibles-backup-photos-$stamp.zip")
-                }
-                MoreRow(stringResource(R.string.more_auto), autoSub) {
-                    if (autoOn) autoDialog = true else pickFolder.launch(STARTING_FOLDER)
+                SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
+                    if (on) pickFolder.launch(STARTING_FOLDER) else { vm.auto.disable(); autoTick++ }
                 }
                 MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
-                PhotoHintRow()
                 if (relinkPending) {
                     MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
                         askPhotos.launch(BackupRestore.photoPermission())
                     }
+                }
+                SectionTitle(stringResource(R.string.photos_section))
+                PhotoHintRow()
+                val photoSummary by vm.photos.collectAsState()
+                LaunchedEffect(Unit) { vm.loadPhotos(context) }
+                MoreRow(
+                    stringResource(R.string.photos_kept),
+                    photoSummary?.let { stringResource(R.string.photos_kept_sub, it.kept, android.text.format.Formatter.formatShortFileSize(context, it.bytes)) },
+                ) { section = S_PHOTOS }
+            }
+            S_WEEKLY -> {
+                ToggleRow(stringResource(R.string.more_auto), stringResource(R.string.weekly_explain), autoOn) { on ->
+                    if (on) pickFolder.launch(STARTING_FOLDER) else { vm.auto.disable(); autoTick++ }
+                }
+                if (autoOn) {
+                    val folderName = remember(autoTick) {
+                        vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
+                    }
+                    MoreRow(stringResource(R.string.weekly_folder), folderName ?: "?") { pickFolder.launch(STARTING_FOLDER) }
+                    var photos by remember { mutableStateOf(vm.auto.includePhotos) }
+                    ToggleRow(stringResource(R.string.weekly_photos), stringResource(R.string.weekly_photos_sub), photos) {
+                        photos = it; vm.auto.includePhotos = it; autoTick++
+                    }
+                    SectionTitle(stringResource(R.string.weekly_keep))
+                    var keep by remember { mutableStateOf(vm.auto.keep) }
+                    Choice(AutoBackup.KEEP_CHOICES.map { stringResource(R.string.weekly_keep_n, it) }, AutoBackup.KEEP_CHOICES.indexOf(keep)) {
+                        keep = AutoBackup.KEEP_CHOICES[it]; vm.auto.keep = keep
+                    }
+                    Note(stringResource(R.string.weekly_keep_sub))
+                    val startedText = stringResource(R.string.weekly_started)
+                    MoreRow(stringResource(R.string.more_auto_now), autoSub) {
+                        vm.auto.runNow()
+                        scope.launch { snackbar.showSnackbar(startedText) }
+                    }
+                }
+            }
+            S_PHOTOS -> {
+                val summary by vm.photos.collectAsState()
+                LaunchedEffect(Unit) { vm.loadPhotos(context) }
+                val sum = summary
+                if (sum == null) Note("…")
+                else {
+                    Note(stringResource(R.string.photos_kept_note, sum.kept, android.text.format.Formatter.formatShortFileSize(context, sum.bytes)))
+                    if (sum.groups.isEmpty()) Note(stringResource(R.string.photos_none))
+                    sum.groups.forEach { g ->
+                        SectionTitle(g.customName ?: stringResource(g.type.pluralLabel()))
+                        g.lines.forEach { l ->
+                            InfoRow(
+                                stringResource(l.kindLabel),
+                                pluralStringResource(R.plurals.photos_count, l.count, l.count) + " · " +
+                                    android.text.format.Formatter.formatShortFileSize(context, l.bytes),
+                            )
+                        }
+                    }
+                    if (sum.linked > 0) Note(pluralStringResource(R.plurals.photos_linked, sum.linked, sum.linked))
+                    if (sum.missing > 0) Note(pluralStringResource(R.plurals.photos_missing, sum.missing, sum.missing))
                 }
             }
             S_CATALOGUE -> {
@@ -440,6 +581,7 @@ private fun parentOf(section: String?): String? = when (section) {
     S_INSTALLED -> S_CATALOGUE
     S_ABOUT -> S_HELP
     S_ALERT_CATS -> S_ALERTS
+    S_WEEKLY, S_PHOTOS -> S_DATA
     else -> null
 }
 
@@ -472,6 +614,8 @@ private const val S_HELP = "help"
 private const val S_INSTALLED = "installed"
 private const val S_ABOUT = "about"
 private const val S_ALERT_CATS = "alert_categories"
+private const val S_WEEKLY = "weekly"
+private const val S_PHOTOS = "photos"
 
 /** One section on the Settings list: its name, what is set now, and an arrow. */
 @Composable
@@ -529,6 +673,41 @@ private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: ()
         },
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(android.R.string.cancel)) } },
     )
+}
+
+/** A whole-row switch, read with its words. */
+@Composable
+private fun ToggleRow(title: String, sub: String?, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
+        androidx.compose.material3.Switch(checked = checked, onCheckedChange = null)
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+/** Words that open a page, a thin line, then a switch (Android's own settings pattern; owner, 2026-11-09). */
+@Composable
+private fun SplitSwitchRow(title: String, sub: String, checked: Boolean, onOpen: () -> Unit, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth().heightIn(min = 64.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+        Column(Modifier.weight(1f).clickable(onClick = onOpen).padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        androidx.compose.material3.VerticalDivider(Modifier.height(32.dp), color = MaterialTheme.colorScheme.outlineVariant)
+        Box(
+            Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onChange).padding(horizontal = 16.dp, vertical = 12.dp),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) { androidx.compose.material3.Switch(checked = checked, onCheckedChange = null) }
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 /** A line that only tells (nothing to tap). */

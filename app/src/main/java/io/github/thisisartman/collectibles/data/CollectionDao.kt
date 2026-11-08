@@ -199,6 +199,9 @@ interface CollectionDao {
     @Query("DELETE FROM collection_type")
     suspend fun deleteAllCollectionTypes()
 
+    @Query("DELETE FROM collection_type WHERE id = :id")
+    suspend fun deleteCollectionType(id: String)
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCollectionTypes(types: List<CollectionType>)
 

@@ -44,6 +44,16 @@ class AutoBackup @Inject constructor(
     val lastSuccessMs: Long? get() = prefs.getLong(KEY_LAST, 0L).takeIf { it > 0 }
     val lastFailed: Boolean get() = prefs.getBoolean(KEY_FAILED, false)
 
+    /** Weekly backups carry the photos (default) or only the finds (owner, 2026-11-09: a setting on the weekly page). */
+    var includePhotos: Boolean
+        get() = prefs.getBoolean(KEY_PHOTOS, true)
+        set(v) = prefs.edit().putBoolean(KEY_PHOTOS, v).apply()
+
+    /** How many weekly backups stay in the folder. */
+    var keep: Int
+        get() = prefs.getInt(KEY_KEEP, KEEP).takeIf { it in KEEP_CHOICES } ?: KEEP
+        set(v) = prefs.edit().putInt(KEY_KEEP, v).apply()
+
     /** Calls [onChange] when the folder or the last result changes. Returns the listener, to pass to [stopListening]. */
     fun listen(onChange: () -> Unit): SharedPreferences.OnSharedPreferenceChangeListener {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ -> onChange() }
@@ -103,7 +113,7 @@ class AutoBackup @Inject constructor(
             return Outcome.Failed
         }
         try {
-            context.contentResolver.openOutputStream(file.uri, "wt")!!.use { out -> backup.writeBackupLocked(out, withPhotos = true) }
+            context.contentResolver.openOutputStream(file.uri, "wt")!!.use { out -> backup.writeBackupLocked(out, withPhotos = includePhotos) }
             val info = restore.inspect(file.uri)
             restore.discard(info)
             val previousFinds = prefs.getInt(KEY_FINDS, 0)
@@ -121,13 +131,14 @@ class AutoBackup @Inject constructor(
     }
 
     private fun prune(dir: DocumentFile) {
-        dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }.sortedByDescending { it.name }.drop(KEEP).forEach { it.delete() }
+        dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }.sortedByDescending { it.name }.drop(keep).forEach { it.delete() }
     }
 
     enum class Outcome { Saved, NoFolder, LostAccess, Failed }
 
     companion object {
         const val KEEP = 4
+        val KEEP_CHOICES = listOf(2, 4, 8)
         /** The dev build has its own names, so pruning in a shared folder never touches the real app's backups (#42). */
         fun prefixFor(dev: Boolean) = if (dev) "collectibles-dev-auto-" else "collectibles-auto-"
         fun ownFile(prefix: String) = Regex("^" + Regex.escape(prefix) + "\\d{8}-\\d{6}( \\(\\d+\\))?(\\.zip)?$")
@@ -139,6 +150,8 @@ class AutoBackup @Inject constructor(
         private const val KEY_LAST = "auto_last_ms"
         private const val KEY_FINDS = "auto_last_finds"
         private const val KEY_FAILED = "auto_failed"
+        private const val KEY_PHOTOS = "auto_photos"
+        private const val KEY_KEEP = "auto_keep"
     }
 }
 

@@ -143,7 +143,7 @@
     <string name="more_relink">写真をもう一度探す</string>
     <string name="more_relink_sub">記録と写真を照合するため、すべての写真へのアクセスが必要です。</string>
     <string name="more_auto">毎週のバックアップ</string>
-    <string name="more_auto_sub_off">オフ。タップしてフォルダを選択します。</string>
+    <string name="more_auto_sub_off">オフ。オンにするとフォルダーを選べます。</string>
     <string name="more_auto_sub_on">オン。最初のバックアップを準備中です。</string>
     <string name="more_auto_sub_last">オン。前回のバックアップ：%1$s</string>
     <string name="more_auto_sub_failed">前回のバックアップに失敗しました。タップしてフォルダを選び直してください。</string>
@@ -604,4 +604,39 @@
     <string name="alerts_distance_for">距離</string>
     <string name="alerts_station_short">今日降りる駅だけ</string>
     <string name="settings_alerts_live">%1$s · %2$s · %4$d中%3$dカテゴリー</string>
+    <string name="backup_section">バックアップ</string>
+    <string name="backup_now_photos">記録と写真をファイルに保存します</string>
+    <string name="backup_now_plain">記録をファイルに保存します（写真なし）</string>
+    <string name="photos_section">写真</string>
+    <string name="photos_kept">Meguriに保存した写真</string>
+    <string name="photos_kept_sub">%1$d枚 · %2$s</string>
+    <string name="photos_kept_note">Meguriは追加した写真のコピーを持つので、ギャラリーから消しても残ります。写真付きバックアップで新しいスマホへ移せます。%1$d枚、%2$s。</string>
+    <string name="photos_none">まだ写真がありません。記録に追加した写真がここに表示されます。</string>
+    <plurals name="photos_count">
+        <item quantity="other">%1$d枚</item>
+    </plurals>
+    <plurals name="photos_linked">
+        <item quantity="other">ほかに%1$d枚はギャラリーへのリンクです（コピーを持つ前の写真）。</item>
+    </plurals>
+    <plurals name="photos_missing">
+        <item quantity="other">%1$d枚の写真が見つかりません。</item>
+    </plurals>
+    <string name="weekly_explain">週に一度、選んだフォルダーにバックアップを保存し、最新のいくつかを残します。</string>
+    <string name="weekly_folder">フォルダー</string>
+    <string name="weekly_photos">写真を含める</string>
+    <string name="weekly_photos_sub">ファイルは大きくなりますが、新しいスマホで写真も戻ります</string>
+    <string name="weekly_keep">残す数</string>
+    <string name="weekly_keep_n">最新%1$d個</string>
+    <string name="weekly_keep_sub">古いバックアップは削除します。ただし最新の記録数が前回より少ないときは残します。</string>
+    <string name="weekly_started">バックアップ中…</string>
+    <string name="cat_edit_title">カテゴリーを編集</string>
+    <string name="cat_remove">削除</string>
+    <plurals name="cat_remove_blocked">
+        <item quantity="other">%1$d件のアイテムがあります。カテゴリーを削除するには、先に移動か削除をしてください。</item>
+    </plurals>
+    <string name="cat_empty">自分で追加したカテゴリーがここに表示されます。下のボタンか、＋の「追加」から作れます。</string>
+    <string name="alerts_target_own">このカテゴリーだけの距離です。ほかは共通の距離のままです。</string>
+    <string name="alerts_target_same">共通の距離を使っています。スライダーを動かすと、このカテゴリーだけの距離になります。</string>
+    <string name="alerts_use_main">共通の距離に戻す</string>
+    <string name="cat_save">保存</string>
 </resources>
