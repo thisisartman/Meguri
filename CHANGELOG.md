@@ -6,6 +6,7 @@
 - Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name. (In progress.)
 - Scan a card: trimmed to the top card when the scanner takes in the cards under it or the box (Tokyo's lighter frames too), and turned so its code sits top right, as on every card. Checked on 11 of the owner's 27 card photos, the rest running.
 - Your own kinds show their own name at the top of an item's page, not "My collection".
+- Not released yet: these go out as 0.4.0 after the owner's testing of beta.9.
 - Scan a card: a card scanned upside down (or sideways) is turned the right way up, by finding which way its code reads.
 - Photo dialog: what "Remove photo" does is now a tooltip on the button (long press), not a line of text.
 - Photos: Meguri's own copy is now 3000 px (was 1600), so full screen and zoom stay sharp. Photos added before keep their size.
