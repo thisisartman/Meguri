@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-11-08: Poco updated to beta.8
+- The Poco real app went from beta.1 to beta.8 after a backup (21 finds). All 21 finds were kept, the catalogue grew to 754 items, no crash.
+
 ## 2026-11-08: 0.3.0-beta.9 (versionCode 11), from the owner's S23 feedback on beta.8
 - **Card lists:** a grid like everywhere else, with short names ("Saitama-ken A001"); only two filters, Have and To get, both on by default (no All, no series).
 - **Display picture by itself:** the first photo of an item's main kind becomes its display picture when it has none: a manhole card's cover, a station's Ekitag screenshot, a goshuin itself. Also when a photo's kind is changed to that.
