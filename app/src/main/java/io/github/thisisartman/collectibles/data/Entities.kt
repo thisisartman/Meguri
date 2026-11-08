@@ -42,6 +42,16 @@ object PhotoKind {
     const val OTHER = "other"
 }
 
+/** Which photo kind becomes an item's display picture on its own when it has none (owner, 2026-11-08). */
+object AutoCover {
+    fun makesCover(type: ItemType, role: String): Boolean = when (type) {
+        ItemType.MANHOLE_CARD -> role == PhotoKind.MANHOLE
+        ItemType.EKI_STAMP, ItemType.EKITAG -> role == PhotoKind.EKITAG
+        ItemType.GOSHUIN -> role == PhotoKind.STAMP
+        else -> false
+    }
+}
+
 enum class Origin { SEED, CSV_IMPORT, USER }
 
 enum class Via { MANUAL, NOTIFICATION, SUGGESTION, BULK }

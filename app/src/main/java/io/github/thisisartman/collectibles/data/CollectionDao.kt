@@ -232,6 +232,9 @@ interface CollectionDao {
     @Query("UPDATE item SET none_here_at = :at, updated_at = :now WHERE id = :id")
     suspend fun setNoneHere(id: String, at: Long?, now: Long)
 
+    @Query("SELECT i.* FROM item i JOIN acquisition a ON a.item_id = i.id WHERE a.id = :findId")
+    suspend fun itemOfFind(findId: String): Item?
+
     @Query("UPDATE item SET cover_photo_id = :photoId, updated_at = :now WHERE id = :id")
     suspend fun setCover(id: String, photoId: String?, now: Long)
 }

@@ -268,6 +268,8 @@ class CollectionRepository @Inject constructor(
     suspend fun setPhotoKind(photoId: String, kind: String) {
         dao.setPhotoRole(photoId, kind)
         log.i("Photo", "Kind of $photoId is now $kind")
+        // Marking a photo as the item's main kind can make it the display picture too
+        dao.allPhotos().firstOrNull { it.id == photoId }?.let { autoCover(photoId, it.acquisitionId) }
     }
 
     suspend fun removePhoto(photoId: String) {
@@ -294,6 +296,21 @@ class CollectionRepository @Inject constructor(
             ),
         )
         log.i("Photo", "Attached ${photo.displayName} to find $findId")
+        autoCover(id, findId)
+    }
+
+    /**
+     * The first photo of an item's main kind becomes its display picture when it has none (owner, 2026-11-08):
+     * a manhole card's cover, a station's Ekitag screenshot, a goshuin itself.
+     */
+    private suspend fun autoCover(photoId: String, findId: String) {
+        val item = dao.itemOfFind(findId) ?: return
+        if (item.coverPhotoId != null) return
+        val role = dao.allPhotos().firstOrNull { it.id == photoId }?.role ?: return
+        if (AutoCover.makesCover(item.type, role)) {
+            dao.setCover(item.id, photoId, now())
+            log.i("Photo", "Photo $photoId is now the display picture of ${item.id}")
+        }
     }
 }
 
