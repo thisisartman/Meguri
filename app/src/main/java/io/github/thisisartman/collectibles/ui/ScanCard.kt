@@ -262,7 +262,16 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         val row = s.row
         AlertDialog(
             onDismissRequest = { result = null },
-            title = { Text(if (row != null) row.item.displayName(ja) else stringResource(if (s.cover) R.string.scan_cover_title else R.string.scan_no_match)) },
+            title = {
+                if (row != null) {
+                    // The card's design as the title, the place and code under it (owner, 2026-11-09)
+                    val (t, sub) = row.item.cardTitle(ja)
+                    Column {
+                        Text(t)
+                        sub?.let { Text(it, style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
+                } else Text(stringResource(if (s.cover) R.string.scan_cover_title else R.string.scan_no_match))
+            },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Full screen, like on an item page (owner, 2026-11-09: the button did nothing here)

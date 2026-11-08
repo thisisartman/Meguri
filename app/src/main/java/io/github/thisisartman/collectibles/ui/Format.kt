@@ -28,6 +28,29 @@ fun Item.shortName(japanese: Boolean): String =
     if (type == ItemType.MANHOLE_CARD) displayName(japanese).replace(Regex("\\s*[(（][^)）]*[)）]\\s*"), " ").trim()
     else tileLabel(japanese)
 
+/**
+ * A manhole card's name as a title and a subtitle (owner, 2026-11-09: "Tsubame · 20 years as one city" in one line
+ * was hard to read). The design is the title ("20 years as one city"), the place and code the subtitle
+ * ("Tsubame · 15-213-E001"). A card with no design name ("Niigata-shi B001") keeps its name, with the code under it.
+ * Pure, for tests.
+ */
+object CardName {
+    fun split(nameJa: String, nameRomaji: String?, municipality: String?, code: String?, japanese: Boolean): Pair<String, String?> {
+        val (place, design) = if (japanese || nameRomaji == null) {
+            val m = municipality?.takeIf { it.isNotBlank() && nameJa.startsWith("$it ") }
+            if (m != null) m to nameJa.removePrefix("$m ").trim() else nameJa to null
+        } else {
+            val i = nameRomaji.indexOf(" · ")
+            if (i > 0) nameRomaji.substring(0, i) to nameRomaji.substring(i + 3).trim() else nameRomaji to null
+        }
+        if (design.isNullOrBlank()) return place to code?.takeIf { it !in place }
+        return design to listOfNotNull(place, code).joinToString(" · ")
+    }
+}
+
+fun Item.cardTitle(japanese: Boolean): Pair<String, String?> =
+    if (type == ItemType.MANHOLE_CARD) CardName.split(nameJa, nameRomaji, municipality, code, japanese) else displayName(japanese) to null
+
 /** The other script, shown on the item page in English mode only. */
 fun Item.secondaryName(japanese: Boolean): String? = if (japanese) null else nameJa.takeIf { nameRomaji != null && it != nameRomaji }
 

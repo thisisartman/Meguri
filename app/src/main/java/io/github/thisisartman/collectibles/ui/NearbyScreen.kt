@@ -130,7 +130,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         if (focusSearch > 0) { kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
     }
 
-    val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
+    val custom = LocalCustomTypes.current
+    val inTab = remember(rows, tab, custom) { rows.filter { tab.has(it.item, custom) } }
     val kinds = remember(inTab) { inTab.map { it.item.type }.distinct().sortedBy { it.ordinal } }
     // Search results by type (owner, 2026-11-07): All, or one type, as chips under the search bar
     var searchKind by rememberSaveable { mutableStateOf<ItemType?>(null) }
@@ -256,10 +257,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 // While searching, the tabs give way to the number found, on the row with sort and size (below)
                 if (!searching) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    // A third tab, Mine, once you have items in your own collections (#64)
-                    val tabs = listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { it.item.type == ItemType.CUSTOM } })
+                    // Your own kinds sit under Stamps or Cards; a third tab, Other, only for kinds that are neither
+                    val tabs = listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { r -> MapSection.MINE.has(r.item, custom) } })
                     tabs.forEachIndexed { i, t ->
-                        val all = rows.filter { it.item.type in t.types }
+                        val all = rows.filter { t.has(it.item, custom) }
                         SegmentedButton(
                             selected = tab == t,
                             onClick = { tab = t; kind = null },

@@ -6,6 +6,8 @@
 - (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its kind. A kind you type that Meguri doesn't have becomes a kind of its own, with its own place in My book.
 - Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name on two lines (your language first), in M PLUS Rounded 1c.
 - Testing on the Poco: card photos from its own camera app against Meguri's scanner, to see which reads and crops better on a low-end phone.
+- Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").
+- Nearby: your own kinds sit under Stamps or Cards; the third tab, Other, is only for kinds that are neither.
 - Scan result: the full screen button works (it did nothing).
 - Taps vibrate on more phones (the Poco gave none), and Collect has a firmer buzz of its own.
 - Scan a card: when the code could be one of two cards (an L read as an I), it asks "Or is it ...?". A card whose code can't be read goes to Pick by hand, never to the manhole cover question.

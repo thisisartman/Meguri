@@ -239,7 +239,10 @@ private fun Actions(item: Item, meters: Double?) {
 
 @Composable
 private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyList()) {
-    Text(item.displayName(ja), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    // A manhole card: its design as the title, the place and code under it
+    val (title, subtitle) = item.cardTitle(ja)
+    Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+    subtitle?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
     item.secondaryName(ja)?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     // English mode: prefecture in romaji; the town has no romaji in the catalogue and is already in the name, so it is left out
     val sub = listOfNotNull(

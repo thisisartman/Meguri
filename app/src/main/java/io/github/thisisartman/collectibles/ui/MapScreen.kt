@@ -55,10 +55,25 @@ enum class MapSection(val types: Set<ItemType>) {
     ALL(ItemType.entries.toSet()),
     STAMPS(setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)),
     CARDS(setOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD)),
-    // Your own collections (#64); the tab shows only when you have any
+    // Your own kinds that are neither a card nor a stamp; the tab, "Other", shows only when you have any
     MINE(setOf(ItemType.CUSTOM)),
     // Everything you have collected, from the profile page (#72)
     COLLECTED(ItemType.entries.toSet()),
+    ;
+
+    /**
+     * Whether [item] belongs here. Your own kinds go where their category says (owner, 2026-11-09: "what is Mine?"):
+     * a kind of card under Cards, a kind of stamp under Stamps, anything else under Other.
+     */
+    fun has(item: io.github.thisisartman.collectibles.data.Item, custom: Map<String, io.github.thisisartman.collectibles.data.CollectionType>): Boolean {
+        if (item.type != ItemType.CUSTOM || this == ALL || this == COLLECTED) return item.type in types
+        val cat = item.customTypeId?.let { custom[it] }?.category() ?: Category.OTHER
+        return when (this) {
+            STAMPS -> cat == Category.STAMP
+            CARDS -> cat == Category.CARD
+            else -> cat == Category.OTHER
+        }
+    }
 }
 
 fun ItemRow.toPin(): MapPin? {
@@ -74,7 +89,8 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
     val context = LocalContext.current
     val rows by vm.rows.collectAsStateWithLifecycle()
     val here by vm.here.collectAsStateWithLifecycle()
-    val shown = remember(rows, section) { rows.filter { it.item.type in section.types && (section != MapSection.COLLECTED || it.collected) } }
+    val custom = LocalCustomTypes.current
+    val shown = remember(rows, section, custom) { rows.filter { section.has(it.item, custom) && (section != MapSection.COLLECTED || it.collected) } }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
     val tick = rememberTick()
     var picked by rememberSaveable { mutableStateOf<String?>(null) }

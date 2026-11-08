@@ -293,7 +293,7 @@
     <string name="find_cost">支払った金額</string>
     <string name="a11y_less">1つ減らす</string>
     <string name="a11y_more">1つ増やす</string>
-    <string name="nearby_tab_mine">マイ</string>
+    <string name="nearby_tab_mine">その他</string>
     <string name="check_title">コレクションチェック</string>
     <string name="check_hint">持っているものにチェックを付けます。左右にスワイプすると次のグループです。</string>
     <string name="check_nothing">先にカタログを読み込むと、持っているものにチェックを付けられます。</string>

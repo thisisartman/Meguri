@@ -293,7 +293,7 @@
     <string name="find_cost">What you paid</string>
     <string name="a11y_less">One fewer</string>
     <string name="a11y_more">One more</string>
-    <string name="nearby_tab_mine">Mine</string>
+    <string name="nearby_tab_mine">Other</string>
     <string name="check_title">Collection check</string>
     <string name="check_hint">Tick what you already have. Swipe left or right for the next group.</string>
     <string name="check_nothing">Load a catalogue first; then you can tick what you already have.</string>
