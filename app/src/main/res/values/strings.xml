@@ -601,4 +601,17 @@
     <string name="help_whats_new">What\'s new</string>
     <string name="help_logs_sub">What the app recorded, to send when something goes wrong</string>
     <string name="help_about_sub">Version, licences and credits</string>
+    <string name="alerts_when">When to alert</string>
+    <string name="alerts_mode_off">Off</string>
+    <string name="alerts_mode_trip">Travelling</string>
+    <string name="alerts_mode_always">Always</string>
+    <string name="alerts_mode_sub">Travelling: until midnight, or during a trip (Proximity mode). Always: also when Meguri is closed.</string>
+    <string name="alerts_how_close">How close</string>
+    <string name="alerts_every">For every category</string>
+    <string name="alerts_categories">Categories</string>
+    <string name="alerts_categories_sub">%1$d of %2$d</string>
+    <string name="alerts_same">Same (%1$s)</string>
+    <string name="alerts_distance_for">Distance</string>
+    <string name="alerts_station_short">Only where you get off today</string>
+    <string name="settings_alerts_live">%1$s · %2$s · %3$d of %4$d categories</string>
 </resources>

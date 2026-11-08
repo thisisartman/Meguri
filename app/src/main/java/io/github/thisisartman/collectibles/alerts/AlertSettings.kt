@@ -42,8 +42,9 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getInt(KEY_GEO_ERROR, 0)
         set(v) = prefs.edit().putInt(KEY_GEO_ERROR, v).apply()
 
+    /** The one distance every category uses unless it has its own (design C, 2026-11-09). */
     var radiusM: Int
-        get() = prefs.getInt(KEY_RADIUS, DEFAULT_RADIUS_M)
+        get() = snap(prefs.getInt(KEY_RADIUS, DEFAULT_RADIUS_M))
         set(v) = prefs.edit().putInt(KEY_RADIUS, v).apply()
 
     /**
@@ -62,10 +63,17 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getBoolean(KEY_QUIET, true)
         set(v) = prefs.edit().putBoolean(KEY_QUIET, v).apply()
 
-    /** The alert distance for one kind (#73): what you chose for it, else its default. */
-    fun radiusFor(type: ItemType): Int = prefs.getInt(KEY_RADIUS_PREFIX + type.name, DEFAULT_RADII[type] ?: radiusM)
+    /** A category's own distance, or null when it uses the main one ("Same"). */
+    fun ownRadius(type: ItemType): Int? =
+        if (prefs.contains(KEY_RADIUS_PREFIX + type.name)) snap(prefs.getInt(KEY_RADIUS_PREFIX + type.name, DEFAULT_RADIUS_M)) else null
 
-    fun setRadiusFor(type: ItemType, meters: Int) = prefs.edit().putInt(KEY_RADIUS_PREFIX + type.name, meters).apply()
+    /** The alert distance for one category: its own, else the main one. */
+    fun radiusFor(type: ItemType): Int = ownRadius(type) ?: radiusM
+
+    /** null goes back to the main distance. */
+    fun setRadiusFor(type: ItemType, meters: Int?) = prefs.edit().apply {
+        if (meters == null) remove(KEY_RADIUS_PREFIX + type.name) else putInt(KEY_RADIUS_PREFIX + type.name, meters)
+    }.apply()
 
     fun snapshot() = AlertPrefs(radiusM, types, quietOn, QUIET_FROM, QUIET_TO, COOLDOWN_MS, ItemType.entries.associateWith { radiusFor(it) })
 
@@ -89,14 +97,10 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
     fun stopListening(l: SharedPreferences.OnSharedPreferenceChangeListener) = prefs.unregisterOnSharedPreferenceChangeListener(l)
 
     companion object {
-        const val DEFAULT_RADIUS_M = 300
-        val RADIUS_CHOICES = listOf(200, 300, 500, 1000)
-
-        /** Per kind (#73): stations are close together on a line, dams sit far out of town. */
-        val DEFAULT_RADII = mapOf(
-            ItemType.EKI_STAMP to 200, ItemType.EKITAG to 200, ItemType.MANHOLE_CARD to 500,
-            ItemType.GOSHUIN to 300, ItemType.DAM_CARD to 1000, ItemType.MUSEUM_STAMP to 300, ItemType.ROADSIDE_STATION to 500,
-        )
+        const val DEFAULT_RADIUS_M = 500
+        /** Three choices (owner, 2026-11-09). A distance saved before (300 m) reads as the nearest of them. */
+        val RADIUS_CHOICES = listOf(200, 500, 1000)
+        fun snap(m: Int): Int = RADIUS_CHOICES.minBy { kotlin.math.abs(it - m) }
         private const val KEY_RADIUS_PREFIX = "radius_"
         val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
         val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2

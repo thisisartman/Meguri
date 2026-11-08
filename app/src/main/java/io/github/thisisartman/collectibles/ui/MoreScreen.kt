@@ -265,6 +265,7 @@ fun MoreScreen(
         S_HELP to stringResource(R.string.settings_help),
         S_INSTALLED to stringResource(R.string.settings_installed),
         S_ABOUT to stringResource(R.string.more_about),
+        S_ALERT_CATS to stringResource(R.string.alerts_categories),
     )
     var whatsNew by remember { mutableStateOf(false) }
     if (whatsNew) WhatsNewDialog(onDismiss = { whatsNew = false })
@@ -299,7 +300,18 @@ fun MoreScreen(
                     ).joinToString(" · "),
                     R.drawable.ic_settings_look,
                 ) { section = S_LOOK }
-                SectionLine(titles.getValue(S_ALERTS), stringResource(R.string.settings_alerts_sub), R.drawable.ic_settings_alerts) { section = S_ALERTS }
+                val alerts: AlertsViewModel = hiltViewModel()
+                val a = alerts.settings
+                SectionLine(
+                    titles.getValue(S_ALERTS),
+                    stringResource(
+                        R.string.settings_alerts_live,
+                        stringResource(if (a.geofenceOn) R.string.alerts_mode_always else if (a.tripOn) R.string.alerts_mode_trip else R.string.alerts_mode_off),
+                        radiusText(a.radiusM),
+                        ALERT_TYPES.count { it.first in a.types }, ALERT_TYPES.size,
+                    ),
+                    R.drawable.ic_settings_alerts,
+                ) { section = S_ALERTS }
                 SectionLine(titles.getValue(S_DATA), autoSub, R.drawable.ic_settings_backup) { section = S_DATA }
                 SectionLine(
                     titles.getValue(S_COLLECTIONS),
@@ -314,7 +326,8 @@ fun MoreScreen(
                 SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME), R.drawable.ic_settings_help) { section = S_HELP }
             }
             S_COLLECTIONS -> myCollections()
-            S_ALERTS -> AlertsSection()
+            S_ALERTS -> AlertsSection(onCategories = { section = S_ALERT_CATS })
+            S_ALERT_CATS -> AlertCategoriesSection()
             S_LOOK -> {
                 // Theme (owner, 2026-11-09): the phone's dark mode, or always light, or always dark; the map follows
                 SectionTitle(stringResource(R.string.look_theme))
@@ -358,6 +371,7 @@ fun MoreScreen(
                 MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
+                PhotoHintRow()
                 if (relinkPending) {
                     MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
                         askPhotos.launch(BackupRestore.photoPermission())
@@ -425,6 +439,7 @@ fun MoreScreen(
 private fun parentOf(section: String?): String? = when (section) {
     S_INSTALLED -> S_CATALOGUE
     S_ABOUT -> S_HELP
+    S_ALERT_CATS -> S_ALERTS
     else -> null
 }
 
@@ -456,6 +471,7 @@ private const val S_CATALOGUE = "catalogue"
 private const val S_HELP = "help"
 private const val S_INSTALLED = "installed"
 private const val S_ABOUT = "about"
+private const val S_ALERT_CATS = "alert_categories"
 
 /** One section on the Settings list: its name, what is set now, and an arrow. */
 @Composable

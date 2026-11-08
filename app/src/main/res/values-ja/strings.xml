@@ -591,4 +591,17 @@
     <string name="help_whats_new">新機能</string>
     <string name="help_logs_sub">アプリの記録。不具合のときに送ってください</string>
     <string name="help_about_sub">バージョン、ライセンス、クレジット</string>
+    <string name="alerts_when">通知するとき</string>
+    <string name="alerts_mode_off">オフ</string>
+    <string name="alerts_mode_trip">移動中</string>
+    <string name="alerts_mode_always">常に</string>
+    <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間（近接モード）。常に：Meguriを閉じていても。</string>
+    <string name="alerts_how_close">距離</string>
+    <string name="alerts_every">すべてのカテゴリー</string>
+    <string name="alerts_categories">カテゴリー</string>
+    <string name="alerts_categories_sub">%2$d中%1$d</string>
+    <string name="alerts_same">同じ（%1$s）</string>
+    <string name="alerts_distance_for">距離</string>
+    <string name="alerts_station_short">今日降りる駅だけ</string>
+    <string name="settings_alerts_live">%1$s · %2$s · %4$d中%3$dカテゴリー</string>
 </resources>

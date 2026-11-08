@@ -11,6 +11,8 @@
 - Notebook stamps: Scan a notebook page and Meguri boxes each stamp (move, resize, remove or add boxes), cleans it (Show original to switch), reads the station name printed on it and picks the station when sure, suggests it when fairly sure, or lets you type to find it. Saved as had before Meguri, never as collected today.
 - Search is forgiving everywhere: any part of a card code ("A001"), Japanese full-width typing, hiragana or katakana, names in either language, the town; best match first, then nearest. Type code lists matching cards as you type.
 - Settings: Theme (Phone, Light or Dark; the map and the status bar follow it), Colours (Meguri or Wallpaper) and Language as one-tap choices. On Android 12 and older, Language opens the phone's language settings.
+- Alerts, simpler (owner's pick C): When to alert is Off, Travelling or Always; How close is one slider for every category (200 m, 500 m, 1 km); Categories, one tap in, switches each on or off and can give it its own distance ("Same" uses the main one). Quiet at night and Keep alerts working stay. A distance saved before (300 m) reads as 200 m.
+- Suggest new photos moved from Alerts to Backup and data.
 - Settings list: an icon for each section, and what is set now under it (theme, colours, language; your categories; the prefectures loaded). Order: Appearance, Alerts, Backup, Categories, Catalogue, Help.
 - Catalogue: the prefectures sit one tap in, under Installed catalogues, each with how many of each category it has, next to Load catalogue (CSV). Card pictures stay on the Catalogue page.
 - Help and about: What's new opens from here; About opens a page with the version, licences and credits (the About line did nothing before).

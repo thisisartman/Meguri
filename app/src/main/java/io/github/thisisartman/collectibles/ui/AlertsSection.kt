@@ -10,8 +10,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +23,18 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.material3.Slider
+import androidx.compose.foundation.systemGestureExclusion
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -78,10 +88,9 @@ fun startTrip(context: Context, vm: AlertsViewModel): Boolean {
     return true
 }
 
-/** "Alerts" in More (M4): Trip mode, background alerts, distance, types, quiet hours, phone setup. */
-@OptIn(ExperimentalLayoutApi::class)
+/** Alerts in Settings: when (Off, Travelling, Always), how close, which categories, quiet hours, phone setup. */
 @Composable
-fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
+fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel()) {
     val context = LocalContext.current
     val s = vm.settings
     var tick by remember { mutableIntStateOf(0) }
@@ -124,54 +133,51 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     val geoError = remember(tick) { s.geofenceError }
     val until = remember(tick) { SimpleDateFormat("HH:mm", Locale.US).format(Date(s.tripUntilMs)) }
 
-    SectionTitle(stringResource(R.string.alerts_title))
-
-    SwitchRow(
-        title = stringResource(R.string.trip_title),
-        sub = when {
-            tripRefused && !vm.location.hasPermission() -> stringResource(R.string.trip_needs_location)
-            tripOn -> stringResource(R.string.trip_sub_on, until)
-            else -> stringResource(R.string.trip_sub_off)
-        },
-        checked = tripOn,
-        onChange = { on ->
-            if (on) tripPerms.launch(foregroundAlertPermissions()) else TripModeService.stop(context)
-            tick++
-        },
-    )
-
-    SwitchRow(
-        title = stringResource(R.string.bg_title),
-        sub = when {
-            !playOk -> stringResource(R.string.bg_sub_no_play)
-            geoOn && !geoReady -> stringResource(R.string.bg_sub_needs)
-            geoOn && geoError == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> stringResource(R.string.bg_sub_accuracy)
-            geoOn && geoError != 0 -> stringResource(R.string.bg_sub_failed)
-            geoOn -> stringResource(R.string.bg_sub_on)
-            else -> stringResource(R.string.bg_sub_off)
-        },
-        checked = geoOn && geoReady && geoError == 0,
-        enabled = playOk,
-        onChange = { on ->
-            if (on && geoOn && geoReady && geoError != 0) {
-                // Tapping a row that says what to fix opens the place to fix it, then tries again on return
-                if (geoError == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE) openLocationSettings(context)
-                vm.geofences.refreshInBackground()
-            } else if (!on) {
-                s.geofenceOn = false
-                vm.geofences.refreshInBackground()
-            } else if (!vm.location.hasPermission()) {
-                bgFirstPerms.launch(foregroundAlertPermissions())
-            } else if (!vm.geofences.hasBackgroundLocation()) {
-                askBackground = true
-            } else {
-                s.geofenceOn = true
-                vm.geofences.refreshInBackground()
+    // Design C (owner, 2026-11-09): one mode, one distance, categories one tap in
+    val mode = when { geoOn -> 2; tripOn -> 1; else -> 0 }
+    SectionTitle(stringResource(R.string.alerts_when))
+    Choice3(
+        listOf(stringResource(R.string.alerts_mode_off), stringResource(R.string.alerts_mode_trip), stringResource(R.string.alerts_mode_always)),
+        mode,
+    ) { pick ->
+        when (pick) {
+            0 -> {
+                TripModeService.stop(context)
+                s.geofenceOn = false; vm.geofences.refreshInBackground()
             }
-            tick++
-        },
+            1 -> {
+                if (geoOn) { s.geofenceOn = false; vm.geofences.refreshInBackground() }
+                tripPerms.launch(foregroundAlertPermissions())
+            }
+            2 -> {
+                TripModeService.stop(context)
+                when {
+                    !playOk -> {}
+                    !vm.location.hasPermission() -> bgFirstPerms.launch(foregroundAlertPermissions())
+                    !vm.geofences.hasBackgroundLocation() -> askBackground = true
+                    else -> { s.geofenceOn = true; vm.geofences.refreshInBackground() }
+                }
+            }
+        }
+        tick++
+    }
+    // What the chosen mode is doing now, or what to fix (tap opens the place to fix it)
+    val status: Pair<String, (() -> Unit)?> = when {
+        tripRefused && !vm.location.hasPermission() -> stringResource(R.string.trip_needs_location) to { tripPerms.launch(foregroundAlertPermissions()) }
+        mode == 2 && !geoReady -> stringResource(R.string.bg_sub_needs) to { askBackground = true }
+        mode == 2 && geoError == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> stringResource(R.string.bg_sub_accuracy) to { openLocationSettings(context); vm.geofences.refreshInBackground() }
+        mode == 2 && geoError != 0 -> stringResource(R.string.bg_sub_failed) to { vm.geofences.refreshInBackground(); tick++ }
+        mode == 2 -> stringResource(R.string.bg_sub_on) to null
+        mode == 1 -> stringResource(R.string.trip_sub_on, until) to null
+        !playOk -> stringResource(R.string.bg_sub_no_play) to null
+        else -> stringResource(R.string.alerts_mode_sub) to null
+    }
+    Text(
+        status.first,
+        Modifier.fillMaxWidth().let { m -> status.second?.let { m.clickable(onClick = it) } ?: m }.padding(horizontal = 16.dp, vertical = 8.dp),
+        style = MaterialTheme.typography.bodySmall,
+        color = if (status.second != null) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
     )
-
     if ((tripOn || geoOn) && !notificationsOk) {
         Text(
             stringResource(R.string.notif_off),
@@ -180,70 +186,23 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
             color = MaterialTheme.colorScheme.error,
         )
     }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
-    // A distance per kind (#73): stations close together on a line want less than a dam out of town
-    Text(stringResource(R.string.alert_distance), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.bodyLarge)
-    listOf(ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
-        ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural,
-            ItemType.ROADSIDE_STATION to R.string.type_roadside_plural)
-        .forEach { (t, label) ->
-            val radius = remember(tick) { s.radiusFor(t) }
-            Row(Modifier.padding(start = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                TypeDot(t)
-                Spacer(Modifier.width(6.dp))
-                Text(stringResource(label), style = MaterialTheme.typography.bodyMedium)
-            }
-            FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AlertSettings.RADIUS_CHOICES.forEach { r ->
-                    InkFilterChip(
-                        selected = radius == r,
-                        onClick = { s.setRadiusFor(t, r); vm.geofences.refreshInBackground(); tick++ },
-                        label = { Text(distanceText(r.toDouble()).orEmpty()) },
-                        modifier = Modifier.heightIn(min = 48.dp),
-                    )
-                }
-            }
-        }
+    val main = remember(tick) { s.radiusM }
+    // A slider with three stops (owner, 2026-11-09: "maybe a slider would help")
+    DistanceSlider(main) { r -> s.radiusM = r; vm.geofences.refreshInBackground(); tick++ }
 
-    // Owner's pick B (#73): stations alert only where you plan to get off
-    Text(
-        stringResource(R.string.alert_station_rule),
-        Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-    )
-    Text(stringResource(R.string.alert_for), Modifier.padding(start = 16.dp, top = 8.dp), style = MaterialTheme.typography.bodyLarge)
     val types = remember(tick) { s.types }
-    FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin, ItemType.EKI_STAMP to R.string.type_eki_plural,
-            ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural,
-            ItemType.ROADSIDE_STATION to R.string.type_roadside_plural)
-            .forEach { (t, label) ->
-                InkFilterChip(
-                    selected = t in types,
-                    onClick = { s.types = if (t in types) types - t else types + t; vm.geofences.refreshInBackground(); tick++ },
-                    label = { Text(stringResource(label)) },
-                    leadingIcon = { TypeDot(t) },
-                )
-            }
-    }
+    val on = ALERT_TYPES.filter { it.first in types }
+    MoreLink(
+        stringResource(R.string.alerts_categories),
+        stringResource(R.string.alerts_categories_sub, on.size, ALERT_TYPES.size) +
+            if (on.isEmpty()) "" else " · " + on.joinToString(", ") { context.getString(it.second) },
+        onClick = onCategories,
+    )
 
     val quiet = remember(tick) { s.quietOn }
     SwitchRow(stringResource(R.string.quiet_title), stringResource(R.string.quiet_sub), quiet, onChange = { s.quietOn = it; tick++ })
-
-    // New-photo hint (M7, owner 2026-11-08: yes, with a way to turn it off)
-    val photoPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        val ok = io.github.thisisartman.collectibles.data.SharedPhotoReader.placePermissions().all { granted[it] == true || context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
-        s.photoHintsOn = ok
-        if (ok) { s.photoHintsSeenSec = System.currentTimeMillis() / 1000; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context) }
-        tick++
-    }
-    val photoHints = remember(tick) { s.photoHintsOn }
-    SwitchRow(stringResource(R.string.photo_hint_setting), stringResource(R.string.photo_hint_setting_sub), photoHints, onChange = { on ->
-        if (on) photoPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
-        else { s.photoHintsOn = false; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context) }
-        tick++
-    })
 
     MoreLink(
         stringResource(R.string.setup_title),
@@ -263,6 +222,155 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
             },
             dismissButton = { TextButton(onClick = { askBackground = false }) { Text(stringResource(R.string.cancel)) } },
         )
+    }
+}
+
+/** "Suggest new photos" (M7). Lives under Backup and data with the other photo settings (owner, 2026-11-09). */
+@Composable
+fun PhotoHintRow(vm: AlertsViewModel = hiltViewModel()) {
+    val context = LocalContext.current
+    val s = vm.settings
+    var tick by remember { mutableIntStateOf(0) }
+    val photoPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        val ok = io.github.thisisartman.collectibles.data.SharedPhotoReader.placePermissions().all { granted[it] == true || context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+        s.photoHintsOn = ok
+        if (ok) { s.photoHintsSeenSec = System.currentTimeMillis() / 1000; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context) }
+        tick++
+    }
+    val photoHints = remember(tick) { s.photoHintsOn }
+    SwitchRow(stringResource(R.string.photo_hint_setting), stringResource(R.string.photo_hint_setting_sub), photoHints, onChange = { on ->
+        if (on) photoPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
+        else { s.photoHintsOn = false; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context) }
+        tick++
+    })
+}
+
+/** The categories that can alert, in the order they show. */
+val ALERT_TYPES = listOf(
+    ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
+    ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural, ItemType.ROADSIDE_STATION to R.string.type_roadside_plural,
+)
+
+/** Inside Alerts > Categories: each one on or off, and "Same" (the main distance) or its own. */
+@Composable
+fun AlertCategoriesSection(vm: AlertsViewModel = hiltViewModel()) {
+    val s = vm.settings
+    var tick by remember { mutableIntStateOf(0) }
+    val types = remember(tick) { s.types }
+    val main = remember(tick) { s.radiusM }
+    ALERT_TYPES.forEach { (t, label) ->
+        val alerts = t in types
+        Row(
+            Modifier.fillMaxWidth()
+                .toggleable(value = alerts, role = Role.Switch, onValueChange = {
+                    s.types = if (alerts) types - t else types + t; vm.geofences.refreshInBackground(); tick++
+                })
+                .heightIn(min = 56.dp).padding(start = 16.dp, end = 16.dp, top = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TypeDot(t)
+            Spacer(Modifier.width(10.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
+                if (t == ItemType.EKI_STAMP) Text(stringResource(R.string.alerts_station_short), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Switch(checked = alerts, onCheckedChange = null)
+        }
+        if (alerts) {
+            val own = remember(tick) { s.ownRadius(t) }
+            DistanceRow(stringResource(R.string.alerts_distance_for), null, own, sameAs = main, indent = true) { r ->
+                s.setRadiusFor(t, r); vm.geofences.refreshInBackground(); tick++
+            }
+        } else HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    }
+    Text(
+        stringResource(R.string.alert_station_rule),
+        Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+}
+
+/**
+ * A distance chosen from a short menu: 200 m, 500 m, 1 km. With [sameAs], the first choice is "Same" (null),
+ * meaning the main distance.
+ */
+@Composable
+private fun DistanceRow(title: String, sub: String?, value: Int?, sameAs: Int?, indent: Boolean = false, onPick: (Int?) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val sameText = sameAs?.let { stringResource(R.string.alerts_same, radiusText(it)) }
+    Box {
+        Row(
+            Modifier.fillMaxWidth().clickable { open = true }.heightIn(min = 48.dp)
+                .padding(start = if (indent) 48.dp else 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(title, style = if (indent) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge)
+                if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(
+                if (value == null) sameText.orEmpty() else radiusText(value),
+                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+            )
+            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            if (sameText != null) DropdownMenuItem(text = { Text(sameText) }, onClick = { open = false; onPick(null) })
+            AlertSettings.RADIUS_CHOICES.forEach { r ->
+                DropdownMenuItem(text = { Text(radiusText(r)) }, onClick = { open = false; onPick(r) })
+            }
+        }
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+/** "200 m", "500 m", "1 km": the alert distances as the owner wrote them. */
+fun radiusText(m: Int): String = if (m % 1000 == 0) "${m / 1000} km" else "$m m"
+
+/** How close, for every category: three stops, the chosen one written on the right. */
+@Composable
+private fun DistanceSlider(value: Int, onPick: (Int) -> Unit) {
+    val choices = AlertSettings.RADIUS_CHOICES
+    var pos by remember(value) { mutableStateOf(choices.indexOf(value).coerceAtLeast(0).toFloat()) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.alerts_how_close), style = MaterialTheme.typography.bodyLarge)
+                Text(stringResource(R.string.alerts_every), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            Text(radiusText(choices[pos.toInt()]), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.primary)
+        }
+        Slider(
+            value = pos, onValueChange = { pos = Math.round(it).toFloat() },
+            onValueChangeFinished = { onPick(choices[pos.toInt()]) },
+            valueRange = 0f..(choices.size - 1).toFloat(), steps = choices.size - 2,
+            // The 1 km end sits in the phone's back-swipe edge: dragging it went Back on the Poco
+            modifier = Modifier.systemGestureExclusion(),
+        )
+        Row(Modifier.fillMaxWidth()) {
+            choices.forEachIndexed { i, r ->
+                Text(
+                    radiusText(r), Modifier.weight(1f),
+                    textAlign = when (i) { 0 -> TextAlign.Start; choices.lastIndex -> TextAlign.End; else -> TextAlign.Center },
+                    style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+        }
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+/** Off / Travelling / Always. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun Choice3(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        labels.forEachIndexed { i, l ->
+            SegmentedButton(
+                selected = i == selected, onClick = { onSelect(i) },
+                shape = SegmentedButtonDefaults.itemShape(i, labels.size),
+            ) { Text(l, maxLines = 1) }
+        }
     }
 }
 
