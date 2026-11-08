@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -51,7 +52,50 @@ fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
         row.collected -> Seal("", colorOf(row.item), size, modifier, icon = iconOf(row.item))
         else -> EmptySlot(size, modifier)
     }
-    if (row.photoUri != null) PhotoThumb(row.photoUri, size, modifier, fallback = { noPhoto() }) else noPhoto()
+    // The card's own picture when downloaded (#53): greyed until collected; your photo still comes first
+    val cards by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsState()
+    val code = row.item.code
+    when {
+        row.photoUri != null -> PhotoThumb(row.photoUri, size, modifier, fallback = { noPhoto() })
+        row.item.type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD && code != null && code in cards ->
+            CardPictureThumb(code, row.collected, size, modifier) { noPhoto() }
+        else -> noPhoto()
+    }
+}
+
+/** Decoded card pictures, small, kept while the app runs so lists scroll without reloading. */
+private val cardThumbCache = android.util.LruCache<String, Bitmap>(120)
+
+@Composable
+fun CardPictureThumb(code: String, collected: Boolean, size: Dp, modifier: Modifier = Modifier, fallback: @Composable () -> Unit) {
+    val context = LocalContext.current
+    val px = with(LocalDensity.current) { size.roundToPx() }
+    var bmp by remember(code) { mutableStateOf(cardThumbCache.get(code)) }
+    var failed by remember(code) { mutableStateOf(false) }
+    LaunchedEffect(code) {
+        if (bmp != null) return@LaunchedEffect
+        bmp = withContext(Dispatchers.IO) {
+            runCatching {
+                val f = io.github.thisisartman.collectibles.photo.CardPictures.file(context, code)
+                val o = android.graphics.BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                android.graphics.BitmapFactory.decodeFile(f.path, o)
+                var s = 1; while (o.outWidth / (s * 2) >= px) s *= 2
+                android.graphics.BitmapFactory.decodeFile(f.path, android.graphics.BitmapFactory.Options().apply { inSampleSize = s })
+            }.getOrNull()
+        }?.also { cardThumbCache.put(code, it) }
+        failed = bmp == null
+    }
+    val b = bmp
+    when {
+        b != null -> Image(
+            b.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop,
+            colorFilter = if (collected) null else androidx.compose.ui.graphics.ColorFilter.colorMatrix(androidx.compose.ui.graphics.ColorMatrix().apply { setToSaturation(0f) }),
+            alpha = if (collected) 1f else 0.55f,
+            modifier = modifier.size(size).clip(RoundedCornerShape(size * 0.22f)),
+        )
+        failed -> fallback()
+        else -> Box(modifier.size(size).clip(RoundedCornerShape(size * 0.22f)).background(LocalTypeColors.current.dash.copy(alpha = 0.3f)))
+    }
 }
 
 /** The type's icon (public domain, CC0: Mapbox Maki and Temaki; see res/drawable/ic_type_*.xml). */

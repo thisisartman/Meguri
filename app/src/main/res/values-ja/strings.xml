@@ -370,8 +370,8 @@
     <string name="settings_data">バックアップとデータ</string>
     <string name="settings_look">表示と言語</string>
     <string name="settings_catalogue">カタログ</string>
-    <string name="settings_catalogue_sub">新潟を内蔵・CSVで追加</string>
-    <string name="settings_catalogue_note">新潟のカタログと、新潟・埼玉・東京のオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
+    <string name="settings_catalogue_sub">新潟・埼玉・東京を内蔵・カードの画像・CSVで追加</string>
+    <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）とオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
     <string name="settings_collections_sub">自分のコレクションと新しいコレクションの作成</string>
@@ -506,4 +506,10 @@
     <string name="photo_view_close">閉じる</string>
     <string name="type_roadside">道の駅スタンプ</string>
     <string name="type_roadside_plural">道の駅</string>
+    <string name="cards_download">カードの画像</string>
+    <string name="cards_download_sub">%2$d枚中%1$d枚がこの端末に。タップでカードのサイト（駅からマンホール）から残りを自分用にダウンロード。端末内だけに保存し、バックアップには含めません。画像の権利はGKPと各自治体にあります。</string>
+    <string name="cards_progress">ダウンロード中 %1$d / %2$d…</string>
+    <string name="cards_done">カードの画像：%1$d枚ダウンロード、%2$d枚見つからず</string>
+    <string name="cards_remove">カードの画像を削除</string>
+    <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
 </resources>

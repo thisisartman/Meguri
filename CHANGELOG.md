@@ -1,5 +1,9 @@
 # Changelog
 
+## Next (after beta.7)
+- Card pictures (#53): Settings → Catalogue → Card pictures downloads each manhole card's picture onto this phone, one at a time, from Eki kara Manhole. They are for your own use only, never in the app or backups (© GKP and each city). Tiles show the card greyed until collected; your own photo still comes first; the item page's card opens full screen. Seen on the Poco: 222 of 222.
+- Settings → Catalogue now says what is built in (Niigata, Saitama, Tokyo; all types).
+
 ## 2026-11-08: 0.3.0-beta.7 (versionCode 9), for the S23 and friends' testing
 - Checked before release:
   - 111 unit and 28 device tests pass.

@@ -47,6 +47,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -122,7 +123,10 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                     // The picture at the top opens full screen (owner, 2026-11-08)
                     var big by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-                    val picture = r.photoUri
+                    val cards by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsState()
+                    val ctx = androidx.compose.ui.platform.LocalContext.current
+                    val picture = r.photoUri ?: r.item.code?.takeIf { it in cards && r.item.type == ItemType.MANHOLE_CARD }
+                        ?.let { io.github.thisisartman.collectibles.photo.CardPictures.uri(ctx, it) }
                     Mark(r, 64.dp, if (picture != null) Modifier.clickable { big = true } else Modifier)
                     if (big && picture != null) FullscreenPhoto(picture, onClose = { big = false })
                     Spacer(Modifier.width(14.dp))

@@ -36,6 +36,7 @@ class CollectiblesApp : Application() {
         autoBackup.catchUpIfOverdue()
         notifier.createChannels()
         geofences.refreshInBackground()
+        io.github.thisisartman.collectibles.photo.CardPictures.load(this)
         // The new-photo hint waits for the next gallery photo again after each start (M7)
         if (alertSettings.photoHintsOn) io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(this, androidx.work.ExistingWorkPolicy.KEEP)
         CoroutineScope(Dispatchers.IO).launch {

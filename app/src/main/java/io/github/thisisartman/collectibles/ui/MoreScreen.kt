@@ -1,5 +1,10 @@
 package io.github.thisisartman.collectibles.ui
 
+import io.github.thisisartman.collectibles.photo.CardPictures
+import io.github.thisisartman.collectibles.data.CollectiblesDb
+import io.github.thisisartman.collectibles.data.ItemType
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -66,8 +71,27 @@ class MoreViewModel @Inject constructor(
     val restore: BackupRestore,
     val auto: AutoBackup,
     val log: FileLog,
+    private val db: CollectiblesDb,
 ) : ViewModel() {
     fun run(block: suspend () -> Unit) { viewModelScope.launch { block() } }
+
+    /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */
+    suspend fun cardCodes(): List<String> = db.dao().allItems()
+        .filter { it.type == ItemType.MANHOLE_CARD }.mapNotNull { it.code }
+
+    /** Card pictures being downloaded: done and total, or null when idle. Survives leaving the screen. */
+    val cardProgress = kotlinx.coroutines.flow.MutableStateFlow<Pair<Int, Int>?>(null)
+
+    fun downloadCards(context: android.content.Context, onDone: (Int, Int) -> Unit) {
+        if (cardProgress.value != null) return
+        viewModelScope.launch {
+            cardProgress.value = 0 to 0
+            val (ok, failed) = CardPictures.download(context.applicationContext, cardCodes()) { d, t -> cardProgress.value = d to t }
+            log.i("Cards", "Card pictures: $ok downloaded, $failed failed")
+            cardProgress.value = null
+            onDone(ok, failed)
+        }
+    }
 }
 
 @Composable
@@ -304,6 +328,24 @@ fun MoreScreen(
             S_CATALOGUE -> {
                 MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
                     openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
+                }
+                // Card pictures (#53): onto this phone only, never in the app or backups
+                val ctx = androidx.compose.ui.platform.LocalContext.current
+                val progress by vm.cardProgress.collectAsState()
+                val have by CardPictures.have.collectAsState()
+                var total by remember { mutableStateOf<Int?>(null) }
+                LaunchedEffect(Unit) { total = vm.cardCodes().size }
+                val doneText = stringResource(R.string.cards_done)
+                MoreRow(
+                    stringResource(R.string.cards_download),
+                    progress?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
+                        ?: if (total != null && total!! > 0 && have.size >= total!!) stringResource(R.string.cards_all, have.size)
+                        else stringResource(R.string.cards_download_sub, have.size, total ?: 0),
+                ) {
+                    vm.downloadCards(ctx) { ok, failed -> scope.launch { snackbar.showSnackbar(doneText.format(ok, failed)) } }
+                }
+                if (have.isNotEmpty() && progress == null) MoreRow(stringResource(R.string.cards_remove), null) {
+                    CardPictures.removeAll(ctx)
                 }
                 Text(
                     stringResource(R.string.settings_catalogue_note),

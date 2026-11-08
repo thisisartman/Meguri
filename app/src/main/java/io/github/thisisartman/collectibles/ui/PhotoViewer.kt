@@ -57,7 +57,13 @@ private fun rememberPicture(uri: String, maxPx: Int): Pair<Bitmap?, Boolean> {
     var bmp by remember(uri, maxPx) { mutableStateOf<Bitmap?>(null) }
     var done by remember(uri, maxPx) { mutableStateOf(false) }
     LaunchedEffect(uri, maxPx) {
-        bmp = withContext(Dispatchers.IO) { runCatching { PhotoStore.thumbnail(context, uri, maxPx) }.getOrNull() }
+        bmp = withContext(Dispatchers.IO) {
+            runCatching {
+                // A downloaded card picture is a plain file (#53); everything else goes through PhotoStore
+                if (uri.startsWith("file:")) android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(java.io.File(uri.removePrefix("file:"))))
+                else PhotoStore.thumbnail(context, uri, maxPx)
+            }.getOrNull()
+        }
         done = true
     }
     return bmp to done
