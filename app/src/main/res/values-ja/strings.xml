@@ -504,4 +504,6 @@
     <string name="photo_hint_channel_sub">未取得のものの近くで撮った新しい写真</string>
     <string name="photo_view_fullscreen">全画面で見る</string>
     <string name="photo_view_close">閉じる</string>
+    <string name="type_roadside">道の駅スタンプ</string>
+    <string name="type_roadside_plural">道の駅</string>
 </resources>

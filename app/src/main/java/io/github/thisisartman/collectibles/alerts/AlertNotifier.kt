@@ -61,6 +61,7 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             ItemType.CUSTOM -> R.string.type_custom
             ItemType.DAM_CARD -> R.string.type_dam
             ItemType.MUSEUM_STAMP -> R.string.type_museum
+            ItemType.ROADSIDE_STATION -> R.string.type_roadside
         },
     )
 

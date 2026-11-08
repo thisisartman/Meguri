@@ -109,6 +109,7 @@ fun CollectionCheckScreen(
     val goshuinLabel = stringResource(R.string.type_goshuin)
     val damLabel = stringResource(R.string.type_dam_plural)
     val museumLabel = stringResource(R.string.type_museum_plural)
+    val roadsideLabel = stringResource(R.string.type_roadside_plural)
     val otherStations = stringResource(R.string.book_other_stations)
     val customLabel = stringResource(R.string.type_custom)
     // Only catalogue items can be ticked; things you added yourself already have their collection
@@ -130,6 +131,7 @@ fun CollectionCheckScreen(
         candidates.filter { it.item.type == ItemType.GOSHUIN }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("g", goshuinLabel, it) }
         candidates.filter { it.item.type == ItemType.DAM_CARD }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("dam", damLabel, it) }
         candidates.filter { it.item.type == ItemType.MUSEUM_STAMP }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("mus", museumLabel, it) }
+        candidates.filter { it.item.type == ItemType.ROADSIDE_STATION }.takeIf { it.isNotEmpty() }?.let { out += CheckGroup("road", roadsideLabel, it) }
         candidates.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }.forEach { (id, l) ->
             out += CheckGroup("c:$id", customTypes[id]?.name ?: customLabel, l)
         }

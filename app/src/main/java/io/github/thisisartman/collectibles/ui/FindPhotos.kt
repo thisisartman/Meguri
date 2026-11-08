@@ -68,7 +68,7 @@ fun photoKinds(type: ItemType): List<String> = when (type) {
     ItemType.EKI_STAMP, ItemType.EKITAG -> listOf(PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.PLACE)
     ItemType.MANHOLE_CARD -> listOf(PhotoKind.STAMP, PhotoKind.MANHOLE, PhotoKind.PLACE)
     ItemType.GOSHUIN -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
-    ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
+    ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
 }
 
 @androidx.annotation.StringRes
@@ -79,14 +79,14 @@ fun kindLabel(type: ItemType, kind: String): Int = when (kind) {
         ItemType.GOSHUIN -> R.string.kind_goshuin
         ItemType.CUSTOM -> R.string.kind_item
         ItemType.DAM_CARD -> R.string.kind_card
-        ItemType.MUSEUM_STAMP -> R.string.photo_kind_stamp
+        ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> R.string.photo_kind_stamp
     }
     PhotoKind.EKITAG -> R.string.kind_ekitag
     PhotoKind.MANHOLE -> R.string.kind_manhole
     PhotoKind.PLACE -> when (type) {
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.kind_station
         ItemType.GOSHUIN -> R.string.kind_shrine
-        ItemType.MANHOLE_CARD, ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP -> R.string.kind_place
+        ItemType.MANHOLE_CARD, ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> R.string.kind_place
     }
     // 0.3's "proof" was an Ekitag screenshot or a card photo
     PhotoKind.PROOF -> if (type == ItemType.MANHOLE_CARD) R.string.kind_card else R.string.kind_ekitag
@@ -97,7 +97,8 @@ private fun sameKind(a: String, b: String, type: ItemType): Boolean =
     a == b || (a == PhotoKind.PROOF && b == (if (type == ItemType.MANHOLE_CARD) PhotoKind.STAMP else PhotoKind.EKITAG))
 
 // Three to a row on a phone (3 x 96 + 2 x 10 + 2 x 16 = 340 dp, inside a 360 dp screen)
-private val SLOT = 96.dp
+/** The photo square's side: fitted to the screen so a row of up to four squares fits on one line (owner, 2026-11-08). */
+private val LocalSlot = androidx.compose.runtime.compositionLocalOf { 96.dp }
 
 /**
  * The item's photos as squares: each kind for the type has a square, filled with your photo or dotted with a
@@ -124,9 +125,15 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
 
     // A grid that wraps to the screen, not a sideways strip: every kind is visible without scrolling
     // (map-app study, 2026-11-07: the strip cut off "Other photo")
+    // Up to four squares per line, sized to the screen (owner, 2026-11-08: "smaller to fit on the same line")
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+    val count = (slots.size + extra.size + 1).coerceAtMost(5)
+    val gap = 8.dp
+    val slot = ((maxWidth - gap * (count - 1)) / count).coerceIn(64.dp, 96.dp)
+    androidx.compose.runtime.CompositionLocalProvider(LocalSlot provides slot) {
     FlowRow(
-        Modifier.padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        Modifier,
+        horizontalArrangement = Arrangement.spacedBy(gap),
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         slots.forEach { (kind, p) ->
@@ -136,6 +143,8 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
         }
         extra.forEach { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role)) + if (p.id == coverId) " ★" else "") { editing = p } }
         EmptySquare(stringResource(R.string.photo_kind_other)) { adding = PhotoKind.OTHER }
+    }
+    }
     }
 
     adding?.let { kind ->
@@ -239,6 +248,7 @@ fun PhotoKindMenu(type: ItemType, expanded: Boolean, onDismiss: () -> Unit, onPi
 
 @Composable
 private fun PhotoSquare(p: Photo, label: String, onClick: () -> Unit) {
+    val SLOT = LocalSlot.current
     Column(
         Modifier.width(SLOT).clickable(onClick = onClick).spoken(stringResource(R.string.a11y_photo_kind, label)),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -252,6 +262,7 @@ private fun PhotoSquare(p: Photo, label: String, onClick: () -> Unit) {
 @Composable
 private fun EmptySquare(label: String, onClick: () -> Unit) {
     val dash = LocalTypeColors.current.dash
+    val SLOT = LocalSlot.current
     val add = stringResource(R.string.photo_add_kind, label)
     Column(
         Modifier.width(SLOT).clickable(onClick = onClick).spoken(add),
@@ -309,6 +320,7 @@ fun kindIcon(type: ItemType, kind: String): Int = when (kind) {
         ItemType.GOSHUIN -> R.drawable.ic_type_goshuin
         ItemType.DAM_CARD -> R.drawable.ic_type_dam
         ItemType.MUSEUM_STAMP -> R.drawable.ic_type_museum
+        ItemType.ROADSIDE_STATION -> R.drawable.ic_type_roadside
         ItemType.CUSTOM -> R.drawable.ic_add_photo
     }
     PhotoKind.EKITAG -> R.drawable.ic_type_ekitag
@@ -318,6 +330,7 @@ fun kindIcon(type: ItemType, kind: String): Int = when (kind) {
         ItemType.GOSHUIN -> R.drawable.ic_type_shrine
         ItemType.DAM_CARD -> R.drawable.ic_type_dam
         ItemType.MUSEUM_STAMP -> R.drawable.ic_type_museum
+        ItemType.ROADSIDE_STATION -> R.drawable.ic_type_roadside
         else -> R.drawable.ic_add_photo
     }
     PhotoKind.PROOF -> if (type == ItemType.EKI_STAMP || type == ItemType.EKITAG) R.drawable.ic_type_ekitag else R.drawable.ic_add_photo

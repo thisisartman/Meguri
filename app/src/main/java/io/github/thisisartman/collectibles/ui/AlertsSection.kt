@@ -184,7 +184,8 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     // A distance per kind (#73): stations close together on a line want less than a dam out of town
     Text(stringResource(R.string.alert_distance), Modifier.padding(start = 16.dp, top = 12.dp), style = MaterialTheme.typography.bodyLarge)
     listOf(ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
-        ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural)
+        ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural,
+            ItemType.ROADSIDE_STATION to R.string.type_roadside_plural)
         .forEach { (t, label) ->
             val radius = remember(tick) { s.radiusFor(t) }
             Row(Modifier.padding(start = 16.dp, top = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -215,7 +216,8 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     val types = remember(tick) { s.types }
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         listOf(ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin, ItemType.EKI_STAMP to R.string.type_eki_plural,
-            ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural)
+            ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural,
+            ItemType.ROADSIDE_STATION to R.string.type_roadside_plural)
             .forEach { (t, label) ->
                 InkFilterChip(
                     selected = t in types,

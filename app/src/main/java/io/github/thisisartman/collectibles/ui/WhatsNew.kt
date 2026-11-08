@@ -42,6 +42,10 @@ object WhatsNew {
                 "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
                 "Menu: on My book (⋮); the search bar is only search" to "メニュー：マイブックの「⋮」に。検索バーは検索だけに",
                 "Ekitag: Niigata's Ekitag stations listed" to "エキタグ：新潟のエキタグ駅を追加",
+                "Stations: JR East stamps for Saitama and Tokyo (217 stations, 19 lines); the Joetsu Shinkansen from Tokyo" to "駅：埼玉・東京のJR東日本の駅スタンプ（217駅・19路線）、上越新幹線を東京から",
+                "Roadside stations: a new type, 64 michi-no-eki stamps in Niigata, Saitama and Tokyo" to "道の駅：新しい種類。新潟・埼玉・東京の64駅のスタンプ",
+                "Dam cards: Saitama and Tokyo added (14)" to "ダムカード：埼玉・東京を追加（14）",
+                "Photos on an item page: smaller squares, all on one line" to "アイテムの写真：小さめの枠で1行に",
             ),
         ),
         Section(

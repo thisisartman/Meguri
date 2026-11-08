@@ -236,7 +236,7 @@ private fun Region(p: Prefecture, counts: Map<ItemType, Int>?, ja: Boolean, on: 
         Column(Modifier.weight(1f)) {
             Text(p.name(ja), style = MaterialTheme.typography.bodyLarge)
             counts?.let { c ->
-                val labels = c.entries.sortedByDescending { it.value }.map { (t, n) -> n to stringResource(t.pluralLabel()) }
+                val labels = c.entries.sortedByDescending { it.value }.map { (t, n) -> n to stringResource(if (n == 1) t.label() else t.pluralLabel()) }
                 Text(
                     labels.joinToString(" · ") { (n, label) -> "$n $label" },
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

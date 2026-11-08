@@ -1,6 +1,12 @@
 # Changelog
 
 ## 2026-11-08: next beta (not released)
+- Catalogue (#65, #55, #22):
+  - JR East station stamps for Saitama and Tokyo: 217 stations on 19 lines, in running order; the Joetsu Shinkansen now runs from Tokyo (12 stations).
+  - Dam cards for Saitama (12) and Tokyo (2) from the MLIT list.
+  - A new type, roadside stations (道の駅): 64 stamps in Niigata (42), Saitama (21) and Tokyo (1), from MLIT's list of 2026-09-04. Positions are from OpenStreetMap; two have none yet.
+- Item page photos: the squares size to the screen, five to a line.
+- Region list: "1 Roadside station stamp", not "1 Roadside stations".
 - Photos larger: tapping a photo on an item page shows it big and whole, with a full-screen button; full screen zooms with two fingers or a double tap. The picture at the top of an item page opens full screen too.
 - Photo suggestions (M7): with Settings → Alerts → "Suggest new photos" on (it asks for photo access), a photo taken with the camera within 300 m of something you have not collected brings a quiet notification: "Attach" collects it on the photo's day with the photo, "Pick another" opens the share screen. Off by default.
 - Timeline (M6): My book → Timeline lists everything you collected, by day, with times; a day opens the trip report.

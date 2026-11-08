@@ -65,7 +65,7 @@ object BookKinds {
     /** One collection inside a kind: a line's stamps, a prefecture's cards, or all of an open-ended kind. */
     data class Group(val key: String, val lineId: String?, val prefecture: String?, val rows: List<ItemRow>, val collected: Int, val total: Int?)
 
-    private val ORDER = listOf(ItemType.MANHOLE_CARD, ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP)
+    private val ORDER = listOf(ItemType.MANHOLE_CARD, ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.GOSHUIN, ItemType.DAM_CARD, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP)
 
     /** Goshuin and museum stamps have no fixed list, so they count up with no total. */
     fun openEnded(type: ItemType) = type == ItemType.GOSHUIN || type == ItemType.MUSEUM_STAMP
@@ -120,6 +120,7 @@ private fun kindPlural(type: ItemType): Int = when (type) {
     ItemType.EKI_STAMP -> R.string.type_eki_plural
     ItemType.DAM_CARD -> R.string.type_dam_plural
     ItemType.MUSEUM_STAMP -> R.string.type_museum_plural
+    ItemType.ROADSIDE_STATION -> R.string.type_roadside_plural
     else -> type.label()
 }
 

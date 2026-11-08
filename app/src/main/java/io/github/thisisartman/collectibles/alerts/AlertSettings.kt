@@ -95,10 +95,10 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         /** Per kind (#73): stations are close together on a line, dams sit far out of town. */
         val DEFAULT_RADII = mapOf(
             ItemType.EKI_STAMP to 200, ItemType.EKITAG to 200, ItemType.MANHOLE_CARD to 500,
-            ItemType.GOSHUIN to 300, ItemType.DAM_CARD to 1000, ItemType.MUSEUM_STAMP to 300,
+            ItemType.GOSHUIN to 300, ItemType.DAM_CARD to 1000, ItemType.MUSEUM_STAMP to 300, ItemType.ROADSIDE_STATION to 500,
         )
         private const val KEY_RADIUS_PREFIX = "radius_"
-        val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP)
+        val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
         val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2
         private const val MARK_V2 = "_kinds_v2"
         const val QUIET_FROM = 22

@@ -155,7 +155,7 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             }
             // Goshuin, dam cards, museum stamps (#55): one section each, open-ended (no fixed total)
             listOf(Triple(ItemType.GOSHUIN, R.string.type_goshuin, "h:g"), Triple(ItemType.DAM_CARD, R.string.type_dam_plural, "h:dam"),
-                Triple(ItemType.MUSEUM_STAMP, R.string.type_museum_plural, "h:mus")).forEach { (kind, label, hk) ->
+                Triple(ItemType.MUSEUM_STAMP, R.string.type_museum_plural, "h:mus"), Triple(ItemType.ROADSIDE_STATION, R.string.type_roadside_plural, "h:road")).forEach { (kind, label, hk) ->
             val goshuin = rows.filter { it.item.type == kind }
             if (goshuin.isNotEmpty()) {
                 stickyHeader(key = hk) {

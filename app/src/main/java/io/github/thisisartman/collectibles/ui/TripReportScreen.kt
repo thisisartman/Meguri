@@ -118,6 +118,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
         ItemType.EKITAG to stringResource(R.string.type_ekitag), ItemType.GOSHUIN to stringResource(R.string.type_goshuin),
         ItemType.CUSTOM to stringResource(R.string.type_custom),
         ItemType.DAM_CARD to stringResource(R.string.type_dam), ItemType.MUSEUM_STAMP to stringResource(R.string.type_museum),
+        ItemType.ROADSIDE_STATION to stringResource(R.string.type_roadside),
     )
     fun colorFor(r: ReportRow): Int = (r.item.customTypeId?.let { customTypes[it] }?.takeIf { r.item.type == ItemType.CUSTOM }?.let { androidx.compose.ui.graphics.Color(it.color) } ?: types.of(r.item.type)).toArgb()
     val spec = remember(rows, chosen, ja, scheme) {

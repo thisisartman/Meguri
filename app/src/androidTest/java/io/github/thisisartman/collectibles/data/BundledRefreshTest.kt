@@ -59,15 +59,15 @@ class BundledRefreshTest {
 
         val r = io.refreshBundledIfChanged()
         assertNotNull(r)
-        assertEquals(1, r!!.added) // Jomo-Kogen, the one new station
+        assertEquals(2, r!!.added) // Jomo-Kogen and Honjo-Waseda, the stations only on the Shinkansen
         val after = d.allItems()
-        assertEquals(itemsBefore.size + 1, after.size)
+        assertEquals(itemsBefore.size + 2, after.size)
         assertTrue(itemsBefore.keys.all { id -> after.any { it.id == id } })
         assertEquals(after.size, after.map { it.catalogKey }.toSet().size)
         assertEquals(listOf("f1"), d.allFinds().map { it.id })
         val sk = d.allLineStations().filter { it.lineId == RailGraph.SHINKANSEN }.sortedBy { it.seq }
-        assertEquals(7, sk.size)
-        assertEquals(urasa.id, sk[3].itemId) // Takasaki, Jomo-Kogen, Echigo-Yuzawa, Urasa
+        assertEquals(12, sk.size)
+        assertEquals(urasa.id, sk[8].itemId) // Tokyo, Ueno, Omiya, Kumagaya, Honjo-Waseda, Takasaki, Jomo-Kogen, Echigo-Yuzawa, Urasa
         // The planner now rides it
         assertEquals(RailGraph.SHINKANSEN, RailGraph.from(d.allLineStations()).route(urasa.id, after.single { it.nameJa == "新潟駅" && it.type == ItemType.EKI_STAMP }.id)!!.single().lineId)
 
