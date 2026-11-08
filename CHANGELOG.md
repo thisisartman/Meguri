@@ -9,6 +9,7 @@
 - The word "kind" is gone from the app: they are types (the owner's word).
 - Add form: "New type: ..." is a label now, not a button that did nothing.
 - Notebook stamps: Scan a notebook page and Meguri boxes each stamp (move, resize, remove or add boxes), cleans it (Show original to switch), reads the station name printed on it and picks the station when sure, suggests it when fairly sure, or lets you type to find it. Saved as had before Meguri, never as collected today.
+- Settings: a proposal for a theme switch, fuller sections and simpler Alerts is with the owner.
 - Nearby tiles: shorter names (no "Station" or "Michi-no-Eki"), and an Ekitag has a small badge instead of "· Ekitag".
 - Scan a card: when the code can't be read, choose Retake photo or Type code. The first time you type one, a short animation shows where the code is (top right of the card).
 - Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").
