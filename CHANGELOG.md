@@ -1,6 +1,8 @@
 # Changelog
 
 ## 2026-11-08: next beta (not released)
+- Timeline (M6): My book → Timeline lists everything you collected, by day, with times; a day opens the trip report.
+- List filters (M6): each prefecture's list has All / To get / Have, and the card series when there are several.
 - Map on opening: frames you and the nearby pins above the sheet, even when the pins load a moment late (it had opened at street level with nothing in view, Poco).
 - Photos: a picture the app can no longer read shows the seal instead of a grey box.
 - What's new: rewritten for beta.7; its button is full height.

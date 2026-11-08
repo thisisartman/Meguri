@@ -487,4 +487,11 @@
     <plurals name="kind_lines"><item quantity="other">%d 路線</item></plurals>
     <plurals name="kind_prefectures"><item quantity="other">%d 都道府県</item></plurals>
     <string name="kind_next">次: %s</string>
+    <string name="timeline_title">タイムライン</string>
+    <string name="timeline_sub">集めたものを日ごとに</string>
+    <string name="timeline_empty">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="filter_all">すべて</string>
+    <string name="filter_to_get">未取得</string>
+    <string name="filter_have">取得済み</string>
+    <string name="filter_series">第%1$s弾</string>
 </resources>

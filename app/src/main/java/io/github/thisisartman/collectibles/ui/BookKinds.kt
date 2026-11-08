@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -30,6 +31,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -285,7 +287,29 @@ fun GroupScreen(vm: MainViewModel, kindKey: String, groupKey: String, nav: NavHo
             },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back)) } },
         )
-        val list = group?.rows.orEmpty().sortedWith(compareByDescending<ItemRow> { it.collected }.thenByDescending { it.lastAt ?: 0L }.thenBy { it.item.code ?: it.item.displayName(ja) })
+        // Filters (M6): what you have or still need, and the card series where a prefecture has several
+        var show by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) } // 0 all, 1 to get, 2 have
+        var series by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf<String?>(null) }
+        val allSeries = remember(group) { group?.rows.orEmpty().mapNotNull { it.item.series?.trim()?.ifEmpty { null } }.distinct().sorted() }
+        androidx.compose.foundation.lazy.LazyRow(
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            val labels = listOf(R.string.filter_all, R.string.filter_to_get, R.string.filter_have)
+            items(labels.size) { i ->
+                androidx.compose.material3.FilterChip(selected = show == i, onClick = { show = i }, label = { Text(stringResource(labels[i])) },
+                    modifier = Modifier.heightIn(min = 48.dp))
+            }
+            if (allSeries.size > 1) items(allSeries.size) { i ->
+                val s = allSeries[i]
+                androidx.compose.material3.FilterChip(selected = series == s, onClick = { series = if (series == s) null else s },
+                    label = { Text(stringResource(R.string.filter_series, s)) }, modifier = Modifier.heightIn(min = 48.dp))
+            }
+        }
+        val list = group?.rows.orEmpty()
+            .filter { r -> when (show) { 1 -> !r.collected; 2 -> r.collected; else -> true } }
+            .filter { r -> series == null || r.item.series?.trim() == series }
+            .sortedWith(compareByDescending<ItemRow> { it.collected }.thenByDescending { it.lastAt ?: 0L }.thenBy { it.item.code ?: it.item.displayName(ja) })
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             items(list, key = { it.item.id }) { r ->
                 ItemListRow(r, ja, vm.distanceTo(r), false, false, onToggle = {}, onOpen = { nav.openItem(r.item.id) })

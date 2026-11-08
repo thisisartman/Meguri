@@ -493,4 +493,11 @@
     <plurals name="kind_lines"><item quantity="one">%d line</item><item quantity="other">%d lines</item></plurals>
     <plurals name="kind_prefectures"><item quantity="one">%d prefecture</item><item quantity="other">%d prefectures</item></plurals>
     <string name="kind_next">Next: %s</string>
+    <string name="timeline_title">Timeline</string>
+    <string name="timeline_sub">Everything you collected, by day</string>
+    <string name="timeline_empty">Nothing with a day yet. Each find you log keeps its day; things you had before the app have none.</string>
+    <string name="filter_all">All</string>
+    <string name="filter_to_get">To get</string>
+    <string name="filter_have">Have</string>
+    <string name="filter_series">Series %1$s</string>
 </resources>

@@ -6,4 +6,5 @@
     <plurals name="nearby_found"><item quantity="one">%1$d found for “%2$s”</item><item quantity="other">%1$d found for “%2$s”</item></plurals>
     <plurals name="check_add"><item quantity="one">Add %d to my collection</item><item quantity="other">Add %d to my collection</item></plurals>
     <string name="count_sep">", "</string>
+    <plurals name="timeline_count"><item quantity="one">%d find</item><item quantity="other">%d finds</item></plurals>
 </resources>
