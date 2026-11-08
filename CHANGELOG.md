@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-08: Poco updated to beta.9, test checklist
+- The Poco real app went to beta.9 after another backup: 21 finds kept, no crash.
+- `docs/TEST_CHECKLIST.md`: 31 things to test, for the owner and friends.
+
 ## 2026-11-08: Poco updated to beta.8
 - The Poco real app went from beta.1 to beta.8 after a backup (21 finds). All 21 finds were kept, the catalogue grew to 754 items, no crash.
 
