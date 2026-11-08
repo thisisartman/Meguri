@@ -19,7 +19,7 @@ val signingProps: Properties? = providers.gradleProperty("COLLECTIBLES_SIGNING")
     ?.let { f -> Properties().apply { f.inputStream().use { load(it) } } }
 
 // Owner, 2026-11-07: this version is the beta, under testing
-val appVersionName = "0.3.0-beta.7"
+val appVersionName = "0.3.0-beta.8"
 
 android {
     namespace = "io.github.thisisartman.collectibles"
@@ -30,7 +30,7 @@ android {
         applicationId = "io.github.thisisartman.collectibles"
         minSdk = 29
         targetSdk = 37
-        versionCode = 9
+        versionCode = 10
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "Meguri"
@@ -61,6 +61,16 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             signingConfig = signingConfigs.findByName("release")
+        }
+        // The release build's shrunk code under the dev app's name and debug key: lets a phone's dev copy run exactly
+        // what a release runs (the shrinker broke the card scanner once, 2026-11-08) without touching the real app
+        create("devRelease") {
+            initWith(getByName("release"))
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-devrelease"
+            manifestPlaceholders["appLabel"] = "Meguri (dev)"
+            signingConfig = signingConfigs.getByName("debug")
+            matchingFallbacks += listOf("release")
         }
     }
 

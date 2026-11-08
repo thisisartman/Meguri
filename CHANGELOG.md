@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-08: 0.3.0-beta.8 (versionCode 10)
+- Carries Scan a card and Card pictures (below). Same database as beta.7, so not one-way from beta.7 (one-way from beta.6).
+- Fixed before release: the release build crashed when starting the card scanner (the code shrinker removed parts of ML Kit). It now keeps ML Kit's classes.
+  - Checked on the emulator (no crash) and on the Poco with a new `devRelease` build: the release code under the dev app's name and debug key. It read 15-202-A001.
+
 ## Next (after beta.7)
 - Scan a card (M7 auto-crop, M8 recognition): + → "Scan a card".
   - Google's on-device document scanner finds the card's edges and straightens it (corners can be moved, or a gallery photo imported).

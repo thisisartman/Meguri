@@ -29,7 +29,14 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New", "新機能",
+            "New in beta.8", "beta.8の新機能",
+            listOf(
+                "Scan a card: + → Scan a card. Meguri straightens the photo, reads the card code and finds the card" to "カードをスキャン：＋→カードをスキャン。写真を補正し、コードを読み取ってカードを探します",
+                "Card pictures: Settings → Catalogue downloads each card's picture onto this phone; tiles show it greyed until collected" to "カードの画像：設定→カタログで各カードの画像を端末にダウンロード。未取得はグレーで表示",
+            ),
+        ),
+        Section(
+            "Also new since beta.6", "beta.6からの新機能",
             listOf(
                 "Opening: a map of Japan that flies to you and what is near" to "起動：日本地図から現在地と近くのものへ",
                 "My book: one tile per type, each opens its collections with progress rings" to "マイブック：種類ごとのタイル。開くと各コレクションの進み具合",
