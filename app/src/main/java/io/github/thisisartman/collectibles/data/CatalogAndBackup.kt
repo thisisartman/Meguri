@@ -43,9 +43,9 @@ class CatalogAndBackup @Inject constructor(
         log.d("Catalog", "Import from a file: start")
         val text = context.contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
         log.d("Catalog", "Read ${text.length} characters in ${System.currentTimeMillis() - t0} ms")
-        // A failure here is logged as an error by the screen that started it
+        // Logged here: the welcome card shows the failure but does not log it
         runCatching { importCatalogText(text) }
-            .onFailure { log.d("Catalog", "Import from a file failed after ${System.currentTimeMillis() - t0} ms: $it") }
+            .onFailure { if (it !is kotlinx.coroutines.CancellationException) log.e("Catalog", "Import from a file failed after ${System.currentTimeMillis() - t0} ms", it) }
             .getOrThrow()
             .also { log.d("Catalog", "Import from a file done in ${System.currentTimeMillis() - t0} ms") }
     }
@@ -66,6 +66,8 @@ class CatalogAndBackup @Inject constructor(
                 bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha(text)).apply()
                 log.i("Catalog", "Bundled catalogue loaded in ${System.currentTimeMillis() - t0} ms: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             // The onboarding and the welcome card show a message but do not log it
             log.e("Catalog", "Loading the bundled catalogue failed after ${System.currentTimeMillis() - t0} ms", e)
