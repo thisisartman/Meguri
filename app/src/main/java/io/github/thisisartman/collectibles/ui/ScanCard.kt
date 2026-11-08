@@ -142,6 +142,13 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 reading = false; notReady = true; return@launch
             }
             val photo = if (turn != 0 && page0 != null) uprightCopy(context, page0, turn) ?: page.imageUri else page.imageUri
+            // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
+            if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
+                val dir = java.io.File(context.getExternalFilesDir(null), "scan-debug").apply { mkdirs() }
+                val stamp = System.currentTimeMillis()
+                context.contentResolver.openInputStream(page.imageUri)?.use { i -> java.io.File(dir, "$stamp-page.jpg").outputStream().use { i.copyTo(it) } }
+                java.io.File(dir, "$stamp.txt").writeText("code=${code ?: ""}\nturn=$turn\n")
+            }
             val match = cards.firstOrNull { it.item.code == code }
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
             // on the card you pick from the nearest ones

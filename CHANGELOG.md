@@ -2,6 +2,9 @@
 
 ## Next (after beta.9)
 - Map: the land is a shade apart from the app (lighter in dark mode, slightly darker in light mode), so the search bar and the sheet have a clear edge. Roads in dark mode are lighter to match.
+- + is three large buttons: Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its kind. A kind you type that Meguri doesn't have becomes a kind of its own, with its own place in My book.
+- Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name. (In progress.)
+- Scan a card: trimming to the top card when the scanner takes in the cards under it or the box. (In progress.)
 - Scan a card: a card scanned upside down (or sideways) is turned the right way up, by finding which way its code reads.
 - Photo dialog: what "Remove photo" does is now a tooltip on the button (long press), not a line of text.
 - Photos: Meguri's own copy is now 3000 px (was 1600), so full screen and zoom stay sharp. Photos added before keep their size.

@@ -209,7 +209,9 @@ class CollectionRepository @Inject constructor(
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             val info = pickedInfo(picked)
             val id = newId()
-            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id, circle = kind == PhotoKind.MANHOLE)
+            // An Ekitag screenshot is titled with the station's name (both names when it has an English one)
+            val title = if (kind == PhotoKind.EKITAG) dao.itemOfFind(findId)?.let { i -> listOfNotNull(i.nameJa, i.nameRomaji?.takeIf { it.isNotBlank() && it != i.nameJa }).joinToString(" · ") } else null
+            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id, circle = kind == PhotoKind.MANHOLE, ekitagTitle = title)
             if (uri == null) {
                 log.w("Photo", "Could not copy a gallery photo for find $findId")
                 return@withContext false

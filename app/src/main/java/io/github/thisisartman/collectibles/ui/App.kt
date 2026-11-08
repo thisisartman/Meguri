@@ -98,6 +98,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     // Scan a card (M7, M8): the scanner is hosted here so its result outlives the + sheet
     var scanTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     ScanCardHost(vm, nav, scanTrigger)
+    // + → Search: each tap focuses Nearby's search bar once
+    var searchTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     // First open after an update: what changed (#77)
     val appContext = androidx.compose.ui.platform.LocalContext.current
     // Not during the onboarding (#81): a phone with no catalogue yet has nothing "new" to read
@@ -263,7 +265,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     popEnterTransition = { androidx.compose.animation.EnterTransition.None },
                     popExitTransition = { androidx.compose.animation.ExitTransition.None },
                 ) {
-                    composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
+                    composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, focusSearch = searchTick, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     // Every page but the maps sits on a solid background: the item page had none, so for a moment
                     // after a tap the Nearby map showed through it (screen recording on the Poco, 2026-11-07)
                     composable(BOOK) { Page { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) } }
@@ -309,6 +311,16 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         }
                     }
                     composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
+                    composable("new") {
+                        Page {
+                            NewItemScreen(vm, onBack = { nav.popBackStack() }, onSaved = { itemId, findId, withPhoto ->
+                                // The new item's page replaces the form, so Back goes to where + was pressed
+                                nav.popBackStack()
+                                nav.openItem(itemId)
+                                if (withPhoto) photo.capture(findId)
+                            })
+                        }
+                    }
                     composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }
                     composable("trip") { Page { TripScreen(vm, nav, snackbar, onBack = { nav.popBackStack() }, onAlready = { nav.navigate("trip-check") }) } }
                     composable("trip-report") { Page { TripReportScreen(vm, onBack = { nav.popBackStack() }) } }
@@ -336,7 +348,17 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             }
         }
         if (showLog) {
-            LogSheet(vm, onDismiss = { showLog = false }, onOpenItem = { showLog = false; nav.openItem(it) }, onScan = { showLog = false; scanTrigger++ })
+            LogSheet(
+                onDismiss = { showLog = false },
+                onScan = { showLog = false; scanTrigger++ },
+                // Search: the search bar on Nearby, focused, so typing starts at once
+                onSearch = {
+                    showLog = false
+                    if (nav.currentDestination?.route != NEARBY) nav.popBackStack(NEARBY, inclusive = false)
+                    searchTick++
+                },
+                onAdd = { showLog = false; nav.navigate("new") },
+            )
         }
     }
 }

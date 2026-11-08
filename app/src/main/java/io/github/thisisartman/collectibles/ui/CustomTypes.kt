@@ -54,10 +54,33 @@ val LocalCustomTypes = compositionLocalOf<Map<String, CollectionType>> { emptyMa
 val CUSTOM_COLORS = listOf(0xFF7A5AA8, 0xFF2F6F8F, 0xFFA8611F, 0xFF4F7A2E, 0xFFA83A6E, 0xFF5A6470)
 
 /** Icons offered for a new collection (CC0: Mapbox Maki and Temaki; Material for the generic one). */
-val CUSTOM_ICONS = listOf("collect", "museum", "dam", "station", "goshuin", "manhole", "ekitag")
+val CUSTOM_ICONS = listOf("collect", "card", "stamp", "museum", "dam", "station", "goshuin", "manhole", "ekitag")
+
+/**
+ * Card, stamp or something else (owner, 2026-11-09: a new item is first a card or a stamp, then its kind). Built-in
+ * kinds have a fixed one; your own kinds take it from their icon, so no database change is needed.
+ */
+enum class Category { CARD, STAMP, OTHER }
+
+fun ItemType.category(): Category = when (this) {
+    ItemType.MANHOLE_CARD, ItemType.DAM_CARD -> Category.CARD
+    ItemType.EKI_STAMP, ItemType.GOSHUIN, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.EKITAG -> Category.STAMP
+    ItemType.CUSTOM -> Category.OTHER
+}
+
+fun CollectionType.category(): Category = when (icon) {
+    "card", "manhole", "dam" -> Category.CARD
+    "stamp", "museum", "station", "goshuin", "ekitag" -> Category.STAMP
+    else -> Category.OTHER
+}
+
+/** The icon a kind you type in gets: a card, a stamp, or the general one. */
+fun Category.icon(): String = when (this) { Category.CARD -> "card"; Category.STAMP -> "stamp"; Category.OTHER -> "collect" }
 
 @androidx.annotation.DrawableRes
 fun customIconRes(key: String): Int = when (key) {
+    "card" -> R.drawable.ic_type_card
+    "stamp" -> R.drawable.ic_type_stamp
     "museum" -> R.drawable.ic_type_museum
     "dam" -> R.drawable.ic_type_dam
     "station" -> R.drawable.ic_type_station
@@ -70,6 +93,8 @@ fun customIconRes(key: String): Int = when (key) {
 /** What a screen reader says for each icon choice. */
 @androidx.annotation.StringRes
 private fun iconLabel(key: String): Int = when (key) {
+    "card" -> R.string.add_cat_card
+    "stamp" -> R.string.add_cat_stamp
     "museum" -> R.string.type_museum
     "dam" -> R.string.type_dam
     "station" -> R.string.type_eki

@@ -47,10 +47,15 @@ object PhotoStore {
      * upright, at most [LONG_SIDE] px on the long side, WebP. Written to a temporary file and renamed, so a crash
      * never leaves half a picture. Returns the new content_uri, or null if the source can't be read.
      */
-    fun importCopy(context: Context, source: ImageDecoder.Source, photoId: String, circle: Boolean = false): String? {
+    fun importCopy(context: Context, source: ImageDecoder.Source, photoId: String, circle: Boolean = false, ekitagTitle: String? = null): String? {
         val whole = runCatching { decode(source, LONG_SIDE) }.getOrNull() ?: return null
-        // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo
-        val bmp = if (circle) runCatching { CoverCrop.crop(whole) }.getOrNull()?.also { whole.recycle() } ?: whole else whole
+        // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
+        // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
+        val bmp = when {
+            circle -> runCatching { CoverCrop.crop(whole) }.getOrNull()?.also { whole.recycle() } ?: whole
+            ekitagTitle != null -> runCatching { EkitagArt.render(whole, ekitagTitle) }.getOrNull()?.also { whole.recycle() } ?: whole
+            else -> whole
+        }
         val target = File(dir(context), "$photoId.webp")
         val tmp = File(dir(context), "$photoId.webp.tmp")
         val ok = runCatching {
@@ -66,8 +71,8 @@ object PhotoStore {
         return if (ok) appUri(photoId) else null
     }
 
-    fun importCopy(context: Context, source: Uri, photoId: String, circle: Boolean = false): String? =
-        importCopy(context, ImageDecoder.createSource(context.contentResolver, source), photoId, circle)
+    fun importCopy(context: Context, source: Uri, photoId: String, circle: Boolean = false, ekitagTitle: String? = null): String? =
+        importCopy(context, ImageDecoder.createSource(context.contentResolver, source), photoId, circle, ekitagTitle)
 
     fun importCopy(context: Context, source: File, photoId: String): String? =
         importCopy(context, ImageDecoder.createSource(source), photoId)

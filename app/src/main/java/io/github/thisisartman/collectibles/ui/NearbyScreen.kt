@@ -105,7 +105,7 @@ import io.github.thisisartman.collectibles.data.Origin
 /** Nearby, layout B (owner's pick, 2026-11-06): the map fills the screen and a sheet of tiles sits over it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, focusSearch: Int = 0, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
@@ -125,6 +125,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val focus = androidx.compose.ui.platform.LocalFocusManager.current
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
     val searching = query.isNotBlank()
+    // + → Search (owner, 2026-11-09): focus the bar so the keyboard comes up; the wait lets the sheet close first
+    androidx.compose.runtime.LaunchedEffect(focusSearch) {
+        if (focusSearch > 0) { kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
+    }
 
     val inTab = remember(rows, tab) { rows.filter { it.item.type in tab.types } }
     val kinds = remember(inTab) { inTab.map { it.item.type }.distinct().sortedBy { it.ordinal } }
