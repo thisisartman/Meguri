@@ -164,11 +164,18 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
                     )
                 }
                 if (newKind) {
-                    InkFilterChip(
-                        selected = true, onClick = {},
-                        label = { Text(stringResource(R.string.add_new_kind, typed), maxLines = 1) },
-                        leadingIcon = { Icon(painterResource(customIconRes((category ?: Category.OTHER).icon())), contentDescription = null, modifier = Modifier.size(18.dp)) },
-                    )
+                    // A label, not a chip: it only shows what will be made, so it must not look tappable
+                    androidx.compose.material3.Surface(
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                        color = MaterialTheme.colorScheme.secondaryContainer,
+                        contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                    ) {
+                        Row(Modifier.heightIn(min = 32.dp).padding(horizontal = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(painterResource(customIconRes((category ?: Category.OTHER).icon())), contentDescription = null, modifier = Modifier.size(18.dp))
+                            Spacer(Modifier.width(6.dp))
+                            Text(stringResource(R.string.add_new_kind, typed), maxLines = 1, style = MaterialTheme.typography.labelLarge)
+                        }
+                    }
                 }
             }
             if (newKind) {
