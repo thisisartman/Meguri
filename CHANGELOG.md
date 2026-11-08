@@ -7,7 +7,7 @@
   - On the very first open, "Meguri / 巡り" fades into the map of Japan.
   - In the picker, the keyboard stays up after OK, with the search text selected, so typing the next name replaces it.
   - The card opens beside a tile in the outer columns, and above or below one in the middle columns.
-  - The last thing added shows by name and kind.
+  - The last thing added shows by name and type.
   - Pulling the picker down shows the map with what the search found, framed above the sheet.
   - Back steps through the onboarding instead of leaving it.
   - The search bar is hidden while it runs.
@@ -16,12 +16,12 @@
 - The map is flat: land in the app's own colour, water in a soft tint of the accent, no relief texture, parks or buildings; the same online and offline, light and dark.
 - The pin card's icons are all one size.
 - Edit an item's details: the pencil on an item page opens its names, where to get it, address, hours, notes and position. The position can be where you are, a pasted Google Maps link (a map view, a place or a short link) or a place search. Your edits stay when the catalogue is updated. (Database version 4; existing items move over unchanged.)
-- My book in sections (your pick B1): under the totals and the map, one tile per kind (Manhole cards, Station stamps, Ekitag, Goshuin, Dam cards, Museum stamps, and each of your own collections), each with a ring for how far you are. A tile opens that kind: its own map, its collections as rings (by line for stamps, by prefecture for the rest) with the next one to get, and what you collected last. A ring opens the full book. No long lists on My book itself.
+- My book in sections (your pick B1): under the totals and the map, one tile per type (Manhole cards, Station stamps, Ekitag, Goshuin, Dam cards, Museum stamps, and each of your own collections), each with a ring for how far you are. A tile opens that type: its own map, its collections as rings (by line for stamps, by prefecture for the rest) with the next one to get, and what you collected last. A ring opens the full book. No long lists on My book itself.
 - Share photos to Meguri (#80, your pick "Groups, then a sheet"):
   - Meguri is in Android's share sheet for one photo or several.
-  - The photos are grouped by where they were taken, and each group shows its best guess: the nearest stamp, card or goshuin. "Change" opens a sheet with search, kinds and what's near where they were taken; "Leave these out" skips a group.
+  - The photos are grouped by where they were taken, and each group shows its best guess: the nearest stamp, card or goshuin. "Change" opens a sheet with search, types and what's near where they were taken; "Leave these out" skips a group.
   - "Add all" puts each group's photos on that item, filed as Other photos to sort later. An item you already have keeps its find and gains the photos; one you don't have is collected on the day and at the place the photos were taken.
-  - Photos with no location get no guess; you choose. Some galleries hide where a photo was taken; Meguri then says so and offers "Allow" (photo access and photo locations) instead of asking by itself.
+  - Photos with no location get no guess; you choose. A photo whose location was blanked on the way out (your S23 poster photo via Google Photos) counts as having none. Some galleries hide where a photo was taken; Meguri then says so and offers "Allow" (photo access and photo locations) instead of asking by itself.
 - An Ekitag's tile says so ("Niitsu Station · Ekitag"), since it shares its station's name and spot.
 - Niigata catalogue checked against the official sources:
   - Ekitag: 20 Niigata stations added, from JR East's Niigata branch announcements (2024-03, 2024-07 and 2024-11).

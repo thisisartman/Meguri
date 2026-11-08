@@ -42,8 +42,8 @@ object SharedPhotoReader {
             cr.query(uri, arrayOf(MediaStore.Images.Media.DATE_TAKEN), null, null, null)
                 ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getLong(0).takeIf { it > 0 } else null }
         }.getOrNull()
-        // Some apps write 0,0 for "no position"
-        if (lat == 0.0 && lng == 0.0) { lat = null; lng = null }
+        // Some apps write 0,0 for "no position"; a GPS block emptied by the gallery reads as NaN (S23 + Google Photos, 2026-11-08)
+        if ((lat == 0.0 && lng == 0.0) || lat?.isFinite() == false || lng?.isFinite() == false) { lat = null; lng = null }
         return SharedPhoto(uri.toString(), lat, lng, taken, placeHidden = lat == null && fromGallery && !maySeeOriginals(context))
     }
 

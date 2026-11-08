@@ -231,7 +231,7 @@
 
     <!-- Colour setting (#57, Legion) -->
     <string name="look_device_colours">Device colours</string>
-    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each kind stay the same.</string>
+    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each type stay the same.</string>
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">Stamp</string>
