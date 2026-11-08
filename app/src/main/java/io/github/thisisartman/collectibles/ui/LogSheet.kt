@@ -69,8 +69,9 @@ fun BoxScope.LogSheet(open: Boolean, onDismiss: () -> Unit, onScan: () -> Unit, 
 
 @Composable
 private fun SquareAction(icon: Int, label: String, onClick: () -> Unit) {
+    val tick = rememberTick()
     Surface(
-        onClick = onClick,
+        onClick = { tick(); onClick() },
         modifier = Modifier.size(84.dp),
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,

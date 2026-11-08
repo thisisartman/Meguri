@@ -103,6 +103,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
         val meters = vm.distanceTo(r)
         val context = LocalContext.current
         val tick = rememberTick()
+        val confirm = rememberConfirm()
         // Photos go on the latest collection; with none yet, adding a photo collects the item first
         val target = finds.firstOrNull()?.find?.id
         val photoActions = remember(target, r.item.id) {
@@ -197,8 +198,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 Spacer(Modifier.width(6.dp))
                 Text(collectLabel)
             }
-            if (r.collected) InkOutlinedButton(onClick = { tick(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
-            else Button(onClick = { tick(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
+            if (r.collected) InkOutlinedButton(onClick = { confirm(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
+            else Button(onClick = { confirm(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
         }
         // While the gallery is open the dialog stays hidden; the pick result clears menuKind
         menuKind?.let { k ->
