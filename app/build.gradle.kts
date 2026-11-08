@@ -102,6 +102,9 @@ dependencies {
     implementation(libs.androidx.documentfile)
     // Geofencing only (PRD FR-12); everything else uses Android's own LocationManager
     implementation(libs.play.services.location)
+    // Scan a card (M7, M8): edge-finding scanner and Japanese text reading, both through Play services (small)
+    implementation(libs.mlkit.doc.scanner)
+    implementation(libs.mlkit.text.ja)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)

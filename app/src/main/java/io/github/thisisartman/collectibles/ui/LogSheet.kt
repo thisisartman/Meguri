@@ -51,7 +51,7 @@ import io.github.thisisartman.collectibles.data.ItemType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> Unit) {
+fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> Unit, onScan: () -> Unit = {}) {
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val nearest by vm.nearest.collectAsStateWithLifecycle()
@@ -131,6 +131,15 @@ fun LogSheet(vm: MainViewModel, onDismiss: () -> Unit, onOpenItem: (String) -> U
                 }
                 Spacer(Modifier.width(8.dp))
                 InkOutlinedButton(onClick = { newOpen = true }) { Text(stringResource(R.string.log_new)) }
+            }
+            // Scan a manhole card: crop, read its code, collect it with that photo (M7, M8)
+            Row(Modifier.fillMaxWidth().clickable(onClick = onScan).padding(horizontal = 16.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_scan), contentDescription = null)
+                Spacer(Modifier.width(16.dp))
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.scan_card), style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+                    Text(stringResource(R.string.scan_card_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
         }
     }

@@ -244,7 +244,7 @@ class CollectionRepository @Inject constructor(
      * was taken and placed where they were taken. Each gets Meguri's own copy, filed as Other to sort later. Returns
      * how many were copied.
      */
-    suspend fun addShared(itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?): Int {
+    suspend fun addShared(itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?, kind: String = PhotoKind.OTHER): Int {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             dao.insertFind(
                 Acquisition(
@@ -254,7 +254,7 @@ class CollectionRepository @Inject constructor(
             )
         }
         var copied = 0
-        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), PhotoKind.OTHER)) copied++
+        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), kind)) copied++
         log.i("Share", "Added $copied of ${photos.size} shared photos to item $itemId")
         return copied
     }

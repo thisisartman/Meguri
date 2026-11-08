@@ -1,6 +1,12 @@
 # Changelog
 
 ## Next (after beta.7)
+- Scan a card (M7 auto-crop, M8 recognition): + → "Scan a card".
+  - Google's on-device document scanner finds the card's edges and straightens it (corners can be moved, or a gallery photo imported).
+  - The Japanese text reader reads the printed code, and the matching card is offered: "Collect with this photo" (filed as the card's photo) or "Open". No code: "Pick by hand" opens the share screen.
+  - Both run on the phone through Play services. The reader downloads once in the background; until then the app says so.
+  - This replaces the planned OpenCV crop (+15 MB) with a scanner of well under 1 MB.
+  - Seen on the Poco: 15-202-A001 read from a 240 px picture and matched to Nagaoka · Kaen doki.
 - Card pictures (#53): Settings → Catalogue → Card pictures downloads each manhole card's picture onto this phone, one at a time, from Eki kara Manhole. They are for your own use only, never in the app or backups (© GKP and each city). Tiles show the card greyed until collected; your own photo still comes first; the item page's card opens full screen. Seen on the Poco: 222 of 222.
 - Settings → Catalogue now says what is built in (Niigata, Saitama, Tokyo; all types).
 

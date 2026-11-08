@@ -95,6 +95,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     // For messages that outlive the page that sent them (shared photos added)
     val appScope = androidx.compose.runtime.rememberCoroutineScope()
     var showLog by rememberSaveable { mutableStateOf(false) }
+    // Scan a card (M7, M8): the scanner is hosted here so its result outlives the + sheet
+    var scanTrigger by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    ScanCardHost(vm, nav, scanTrigger)
     // First open after an update: what changed (#77)
     val appContext = androidx.compose.ui.platform.LocalContext.current
     // Not during the onboarding (#81): a phone with no catalogue yet has nothing "new" to read
@@ -333,7 +336,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             }
         }
         if (showLog) {
-            LogSheet(vm, onDismiss = { showLog = false }, onOpenItem = { showLog = false; nav.openItem(it) })
+            LogSheet(vm, onDismiss = { showLog = false }, onOpenItem = { showLog = false; nav.openItem(it) }, onScan = { showLog = false; scanTrigger++ })
         }
     }
 }
