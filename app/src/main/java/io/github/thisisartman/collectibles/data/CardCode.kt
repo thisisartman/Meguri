@@ -40,6 +40,17 @@ object CardCode {
         }.distinct().toList()
     }
 
+    /** Card letters the reader mixes up: L read as I (13-100-L101 came back as I101, owner's batch 2026-11-09), O, Q and D. */
+    private val LOOKALIKE = listOf(setOf('I', 'L'), setOf('O', 'Q', 'D'))
+
+    /** Other known codes that differ from [code] only by a look-alike card letter, to offer as "Or is it...?". */
+    fun lookalikes(code: String, known: Set<String>): List<String> {
+        if (code.length < 8) return emptyList()
+        val i = code.length - 4
+        val group = LOOKALIKE.firstOrNull { code[i] in it } ?: return emptyList()
+        return group.filter { it != code[i] }.map { code.substring(0, i) + it + code.substring(i + 1) }.filter { it in known }
+    }
+
     /** The first code in [text] that is in [known] (catalogue codes), or else the first code found at all. */
     fun best(text: String, known: Set<String>): String? {
         val all = findAll(text)

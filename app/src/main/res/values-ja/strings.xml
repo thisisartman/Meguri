@@ -513,6 +513,7 @@
     <string name="cards_remove">カードの画像を削除</string>
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
     <string name="scan_card">カード・ふたをスキャン</string>
+    <string name="scan_or_maybe">%1$sですか？</string>
     <string name="add_scan">スキャン</string>
     <string name="add_search">検索</string>
     <string name="add_new">追加</string>

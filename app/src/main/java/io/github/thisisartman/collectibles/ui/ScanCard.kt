@@ -96,7 +96,11 @@ private suspend fun cardCopy(context: Context, bmp: android.graphics.Bitmap, deg
         }.getOrElse { Pair(null, io.github.thisisartman.collectibles.photo.CardTrim.Result.NO_FRAME) }
     }
 
-private data class Scan(val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
+private data class Scan(
+    val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList(),
+    /** Cards whose code differs only by a look-alike letter (I or L), offered as "Or is it...?" */
+    val lookalikes: List<ItemRow> = emptyList(),
+)
 
 /**
  * Scan a card (M7 auto-crop, M8 recognition; owner 2026-11-08: yes to both). Google's on-device document scanner
@@ -145,6 +149,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             var code: String? = null
             var turn = 0
             var failure: Throwable? = null
+            var rawText = ""
             for (deg in listOf(0, 180, 90, 270)) {
                 val read = runCatching {
                     val input = page0?.let { InputImage.fromBitmap(it, deg) } ?: InputImage.fromFilePath(context, page.imageUri)
@@ -153,6 +158,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 failure = read.exceptionOrNull()
                 if (failure != null) break
                 val found = read.getOrNull() ?: break
+                if (deg == 0) rawText = found.text
                 code = CardCode.best(found.text, known)
                 if (code != null) {
                     turn = deg
@@ -168,26 +174,46 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 }
                 if (page0 == null) break
             }
+            // Nothing read on the whole page: read the card alone, trimmed by its blue frame. The reader missed 3 of the
+            // owner's 27 cards on the raw page (the box and the cards under it around the card)
+            var page1 = page0
+            if (code == null && failure == null && page0 != null) {
+                val card = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                    runCatching { io.github.thisisartman.collectibles.photo.CardTrim.trim(page0).first }.getOrNull()
+                }
+                if (card != null) for (deg in listOf(0, 180)) {
+                    val found = runCatching { reader.process(InputImage.fromBitmap(card, deg)).await() }.getOrNull() ?: break
+                    val c = CardCode.best(found.text, known) ?: continue
+                    code = c
+                    val box = found.textBlocks.flatMap { it.lines }.firstOrNull { CardCode.best(it.text, known) == c }?.boundingBox
+                    turn = if (box == null) deg else (deg + CardCode.turnToTopRight(box.exactCenterX(), box.exactCenterY(), card.width.toFloat(), card.height.toFloat())) % 360
+                    page1 = card
+                    break
+                }
+            }
             // The reader comes through Play services and downloads on first use: say so instead of "no code" (Poco, 2026-11-08)
             if ((failure as? com.google.mlkit.common.MlKitException)?.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) {
                 reading = false; notReady = true; return@launch
             }
             // A card that was read: upright, then trimmed to the top card by its blue frame (owner, 2026-11-09: the
             // scanner took in the cards under it or the box's edge). No clean frame: the upright page as it was
-            val trimmed = if (code != null && page0 != null) cardCopy(context, page0, turn) else null
-            val photo = trimmed?.first ?: if (turn != 0 && page0 != null) uprightCopy(context, page0, turn) ?: page.imageUri else page.imageUri
+            val src = page1
+            val trimmed = if (code != null && src != null) cardCopy(context, src, turn) else null
+            val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) uprightCopy(context, src, turn) ?: page.imageUri else page.imageUri
             // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
             if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
                 val dir = java.io.File(context.getExternalFilesDir(null), "scan-debug").apply { mkdirs() }
                 val stamp = System.currentTimeMillis()
                 context.contentResolver.openInputStream(page.imageUri)?.use { i -> java.io.File(dir, "$stamp-page.jpg").outputStream().use { i.copyTo(it) } }
-                java.io.File(dir, "$stamp.txt").writeText("code=${code ?: ""}\nturn=$turn\ntrim=${trimmed?.second ?: "not tried"}\n")
+                java.io.File(dir, "$stamp.txt").writeText("code=${code ?: ""}\nturn=$turn\ntrim=${trimmed?.second ?: "not tried"}\n--- read as it came:\n$rawText\n")
                 trimmed?.first?.let { u -> context.contentResolver.openInputStream(u)?.use { i -> java.io.File(dir, "$stamp-trim.jpg").outputStream().use { i.copyTo(it) } } }
             }
             val match = cards.firstOrNull { it.item.code == code }
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
             // on the card you pick from the nearest ones
-            val cover = match == null && code == null && runCatching {
+            // A card whose code wasn't read is still a card (blue frame), not a cover: then it goes to Pick by hand
+            val isCard = code == null && page0 != null && runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            val cover = match == null && code == null && !isCard && runCatching {
                 val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
                     d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
                     val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
@@ -195,8 +221,10 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
             }.getOrDefault(false)
             val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
+            if (page1 !== page0) page1?.recycle()
             page0?.recycle()
-            result = Scan(photo, code, match, cover, near)
+            val alike = code?.let { c -> CardCode.lookalikes(c, known).mapNotNull { k -> cards.firstOrNull { it.item.code == k } } } ?: emptyList()
+            result = Scan(photo, code, match, cover, near, alike)
             reading = false
         }
     }
@@ -246,6 +274,13 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                    // The reader can take an L for an I: offer the look-alike card, one tap to switch to it
+                    s.lookalikes.forEach { alt ->
+                        TextButton(
+                            onClick = { result = s.copy(row = alt, code = alt.item.code, lookalikes = listOfNotNull(s.row)) },
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                        ) { Text(stringResource(R.string.scan_or_maybe, alt.item.shortName(ja)), modifier = Modifier.fillMaxWidth()) }
+                    }
                     s.nearCards.forEach { c ->
                         TextButton(onClick = {
                             result = null

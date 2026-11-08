@@ -27,11 +27,12 @@ object CardTrim {
 
     /**
      * A card frame's blue, not the pale blue of a card box or white: Niigata frames are about (20,70,170), Tokyo's
-     * (63,99,125), the owner's box (130,200,230). The red channel is what sets the box apart (owner's 27 photos).
+     * (63,99,125) with a steel blue top band (100,140,170), the owner's box (130,200,230). The red channel is what
+     * sets the box apart (owner's 27 photos: red under 100 missed Tokyo's top band on 13 cards).
      */
     fun isFrameBlue(argb: Int): Boolean {
         val r = (argb shr 16) and 0xFF; val g = (argb shr 8) and 0xFF; val b = argb and 0xFF
-        return r < 100 && b - r > 40 && b > 100 && b >= g
+        return r < 120 && b - r > 40 && b > 100 && b >= g
     }
 
     /** Share of points just inside each edge of [q] that are frame: a real frame is blue on all four sides. */
@@ -119,11 +120,42 @@ object CardTrim {
         )
     }
 
+    /**
+     * [page] shrunk to [w] by [h] in halving steps. One bilinear step from a phone page to 320 px reads only a few
+     * pixels per output pixel and skipped the card's thin side bands (13 of the owner's Tokyo pages failed); each
+     * halving averages every pixel, like the prototype's thumbnail (22 of 31 pages trimmed on the laptop probe).
+     */
+    private fun shrink(page: Bitmap, w: Int, h: Int): Bitmap {
+        var cur = page
+        while (cur.width / 2 >= w && cur.height / 2 >= h) {
+            val next = Bitmap.createScaledBitmap(cur, cur.width / 2, cur.height / 2, true)
+            if (cur !== page) cur.recycle()
+            cur = next
+        }
+        if (cur.width == w && cur.height == h) return cur
+        val out = Bitmap.createScaledBitmap(cur, w, h, true)
+        if (cur !== page && cur !== out) cur.recycle()
+        return out
+    }
+
+    /**
+     * Whether [page] shows a manhole card at all (a large patch of frame blue), even when it can't be trimmed:
+     * a card whose code wasn't read must not be taken for a manhole cover (owner's batch, 2026-11-09: 3 were).
+     */
+    fun looksLikeCard(page: Bitmap): Boolean {
+        val scale = min(1f, WORK.toFloat() / max(page.width, page.height))
+        val sw = max(1, (page.width * scale).roundToInt()); val sh = max(1, (page.height * scale).roundToInt())
+        val small = shrink(page, sw, sh)
+        val px = IntArray(sw * sh).also { small.getPixels(it, 0, sw, 0, 0, sw, sh) }
+        if (small !== page) small.recycle()
+        return find(px, sw, sh).second != Result.NO_FRAME
+    }
+
     /** [page] trimmed to the top card and straightened, or null (with why) to keep the scanner's own crop. */
     fun trim(page: Bitmap): Pair<Bitmap?, Result> {
         val scale = min(1f, WORK.toFloat() / max(page.width, page.height))
         val sw = max(1, (page.width * scale).roundToInt()); val sh = max(1, (page.height * scale).roundToInt())
-        val small = Bitmap.createScaledBitmap(page, sw, sh, true)
+        val small = shrink(page, sw, sh)
         val px = IntArray(sw * sh).also { small.getPixels(it, 0, sw, 0, 0, sw, sh) }
         if (small !== page) small.recycle()
         val (corners, why) = find(px, sw, sh)

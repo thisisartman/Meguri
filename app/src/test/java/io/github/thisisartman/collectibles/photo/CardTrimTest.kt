@@ -85,6 +85,9 @@ class CardTrimTest {
 
     @Test fun tokyosDullerBlueIsFrame() {
         assert(CardTrim.isFrameBlue(rgb(63, 99, 125)))
+        // Tokyo's steel blue top band, measured on the owner's photos
+        assert(CardTrim.isFrameBlue(rgb(106, 147, 177)))
+        assert(CardTrim.isFrameBlue(rgb(97, 133, 159)))
     }
 
     @Test fun paleBlueAndWhiteAreNotFrame() {

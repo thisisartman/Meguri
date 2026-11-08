@@ -31,6 +31,12 @@ class CardCodeTest {
         assertEquals("15-202-A099", CardCode.best(text, setOf("15-202-A099")))
     }
 
+    @Test fun anIMayBeAnL() = assertEquals(listOf("13-100-L101"), CardCode.lookalikes("13-100-I101", setOf("13-100-I101", "13-100-L101", "13-100-J101")))
+
+    @Test fun noLookalikeWhenNoneIsKnown() = assertEquals(emptyList<String>(), CardCode.lookalikes("15-202-A001", setOf("15-202-A001", "15-202-B001")))
+
+    @Test fun anOMayBeAQOrD() = assertEquals(listOf("13-100-Q001", "13-100-D001"), CardCode.lookalikes("13-100-O001", setOf("13-100-O001", "13-100-Q001", "13-100-D001")))
+
     // A 600 x 840 card page; the code is printed top right when it is upright
     @Test fun anUprightCardNeedsNoTurn() = assertEquals(0, CardCode.turnToTopRight(500f, 60f, 600f, 840f))
 
