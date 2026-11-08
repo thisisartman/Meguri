@@ -366,7 +366,7 @@
     <string name="photo_cover_clear">Stop using as display picture</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
     <string name="settings_alerts">Alerts</string>
-    <string name="settings_alerts_sub">Distance for each kind, what alerts, Proximity mode, quiet hours</string>
+    <string name="settings_alerts_sub">Distance for each type, what alerts, Proximity mode, quiet hours</string>
     <string name="settings_data">Backup and data</string>
     <string name="settings_look">Appearance and language</string>
     <string name="settings_catalogue">Catalogue</string>
@@ -375,7 +375,7 @@
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">Logs · version %1$s · credits</string>
     <string name="settings_collections_sub">Your own collections, and making a new one</string>
-    <string name="photo_kind_label">Kind</string>
+    <string name="photo_kind_label">Type</string>
     <string name="sort_tip_near">Nearest</string>
     <string name="sort_tip_near_text">: how far each item is from you</string>
     <string name="sort_tip_az">A to Z</string>
@@ -391,8 +391,8 @@
         <item quantity="other">finds</item>
     </plurals>
     <plurals name="profile_kinds">
-        <item quantity="one">kind</item>
-        <item quantity="other">kinds</item>
+        <item quantity="one">type</item>
+        <item quantity="other">types</item>
     </plurals>
     <string name="onb_welcome">Welcome to Meguri</string>
     <string name="onb_question">Are you starting fresh, or do you already have cards, stamps or goshuin to put in?</string>
@@ -487,7 +487,7 @@
     <string name="share_leave_out">Leave these out</string>
     <plurals name="share_hidden"><item quantity="one">Your gallery hid where %d photo was taken, so it can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item><item quantity="other">Your gallery hid where %d photos were taken, so they can\'t be grouped by place. Meguri can read it if you allow photo access and photo locations.</item></plurals>
     <string name="share_allow_places">Allow</string>
-    <!-- My book as kinds (B1) -->
+    <!-- My book by type (B1) -->
     <string name="book_your_collections">Your collections</string>
     <string name="kind_your_own">your own</string>
     <plurals name="kind_lines"><item quantity="one">%d line</item><item quantity="other">%d lines</item></plurals>
@@ -529,11 +529,11 @@
     <string name="add_cat_card">Card</string>
     <string name="add_cat_stamp">Stamp</string>
     <string name="add_cat_other">Other</string>
-    <string name="add_kind">Kind</string>
-    <string name="add_kind_hint">Pick one or type a new kind</string>
-    <string name="add_new_kind">New kind: %1$s</string>
-    <string name="add_new_kind_pick">Choose card, stamp or other for the new kind.</string>
-    <string name="add_new_kind_note">It becomes a kind of its own, with its own place in My book.</string>
+    <string name="add_kind">Type</string>
+    <string name="add_kind_hint">Pick one, or write a new one</string>
+    <string name="add_new_kind">New type: %1$s</string>
+    <string name="add_new_kind_pick">Choose card, stamp or other for the new type.</string>
+    <string name="add_new_kind_note">It becomes a type of its own, with its own place in My book.</string>
     <string name="add_save_photo">Save + photo</string>
     <string name="scan_card_sub">Photograph a manhole card or cover: Meguri straightens it, reads the code or cuts out the cover, and finds it</string>
     <string name="scan_reading">Reading the card…</string>

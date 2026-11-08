@@ -3,16 +3,17 @@
 ## Next (after beta.9)
 - Map: the land is a shade apart from the app (lighter in dark mode, slightly darker in light mode), so the search bar and the sheet have a clear edge. Roads in dark mode are lighter to match.
 - + opens a small card just above it with three square buttons (Scan, Search, Add); the bottom bar stays usable. + again, a tap outside or Back closes it.
-- (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its kind. A kind you type that Meguri doesn't have becomes a kind of its own, with its own place in My book.
+- (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its type. A type you write that Meguri doesn't have becomes a type of its own, with its own place in My book.
 - Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name on two lines (your language first), in M PLUS Rounded 1c.
 - Testing on the Poco: card photos from its own camera app against Meguri's scanner, to see which reads and crops better on a low-end phone.
+- The word "kind" is gone from the app: they are types (the owner's word).
 - Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").
-- Nearby: your own kinds sit under Stamps or Cards; the third tab, Other, is only for kinds that are neither.
+- Nearby: your own types sit under Stamps or Cards; the third tab, Other, is only for types that are neither.
 - Scan result: the full screen button works (it did nothing).
 - Taps vibrate on more phones (the Poco gave none), and Collect has a firmer buzz of its own.
 - Scan a card: when the code could be one of two cards (an L read as an I), it asks "Or is it ...?". A card whose code can't be read goes to Pick by hand, never to the manhole cover question.
 - Scan a card: trimmed to the top card when the scanner takes in the cards under it or the box (Tokyo's lighter frames too), and turned so its code sits top right, as on every card. On the owner's 27 card photos: 24 codes read, and Tokyo's lighter frames trim too.
-- Your own kinds show their own name at the top of an item's page, not "My collection".
+- Your own types show their own name at the top of an item's page, not "My collection".
 - Not released yet: these go out as 0.4.0 after the owner's testing of beta.9.
 - Scan a card: a card scanned upside down (or sideways) is turned the right way up, by finding which way its code reads.
 - Photo dialog: what "Remove photo" does is now a tooltip on the button (long press), not a line of text.
