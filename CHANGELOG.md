@@ -8,6 +8,7 @@
   - "Scan a card or cover": with no card code but a clear circle, it is a cover, filed on the card you pick from the nearest three. It becomes the display picture.
   - Seen on the Poco.
 - **Crop accuracy** of card scans is still to tune with the owner's card photos.
+- Sent on Telegram at 21:20, with a copy stored on the Predator.
 
 ## 2026-11-08: 0.3.0-beta.8 (versionCode 10)
 - Carries Scan a card and Card pictures (below). Same database as beta.7, so not one-way from beta.7 (one-way from beta.6).
