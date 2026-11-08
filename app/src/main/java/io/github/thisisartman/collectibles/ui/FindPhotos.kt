@@ -109,6 +109,8 @@ private val SLOT = 96.dp
 fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null) {
     var adding by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Photo?>(null) }
+    var fullscreen by remember { mutableStateOf<String?>(null) }
+    fullscreen?.let { FullscreenPhoto(it, onClose = { fullscreen = null }) }
     var pendingKind by remember { mutableStateOf(PhotoKind.STAMP) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) actions.pickPhoto(uri, pendingKind)
@@ -156,7 +158,8 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
             title = { Text(stringResource(R.string.photo_edit_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    PhotoThumb(p.contentUri, 120.dp)
+                    // Card size, whole, with fullscreen a tap away (owner, 2026-11-08)
+                    LargePhoto(p.contentUri, onFullscreen = { fullscreen = p.contentUri })
                     KindChips(type, kind) { kind = it }
                     // The photo shown for this item on tiles, in lists and on its page
                     val isCover = p.id == coverId

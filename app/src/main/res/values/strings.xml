@@ -508,4 +508,6 @@
     <string name="photo_hint_pick">Pick another</string>
     <string name="photo_hint_channel">Photo suggestions</string>
     <string name="photo_hint_channel_sub">A new photo taken near something you have not collected</string>
+    <string name="photo_view_fullscreen">View full screen</string>
+    <string name="photo_view_close">Close</string>
 </resources>

@@ -502,4 +502,6 @@
     <string name="photo_hint_pick">別のものを選ぶ</string>
     <string name="photo_hint_channel">写真の提案</string>
     <string name="photo_hint_channel_sub">未取得のものの近くで撮った新しい写真</string>
+    <string name="photo_view_fullscreen">全画面で見る</string>
+    <string name="photo_view_close">閉じる</string>
 </resources>

@@ -120,7 +120,11 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             item {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Mark(r, 64.dp)
+                    // The picture at the top opens full screen (owner, 2026-11-08)
+                    var big by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+                    val picture = r.photoUri
+                    Mark(r, 64.dp, if (picture != null) Modifier.clickable { big = true } else Modifier)
+                    if (big && picture != null) FullscreenPhoto(picture, onClose = { big = false })
                     Spacer(Modifier.width(14.dp))
                     Column {
                         NameText(item, ja, lineNames)

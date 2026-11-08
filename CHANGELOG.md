@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-11-08: next beta (not released)
+- Photos larger: tapping a photo on an item page shows it big and whole, with a full-screen button; full screen zooms with two fingers or a double tap. The picture at the top of an item page opens full screen too.
 - Photo suggestions (M7): with Settings → Alerts → "Suggest new photos" on (it asks for photo access), a photo taken with the camera within 300 m of something you have not collected brings a quiet notification: "Attach" collects it on the photo's day with the photo, "Pick another" opens the share screen. Off by default.
 - Timeline (M6): My book → Timeline lists everything you collected, by day, with times; a day opens the trip report.
 - List filters (M6): each prefecture's list has All / To get / Have, and the card series when there are several.

@@ -36,6 +36,7 @@ object WhatsNew {
                 "Share to Meguri: share photos from your gallery, grouped by place and date, then pick what each is" to "Meguriに共有：ギャラリーの写真を共有すると、場所と日付でまとめて登録",
                 "Edit details: names, place, hours, notes and position of any item; kept through catalogue updates" to "詳細の編集：名前・場所・時間・メモ・位置。カタログ更新でも残ります",
                 "Photo suggestions: a photo taken near something you haven't collected offers to attach itself (Settings, Alerts; off until you turn it on)" to "写真の提案：未取得のものの近くで撮った写真を追加するよう提案（設定のアラートでオン）",
+                "Photos: tap one to see it large, then full screen with zoom" to "写真：タップで大きく、全画面でズームも",
                 "Timeline: everything you collected, by day (My book)" to "タイムライン：集めたものを日ごとに（マイブック）",
                 "Filters: To get / Have and card series in each list" to "絞り込み：各リストで未取得・取得済み・弾",
                 "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
