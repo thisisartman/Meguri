@@ -352,6 +352,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     else typing?.let { s ->
         val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
         TypeCodeDialog(
+            cards = remember(cards) { cards.map { it to vm.distanceTo(it) } },
             onDismiss = { typing = null },
             onCode = { code ->
                 val match = cards.firstOrNull { it.item.code == code }
@@ -368,9 +369,12 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     fullscreen?.let { u -> FullscreenPhoto(u, onClose = { fullscreen = null }) }
 }
 
-/** Type a card's code by hand. [onCode] gets the tidied code and says whether a card has it. */
+/**
+ * Type a card's code by hand. [onCode] gets the tidied code and says whether a card has it. As you type, any part
+ * of a code ("A001", "202-A") lists the cards that have it, best match first, then nearest (owner, 2026-11-09).
+ */
 @Composable
-private fun TypeCodeDialog(onDismiss: () -> Unit, onCode: (String) -> Boolean) {
+private fun TypeCodeDialog(cards: List<Pair<ItemRow, Double?>>, onDismiss: () -> Unit, onCode: (String) -> Boolean) {
     var text by remember { mutableStateOf("") }
     var notFound by remember { mutableStateOf(false) }
     val code = CardCode.fromTyped(text)
@@ -394,6 +398,18 @@ private fun TypeCodeDialog(onDismiss: () -> Unit, onCode: (String) -> Boolean) {
                     keyboardActions = androidx.compose.foundation.text.KeyboardActions(onDone = { code?.let { notFound = !onCode(it) } }),
                     modifier = Modifier.fillMaxWidth().focusRequester(focus),
                 )
+                val q = text.trim()
+                if (q.isNotEmpty()) {
+                    val ja = isJapanese()
+                    rankSearch(cards, q, { fuzzyScore(q, listOf(it.first.item.code)) }, { it.second }).take(6).forEach { (r, d) ->
+                        TextButton(onClick = { r.item.code?.let { onCode(it) } }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                            Text(
+                                listOfNotNull(r.item.code, r.item.cardTitle(ja).first, distanceText(d)).joinToString(" · "),
+                                modifier = Modifier.fillMaxWidth(), maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            )
+                        }
+                    }
+                }
             }
         },
         confirmButton = { TextButton(enabled = code != null, onClick = { code?.let { notFound = !onCode(it) } }) { Text(stringResource(R.string.scan_type_code_find)) } },

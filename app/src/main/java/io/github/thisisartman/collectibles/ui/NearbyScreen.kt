@@ -138,11 +138,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var searchFocused by remember { mutableStateOf(false) }
     var listOpen by rememberSaveable { mutableStateOf(false) }
     var fitTick by remember { mutableIntStateOf(0) }
-    // A search looks through everything (both tabs, every kind), fuzzy, by name in either language, code or place
+    // A search looks through everything (both tabs, every type), with the shared search: names, code, town, place
     val matches = remember(rows, query) {
         val q = query.trim()
         if (q.isEmpty()) emptyList()
-        else rows.map { it to fuzzyScore(q, listOf(it.item.nameRomaji, it.item.nameJa, it.item.code, it.item.placeName)) }.filter { it.second > 0 }
+        else rows.map { it to it.item.searchScore(q) }.filter { it.second > 0 }
     }
     val matchKinds = remember(matches) { matches.map { it.first.item.type }.distinct().sortedBy { it.ordinal } }
     val shown = remember(inTab, matches, kind, searchKind, byName, here, ja, query) {

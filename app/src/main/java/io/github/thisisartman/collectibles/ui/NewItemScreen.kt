@@ -83,8 +83,9 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
         customTypes.map { KindOption(it.name, it.category(), ItemType.CUSTOM, it.id) }
     val typed = kindText.trim()
     val exact = options.firstOrNull { it.label.equals(typed, ignoreCase = true) }
-    val shown = options.filter { o ->
-        (category == null || o.category == category) && (typed.isEmpty() || o.label.contains(typed, ignoreCase = true))
+    // The shared forgiving search, best match first ("manhol" or "マンホール" finds Manhole card)
+    val shown = options.filter { o -> category == null || o.category == category }.let { opts ->
+        if (typed.isEmpty()) opts else rankSearch(opts, typed, { fuzzyScore(typed, listOf(it.label)) }, { null })
     }
     val newKind = typed.isNotEmpty() && exact == null
     val hasCost = when {

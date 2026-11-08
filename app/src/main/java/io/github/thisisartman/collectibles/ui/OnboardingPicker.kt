@@ -88,8 +88,11 @@ fun OnboardingPicker(
     val places = remember(rows) { pickerPlaces(rows.filter { !it.collected }) }
     val shown = remember(places, query.text, nearest) {
         val q = query.text.trim()
-        val hits = if (q.isEmpty()) places else places.filter { p -> p.rows.any { r -> fuzzyScore(q, listOf(r.item.nameRomaji, r.item.nameJa, r.item.code)) > 0 } }
-        sortPlaces(hits, ja, nearest, distance)
+        // The shared search; while typing, the best match comes first (ties keep A to Z or nearest)
+        fun score(p: PickerPlace) = p.rows.maxOf { r -> r.item.searchScore(q) }
+        val hits = if (q.isEmpty()) places else places.filter { score(it) > 0 }
+        val sorted = sortPlaces(hits, ja, nearest, distance)
+        if (q.isEmpty()) sorted else sorted.sortedByDescending { score(it) }
     }
     val byId = remember(rows) { rows.associateBy { it.item.id } }
     androidx.compose.runtime.LaunchedEffect(shown) { state.pickerShown = shown.map { it.first } }

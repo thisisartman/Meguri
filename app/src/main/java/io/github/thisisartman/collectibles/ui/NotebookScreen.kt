@@ -204,11 +204,8 @@ private fun StampRow(
                 )
                 val q = w.query.trim()
                 if (q.isNotEmpty()) {
-                    val hits = targets.mapNotNull { r ->
-                        val s = fuzzyScore(q, listOf(r.item.nameJa, r.item.nameRomaji, r.item.municipality))
-                        if (s > 0) Triple(r, s, vm.distanceTo(r) ?: Double.MAX_VALUE) else null
-                    }.sortedWith(compareByDescending<Triple<io.github.thisisartman.collectibles.data.ItemRow, Int, Double>> { it.second }.thenBy { it.third }).take(5)
-                    hits.forEach { (r, _, d) ->
+                    val hits = rankSearch(targets, q, { it.item.searchScore(q) }, { vm.distanceTo(it) }).take(5).map { it to (vm.distanceTo(it) ?: Double.MAX_VALUE) }
+                    hits.forEach { (r, d) ->
                         androidx.compose.material3.TextButton(onClick = { w.chosen = r.item.id; w.query = "" }, modifier = Modifier.fillMaxWidth()) {
                             Text(listOfNotNull(r.item.displayName(ja), distanceText(d.takeIf { it < Double.MAX_VALUE })).joinToString(" · "), modifier = Modifier.fillMaxWidth())
                         }

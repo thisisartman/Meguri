@@ -212,9 +212,11 @@ private fun PickSheet(
         if (query.isBlank()) {
             ShareGrouping.suggestions(rows, group.centre, here, types = kind?.let { setOf(it) }, limit = 12).map { it.first }
         } else {
-            rows.filter { (kind == null || it.item.type == kind) && it.item.matches(query) }
-                .sortedBy { r -> if (at == null || r.item.lat == null) Double.MAX_VALUE else distanceM(at.first, at.second, r.item.lat, r.item.lng!!) }
-                .take(24)
+            // The shared search: best match first, then nearest to where the photos were taken
+            rankSearch(
+                rows.filter { kind == null || it.item.type == kind }, query, { it.item.searchScore(query) },
+                { r -> if (at == null || r.item.lat == null) null else distanceM(at.first, at.second, r.item.lat, r.item.lng!!) },
+            ).take(24)
         }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {

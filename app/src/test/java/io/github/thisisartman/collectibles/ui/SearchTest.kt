@@ -34,4 +34,28 @@ class SearchTest {
         assertEquals(0, fuzzyScore("sanjo", minami))
         assertEquals(0, fuzzyScore("", minami))
     }
+
+    // Owner, 2026-11-09: any part of a code finds the card ("A001" lists every A001 card)
+    @Test fun partOfACodeFindsTheCard() {
+        assert(fuzzyScore("A001", listOf("15-202-A001")) > 0)
+        assert(fuzzyScore("202-a", listOf("15-202-A001")) > 0)
+        assert(fuzzyScore("A001", listOf("15-202-B001")) == 0)
+    }
+
+    @Test fun fullWidthTypingFinds() = assert(fuzzyScore("Ａ００１", listOf("15-202-A001")) > 0)
+
+    @Test fun katakanaAndHiraganaFindEachOther() {
+        assert(fuzzyScore("うらさ", listOf("ウラサ")) > 0)
+        assert(fuzzyScore("ウラサ", listOf("うらさ")) > 0)
+    }
+
+    @Test fun noTypoAllowanceForKanji() = assertEquals(0, fuzzyScore("新瀉", listOf("新潟駅")))
+
+    @Test fun stationInsideAWordIsKept() = assert(fuzzyScore("stationery", listOf("Stationery shop")) > 0)
+
+    @Test fun rankingIsBestMatchThenNearest() {
+        val items = listOf("Urasa" to 3.0, "Kami-Urasa" to 1.0, "Urasa-kita" to 9.0)
+        val ranked = rankSearch(items, "ura", { fuzzyScore("ura", listOf(it.first)) }, { it.second }).map { it.first }
+        assertEquals(listOf("Urasa", "Urasa-kita", "Kami-Urasa"), ranked)
+    }
 }
