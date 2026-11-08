@@ -6,11 +6,15 @@
 - (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its type. A type you write that Meguri doesn't have becomes a type of its own, with its own place in My book.
 - Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name on two lines (your language first), in M PLUS Rounded 1c.
 - Tested on the Poco: card photos from its own camera app, run through Meguri's scanner, read 5 of 6 codes (the miss had glare across the card).
-- The word "kind" is gone from the app: they are types (the owner's word).
+- The word "kind" is gone from the app.
 - Add form: "New type: ..." is a label now, not a button that did nothing.
 - Notebook stamps: Scan a notebook page and Meguri boxes each stamp (move, resize, remove or add boxes), cleans it (Show original to switch), reads the station name printed on it and picks the station when sure, suggests it when fairly sure, or lets you type to find it. Saved as had before Meguri, never as collected today.
 - Search is forgiving everywhere: any part of a card code ("A001"), Japanese full-width typing, hiragana or katakana, names in either language, the town; best match first, then nearest. Type code lists matching cards as you type.
-- Settings: a proposal for a theme switch, fuller sections and simpler Alerts is with the owner.
+- Settings: Theme (Phone, Light or Dark; the map and the status bar follow it), Colours (Meguri or Wallpaper) and Language as one-tap choices. On Android 12 and older, Language opens the phone's language settings.
+- Settings list: an icon for each section, and what is set now under it (theme, colours, language; your categories; the prefectures loaded). Order: Appearance, Alerts, Backup, Categories, Catalogue, Help.
+- Catalogue: the prefectures sit one tap in, under Installed catalogues, each with how many of each category it has, next to Load catalogue (CSV). Card pictures stay on the Catalogue page.
+- Help and about: What's new opens from here; About opens a page with the version, licences and credits (the About line did nothing before).
+- What you collect is now called a category everywhere (it was type): Categories in Settings, "New category" on the Add form, "4 categories" on My book.
 - Nearby tiles: shorter names (no "Station" or "Michi-no-Eki"), and an Ekitag has a small badge instead of "· Ekitag"; a long single word no longer breaks in the middle. Search results show a card's code under its design name.
 - Scan a card: when the code can't be read, choose Retake photo or Type code. The first time you type one, a short animation shows where the code is (top right of the card).
 - Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").

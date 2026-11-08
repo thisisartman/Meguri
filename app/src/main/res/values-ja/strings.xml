@@ -110,7 +110,7 @@
     <string name="log_not_in_list_sub">新しく追加して、そのまま記録できます</string>
     <string name="log_new">追加</string>
     <string name="new_title">新しい項目</string>
-    <string name="new_type">種類</string>
+    <string name="new_type">カテゴリー</string>
     <string name="new_name_ja">名前（日本語）</string>
     <string name="new_name_romaji">名前（ローマ字・任意）</string>
     <string name="new_save">保存して記録</string>
@@ -269,7 +269,7 @@
     <string name="no_date">—</string>
     <string name="item_map_not_saved">この場所の地図は端末に保存されていないため、ここではインターネットが必要です。</string>
     <string name="search_show_on_map">地図で見る</string>
-    <string name="type_custom">マイコレクション</string>
+    <string name="type_custom">自分のカテゴリー</string>
     <string name="kind_item">アイテム</string>
     <string name="item_place">場所</string>
     <string name="new_where">場所</string>
@@ -280,13 +280,13 @@
     <string name="new_no_place">見つかりませんでした。日本語の名前で試してください。見つからない場合は現在地を使います。</string>
     <string name="osm_credit">場所 © OpenStreetMap contributors</string>
     <string name="new_cost">支払った金額</string>
-    <string name="collection_new_title">新しいコレクション</string>
+    <string name="collection_new_title">新しいカテゴリー</string>
     <string name="collection_name">名前</string>
     <string name="collection_color">色</string>
     <string name="collection_icon">アイコン</string>
     <string name="collection_has_cost">支払った金額を記録する</string>
-    <string name="collection_new">新しいコレクション</string>
-    <string name="more_my_collections">マイコレクション</string>
+    <string name="collection_new">新しいカテゴリー</string>
+    <string name="more_my_collections">カテゴリー</string>
     <string name="quantity_times">×%1$d</string>
     <string name="find_edit_title">この取得</string>
     <string name="find_quantity">数</string>
@@ -302,7 +302,7 @@
     <string name="a11y_color">色%1$d</string>
     <string name="type_museum">博物館スタンプ</string>
     <string name="type_dam">ダムカード</string>
-    <string name="collection_name_taken">同じ名前のコレクションがすでにあります。</string>
+    <string name="collection_name_taken">同じ名前のカテゴリーがあります。</string>
     <string name="more_backup_photos">写真ごとバックアップ</string>
     <string name="more_backup_photos_sub">新しい端末へ移るとき用：写真もすべて含めます。新しい端末で復元すると写真がMeguriに戻ります。</string>
     <string name="menu_trip">トリップ</string>
@@ -374,7 +374,7 @@
     <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）とオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
-    <string name="settings_collections_sub">自分のコレクションと新しいコレクションの作成</string>
+    <string name="settings_collections_sub">自分で追加したカテゴリーと、新しい追加</string>
     <string name="photo_kind_label">種類</string>
     <string name="sort_tip_near">近い順</string>
     <string name="sort_tip_near_text">：各項目までの距離</string>
@@ -439,7 +439,7 @@
     <string name="onb_finished_done">完了</string>
     <string name="profile_collected">集めたもの</string>
     <plurals name="profile_collections">
-        <item quantity="other">コレクション</item>
+        <item quantity="other">カテゴリー</item>
     </plurals>
     <string name="profile_recent">最近集めたもの</string>
     <string name="edit_title">詳細を編集</string>
@@ -555,11 +555,11 @@
     <string name="add_cat_card">カード</string>
     <string name="add_cat_stamp">スタンプ</string>
     <string name="add_cat_other">その他</string>
-    <string name="add_kind">種類</string>
+    <string name="add_kind">カテゴリー</string>
     <string name="add_kind_hint">選ぶか、新しい種類を入力</string>
-    <string name="add_new_kind">新しい種類：%1$s</string>
+    <string name="add_new_kind">新しいカテゴリー：%1$s</string>
     <string name="add_new_kind_pick">新しい種類のカード・スタンプ・その他を選んでください。</string>
-    <string name="add_new_kind_note">独立した種類として、マイブックに加わります。</string>
+    <string name="add_new_kind_note">独立したカテゴリーとして、マイブックに加わります。</string>
     <string name="add_save_photo">保存＋写真</string>
     <string name="scan_card_sub">マンホールカードやふたを撮ると、補正してコードを読むか、ふたを切り抜いて探します</string>
     <string name="scan_reading">カードを読み取り中…</string>
@@ -575,4 +575,20 @@
     <string name="scan_not_ready">カードの読み取り機能をダウンロード中です（初回のみ、Google Play開発者サービス経由）。1分ほどしてからもう一度試してください。</string>
     <string name="scan_cover_title">マンホールのふた</string>
     <string name="scan_cover">どのカードのふたですか？近いもの：</string>
+    <string name="look_theme">テーマ</string>
+    <string name="look_theme_phone">端末に合わせる</string>
+    <string name="look_theme_light">ライト</string>
+    <string name="look_theme_dark">ダーク</string>
+    <string name="look_theme_sub">「端末に合わせる」はスマホのダークモードに従います。地図も切り替わります。</string>
+    <string name="look_colours">色</string>
+    <string name="look_colours_meguri">Meguri</string>
+    <string name="look_colours_wallpaper">壁紙</string>
+    <string name="look_language_old">このAndroidでは言語はスマホの設定で変えます。タップすると設定が開きます。</string>
+    <string name="settings_installed">入っているカタログ</string>
+    <plurals name="settings_installed_sub">
+        <item quantity="other">%1$d都県 · CSVで追加</item>
+    </plurals>
+    <string name="help_whats_new">新機能</string>
+    <string name="help_logs_sub">アプリの記録。不具合のときに送ってください</string>
+    <string name="help_about_sub">バージョン、ライセンス、クレジット</string>
 </resources>

@@ -110,7 +110,7 @@
     <string name="log_not_in_list_sub">Add a new goshuin, stamp or card here, with this find</string>
     <string name="log_new">New</string>
     <string name="new_title">New item</string>
-    <string name="new_type">Type</string>
+    <string name="new_type">Category</string>
     <string name="new_name_ja">Name in Japanese</string>
     <string name="new_name_romaji">Name in romaji (optional)</string>
     <string name="new_save">Save and log</string>
@@ -231,7 +231,7 @@
 
     <!-- Colour setting (#57, Legion) -->
     <string name="look_device_colours">Device colours</string>
-    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each type stay the same.</string>
+    <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each category stay the same.</string>
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">Stamp</string>
@@ -269,7 +269,7 @@
     <string name="no_date">—</string>
     <string name="item_map_not_saved">The map for this place is not saved on this phone, so it needs internet here.</string>
     <string name="search_show_on_map">Show on map</string>
-    <string name="type_custom">My collection</string>
+    <string name="type_custom">Your own category</string>
     <string name="kind_item">The item</string>
     <string name="item_place">Where</string>
     <string name="new_where">Where</string>
@@ -280,13 +280,13 @@
     <string name="new_no_place">No place found. OpenStreetMap often knows only the Japanese name: try that. Otherwise your position is used.</string>
     <string name="osm_credit">Places © OpenStreetMap contributors</string>
     <string name="new_cost">What you paid</string>
-    <string name="collection_new_title">New collection</string>
+    <string name="collection_new_title">New category</string>
     <string name="collection_name">Name</string>
     <string name="collection_color">Colour</string>
     <string name="collection_icon">Icon</string>
     <string name="collection_has_cost">Note what I paid</string>
-    <string name="collection_new">New collection</string>
-    <string name="more_my_collections">My collections</string>
+    <string name="collection_new">New category</string>
+    <string name="more_my_collections">Categories</string>
     <string name="quantity_times">×%1$d</string>
     <string name="find_edit_title">This collection</string>
     <string name="find_quantity">How many</string>
@@ -302,7 +302,7 @@
     <string name="a11y_color">Colour %1$d</string>
     <string name="type_museum">Museum stamp</string>
     <string name="type_dam">Dam card</string>
-    <string name="collection_name_taken">You already have a collection with this name.</string>
+    <string name="collection_name_taken">You already have a category with this name.</string>
     <string name="more_backup_photos">Back up with photos</string>
     <string name="more_backup_photos_sub">For a new phone: the same backup with every photo inside. Restore it there and the photos come back in Meguri.</string>
     <string name="menu_trip">Trip</string>
@@ -366,7 +366,7 @@
     <string name="photo_cover_clear">Stop using as display picture</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
     <string name="settings_alerts">Alerts</string>
-    <string name="settings_alerts_sub">Distance for each type, what alerts, Proximity mode, quiet hours</string>
+    <string name="settings_alerts_sub">Distance for each category, what alerts, Proximity mode, quiet hours</string>
     <string name="settings_data">Backup and data</string>
     <string name="settings_look">Appearance and language</string>
     <string name="settings_catalogue">Catalogue</string>
@@ -374,7 +374,7 @@
     <string name="settings_catalogue_note">The app comes with the catalogue and an offline map of Niigata, Saitama and Tokyo: manhole cards, station stamps, Ekitag, dam cards and roadside stations. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">Logs · version %1$s · credits</string>
-    <string name="settings_collections_sub">Your own collections, and making a new one</string>
+    <string name="settings_collections_sub">Categories you added yourself, and adding one</string>
     <string name="photo_kind_label">Type</string>
     <string name="sort_tip_near">Nearest</string>
     <string name="sort_tip_near_text">: how far each item is from you</string>
@@ -391,8 +391,8 @@
         <item quantity="other">finds</item>
     </plurals>
     <plurals name="profile_kinds">
-        <item quantity="one">type</item>
-        <item quantity="other">types</item>
+        <item quantity="one">category</item>
+        <item quantity="other">categories</item>
     </plurals>
     <string name="onb_welcome">Welcome to Meguri</string>
     <string name="onb_question">Are you starting fresh, or do you already have cards, stamps or goshuin to put in?</string>
@@ -444,8 +444,8 @@
     <string name="onb_finished_done">Done</string>
     <string name="profile_collected">Collected</string>
     <plurals name="profile_collections">
-        <item quantity="one">collection</item>
-        <item quantity="other">collections</item>
+        <item quantity="one">category</item>
+        <item quantity="other">categories</item>
     </plurals>
     <string name="profile_recent">Recently collected</string>
     <string name="edit_title">Edit details</string>
@@ -564,11 +564,11 @@
     <string name="add_cat_card">Card</string>
     <string name="add_cat_stamp">Stamp</string>
     <string name="add_cat_other">Other</string>
-    <string name="add_kind">Type</string>
+    <string name="add_kind">Category</string>
     <string name="add_kind_hint">Pick one, or write a new one</string>
-    <string name="add_new_kind">New type: %1$s</string>
-    <string name="add_new_kind_pick">Choose card, stamp or other for the new type.</string>
-    <string name="add_new_kind_note">It becomes a type of its own, with its own place in My book.</string>
+    <string name="add_new_kind">New category: %1$s</string>
+    <string name="add_new_kind_pick">Choose card, stamp or other for the new category.</string>
+    <string name="add_new_kind_note">It becomes a category of its own, with its own place in My book.</string>
     <string name="add_save_photo">Save + photo</string>
     <string name="scan_card_sub">Photograph a manhole card or cover: Meguri straightens it, reads the code or cuts out the cover, and finds it</string>
     <string name="scan_reading">Reading the card…</string>
@@ -584,4 +584,21 @@
     <string name="scan_not_ready">The card reader is still downloading (once, through Google Play services). Try again in a minute.</string>
     <string name="scan_cover_title">A manhole cover</string>
     <string name="scan_cover">Which card is this cover for? The nearest ones:</string>
+    <string name="look_theme">Theme</string>
+    <string name="look_theme_phone">Phone</string>
+    <string name="look_theme_light">Light</string>
+    <string name="look_theme_dark">Dark</string>
+    <string name="look_theme_sub">Phone follows your phone\'s dark mode. The map changes with it.</string>
+    <string name="look_colours">Colours</string>
+    <string name="look_colours_meguri">Meguri</string>
+    <string name="look_colours_wallpaper">Wallpaper</string>
+    <string name="look_language_old">On this Android version the language is set in your phone\'s settings. Tapping opens them.</string>
+    <string name="settings_installed">Installed catalogues</string>
+    <plurals name="settings_installed_sub">
+        <item quantity="one">%1$d prefecture · load a CSV for more</item>
+        <item quantity="other">%1$d prefectures · load a CSV for more</item>
+    </plurals>
+    <string name="help_whats_new">What\'s new</string>
+    <string name="help_logs_sub">What the app recorded, to send when something goes wrong</string>
+    <string name="help_about_sub">Version, licences and credits</string>
 </resources>

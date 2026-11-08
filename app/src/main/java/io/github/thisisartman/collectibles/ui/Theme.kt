@@ -75,7 +75,24 @@ object AppLook {
         context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putBoolean(KEY, on).apply()
         state.value = on
     }
+
+    /** Theme (owner, 2026-11-09): follow the phone, or always light, or always dark. */
+    enum class Theme { PHONE, LIGHT, DARK }
+    private const val THEME_KEY = "theme"
+    private val themeState = androidx.compose.runtime.mutableStateOf<Theme?>(null)
+
+    fun theme(context: android.content.Context): Theme = themeState.value
+        ?: runCatching { Theme.valueOf(context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).getString(THEME_KEY, Theme.PHONE.name)!!) }
+            .getOrDefault(Theme.PHONE).also { themeState.value = it }
+
+    fun setTheme(context: android.content.Context, t: Theme) {
+        context.getSharedPreferences(PREFS, android.content.Context.MODE_PRIVATE).edit().putString(THEME_KEY, t.name).apply()
+        themeState.value = t
+    }
 }
+
+/** Whether the app is dark now: the phone's dark mode, unless Light or Dark is chosen in Appearance. */
+val LocalAppDark = androidx.compose.runtime.staticCompositionLocalOf { false }
 
 @Immutable
 data class TypeColors(
@@ -174,13 +191,26 @@ private val PhraseTypography: androidx.compose.material3.Typography = androidx.c
 
 @Composable
 fun CollectiblesTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val dark = when (AppLook.theme(context)) {
+        AppLook.Theme.LIGHT -> false
+        AppLook.Theme.DARK -> true
+        AppLook.Theme.PHONE -> isSystemInDarkTheme()
+    }
     // Type colours stay Meguri's own either way: colour means type
     val scheme = if (AppLook.available() && AppLook.deviceColours(context)) {
         if (dark) androidx.compose.material3.dynamicDarkColorScheme(context) else androidx.compose.material3.dynamicLightColorScheme(context)
     } else if (dark) Dark else Light
-    CompositionLocalProvider(LocalTypeColors provides if (dark) DarkTypes else LightTypes) {
+    // Status and navigation bar icons follow the app's theme, not the phone's (dark icons on Light)
+    val view = androidx.compose.ui.platform.LocalView.current
+    if (!view.isInEditMode) androidx.compose.runtime.SideEffect {
+        val window = (view.context as? android.app.Activity)?.window ?: return@SideEffect
+        androidx.core.view.WindowCompat.getInsetsController(window, view).apply {
+            isAppearanceLightStatusBars = !dark
+            isAppearanceLightNavigationBars = !dark
+        }
+    }
+    CompositionLocalProvider(LocalTypeColors provides if (dark) DarkTypes else LightTypes, LocalAppDark provides dark) {
         MaterialTheme(colorScheme = scheme, typography = PhraseTypography, content = content)
     }
 }

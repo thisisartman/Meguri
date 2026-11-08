@@ -78,7 +78,8 @@ fun MeguriMap(
 ) {
     val context = LocalContext.current
     val lifecycle = LocalLifecycleOwner.current.lifecycle
-    val dark = isSystemInDarkTheme()
+    // The app's theme, not only the phone's: Light or Dark can be chosen in Appearance
+    val dark = LocalAppDark.current
     val japanese = isJapanese()
     // Offline inside the trip area, online elsewhere; decided once, from where you are or the first pin
     val offline = remember {

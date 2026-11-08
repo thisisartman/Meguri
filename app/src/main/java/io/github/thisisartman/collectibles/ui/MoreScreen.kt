@@ -45,11 +45,13 @@ import io.github.thisisartman.collectibles.data.BackupInfo
 import io.github.thisisartman.collectibles.data.BackupRestore
 import io.github.thisisartman.collectibles.data.CurrentCounts
 import androidx.compose.material3.Text
+import androidx.compose.material3.SegmentedButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -76,6 +78,19 @@ class MoreViewModel @Inject constructor(
     fun run(block: suspend () -> Unit) { viewModelScope.launch { block() } }
 
     /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */
+    /** Prefecture -> how many items of each category are loaded (Catalogue pages). */
+    val catalogue = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Map<ItemType, Int>>>(emptyMap())
+    /** Names of the categories the person added (Settings list summary). */
+    val customNames = kotlinx.coroutines.flow.MutableStateFlow<List<String>>(emptyList())
+    fun refresh() {
+        viewModelScope.launch {
+            catalogue.value = db.dao().allItems().filter { it.prefecture != null }
+                .groupBy { it.prefecture!! }.toSortedMap()
+                .mapValues { (_, l) -> l.groupingBy { it.type }.eachCount() }
+            customNames.value = db.dao().allCollectionTypes().map { it.name }
+        }
+    }
+
     suspend fun cardCodes(): List<String> = db.dao().allItems()
         .filter { it.type == ItemType.MANHOLE_CARD }.mapNotNull { it.code }
 
@@ -231,7 +246,7 @@ fun MoreScreen(
     // Settings as a short list of sections, each its own page (owner's pick B, #71, 2026-11-07). The dialogs and
     // file pickers above stay here, so each section's rows work exactly as before.
     var section by rememberSaveable { mutableStateOf<String?>(null) }
-    androidx.activity.compose.BackHandler(enabled = section != null) { section = null }
+    androidx.activity.compose.BackHandler(enabled = section != null) { section = parentOf(section) }
     val autoOn = remember(autoTick) { vm.auto.folder != null }
     val autoLast = remember(autoTick) { vm.auto.lastSuccessMs }
     val autoFailed = remember(autoTick) { vm.auto.lastFailed }
@@ -248,11 +263,18 @@ fun MoreScreen(
         S_LOOK to stringResource(R.string.settings_look),
         S_CATALOGUE to stringResource(R.string.settings_catalogue),
         S_HELP to stringResource(R.string.settings_help),
+        S_INSTALLED to stringResource(R.string.settings_installed),
+        S_ABOUT to stringResource(R.string.more_about),
     )
+    var whatsNew by remember { mutableStateOf(false) }
+    if (whatsNew) WhatsNewDialog(onDismiss = { whatsNew = false })
+    LaunchedEffect(Unit) { vm.refresh() }
+    val catalogue by vm.catalogue.collectAsState()
+    val customNames by vm.customNames.collectAsState()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
         Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-            androidx.compose.material3.IconButton(onClick = { if (section != null) section = null else onBack() }) {
+            androidx.compose.material3.IconButton(onClick = { if (section != null) section = parentOf(section) else onBack() }) {
                 androidx.compose.material3.Icon(
                     androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back),
@@ -263,43 +285,60 @@ fun MoreScreen(
 
         when (section) {
             null -> {
-                // Each line says what is set now, so nothing needs opening just to check (round, option B)
-                SectionLine(titles.getValue(S_COLLECTIONS), stringResource(R.string.settings_collections_sub)) { section = S_COLLECTIONS }
-                SectionLine(titles.getValue(S_ALERTS), stringResource(R.string.settings_alerts_sub)) { section = S_ALERTS }
-                SectionLine(titles.getValue(S_DATA), autoSub) { section = S_DATA }
+                // Each line says what is set now, so nothing needs opening just to check. Order (owner, 2026-11-09):
+                // Appearance, Alerts, Backup and data, Categories, Catalogue, Help and about
+                val themeName = stringResource(
+                    when (AppLook.theme(context)) { AppLook.Theme.PHONE -> R.string.look_theme_phone; AppLook.Theme.LIGHT -> R.string.look_theme_light; AppLook.Theme.DARK -> R.string.look_theme_dark },
+                )
                 SectionLine(
                     titles.getValue(S_LOOK),
-                    stringResource(if (ja) R.string.more_japanese else R.string.more_english) +
-                        if (AppLook.available() && AppLook.deviceColours(context)) " · " + stringResource(R.string.look_device_colours) else "",
+                    listOfNotNull(
+                        themeName,
+                        stringResource(if (AppLook.available() && AppLook.deviceColours(context)) R.string.look_colours_wallpaper else R.string.look_colours_meguri),
+                        stringResource(if (ja) R.string.more_japanese else R.string.more_english),
+                    ).joinToString(" · "),
+                    R.drawable.ic_settings_look,
                 ) { section = S_LOOK }
-                SectionLine(titles.getValue(S_CATALOGUE), stringResource(R.string.settings_catalogue_sub)) { section = S_CATALOGUE }
-                SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME)) { section = S_HELP }
+                SectionLine(titles.getValue(S_ALERTS), stringResource(R.string.settings_alerts_sub), R.drawable.ic_settings_alerts) { section = S_ALERTS }
+                SectionLine(titles.getValue(S_DATA), autoSub, R.drawable.ic_settings_backup) { section = S_DATA }
+                SectionLine(
+                    titles.getValue(S_COLLECTIONS),
+                    if (customNames.isEmpty()) stringResource(R.string.settings_collections_sub) else customNames.joinToString(", "),
+                    R.drawable.ic_settings_categories,
+                ) { section = S_COLLECTIONS }
+                SectionLine(
+                    titles.getValue(S_CATALOGUE),
+                    catalogue.keys.joinToString(", ") { prefectureName(it, ja) }.ifEmpty { stringResource(R.string.settings_catalogue_sub) },
+                    R.drawable.ic_settings_catalogue,
+                ) { section = S_CATALOGUE }
+                SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME), R.drawable.ic_settings_help) { section = S_HELP }
             }
             S_COLLECTIONS -> myCollections()
             S_ALERTS -> AlertsSection()
             S_LOOK -> {
-                SectionTitle(stringResource(R.string.more_language))
-                Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    InkFilterChip(selected = !ja, onClick = { AppLanguage.set(context, japanese = false) }, label = { Text(stringResource(R.string.more_english)) })
-                    InkFilterChip(selected = ja, onClick = { AppLanguage.set(context, japanese = true) }, label = { Text(stringResource(R.string.more_japanese)) })
-                }
+                // Theme (owner, 2026-11-09): the phone's dark mode, or always light, or always dark; the map follows
+                SectionTitle(stringResource(R.string.look_theme))
+                val theme = AppLook.theme(context)
+                Choice(
+                    listOf(R.string.look_theme_phone, R.string.look_theme_light, R.string.look_theme_dark).map { stringResource(it) },
+                    AppLook.Theme.entries.indexOf(theme),
+                ) { AppLook.setTheme(context, AppLook.Theme.entries[it]) }
+                Note(stringResource(R.string.look_theme_sub))
                 if (AppLook.available()) {
+                    SectionTitle(stringResource(R.string.look_colours))
                     var device by remember { mutableStateOf(AppLook.deviceColours(context)) }
-                    Row(
-                        Modifier.fillMaxWidth()
-                            .toggleable(value = device, role = Role.Switch, onValueChange = { device = it; AppLook.setDeviceColours(context, it) })
-                            .heightIn(min = 56.dp)
-                            .padding(horizontal = 16.dp, vertical = 12.dp),
-                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(stringResource(R.string.look_device_colours), style = MaterialTheme.typography.bodyLarge)
-                            Text(stringResource(R.string.look_device_colours_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        androidx.compose.foundation.layout.Spacer(Modifier.width(12.dp))
-                        androidx.compose.material3.Switch(checked = device, onCheckedChange = null)
+                    Choice(listOf(stringResource(R.string.look_colours_meguri), stringResource(R.string.look_colours_wallpaper)), if (device) 1 else 0) {
+                        device = it == 1; AppLook.setDeviceColours(context, device)
                     }
+                    Note(stringResource(R.string.look_device_colours_sub))
                 }
+                SectionTitle(stringResource(R.string.more_language))
+                Choice(listOf(stringResource(R.string.more_english), stringResource(R.string.more_japanese)), if (ja) 1 else 0) {
+                    // The in-app switch needs Android 13; before that the phone's own language page sets it
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) AppLanguage.set(context, japanese = it == 1)
+                    else runCatching { context.startActivity(android.content.Intent(android.provider.Settings.ACTION_LOCALE_SETTINGS)) }
+                }
+                if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) Note(stringResource(R.string.look_language_old))
             }
             S_DATA -> {
                 MoreRow(stringResource(R.string.more_backup), stringResource(R.string.more_backup_sub)) {
@@ -326,9 +365,9 @@ fun MoreScreen(
                 }
             }
             S_CATALOGUE -> {
-                MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
-                    openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
-                }
+                // Prefectures sit one tap in, so the page stays short as more are added (owner, 2026-11-09)
+                val prefCount = catalogue.size
+                MoreRow(stringResource(R.string.settings_installed), pluralStringResource(R.plurals.settings_installed_sub, prefCount, prefCount)) { section = S_INSTALLED }
                 // Card pictures (#53): onto this phone only, never in the app or backups
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val progress by vm.cardProgress.collectAsState()
@@ -353,13 +392,61 @@ fun MoreScreen(
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            S_INSTALLED -> {
+                // One block per prefecture: what of each category is in the app
+                catalogue.forEach { (pref, byType) ->
+                    InfoRow(
+                        prefectureName(pref, ja),
+                        byType.toList().sortedBy { it.first.ordinal }
+                            // "Ekitag 20": a name then its count, so names keep their capitals and 1 reads fine
+                            .joinToString(" · ") { (t, n) -> context.getString(t.pluralLabel()) + " " + n },
+                    )
+                }
+                MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
+                    openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
+                }
+            }
             S_HELP -> {
-                MoreRow(stringResource(R.string.more_logs), null, onLogs)
-                MoreRow(stringResource(R.string.more_about), stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME)) {}
+                MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
+                MoreRow(stringResource(R.string.more_logs), stringResource(R.string.help_logs_sub), onLogs)
+                MoreRow(stringResource(R.string.more_about), stringResource(R.string.help_about_sub)) { section = S_ABOUT }
+            }
+            S_ABOUT -> {
+                Text(
+                    stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME),
+                    Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
+                )
             }
         }
     }
 }
+
+/** Inner pages go back to their section; sections go back to the list. */
+private fun parentOf(section: String?): String? = when (section) {
+    S_INSTALLED -> S_CATALOGUE
+    S_ABOUT -> S_HELP
+    else -> null
+}
+
+/** A one-of-several choice as a segmented row (theme, colours, language). */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun Choice(labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    androidx.compose.material3.SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)) {
+        labels.forEachIndexed { i, l ->
+            SegmentedButton(
+                selected = i == selected, onClick = { onSelect(i) },
+                shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(i, labels.size),
+            ) { Text(l, maxLines = 1) }
+        }
+    }
+}
+
+@Composable
+private fun Note(text: String) = Text(
+    text, Modifier.padding(horizontal = 16.dp, vertical = 6.dp),
+    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+)
 
 private const val S_COLLECTIONS = "collections"
 private const val S_ALERTS = "alerts"
@@ -367,14 +454,21 @@ private const val S_DATA = "data"
 private const val S_LOOK = "look"
 private const val S_CATALOGUE = "catalogue"
 private const val S_HELP = "help"
+private const val S_INSTALLED = "installed"
+private const val S_ABOUT = "about"
 
 /** One section on the Settings list: its name, what is set now, and an arrow. */
 @Composable
-private fun SectionLine(title: String, sub: String, onClick: () -> Unit) {
+private fun SectionLine(title: String, sub: String, icon: Int, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
+        androidx.compose.material3.Icon(
+            androidx.compose.ui.res.painterResource(icon), contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        androidx.compose.foundation.layout.Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.bodyLarge)
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
@@ -419,6 +513,16 @@ private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: ()
         },
         dismissButton = { TextButton(onClick = onCancel) { Text(stringResource(android.R.string.cancel)) } },
     )
+}
+
+/** A line that only tells (nothing to tap). */
+@Composable
+private fun InfoRow(title: String, sub: String) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+        Text(title, style = MaterialTheme.typography.bodyLarge)
+        Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 @Composable
