@@ -65,7 +65,8 @@ class CardTrimTest {
         val c = Canvas(200, 280, desk)
         card(c, 60, 20, 170, 238)                 // runs off the right side
         val (q, why) = CardTrim.find(c.px, c.w, c.h)
-        assertEquals(CardTrim.Result.FRAME_CUT_OFF, why)
+        // Turned down either way: its right band is off the page, and so is its border
+        assert(why == CardTrim.Result.FRAME_CUT_OFF || why == CardTrim.Result.ODD_SHAPE) { "was $why" }
         assertNull(q)
     }
 
@@ -73,6 +74,17 @@ class CardTrimTest {
         val c = Canvas(300, 200, desk)
         c.rect(20, 60, 280, 140, blue)            // a wide blue band
         assertEquals(CardTrim.Result.ODD_SHAPE, CardTrim.find(c.px, c.w, c.h).second)
+    }
+
+    @Test fun aFrameMissingASideIsLeftAlone() {
+        val c = Canvas(240, 300, desk)
+        card(c, 40, 30, 160, 224)
+        c.rect(40, 30, 200, 75, white)           // the whole top band hidden (a glare, another card over it)
+        assertEquals(CardTrim.Result.ODD_SHAPE, CardTrim.find(c.px, c.w, c.h).second)
+    }
+
+    @Test fun tokyosDullerBlueIsFrame() {
+        assert(CardTrim.isFrameBlue(rgb(63, 99, 125)))
     }
 
     @Test fun paleBlueAndWhiteAreNotFrame() {

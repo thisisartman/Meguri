@@ -77,7 +77,26 @@ private suspend fun uprightCopy(context: Context, bmp: android.graphics.Bitmap, 
         }.getOrNull()
     }
 
-private data class Scan(val photo: Uri,val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
+/** The card turned upright and trimmed to the top card, saved in the cache; null when no clean frame (with why). */
+private suspend fun cardCopy(context: Context, bmp: android.graphics.Bitmap, degrees: Int): Pair<Uri?, io.github.thisisartman.collectibles.photo.CardTrim.Result> =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        runCatching {
+            val upright = if (degrees == 0) bmp else {
+                val m = android.graphics.Matrix().apply { postRotate(degrees.toFloat()) }
+                android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+            }
+            val (card, why) = io.github.thisisartman.collectibles.photo.CardTrim.trim(upright)
+            if (upright !== bmp) upright.recycle()
+            if (card == null) return@runCatching Pair<Uri?, io.github.thisisartman.collectibles.photo.CardTrim.Result>(null, why)
+            val dir = java.io.File(context.cacheDir, "scans").apply { mkdirs() }
+            val f = java.io.File(dir, "card-${System.currentTimeMillis()}.jpg")
+            f.outputStream().use { check(card.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, it)) }
+            card.recycle()
+            Pair<Uri?, io.github.thisisartman.collectibles.photo.CardTrim.Result>(Uri.fromFile(f), why)
+        }.getOrElse { Pair(null, io.github.thisisartman.collectibles.photo.CardTrim.Result.NO_FRAME) }
+    }
+
+private data class Scan(val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
 
 /**
  * Scan a card (M7 auto-crop, M8 recognition; owner 2026-11-08: yes to both). Google's on-device document scanner
@@ -129,25 +148,41 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             for (deg in listOf(0, 180, 90, 270)) {
                 val read = runCatching {
                     val input = page0?.let { InputImage.fromBitmap(it, deg) } ?: InputImage.fromFilePath(context, page.imageUri)
-                    reader.process(input).await().text
+                    reader.process(input).await()
                 }
                 failure = read.exceptionOrNull()
                 if (failure != null) break
-                code = CardCode.best(read.getOrDefault(""), known)
-                if (code != null) { turn = deg; break }
+                val found = read.getOrNull() ?: break
+                code = CardCode.best(found.text, known)
+                if (code != null) {
+                    turn = deg
+                    // The reader reads upside-down cards too (owner's photos, 2026-11-09), so reading isn't enough to know
+                    // which way is up. A manhole card's code is printed top right: turn until it sits there
+                    val box = found.textBlocks.flatMap { it.lines }.firstOrNull { CardCode.best(it.text, known) == code }?.boundingBox
+                    if (box != null && page0 != null) {
+                        val fw = if (deg % 180 == 0) page0.width else page0.height
+                        val fh = if (deg % 180 == 0) page0.height else page0.width
+                        turn = (deg + CardCode.turnToTopRight(box.exactCenterX(), box.exactCenterY(), fw.toFloat(), fh.toFloat())) % 360
+                    }
+                    break
+                }
                 if (page0 == null) break
             }
             // The reader comes through Play services and downloads on first use: say so instead of "no code" (Poco, 2026-11-08)
             if ((failure as? com.google.mlkit.common.MlKitException)?.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) {
                 reading = false; notReady = true; return@launch
             }
-            val photo = if (turn != 0 && page0 != null) uprightCopy(context, page0, turn) ?: page.imageUri else page.imageUri
+            // A card that was read: upright, then trimmed to the top card by its blue frame (owner, 2026-11-09: the
+            // scanner took in the cards under it or the box's edge). No clean frame: the upright page as it was
+            val trimmed = if (code != null && page0 != null) cardCopy(context, page0, turn) else null
+            val photo = trimmed?.first ?: if (turn != 0 && page0 != null) uprightCopy(context, page0, turn) ?: page.imageUri else page.imageUri
             // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
             if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
                 val dir = java.io.File(context.getExternalFilesDir(null), "scan-debug").apply { mkdirs() }
                 val stamp = System.currentTimeMillis()
                 context.contentResolver.openInputStream(page.imageUri)?.use { i -> java.io.File(dir, "$stamp-page.jpg").outputStream().use { i.copyTo(it) } }
-                java.io.File(dir, "$stamp.txt").writeText("code=${code ?: ""}\nturn=$turn\n")
+                java.io.File(dir, "$stamp.txt").writeText("code=${code ?: ""}\nturn=$turn\ntrim=${trimmed?.second ?: "not tried"}\n")
+                trimmed?.first?.let { u -> context.contentResolver.openInputStream(u)?.use { i -> java.io.File(dir, "$stamp-trim.jpg").outputStream().use { i.copyTo(it) } } }
             }
             val match = cards.firstOrNull { it.item.code == code }
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,

@@ -30,4 +30,14 @@ class CardCodeTest {
         assertEquals("15-202-A001", CardCode.best(text, setOf("15-202-A001")))
         assertEquals("15-202-A099", CardCode.best(text, setOf("15-202-A099")))
     }
+
+    // A 600 x 840 card page; the code is printed top right when it is upright
+    @Test fun anUprightCardNeedsNoTurn() = assertEquals(0, CardCode.turnToTopRight(500f, 60f, 600f, 840f))
+
+    @Test fun anUpsideDownCardTurnsHalfway() = assertEquals(180, CardCode.turnToTopRight(100f, 780f, 600f, 840f))
+
+    // Lying on its side (840 x 600): code at the bottom right means the card's top is on the right, so a quarter turn back
+    @Test fun aCardOnItsRightSideTurnsBack() = assertEquals(270, CardCode.turnToTopRight(780f, 500f, 840f, 600f))
+
+    @Test fun aCardOnItsLeftSideTurnsForward() = assertEquals(90, CardCode.turnToTopRight(60f, 100f, 840f, 600f))
 }

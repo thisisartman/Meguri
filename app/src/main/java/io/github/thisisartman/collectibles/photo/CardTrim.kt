@@ -25,10 +25,33 @@ object CardTrim {
     /** Why a page was or wasn't trimmed, for the logs and tests. */
     enum class Result { OK, NO_FRAME, FRAME_CUT_OFF, ODD_SHAPE }
 
-    /** A deep, clearly blue pixel: the card's frame, not a pale blue box or white. */
+    /**
+     * A card frame's blue, not the pale blue of a card box or white: Niigata frames are about (20,70,170), Tokyo's
+     * (63,99,125), the owner's box (130,200,230). The red channel is what sets the box apart (owner's 27 photos).
+     */
     fun isFrameBlue(argb: Int): Boolean {
         val r = (argb shr 16) and 0xFF; val g = (argb shr 8) and 0xFF; val b = argb and 0xFF
-        return b - g > 45 && b - r > 70 && b > 100
+        return r < 100 && b - r > 40 && b > 100 && b >= g
+    }
+
+    /** Share of points just inside each edge of [q] that are frame: a real frame is blue on all four sides. */
+    private fun edgesBlue(inFrame: (Int, Int) -> Boolean, q: FloatArray): FloatArray {
+        val out = FloatArray(4)
+        for (e in 0 until 4) {
+            val a = e; val b = (e + 1) % 4; val opp = (e + 3) % 4
+            val ax = q[2 * a]; val ay = q[2 * a + 1]; val bx = q[2 * b]; val by = q[2 * b + 1]
+            val ix = (q[2 * opp] - ax) * 0.004f; val iy = (q[2 * opp + 1] - ay) * 0.004f
+            var hits = 0; val n = 40
+            for (k in 0 until n) {
+                val t = 0.15f + 0.7f * k / (n - 1)
+                val x = (ax + (bx - ax) * t + ix).roundToInt(); val y = (ay + (by - ay) * t + iy).roundToInt()
+                var hit = false
+                for (dy in -2..2) for (dx in -2..2) if (inFrame(x + dx, y + dy)) hit = true
+                if (hit) hits++
+            }
+            out[e] = hits.toFloat() / n
+        }
+        return out
     }
 
     /**
@@ -70,8 +93,12 @@ object CardTrim {
         val fw = (hypot(q[2] - q[0], q[3] - q[1]) + hypot(q[4] - q[6], q[5] - q[7])) / 2
         val fh = (hypot(q[6] - q[0], q[7] - q[1]) + hypot(q[4] - q[2], q[5] - q[3])) / 2
         if (fh <= 0f || fw / fh !in 0.55f..0.9f) return null to Result.ODD_SHAPE
+        // Blue along all four sides, or it isn't a whole frame (a band and a side of another card, say)
+        val sides = edgesBlue({ x, y -> x in 0 until w && y in 0 until h && label[y * w + x] == best }, q)
+        if (sides.any { it < 0.6f }) return null to Result.ODD_SHAPE
         val e = expand(q)
-        val slackX = 0.02f * w; val slackY = 0.02f * h
+        // A border a little past the scanner's page is filled white, like the card's own border
+        val slackX = 0.06f * w; val slackY = 0.06f * h
         for (k in 0 until 4) {
             val x = e[2 * k]; val y = e[2 * k + 1]
             if (x < -slackX || x > w + slackX || y < -slackY || y > h + slackY) return null to Result.FRAME_CUT_OFF
@@ -109,7 +136,10 @@ object CardTrim {
         val m = Matrix()
         if (!m.setPolyToPoly(src, 0, dst, 0, 4)) return null to Result.ODD_SHAPE
         val out = Bitmap.createBitmap(cardW, cardH, Bitmap.Config.ARGB_8888)
-        Canvas(out).drawBitmap(page, m, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+        Canvas(out).apply {
+            drawColor(android.graphics.Color.WHITE)
+            drawBitmap(page, m, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
+        }
         return out to Result.OK
     }
 }
