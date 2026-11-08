@@ -312,6 +312,16 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         }
                     }
                     composable("logs") { Page { LogsScreen(onBack = { nav.popBackStack() }) } }
+                    // Notebook stamps (owner, 2026-11-09): review the boxes, then match each stamp to a station
+                    composable("stamps") { Page { NotebookReviewScreen(onBack = { nav.popBackStack() }, onDone = { nav.navigate("stamps-match") }) } }
+                    composable("stamps-match") {
+                        Page {
+                            NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new") }, onSaved = { n ->
+                                nav.popBackStack(NEARBY, inclusive = false)
+                                appScope.launch { snackbar.showSnackbar(context.resources.getQuantityString(R.plurals.nb_saved, n, n)) }
+                            })
+                        }
+                    }
                     composable("new") {
                         Page {
                             NewItemScreen(vm, onBack = { nav.popBackStack() }, onSaved = { itemId, findId, withPhoto ->

@@ -514,6 +514,29 @@
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
     <string name="scan_card">カード・ふたをスキャン</string>
     <string name="scan_or_maybe">%1$sですか？</string>
+    <string name="nb_review_title">このページのスタンプ</string>
+    <string name="nb_review_hint">枠をドラッグで移動、角で大きさを変更。枠をタップして×で削除。</string>
+    <string name="nb_add_box">枠を追加</string>
+    <string name="nb_match_title">どの駅？</string>
+    <string name="nb_reading">スタンプを読み取り中…</string>
+    <string name="nb_stamp_n">スタンプ%1$d</string>
+    <string name="nb_show_original">元の写真</string>
+    <string name="nb_show_cleaned">補正後</string>
+    <string name="nb_skip">スキップ</string>
+    <string name="nb_keep">残す</string>
+    <string name="nb_change">変更</string>
+    <string name="nb_seems">%1$sのようです</string>
+    <string name="nb_search">駅名・場所を入力</string>
+    <string name="nb_not_in_meguri">Meguriにない？追加する</string>
+    <plurals name="nb_save">
+        <item quantity="other">%d個を保存</item>
+    </plurals>
+    <plurals name="nb_saved">
+        <item quantity="other">%d個を保存しました（Meguri以前に入手）</item>
+    </plurals>
+    <plurals name="nb_done">
+        <item quantity="other">次へ（%d個）</item>
+    </plurals>
     <string name="scan_type_code">コードを入力</string>
     <string name="scan_retake">撮り直す</string>
     <string name="scan_type_code_title">カードのコードを入力</string>

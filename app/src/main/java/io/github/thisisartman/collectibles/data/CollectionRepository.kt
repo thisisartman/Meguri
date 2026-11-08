@@ -265,6 +265,20 @@ class CollectionRepository @Inject constructor(
         return copied
     }
 
+    /**
+     * A stamp from a notebook page (owner, 2026-11-09). Never the photo's time and place: the page is photographed
+     * at home long after. An item already collected only gains the photo; otherwise it is "had before Meguri" with no
+     * date, or on [acquiredAt] when the person gives one.
+     */
+    suspend fun addNotebookStamp(itemId: String, picture: android.net.Uri, acquiredAt: Long?): Boolean {
+        val findId = dao.latestFindId(itemId) ?: newId().also { f ->
+            dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt, beforeApp = acquiredAt == null, via = Via.MANUAL, createdAt = now()))
+        }
+        val ok = attachFromGallery(context, findId, picture, PhotoKind.STAMP)
+        log.i("Notebook", "Stamp for item $itemId from a notebook page (photo copied: $ok)")
+        return ok
+    }
+
     suspend fun editItem(item: Item) {
         val now = now()
         dao.upsertItem(item.copy(editedAt = now, updatedAt = now))

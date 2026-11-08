@@ -225,6 +225,20 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // on the card you pick from the nearest ones
             // A card whose code wasn't read is still a card (blue frame), not a cover: then it goes to Pick by hand
             val isCard = code == null && page0 != null && runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            // A notebook page (mostly plain paper), before the cover check: station stamps are round too (owner, 2026-11-09)
+            if (code == null && !isCard) {
+                val small = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { decodePage(context, page.imageUri, 480) }
+                val px = small?.let { b -> IntArray(b.width * b.height).also { b.getPixels(it, 0, b.width, 0, 0, b.width, b.height) } }
+                if (small != null && px != null && io.github.thisisartman.collectibles.photo.StampFind.isPage(px)) {
+                    val boxes = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { io.github.thisisartman.collectibles.photo.StampFind.find(px, small.width, small.height) }
+                    small.recycle(); if (page1 !== page0) page1?.recycle(); page0?.recycle()
+                    NotebookSession.start(page.imageUri, boxes)
+                    reading = false
+                    nav.navigate("stamps")
+                    return@launch
+                }
+                small?.recycle()
+            }
             val cover = match == null && code == null && !isCard && runCatching {
                 val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
                     d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE

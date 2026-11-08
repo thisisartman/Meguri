@@ -272,6 +272,15 @@ class MainViewModel @Inject constructor(
     }
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
+    /** Notebook stamps: each (item, picture), saved as "had before Meguri" unless already collected; [onDone] gets how many. */
+    fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, onDone: (Int) -> Unit) {
+        viewModelScope.launch {
+            var n = 0
+            for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, null)) n++
+            onDone(n)
+        }
+    }
+
     fun attachPhoto(itemId: String, uri: android.net.Uri, kind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER, onDone: () -> Unit) {
         viewModelScope.launch {
             val p = repo.readShared(uri)

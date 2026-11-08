@@ -597,7 +597,25 @@ internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, 
         Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (row.noneHere) 0.45f else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Mark(row, size)
+        // An Ekitag sits on its station's spot with the same name: a small badge says which tile is the Ekitag
+        androidx.compose.foundation.layout.Box {
+            Mark(row, size)
+            if (row.item.type == ItemType.EKITAG) {
+                androidx.compose.material3.Surface(
+                    shape = androidx.compose.foundation.shape.CircleShape,
+                    color = MaterialTheme.colorScheme.surface,
+                    shadowElevation = 1.dp,
+                    modifier = Modifier.align(Alignment.TopEnd).size(size * 0.34f),
+                ) {
+                    androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+                        androidx.compose.material3.Icon(
+                            androidx.compose.ui.res.painterResource(R.drawable.ic_type_ekitag), contentDescription = stringResource(R.string.type_ekitag),
+                            tint = LocalTypeColors.current.ekitag, modifier = Modifier.size(size * 0.22f),
+                        )
+                    }
+                }
+            }
+        }
         Spacer(Modifier.height(4.dp))
         Text(
             // Always two lines tall, so every tile in a row is the same height and distances line up

@@ -14,10 +14,22 @@ import java.util.Locale
 /** English mode: romaji everywhere (Japanese if no romaji); Japanese mode: Japanese. */
 fun Item.displayName(japanese: Boolean): String = if (japanese) nameJa else nameRomaji ?: nameJa
 
-/** A tile's name: an Ekitag shares its station's name and both sit on one spot, so it says which ("Niitsu Station · Ekitag"). */
-@androidx.compose.runtime.Composable
-fun Item.tileLabel(japanese: Boolean): String =
-    if (type == ItemType.EKITAG) displayName(japanese) + " · " + androidx.compose.ui.res.stringResource(R.string.type_ekitag) else displayName(japanese)
+/**
+ * A tile's name, short enough for two lines (owner, 2026-11-09: "Urasa Station · Ekit…", "Michi-no-Eki Kurosu Ten T…"
+ * were cut off). The tile's icon already says what it is, so "Station" and "Michi-no-Eki" go, and an Ekitag is told
+ * apart from its station by a badge on the tile, not by words. Item pages keep the full name.
+ */
+fun Item.tileLabel(japanese: Boolean): String = TileName.short(displayName(japanese), type, japanese)
+
+object TileName {
+    fun short(name: String, type: ItemType, japanese: Boolean): String = when (type) {
+        ItemType.EKI_STAMP, ItemType.EKITAG ->
+            if (japanese) name else name.removeSuffix(" Station").removeSuffix(" station")
+        ItemType.ROADSIDE_STATION ->
+            if (japanese) name.removePrefix("道の駅").trim() else name.removePrefix("Michi-no-Eki").removePrefix("Michi-no-eki").trim()
+        else -> name
+    }.ifBlank { name }
+}
 
 /**
  * A short name for lists inside one collection (owner, 2026-11-08): a manhole card loses the part in brackets,

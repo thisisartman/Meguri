@@ -520,6 +520,32 @@
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
     <string name="scan_card">Scan a card or cover</string>
     <string name="scan_or_maybe">Or is it %1$s?</string>
+    <string name="nb_review_title">Stamps on this page</string>
+    <string name="nb_review_hint">Drag a box to move it or its corner to resize it. Tap a box, then its cross, to remove it.</string>
+    <string name="nb_add_box">Add a box</string>
+    <string name="nb_match_title">Which station?</string>
+    <string name="nb_reading">Reading the stamps…</string>
+    <string name="nb_stamp_n">Stamp %1$d</string>
+    <string name="nb_show_original">Show original</string>
+    <string name="nb_show_cleaned">Show cleaned</string>
+    <string name="nb_skip">Skip</string>
+    <string name="nb_keep">Keep</string>
+    <string name="nb_change">Change</string>
+    <string name="nb_seems">This seems to be %1$s</string>
+    <string name="nb_search">Type the station or place</string>
+    <string name="nb_not_in_meguri">Not in Meguri? Add it</string>
+    <plurals name="nb_save">
+        <item quantity="one">Save 1 stamp</item>
+        <item quantity="other">Save %d stamps</item>
+    </plurals>
+    <plurals name="nb_saved">
+        <item quantity="one">1 stamp saved, as had before Meguri</item>
+        <item quantity="other">%d stamps saved, as had before Meguri</item>
+    </plurals>
+    <plurals name="nb_done">
+        <item quantity="one">Next (1 stamp)</item>
+        <item quantity="other">Next (%d stamps)</item>
+    </plurals>
     <string name="scan_type_code">Type code</string>
     <string name="scan_retake">Retake photo</string>
     <string name="scan_type_code_title">Type the card\'s code</string>
