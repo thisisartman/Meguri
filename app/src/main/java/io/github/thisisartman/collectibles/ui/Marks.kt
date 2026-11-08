@@ -43,8 +43,7 @@ import kotlinx.coroutines.withContext
 @Composable
 fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
     val ja = isJapanese()
-    when {
-        row.photoUri != null -> PhotoThumb(row.photoUri, size, modifier)
+    @Composable fun noPhoto() = when {
         // Manhole cards keep their official card code (F001); the rest show their type icon, since stations have
         // no official short form like airport codes (research 2026-11-07, owner's N10)
         row.collected && row.item.type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD && row.item.code != null ->
@@ -52,6 +51,7 @@ fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
         row.collected -> Seal("", colorOf(row.item), size, modifier, icon = iconOf(row.item))
         else -> EmptySlot(size, modifier)
     }
+    if (row.photoUri != null) PhotoThumb(row.photoUri, size, modifier, fallback = { noPhoto() }) else noPhoto()
 }
 
 /** The type's icon (public domain, CC0: Mapbox Maki and Temaki; see res/drawable/ic_type_*.xml). */
@@ -117,19 +117,23 @@ fun EmptySlot(size: Dp, modifier: Modifier = Modifier, strong: Boolean = false) 
 }
 
 @Composable
-fun PhotoThumb(uri: String, size: Dp, modifier: Modifier = Modifier) {
+fun PhotoThumb(uri: String, size: Dp, modifier: Modifier = Modifier, fallback: (@Composable () -> Unit)? = null) {
     val context = LocalContext.current
     var bmp by remember(uri) { mutableStateOf<Bitmap?>(null) }
+    var failed by remember(uri) { mutableStateOf(false) }
     LaunchedEffect(uri) {
         bmp = withContext(Dispatchers.IO) {
-            io.github.thisisartman.collectibles.photo.PhotoStore.thumbnail(context, uri, 256)
+            runCatching { io.github.thisisartman.collectibles.photo.PhotoStore.thumbnail(context, uri, 256) }.getOrNull()
         }
+        failed = bmp == null
     }
     val shape = RoundedCornerShape(size * 0.22f)
     val b = bmp
-    if (b != null) {
-        Image(b.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier.size(size).clip(shape))
-    } else {
-        Box(modifier.size(size).clip(shape).background(LocalTypeColors.current.dash.copy(alpha = 0.3f)))
+    when {
+        b != null -> Image(b.asImageBitmap(), contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier.size(size).clip(shape))
+        // A picture that can't be read (deleted from the gallery, or no longer the app's) shows the seal instead of
+        // a grey box (Poco, 2026-11-08)
+        failed && fallback != null -> fallback()
+        else -> Box(modifier.size(size).clip(shape).background(LocalTypeColors.current.dash.copy(alpha = 0.3f)))
     }
 }

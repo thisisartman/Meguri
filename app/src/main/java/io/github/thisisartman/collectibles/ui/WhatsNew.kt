@@ -31,9 +31,20 @@ object WhatsNew {
         Section(
             "New", "新機能",
             listOf(
-                "My book: your finds and collections, a map of where you collected, and what you got last, all on one page" to "マイブック：取得数・コレクション・集めた場所の地図・最近のものを1ページに",
+                "Opening: a map of Japan that flies to you and what is near" to "起動：日本地図から現在地と近くのものへ",
+                "My book: one tile per type, each opens its collections with progress rings" to "マイブック：種類ごとのタイル。開くと各コレクションの進み具合",
+                "Share to Meguri: share photos from your gallery, grouped by place and date, then pick what each is" to "Meguriに共有：ギャラリーの写真を共有すると、場所と日付でまとめて登録",
+                "Edit details: names, place, hours, notes and position of any item; kept through catalogue updates" to "詳細の編集：名前・場所・時間・メモ・位置。カタログ更新でも残ります",
                 "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
                 "Menu: on My book (⋮); the search bar is only search" to "メニュー：マイブックの「⋮」に。検索バーは検索だけに",
+                "Ekitag: Niigata's Ekitag stations listed" to "エキタグ：新潟のエキタグ駅を追加",
+            ),
+        ),
+        Section(
+            "Fixed", "修正",
+            listOf(
+                "Niigata: station order and positions checked; Kamitokoro added" to "新潟：駅の順番と位置を確認、上所駅を追加",
+                "Photos: a picture that can't be read shows the seal, not a grey box" to "写真：読めない写真は灰色ではなく印で表示",
                 "Pin card: icons all one size" to "ピンのカード：アイコンを同じ大きさに",
             ),
         ),
@@ -81,6 +92,6 @@ fun WhatsNewDialog(onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text(if (ja) "OK" else "Got it") } },
+        confirmButton = { TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = 48.dp)) { Text(if (ja) "OK" else "Got it") } },
     )
 }

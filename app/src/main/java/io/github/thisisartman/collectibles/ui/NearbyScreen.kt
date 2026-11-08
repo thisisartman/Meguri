@@ -407,7 +407,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 startOnJapan = true,
                 holdOnJapan = noCatalogue,
                 highlight = if (noCatalogue) prefectures.filter { it.ja in onboarding.chosen } else emptyList(),
-                bottomInset = if (noCatalogue || onboarding.step == OnboardingStep.HAVE) peek else 0.dp,
+                // The sheet always covers the map's lower part, so every fit keeps pins above it (Poco, 2026-11-08)
+                bottomInset = peek,
             )
             // Back to where you are (owner, 2026-11-06), just above the sheet on the right
             if (here.fix != null) {

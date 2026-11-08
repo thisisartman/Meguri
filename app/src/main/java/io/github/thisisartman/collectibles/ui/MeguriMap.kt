@@ -242,8 +242,17 @@ fun MeguriMap(
         if (startOnJapan && !placed && style != null) m.moveCamera(CameraUpdateFactory.newLatLngBounds(JAPAN, 0))
     }
     val hasHere = here != null
-    LaunchedEffect(style, hasHere, holdOnJapan) {
-        if (!startOnJapan || holdOnJapan || placed || style == null || !hasHere) return@LaunchedEffect
+    val fitInsetPx = with(androidx.compose.ui.platform.LocalDensity.current) { bottomInset.roundToPx() }
+    // Framed on you alone because the pins had not loaded yet: frame again once they arrive, unless you moved the map
+    var framedWithoutPins by remember { mutableStateOf(false) }
+    var userMoved by remember { mutableStateOf(false) }
+    LaunchedEffect(map) {
+        map?.addOnCameraMoveStartedListener { reason -> if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) userMoved = true }
+    }
+    val hasPins = pins.isNotEmpty()
+    LaunchedEffect(style, hasHere, holdOnJapan, hasPins) {
+        if (!startOnJapan || holdOnJapan || style == null || !hasHere) return@LaunchedEffect
+        if (placed && !(framedWithoutPins && hasPins && !userMoved)) return@LaunchedEffect
         // A short pause once the position is known, so the map doesn't jump the moment it arrives
         kotlinx.coroutines.delay(300)
         val m = map ?: return@LaunchedEffect
@@ -251,8 +260,12 @@ fun MeguriMap(
         placed = true
         placedAt = h
         val focus = pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second)
-        // Before the pins have loaded there is only you to frame; a bounds of one point throws
-        val update = if (focus.size >= 2) CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(focus).build(), 80)
+        framedWithoutPins = focus.size < 2
+        // Before the pins have loaded there is only you to frame; a bounds of one point throws. The sheet covers the
+        // lower part, so the frame sits above it (Poco 2026-11-08: opened at street level with nothing in view)
+        val d = context.resources.displayMetrics.density
+        val update = if (focus.size >= 2) CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(focus).build(),
+            (40 * d).toInt(), (140 * d).toInt(), (40 * d).toInt(), fitInsetPx + (40 * d).toInt())
         else CameraUpdateFactory.newLatLngZoom(LatLng(h.first, h.second), 14.0)
         m.animateCamera(update, 1400)
     }
