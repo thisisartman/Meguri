@@ -65,7 +65,7 @@ class PhotoBackupTest {
         }
         val uri = resolver.insert(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), values)!!
         // A real 3000 × 2000 JPEG: copies are decoded and resized, so random bytes would not do
-        val bmp = android.graphics.Bitmap.createBitmap(3000, 2000, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(200, 80, 40)) }
+        val bmp = android.graphics.Bitmap.createBitmap(4000, 2000, android.graphics.Bitmap.Config.ARGB_8888).apply { eraseColor(android.graphics.Color.rgb(200, 80, 40)) }
         resolver.openOutputStream(uri)!!.use { bmp.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, it) }
         return uri
     }
@@ -99,8 +99,8 @@ class PhotoBackupTest {
         assertNotEquals(image.toString(), p.contentUri)
         assertTrue(p.contentUri, PhotoStore.exists(context, p.contentUri))
         val back = android.graphics.BitmapFactory.decodeFile(PhotoStore.file(context, p.contentUri).path)
-        assertEquals(1600, back.width)
-        assertEquals(1066, back.height)
+        assertEquals(PhotoStore.LONG_SIDE, back.width)
+        assertEquals(1500, back.height)
     }
 
     @Test fun copierMovesGalleryPhotosIntoTheAppAndKeepsTheRow() = runBlocking {

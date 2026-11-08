@@ -10,15 +10,17 @@ import java.io.File
 import java.io.InputStream
 
 /**
- * Meguri's own copy of every photo (#79): a 1600 px WebP in the app's files, so clearing the gallery loses nothing.
+ * Meguri's own copy of every photo (#79): a 3000 px WebP in the app's files, so clearing the gallery loses nothing.
+ * 3000 px since 2026-11-09 (owner: full screen must stay sharp; 1600 px was stretched 1.5x on the S23's 2340 px screen
+ * and blurred when zoomed into card text). About 0.6 to 1 MB a photo. Copies made before stay at 1600 px.
  * A photo's content_uri is `app:photos/<id>.webp` once copied; older rows still point at the gallery until
  * [PhotoCopier] copies them. The camera's full-size original stays in the gallery as the owner's own picture.
  */
 object PhotoStore {
     const val SCHEME = "app:"
     private const val DIR = "photos"
-    const val LONG_SIDE = 1600
-    const val QUALITY = 80
+    const val LONG_SIDE = 3000
+    const val QUALITY = 85
 
     fun appUri(photoId: String) = "${SCHEME}$DIR/$photoId.webp"
 

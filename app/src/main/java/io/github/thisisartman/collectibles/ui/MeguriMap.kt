@@ -88,11 +88,18 @@ fun MeguriMap(
     val types = LocalTypeColors.current
     val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
     val routeColor = androidx.compose.material3.MaterialTheme.colorScheme.primary.toArgb()
-    // A flat map (owner, 2026-11-08: the textures looked odd): land in the page colour, water in the accent, faded
-    val landColor = androidx.compose.material3.MaterialTheme.colorScheme.background.toArgb()
+    // A flat map (owner, 2026-11-08: the textures looked odd). Land is set apart from the page (owner, 2026-11-09,
+    // S23 screenshot: in the page colour the search bar and sheet had no edge against the map): lighter than the
+    // page in dark mode, a shade darker in light mode. Water is the land tinted with the accent.
+    val page = androidx.compose.material3.MaterialTheme.colorScheme.background
+    val ink = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
+    val land = androidx.compose.ui.graphics.lerp(page, ink, if (dark) 0.16f else 0.06f)
+    val landColor = land.toArgb()
     val waterColor = androidx.compose.ui.graphics.lerp(
-        androidx.compose.material3.MaterialTheme.colorScheme.background, androidx.compose.material3.MaterialTheme.colorScheme.primary, if (dark) 0.22f else 0.16f,
+        land, androidx.compose.material3.MaterialTheme.colorScheme.primary, if (dark) 0.22f else 0.16f,
     ).toArgb()
+    // On the lighter dark-mode land the style's grey roads would vanish, so they are lifted above it
+    val roads = if (dark) androidx.compose.ui.graphics.lerp(land, ink, 0.18f).toArgb() to androidx.compose.ui.graphics.lerp(land, ink, 0.32f).toArgb() else null
     val tapPin by rememberUpdatedState(onPinTap)
     val tapMap by rememberUpdatedState(onMapTap)
     val anchorNow by rememberUpdatedState(anchor)
@@ -105,7 +112,7 @@ fun MeguriMap(
     var style by remember { mutableStateOf<Style?>(null) }
     // Until the style has drawn, the map shows this colour: the page's own background, not MapLibre's light grey,
     // which flashed in dark mode when coming back to Nearby (screen recording on the Poco, 2026-11-07)
-    val loadColor = androidx.compose.material3.MaterialTheme.colorScheme.background.toArgb()
+    val loadColor = landColor
     val mapView = remember {
         MapLibre.getInstance(context)
         val options = org.maplibre.android.maps.MapLibreMapOptions.createFromAttributes(context).foregroundLoadColor(loadColor).textureMode(inCard)
@@ -154,7 +161,7 @@ fun MeguriMap(
                     Expression.coalesce(Expression.get("name:ja"), Expression.get("name:nonlatin"), Expression.get("name"))
                 else
                     Expression.coalesce(Expression.get("name:en"), Expression.get("name:latin"), Expression.get("name"))
-                flatten(s, landColor, waterColor)
+                flatten(s, landColor, waterColor, roads)
                 s.layers.filterIsInstance<org.maplibre.android.style.layers.SymbolLayer>().forEach { layer ->
                     val tf = layer.textField.expression?.toString() ?: layer.textField.value?.toString() ?: return@forEach
                     if ("name" in tf && "ref" !in tf) layer.setProperties(PropertyFactory.textField(oneName))
@@ -388,7 +395,9 @@ private val JAPAN: LatLngBounds = LatLngBounds.Builder().include(LatLng(30.0, 12
  * One flat look for every map source (OpenFreeMap online, Protomaps offline): hill shading, land cover textures,
  * parks, woods and buildings off; land and water in two flat colours. Roads and labels stay as the style draws them.
  */
-private fun flatten(s: Style, land: Int, water: Int) {
+private fun flatten(s: Style, land: Int, water: Int, roads: Pair<Int, Int>? = null) {
+    // roads = (minor, major) colours; casings, tunnels and rail keep the style's own darker colours as outlines
+    val major = Regex("highway|motorway|major|trunk|primary|link")
     val hide = Regex("hillshade|landcover|landuse|park|wood|forest|grass|scrub|wetland|sand|glacier|ice|building|aeroway|pitch|cemetery|military|zoo|hospital|school|beach|farmland|orchard|vineyard")
     s.layers.forEach { l ->
         val id = l.id.lowercase()
@@ -401,6 +410,9 @@ private fun flatten(s: Style, land: Int, water: Int) {
                 l.setProperties(PropertyFactory.fillColor(land), PropertyFactory.fillPattern(Expression.literal("")))
             l is org.maplibre.android.style.layers.FillLayer && "water" in id -> l.setProperties(PropertyFactory.fillColor(water), PropertyFactory.fillOpacity(1f))
             l is org.maplibre.android.style.layers.LineLayer && "water" in id -> l.setProperties(PropertyFactory.lineColor(water))
+            roads != null && l is org.maplibre.android.style.layers.LineLayer && ("road" in id || "street" in id || "transportation" in id || "highway" in id) &&
+                "casing" !in id && "tunnel" !in id && "rail" !in id && "path" !in id ->
+                l.setProperties(PropertyFactory.lineColor(if (major.containsMatchIn(id)) roads.second else roads.first))
             hide.containsMatchIn(id) && (l is org.maplibre.android.style.layers.FillLayer || l is org.maplibre.android.style.layers.FillExtrusionLayer || l is org.maplibre.android.style.layers.LineLayer) ->
                 l.setProperties(PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
         }

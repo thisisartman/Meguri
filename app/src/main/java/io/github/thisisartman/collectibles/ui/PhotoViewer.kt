@@ -97,7 +97,8 @@ fun LargePhoto(uri: String, modifier: Modifier = Modifier, onFullscreen: () -> U
 @Composable
 fun FullscreenPhoto(uri: String, onClose: () -> Unit) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
-        val (bmp, done) = rememberPicture(uri, 2400)
+        // The stored copy whole, so zooming into card text stays sharp
+        val (bmp, done) = rememberPicture(uri, PhotoStore.LONG_SIDE)
         var scale by remember { mutableFloatStateOf(1f) }
         var offset by remember { mutableStateOf(Offset.Zero) }
         val state = rememberTransformableState { zoom, pan, _ ->

@@ -1,5 +1,9 @@
 # Changelog
 
+## Next (after beta.9)
+- Map: the land is a shade apart from the app (lighter in dark mode, slightly darker in light mode), so the search bar and the sheet have a clear edge. Roads in dark mode are lighter to match.
+- Photos: Meguri's own copy is now 3000 px (was 1600), so full screen and zoom stay sharp. Photos added before keep their size.
+
 ## 2026-11-09: Commit history cleaned
 - Claude lines removed from every commit message on every branch. Code unchanged. Commit IDs changed: see the map in `Backups/`.
 - Draft PR #70 is now #82.
