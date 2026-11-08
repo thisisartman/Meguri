@@ -2,6 +2,8 @@
 
 ## Next (after beta.9)
 - Map: the land is a shade apart from the app (lighter in dark mode, slightly darker in light mode), so the search bar and the sheet have a clear edge. Roads in dark mode are lighter to match.
+- Scan a card: a card scanned upside down (or sideways) is turned the right way up, by finding which way its code reads.
+- Photo dialog: what "Remove photo" does is now a tooltip on the button (long press), not a line of text.
 - Photos: Meguri's own copy is now 3000 px (was 1600), so full screen and zoom stay sharp. Photos added before keep their size.
 
 ## 2026-11-09: Commit history cleaned

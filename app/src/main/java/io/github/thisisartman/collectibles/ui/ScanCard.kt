@@ -63,7 +63,21 @@ private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { c ->
 }
 
 /** What a scan found: the photo, the code read from it (if any) and the card it matches (if any). */
-private data class Scan(val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
+/** [bmp] turned [degrees] clockwise, saved as a JPEG in the cache; the app copy is made from it when the photo is attached. */
+private suspend fun uprightCopy(context: Context, bmp: android.graphics.Bitmap, degrees: Int): Uri? =
+    kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        runCatching {
+            val m = android.graphics.Matrix().apply { postRotate(degrees.toFloat()) }
+            val turned = android.graphics.Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, m, true)
+            val dir = java.io.File(context.cacheDir, "scans").apply { mkdirs() }
+            val f = java.io.File(dir, "scan-${System.currentTimeMillis()}.jpg")
+            f.outputStream().use { check(turned.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, it)) }
+            turned.recycle()
+            Uri.fromFile(f)
+        }.getOrNull()
+    }
+
+private data class Scan(val photo: Uri,val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
 
 /**
  * Scan a card (M7 auto-crop, M8 recognition; owner 2026-11-08: yes to both). Google's on-device document scanner
@@ -98,17 +112,36 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         val page = GmsDocumentScanningResult.fromActivityResultIntent(r.data)?.pages?.firstOrNull() ?: return@rememberLauncherForActivityResult
         reading = true
         scope.launch {
-            val read = runCatching {
-                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
-                    .process(InputImage.fromFilePath(context, page.imageUri)).await().text
+            val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
+            val known = cards.mapNotNull { it.item.code }.toSet()
+            val reader = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            // The scanner straightens the card but does not know which way is up: it came back upside down on the S23
+            // (owner, 2026-11-09). Read it as it comes, then turned 180, 90 and 270 degrees; the turn that reads the
+            // card code is the upright one, and the photo is saved that way up
+            val page0 = runCatching {
+                android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, _, _ ->
+                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                }
+            }.getOrNull()
+            var code: String? = null
+            var turn = 0
+            var failure: Throwable? = null
+            for (deg in listOf(0, 180, 90, 270)) {
+                val read = runCatching {
+                    val input = page0?.let { InputImage.fromBitmap(it, deg) } ?: InputImage.fromFilePath(context, page.imageUri)
+                    reader.process(input).await().text
+                }
+                failure = read.exceptionOrNull()
+                if (failure != null) break
+                code = CardCode.best(read.getOrDefault(""), known)
+                if (code != null) { turn = deg; break }
+                if (page0 == null) break
             }
             // The reader comes through Play services and downloads on first use: say so instead of "no code" (Poco, 2026-11-08)
-            if ((read.exceptionOrNull() as? com.google.mlkit.common.MlKitException)?.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) {
+            if ((failure as? com.google.mlkit.common.MlKitException)?.errorCode == com.google.mlkit.common.MlKitException.UNAVAILABLE) {
                 reading = false; notReady = true; return@launch
             }
-            val text = read.getOrDefault("")
-            val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
-            val code = CardCode.best(text, cards.mapNotNull { it.item.code }.toSet())
+            val photo = if (turn != 0 && page0 != null) uprightCopy(context, page0, turn) ?: page.imageUri else page.imageUri
             val match = cards.firstOrNull { it.item.code == code }
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
             // on the card you pick from the nearest ones
@@ -120,7 +153,8 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
             }.getOrDefault(false)
             val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
-            result = Scan(page.imageUri, code, match, cover, near)
+            page0?.recycle()
+            result = Scan(photo, code, match, cover, near)
             reading = false
         }
     }

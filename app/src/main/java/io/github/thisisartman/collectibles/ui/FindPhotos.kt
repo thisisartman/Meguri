@@ -28,6 +28,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -181,15 +182,22 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
                             Text(stringResource(R.string.photo_cover_set))
                         }
                     }
-                    Text(stringResource(R.string.photo_remove_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             },
             confirmButton = {
                 TextButton(onClick = { if (kind != p.role) actions.setKind(p.id, kind); editing = null }) { Text(stringResource(R.string.photo_done)) }
             },
             dismissButton = {
-                TextButton(onClick = { actions.remove(p.id); editing = null }) {
-                    Text(stringResource(R.string.photo_remove), color = MaterialTheme.colorScheme.error)
+                // What removing does is a tooltip on the button (long press), not a line in the dialog (owner, 2026-11-09)
+                @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+                androidx.compose.material3.TooltipBox(
+                    positionProvider = androidx.compose.material3.TooltipDefaults.rememberPlainTooltipPositionProvider(),
+                    tooltip = { PlainTooltip { Text(stringResource(R.string.photo_remove_note)) } },
+                    state = androidx.compose.material3.rememberTooltipState(),
+                ) {
+                    TextButton(onClick = { actions.remove(p.id); editing = null }) {
+                        Text(stringResource(R.string.photo_remove), color = MaterialTheme.colorScheme.error)
+                    }
                 }
             },
         )
