@@ -5,7 +5,7 @@
 - + opens a small card just above it with three square buttons (Scan, Search, Add); the bottom bar stays usable. + again, a tap outside or Back closes it.
 - (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its type. A type you write that Meguri doesn't have becomes a type of its own, with its own place in My book.
 - Ekitag screenshots: the stamp is cut out by its shape and set on a rounded square in its colour, with the station's name on two lines (your language first), in M PLUS Rounded 1c.
-- Testing on the Poco: card photos from its own camera app against Meguri's scanner, to see which reads and crops better on a low-end phone.
+- Tested on the Poco: card photos from its own camera app, run through Meguri's scanner, read 5 of 6 codes (the miss had glare across the card).
 - The word "kind" is gone from the app: they are types (the owner's word).
 - Manhole cards: the design is the title and the place and code sit under it ("20 years as one city", then "Tsubame · 15-213-E001").
 - Nearby: your own types sit under Stamps or Cards; the third tab, Other, is only for types that are neither.
