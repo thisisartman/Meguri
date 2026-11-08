@@ -115,6 +115,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     val scope = rememberCoroutineScope()
     var reading by remember { mutableStateOf(false) }
     var result by remember { mutableStateOf<Scan?>(null) }
+    var fullscreen by remember { mutableStateOf<String?>(null) }
     var failed by remember { mutableStateOf(false) }
     var notReady by remember { mutableStateOf(false) }
     // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background)
@@ -264,7 +265,8 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             title = { Text(if (row != null) row.item.displayName(ja) else stringResource(if (s.cover) R.string.scan_cover_title else R.string.scan_no_match)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LargePhoto(s.photo.toString(), onFullscreen = {})
+                    // Full screen, like on an item page (owner, 2026-11-09: the button did nothing here)
+                    LargePhoto(s.photo.toString(), onFullscreen = { fullscreen = s.photo.toString() })
                     Text(
                         when {
                             row != null -> stringResource(R.string.scan_found, s.code ?: "")
@@ -305,4 +307,6 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             },
         )
     }
+    // After the result dialog, so it opens on top of it
+    fullscreen?.let { u -> FullscreenPhoto(u, onClose = { fullscreen = null }) }
 }
