@@ -22,6 +22,7 @@ class CollectiblesApp : Application() {
     @Inject lateinit var geofences: io.github.thisisartman.collectibles.alerts.Geofences
     @Inject lateinit var catalogue: io.github.thisisartman.collectibles.data.CatalogAndBackup
     @Inject lateinit var photoCopier: io.github.thisisartman.collectibles.photo.PhotoCopier
+    @Inject lateinit var alertSettings: io.github.thisisartman.collectibles.alerts.AlertSettings
 
     override fun onCreate() {
         super.onCreate()
@@ -35,6 +36,8 @@ class CollectiblesApp : Application() {
         autoBackup.catchUpIfOverdue()
         notifier.createChannels()
         geofences.refreshInBackground()
+        // The new-photo hint waits for the next gallery photo again after each start (M7)
+        if (alertSettings.photoHintsOn) io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(this, androidx.work.ExistingWorkPolicy.KEEP)
         CoroutineScope(Dispatchers.IO).launch {
             runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
             runCatching { photoCopier.copyAll() }.onFailure { log.e("Photo", "Copying photos into the app failed", it) }

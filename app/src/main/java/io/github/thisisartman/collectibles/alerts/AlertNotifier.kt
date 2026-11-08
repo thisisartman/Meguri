@@ -34,6 +34,10 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
                 .apply { description = context.getString(R.string.alerts_channel_sub) },
         )
         m.createNotificationChannel(
+            NotificationChannel(CH_PHOTOS, context.getString(R.string.photo_hint_channel), NotificationManager.IMPORTANCE_LOW)
+                .apply { description = context.getString(R.string.photo_hint_channel_sub); setShowBadge(false) },
+        )
+        m.createNotificationChannel(
             NotificationChannel(CH_TRIP, context.getString(R.string.trip_channel), NotificationManager.IMPORTANCE_LOW)
                 .apply { description = context.getString(R.string.trip_channel_sub); setShowBadge(false) },
         )
@@ -88,6 +92,34 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             .setAutoCancel(true)
             .addAction(0, context.getString(R.string.alert_done), collect)
             .addAction(0, context.getString(R.string.alert_dismiss), dismiss)
+            .build()
+        post(id, n)
+    }
+
+    /**
+     * A new camera photo taken near something still to get (M7): "Attach" puts it on that item, "Pick another" opens
+     * the share screen with it. Quiet, on its own channel, so it can be turned off separately from alerts.
+     */
+    fun notifyPhoto(item: Item, photo: android.net.Uri, meters: Double) {
+        if (!canPost()) return
+        val id = notificationId("photo:" + photo)
+        val attach = PendingIntent.getActivity(
+            context, id + 1, MainActivity.attachIntent(context, item.id, photo), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val pick = PendingIntent.getActivity(
+            context, id + 2, MainActivity.shareOneIntent(context, photo), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val text = context.getString(R.string.photo_hint_text, typeLabel(item.type), distance(meters))
+        val n = NotificationCompat.Builder(context, CH_PHOTOS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.photo_hint_title, nameOf(item)))
+            .setContentText(text)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setSilent(true)
+            .setContentIntent(pick)
+            .setAutoCancel(true)
+            .addAction(0, context.getString(R.string.photo_hint_attach), attach)
+            .addAction(0, context.getString(R.string.photo_hint_pick), pick)
             .build()
         post(id, n)
     }
@@ -151,6 +183,7 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
     companion object {
         const val CH_ALERTS = "alerts"
         const val CH_TRIP = "trip"
+        const val CH_PHOTOS = "photo_hints"
         const val TRIP_ID = 1
         const val UNDO_WINDOW_MS = 30_000L
 

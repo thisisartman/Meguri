@@ -271,6 +271,15 @@ class MainViewModel @Inject constructor(
         _shared.value = null
     }
 
+    /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
+    fun attachPhoto(itemId: String, uri: android.net.Uri, onDone: () -> Unit) {
+        viewModelScope.launch {
+            val p = repo.readShared(uri)
+            repo.addShared(itemId, listOf(p), if (p.hasPlace) p.lat!! to p.lng!! else null)
+            onDone()
+        }
+    }
+
     /** Reads where and when each shared photo was taken; called once "photo locations" has been asked for. */
     fun readShare() {
         val uris = sharedUris.value

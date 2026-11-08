@@ -500,4 +500,12 @@
     <string name="filter_to_get">To get</string>
     <string name="filter_have">Have</string>
     <string name="filter_series">Series %1$s</string>
+    <string name="photo_hint_setting">Suggest new photos</string>
+    <string name="photo_hint_setting_sub">When you take a photo with the camera near something you have not collected, Meguri offers to add it. Needs access to your photos.</string>
+    <string name="photo_hint_title">Photo near %1$s</string>
+    <string name="photo_hint_text">%1$s · %2$s from where it was taken</string>
+    <string name="photo_hint_attach">Attach</string>
+    <string name="photo_hint_pick">Pick another</string>
+    <string name="photo_hint_channel">Photo suggestions</string>
+    <string name="photo_hint_channel_sub">A new photo taken near something you have not collected</string>
 </resources>

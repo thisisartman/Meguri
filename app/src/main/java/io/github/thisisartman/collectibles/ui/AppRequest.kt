@@ -10,6 +10,7 @@ sealed interface AppRequest {
     data class Collect(val itemId: String, val fix: Fix?) : AppRequest
     data object StartTrip : AppRequest
     data class Share(val uris: List<android.net.Uri>) : AppRequest
+    data class Attach(val itemId: String, val uri: android.net.Uri) : AppRequest
 
     companion object {
         fun from(intent: Intent?): AppRequest? {
@@ -21,6 +22,11 @@ sealed interface AppRequest {
                 Intent.ACTION_SEND_MULTIPLE -> androidx.core.content.IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
                     ?.takeIf { it.isNotEmpty() }?.let { return Share(it.toList()) }
             }
+            // The new-photo hint (M7)
+            intent.getStringExtra(MainActivity.EXTRA_ATTACH_ITEM)?.let { id ->
+                intent.getStringExtra(MainActivity.EXTRA_ATTACH_URI)?.let { return Attach(id, android.net.Uri.parse(it)) }
+            }
+            intent.getStringExtra(MainActivity.EXTRA_SHARE_URI)?.let { return Share(listOf(android.net.Uri.parse(it))) }
             intent.getStringExtra(MainActivity.EXTRA_COLLECT_ITEM)?.let { id ->
                 val fix = if (intent.hasExtra(MainActivity.EXTRA_FIX_LAT)) Fix(
                     intent.getDoubleExtra(MainActivity.EXTRA_FIX_LAT, 0.0), intent.getDoubleExtra(MainActivity.EXTRA_FIX_LNG, 0.0),

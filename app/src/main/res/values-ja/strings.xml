@@ -494,4 +494,12 @@
     <string name="filter_to_get">未取得</string>
     <string name="filter_have">取得済み</string>
     <string name="filter_series">第%1$s弾</string>
+    <string name="photo_hint_setting">新しい写真を提案</string>
+    <string name="photo_hint_setting_sub">カメラで未取得のものの近くで撮った写真を、Meguriが追加するよう提案します。写真へのアクセスが必要です。</string>
+    <string name="photo_hint_title">%1$sの近くの写真</string>
+    <string name="photo_hint_text">%1$s・撮影場所から%2$s</string>
+    <string name="photo_hint_attach">追加</string>
+    <string name="photo_hint_pick">別のものを選ぶ</string>
+    <string name="photo_hint_channel">写真の提案</string>
+    <string name="photo_hint_channel_sub">未取得のものの近くで撮った新しい写真</string>
 </resources>

@@ -229,6 +229,20 @@ fun AlertsSection(vm: AlertsViewModel = hiltViewModel()) {
     val quiet = remember(tick) { s.quietOn }
     SwitchRow(stringResource(R.string.quiet_title), stringResource(R.string.quiet_sub), quiet, onChange = { s.quietOn = it; tick++ })
 
+    // New-photo hint (M7, owner 2026-11-08: yes, with a way to turn it off)
+    val photoPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
+        val ok = io.github.thisisartman.collectibles.data.SharedPhotoReader.placePermissions().all { granted[it] == true || context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
+        s.photoHintsOn = ok
+        if (ok) { s.photoHintsSeenSec = System.currentTimeMillis() / 1000; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context) }
+        tick++
+    }
+    val photoHints = remember(tick) { s.photoHintsOn }
+    SwitchRow(stringResource(R.string.photo_hint_setting), stringResource(R.string.photo_hint_setting_sub), photoHints, onChange = { on ->
+        if (on) photoPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
+        else { s.photoHintsOn = false; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context) }
+        tick++
+    })
+
     MoreLink(
         stringResource(R.string.setup_title),
         stringResource(if (Build.MANUFACTURER.equals("samsung", ignoreCase = true)) R.string.setup_sub_samsung else R.string.setup_sub),

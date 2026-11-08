@@ -27,6 +27,16 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
 
     val tripOn: Boolean get() = tripUntilMs > System.currentTimeMillis()
 
+    /** The new-photo hint (M7): off until switched on in Settings, which also asks for gallery access. */
+    var photoHintsOn: Boolean
+        get() = prefs.getBoolean("photo_hints", false)
+        set(v) = prefs.edit().putBoolean("photo_hints", v).apply()
+
+    /** Gallery photos added before this time (seconds) have been looked at. 0: not started; the first run only marks now. */
+    var photoHintsSeenSec: Long
+        get() = prefs.getLong("photo_hints_seen", 0L)
+        set(v) = prefs.edit().putLong("photo_hints_seen", v).apply()
+
     /** The last geofence registration error from Play Services, 0 when the last one worked. */
     var geofenceError: Int
         get() = prefs.getInt(KEY_GEO_ERROR, 0)

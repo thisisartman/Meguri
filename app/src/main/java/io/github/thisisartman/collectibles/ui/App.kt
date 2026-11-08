@@ -172,6 +172,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             }
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
             is AppRequest.Share -> { vm.openShare(r.uris); nav.navigate("share") }
+            is AppRequest.Attach -> vm.attachPhoto(r.itemId, r.uri) { nav.openItem(r.itemId) }
         }
         onRequestHandled()
     }

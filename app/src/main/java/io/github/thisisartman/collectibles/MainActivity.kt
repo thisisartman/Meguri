@@ -59,5 +59,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         fun startTripIntent(context: Context) = launchIntent(context).putExtra(EXTRA_START_TRIP, true)
+        /** The new-photo hint's "Attach": that photo onto that item (M7). */
+        fun attachIntent(context: Context, itemId: String, photo: android.net.Uri) =
+            launchIntent(context).putExtra(EXTRA_ATTACH_ITEM, itemId).putExtra(EXTRA_ATTACH_URI, photo.toString())
+        /** The new-photo hint's "Pick another": the share screen with that one photo. */
+        fun shareOneIntent(context: Context, photo: android.net.Uri) = launchIntent(context).putExtra(EXTRA_SHARE_URI, photo.toString())
+        const val EXTRA_ATTACH_ITEM = "attach_item"
+        const val EXTRA_ATTACH_URI = "attach_uri"
+        const val EXTRA_SHARE_URI = "share_uri"
     }
 }
