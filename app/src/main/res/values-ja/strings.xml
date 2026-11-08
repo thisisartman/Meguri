@@ -512,8 +512,8 @@
     <string name="cards_done">カードの画像：%1$d枚ダウンロード、%2$d枚見つからず</string>
     <string name="cards_remove">カードの画像を削除</string>
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
-    <string name="scan_card">カードをスキャン</string>
-    <string name="scan_card_sub">マンホールカードを撮ると、まっすぐに補正してコードを読み取り、カードを探します</string>
+    <string name="scan_card">カード・ふたをスキャン</string>
+    <string name="scan_card_sub">マンホールカードやふたを撮ると、補正してコードを読むか、ふたを切り抜いて探します</string>
     <string name="scan_reading">カードを読み取り中…</string>
     <string name="scan_unavailable">この端末ではスキャナーを使えません（Google Play開発者サービスが必要）。アイテムのページから写真を追加してください。</string>
     <string name="scan_no_match">どのカードですか？</string>
@@ -525,4 +525,6 @@
     <string name="scan_open">開く</string>
     <string name="scan_pick">手で選ぶ</string>
     <string name="scan_not_ready">カードの読み取り機能をダウンロード中です（初回のみ、Google Play開発者サービス経由）。1分ほどしてからもう一度試してください。</string>
+    <string name="scan_cover_title">マンホールのふた</string>
+    <string name="scan_cover">どのカードのふたですか？近いもの：</string>
 </resources>

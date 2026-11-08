@@ -29,6 +29,14 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
+            "New in beta.9", "beta.9の新機能",
+            listOf(
+                "Card lists: a grid with short names; filter by Have and To get" to "カード一覧：短い名前のグリッドに。取得済み・未取得で絞り込み",
+                "Manhole covers: a cover photo is cut out as a circle; scan a cover and pick its card" to "マンホールのふた：ふたの写真を円形に切り抜き。ふたをスキャンしてカードを選択",
+                "Display picture: a cover, an Ekitag screenshot or a goshuin photo becomes it by itself" to "表示画像：ふた・エキタグ・御朱印の写真が自動で表示画像に",
+            ),
+        ),
+        Section(
             "New in beta.8", "beta.8の新機能",
             listOf(
                 "Scan a card: + → Scan a card. Meguri straightens the photo, reads the card code and finds the card" to "カードをスキャン：＋→カードをスキャン。写真を補正し、コードを読み取ってカードを探します",

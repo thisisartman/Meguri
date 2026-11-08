@@ -63,7 +63,7 @@ private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { c ->
 }
 
 /** What a scan found: the photo, the code read from it (if any) and the card it matches (if any). */
-private data class Scan(val photo: Uri, val code: String?, val row: ItemRow?)
+private data class Scan(val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList())
 
 /**
  * Scan a card (M7 auto-crop, M8 recognition; owner 2026-11-08: yes to both). Google's on-device document scanner
@@ -109,7 +109,18 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             val text = read.getOrDefault("")
             val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
             val code = CardCode.best(text, cards.mapNotNull { it.item.code }.toSet())
-            result = Scan(page.imageUri, code, cards.firstOrNull { it.item.code == code })
+            val match = cards.firstOrNull { it.item.code == code }
+            // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
+            // on the card you pick from the nearest ones
+            val cover = match == null && code == null && runCatching {
+                val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
+                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                    val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
+                }
+                io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
+            }.getOrDefault(false)
+            val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
+            result = Scan(page.imageUri, code, match, cover, near)
             reading = false
         }
     }
@@ -146,7 +157,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         val row = s.row
         AlertDialog(
             onDismissRequest = { result = null },
-            title = { Text(if (row != null) row.item.displayName(ja) else stringResource(R.string.scan_no_match)) },
+            title = { Text(if (row != null) row.item.displayName(ja) else stringResource(if (s.cover) R.string.scan_cover_title else R.string.scan_no_match)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     LargePhoto(s.photo.toString(), onFullscreen = {})
@@ -154,10 +165,17 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                         when {
                             row != null -> stringResource(R.string.scan_found, s.code ?: "")
                             s.code != null -> stringResource(R.string.scan_unknown_code, s.code)
+                            s.cover -> stringResource(R.string.scan_cover)
                             else -> stringResource(R.string.scan_no_code)
                         },
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                    s.nearCards.forEach { c ->
+                        TextButton(onClick = {
+                            result = null
+                            vm.attachPhoto(c.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.MANHOLE) { nav.openItem(c.item.id) }
+                        }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) { Text(c.item.shortName(ja), modifier = Modifier.fillMaxWidth()) }
+                    }
                 }
             },
             confirmButton = {

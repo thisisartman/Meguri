@@ -518,8 +518,8 @@
     <string name="cards_done">Card pictures: %1$d downloaded, %2$d not found</string>
     <string name="cards_remove">Remove card pictures</string>
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
-    <string name="scan_card">Scan a card</string>
-    <string name="scan_card_sub">Photograph a manhole card: Meguri straightens it, reads its code and finds it</string>
+    <string name="scan_card">Scan a card or cover</string>
+    <string name="scan_card_sub">Photograph a manhole card or cover: Meguri straightens it, reads the code or cuts out the cover, and finds it</string>
     <string name="scan_reading">Reading the card…</string>
     <string name="scan_unavailable">The scanner isn\'t available on this phone (it needs Google Play services). Add the photo from the item page instead.</string>
     <string name="scan_no_match">Which card is this?</string>
@@ -531,4 +531,6 @@
     <string name="scan_open">Open</string>
     <string name="scan_pick">Pick by hand</string>
     <string name="scan_not_ready">The card reader is still downloading (once, through Google Play services). Try again in a minute.</string>
+    <string name="scan_cover_title">A manhole cover</string>
+    <string name="scan_cover">Which card is this cover for? The nearest ones:</string>
 </resources>

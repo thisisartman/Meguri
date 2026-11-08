@@ -209,7 +209,7 @@ class CollectionRepository @Inject constructor(
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             val info = pickedInfo(picked)
             val id = newId()
-            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id)
+            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id, circle = kind == PhotoKind.MANHOLE)
             if (uri == null) {
                 log.w("Photo", "Could not copy a gallery photo for find $findId")
                 return@withContext false
@@ -282,7 +282,7 @@ class CollectionRepository @Inject constructor(
     /** A camera photo: Meguri keeps its own copy (#79); if the copy fails, the photo points at the gallery and a later start copies it. */
     suspend fun attachPhoto(findId: String, photo: PhotoInfo) = kotlinx.coroutines.withContext(Dispatchers.IO) {
         val id = newId()
-        val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, android.net.Uri.parse(photo.uri), id)
+        val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, android.net.Uri.parse(photo.uri), id, circle = nextKind[findId] == PhotoKind.MANHOLE)
         insertPhoto(id, findId, if (uri != null) photo.copy(uri = uri) else photo)
     }
 

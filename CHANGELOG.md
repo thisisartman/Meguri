@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-08: 0.3.0-beta.9 (versionCode 11), from the owner's S23 feedback on beta.8
+- **Card lists:** a grid like everywhere else, with short names ("Saitama-ken A001"); only two filters, Have and To get, both on by default (no All, no series).
+- **Display picture by itself:** the first photo of an item's main kind becomes its display picture when it has none: a manhole card's cover, a station's Ekitag screenshot, a goshuin itself. Also when a photo's kind is changed to that.
+- **Manhole covers cut to a circle:**
+  - A photo filed as a manhole cover is cut out as a circle, using a small circle finder written for this, no library. It finds the lid's outer rim.
+  - "Scan a card or cover": with no card code but a clear circle, it is a cover, filed on the card you pick from the nearest three. It becomes the display picture.
+  - Seen on the Poco.
+- **Crop accuracy** of card scans is still to tune with the owner's card photos.
+
 ## 2026-11-08: 0.3.0-beta.8 (versionCode 10)
 - Carries Scan a card and Card pictures (below). Same database as beta.7, so not one-way from beta.7 (one-way from beta.6).
 - Fixed before release: the release build crashed when starting the card scanner (the code shrinker removed parts of ML Kit). It now keeps ML Kit's classes.
