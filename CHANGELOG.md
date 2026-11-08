@@ -1,6 +1,13 @@
 # Changelog
 
-## 2026-11-08: next beta (not released)
+## 2026-11-08: 0.3.0-beta.7 (versionCode 9), for the S23 and friends' testing
+- Checked before release:
+  - 111 unit and 28 device tests pass.
+  - Fresh install walked on the emulator: onboarding, region, Collect, Undo.
+  - Upgrade rehearsed on a copy of the real Poco backup: schema 1→4; all 21 finds and every item kept; no duplicate keys; 545 new items.
+  - Release build over beta.6 on the emulator: What's new shows; Trip from a Tokyo→Urasa link; report shares; no crash.
+  - Real phones: the Poco's and the S23's dev copies upgrade and import without errors.
+- One-way: the database moves to version 4 (item editing). Back up first; beta.6 can't take it back.
 - Catalogue (#65, #55, #22):
   - JR East station stamps for Saitama and Tokyo: 217 stations on 19 lines, in running order; the Joetsu Shinkansen now runs from Tokyo (12 stations).
   - Dam cards for Saitama (12) and Tokyo (2) from the MLIT list.
