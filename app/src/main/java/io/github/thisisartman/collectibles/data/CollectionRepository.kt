@@ -209,8 +209,12 @@ class CollectionRepository @Inject constructor(
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             val info = pickedInfo(picked)
             val id = newId()
-            // An Ekitag screenshot is titled with the station's name (both names when it has an English one)
-            val title = if (kind == PhotoKind.EKITAG) dao.itemOfFind(findId)?.let { i -> listOfNotNull(i.nameJa, i.nameRomaji?.takeIf { it.isNotBlank() && it != i.nameJa }).joinToString(" · ") } else null
+            // An Ekitag screenshot is titled with the station's name on two lines, the app's language first (owner, Telegram 491)
+            val title = if (kind == PhotoKind.EKITAG) dao.itemOfFind(findId)?.let { i ->
+                val en = i.nameRomaji?.takeIf { it.isNotBlank() && it != i.nameJa }
+                val ja = context.resources.configuration.locales[0]?.language == "ja"
+                if (en == null) i.nameJa else if (ja) "${i.nameJa}\n$en" else "$en\n${i.nameJa}"
+            } else null
             val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id, circle = kind == PhotoKind.MANHOLE, ekitagTitle = title)
             if (uri == null) {
                 log.w("Photo", "Could not copy a gallery photo for find $findId")

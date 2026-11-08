@@ -53,7 +53,10 @@ object PhotoStore {
         // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
         val bmp = when {
             circle -> runCatching { CoverCrop.crop(whole) }.getOrNull()?.also { whole.recycle() } ?: whole
-            ekitagTitle != null -> runCatching { EkitagArt.render(whole, ekitagTitle) }.getOrNull()?.also { whole.recycle() } ?: whole
+            ekitagTitle != null -> runCatching {
+                // "first\nsecond": the station's name in the app's language first
+                EkitagArt.render(whole, ekitagTitle.substringBefore('\n'), ekitagTitle.substringAfter('\n', ""))
+            }.getOrNull()?.also { whole.recycle() } ?: whole
             else -> whole
         }
         val target = File(dir(context), "$photoId.webp")

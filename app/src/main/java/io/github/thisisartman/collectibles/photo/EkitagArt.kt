@@ -130,8 +130,12 @@ object EkitagArt {
         return if (useColour) rgb(med(crs), med(cgs), med(cbs)) else rgb(med(rs), med(gs), med(bs))
     }
 
-    /** The display picture for [screenshot], titled [title]; null when no stamp is found (the screenshot is kept). */
-    fun render(screenshot: Bitmap, title: String, size: Int = 1200): Bitmap? {
+    /**
+     * The display picture for [screenshot], titled [first] over [second] (the app's language first; [second] may be
+     * empty); null when no stamp is found, and the screenshot is kept. Layout from the owner's notes (Telegram 491,
+     * 2026-11-09): little empty space, the stamp near the top with a little room above, the name large on two lines.
+     */
+    fun render(screenshot: Bitmap, first: String, second: String = "", size: Int = 1200): Bitmap? {
         val scale = min(1f, WORK.toFloat() / screenshot.width)
         val sw = max(1, (screenshot.width * scale).roundToInt()); val sh = max(1, (screenshot.height * scale).roundToInt())
         val small = Bitmap.createScaledBitmap(screenshot, sw, sh, true)
@@ -155,13 +159,15 @@ object EkitagArt {
         val c = Canvas(out)
         // A pale wash of the ink colour, on a rounded square
         val tint = Color.rgb(255 - ((255 - Color.red(inkColour)) * 0.14f).toInt(), 255 - ((255 - Color.green(inkColour)) * 0.14f).toInt(), 255 - ((255 - Color.blue(inkColour)) * 0.14f).toInt())
-        val r = size * 0.14f
+        val r = size * 0.12f
         c.drawRoundRect(RectF(0f, 0f, size.toFloat(), size.toFloat()), r, r, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = tint })
-        val band = size * 0.16f
-        val box = size - band - size * 0.08f
-        val k = min(box / stamp.width, box / stamp.height)
+        val topRoom = size * 0.045f
+        val textH = size * 0.215f
+        val boxH = size - topRoom - textH - size * 0.02f
+        val boxW = size * 0.90f
+        val k = min(boxW / stamp.width, boxH / stamp.height)
         val dw = stamp.width * k; val dh = stamp.height * k
-        val left = (size - dw) / 2; val top = size * 0.05f + (box - dh) / 2
+        val left = (size - dw) / 2; val top = topRoom + (boxH - dh) / 2
         val dst = RectF(left, top, left + dw, top + dh)
         // A soft shadow under the stamp
         val shadow = stamp.extractAlpha(Paint().apply { maskFilter = BlurMaskFilter(14f / k, BlurMaskFilter.Blur.NORMAL) }, IntArray(2))
@@ -169,11 +175,22 @@ object EkitagArt {
         shadow.recycle()
         c.drawBitmap(stamp, null, dst, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))
         stamp.recycle()
-        // The station's name, in the ink colour, shrunk to fit
-        val text = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = inkColour; typeface = Typeface.DEFAULT_BOLD; textSize = band * 0.42f; textAlign = Paint.Align.CENTER }
-        val maxW = size * 0.86f
-        if (text.measureText(title) > maxW) text.textSize *= maxW / text.measureText(title)
-        c.drawText(title, size / 2f, size - band * 0.42f, text)
+        // The station's name on two lines, in the ink colour; a light ink (Asaka's sky blue) is darkened until it reads
+        val lum = (0.2126f * Color.red(inkColour) + 0.7152f * Color.green(inkColour) + 0.0722f * Color.blue(inkColour)) / 255f
+        val textColour = if (lum > 0.42f) Color.rgb((Color.red(inkColour) * 0.42f / lum).toInt(), (Color.green(inkColour) * 0.42f / lum).toInt(), (Color.blue(inkColour) * 0.42f / lum).toInt()) else inkColour
+        val maxW = size * 0.88f
+        fun line(text: String, sizeShare: Float, bold: Boolean, baseline: Float) {
+            if (text.isBlank()) return
+            val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = textColour; typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                textSize = size * sizeShare; textAlign = Paint.Align.CENTER
+            }
+            if (p.measureText(text) > maxW) p.textSize *= maxW / p.measureText(text)
+            c.drawText(text, size / 2f, baseline, p)
+        }
+        val firstBase = size - textH + size * 0.012f + size * 0.082f
+        line(first, 0.082f, true, firstBase)
+        line(second, 0.056f, false, firstBase + size * 0.075f)
         return out
     }
 }

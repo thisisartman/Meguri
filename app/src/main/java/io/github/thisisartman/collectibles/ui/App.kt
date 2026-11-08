@@ -222,7 +222,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                                     contentAlignment = androidx.compose.ui.Alignment.Center,
                                 ) {
                                     androidx.compose.material3.Surface(
-                                        onClick = { showLog = true },
+                                        // + opens the card, and closes it again
+                                        onClick = { showLog = !showLog },
                                         shape = androidx.compose.foundation.shape.CircleShape,
                                         color = MaterialTheme.colorScheme.primary,
                                         contentColor = MaterialTheme.colorScheme.onPrimary,
@@ -238,7 +239,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                             }
                             NavigationBarItem(
                                 selected = (route ?: NEARBY) == r,
-                                onClick = { nav.openTab(r) },
+                                onClick = { showLog = false; nav.openTab(r) },
                                 icon = { Icon(icon, contentDescription = null) },
                                 label = { Text(stringResource(label)) },
                                 colors = NavigationBarItemDefaults.colors(
@@ -339,6 +340,19 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }, only = only, tripDay = true) }
                     }
                 }
+                // The + card sits in the page area, above the bottom bar, so the bar stays usable (owner, 2026-11-09)
+                LogSheet(
+                    open = showLog && topLevel,
+                    onDismiss = { showLog = false },
+                    onScan = { showLog = false; scanTrigger++ },
+                    // Search: the search bar on Nearby, focused, so typing starts at once
+                    onSearch = {
+                        showLog = false
+                        if (nav.currentDestination?.route != NEARBY) nav.popBackStack(NEARBY, inclusive = false)
+                        searchTick++
+                    },
+                    onAdd = { showLog = false; nav.navigate("new") },
+                )
             }
         }
         if (newCollection) {
@@ -346,19 +360,6 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                 vm.addCollectionType(name, color, icon, hasCost)
                 newCollection = false
             }
-        }
-        if (showLog) {
-            LogSheet(
-                onDismiss = { showLog = false },
-                onScan = { showLog = false; scanTrigger++ },
-                // Search: the search bar on Nearby, focused, so typing starts at once
-                onSearch = {
-                    showLog = false
-                    if (nav.currentDestination?.route != NEARBY) nav.popBackStack(NEARBY, inclusive = false)
-                    searchTick++
-                },
-                onAdd = { showLog = false; nav.navigate("new") },
-            )
         }
     }
 }
