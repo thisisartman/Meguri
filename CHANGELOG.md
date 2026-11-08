@@ -13,6 +13,7 @@
 - Settings: Theme (Phone, Light or Dark; the map and the status bar follow it), Colours (Meguri or Wallpaper) and Language as one-tap choices. On Android 12 and older, Language opens the phone's language settings.
 - Alerts, simpler (owner's pick C): When to alert is Off, Travelling or Always; How close is one slider for every category (200 m, 500 m, 1 km); Categories, one tap in, switches each on or off and can give it its own distance ("Same" uses the main one). Quiet at night and Keep alerts working stay. A distance saved before (300 m) reads as 200 m.
 - Suggest new photos moved from Alerts to Backup and data.
+- Alerts: Always no longer stops Proximity mode, so a planned trip keeps telling you where to get off. On a phone without Google Play services, Always says why it can't turn on.
 - Alerts: a menu under How close picks what the slider sets: every category, or one category, which then keeps its own distance ("Use the main distance" puts it back).
 - Backup and data: Back up now (with or without photos, as the weekly setting), Weekly backup as one row (the words open its page, the switch turns it on or off), Restore; a Photos group with Suggest new photos and Photos kept in Meguri.
 - Weekly backup page: the folder, Include photos, Keep the last 2, 4 or 8, and Back up now.

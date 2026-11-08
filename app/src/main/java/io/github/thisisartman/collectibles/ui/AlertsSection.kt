@@ -108,6 +108,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
 
     var askBackground by remember { mutableStateOf(false) }
     var tripRefused by remember { mutableStateOf(false) }
+    var noPlayTapped by remember { mutableStateOf(false) }
 
     val tripPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         tripRefused = !startTrip(context, vm)
@@ -150,9 +151,9 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
                 tripPerms.launch(foregroundAlertPermissions())
             }
             2 -> {
-                TripModeService.stop(context)
+                // A running trip stays on: it carries a planned route's "get off next" alerts
                 when {
-                    !playOk -> {}
+                    !playOk -> noPlayTapped = true
                     !vm.location.hasPermission() -> bgFirstPerms.launch(foregroundAlertPermissions())
                     !vm.geofences.hasBackgroundLocation() -> askBackground = true
                     else -> { s.geofenceOn = true; vm.geofences.refreshInBackground() }
@@ -167,7 +168,9 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
         mode == 2 && !geoReady -> stringResource(R.string.bg_sub_needs) to { askBackground = true }
         mode == 2 && geoError == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> stringResource(R.string.bg_sub_accuracy) to { openLocationSettings(context); vm.geofences.refreshInBackground() }
         mode == 2 && geoError != 0 -> stringResource(R.string.bg_sub_failed) to { vm.geofences.refreshInBackground(); tick++ }
+        mode == 2 && tripOn -> (stringResource(R.string.bg_sub_on) + " " + stringResource(R.string.trip_sub_on, until)) to null
         mode == 2 -> stringResource(R.string.bg_sub_on) to null
+        noPlayTapped && !playOk -> stringResource(R.string.bg_sub_no_play) to null
         mode == 1 -> stringResource(R.string.trip_sub_on, until) to null
         !playOk -> stringResource(R.string.bg_sub_no_play) to null
         else -> stringResource(R.string.alerts_mode_sub) to null

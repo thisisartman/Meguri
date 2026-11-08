@@ -576,10 +576,10 @@
     <string name="scan_cover_title">マンホールのふた</string>
     <string name="scan_cover">どのカードのふたですか？近いもの：</string>
     <string name="look_theme">テーマ</string>
-    <string name="look_theme_phone">端末に合わせる</string>
+    <string name="look_theme_phone">端末</string>
     <string name="look_theme_light">ライト</string>
     <string name="look_theme_dark">ダーク</string>
-    <string name="look_theme_sub">「端末に合わせる」はスマホのダークモードに従います。地図も切り替わります。</string>
+    <string name="look_theme_sub">「端末」はスマホのダークモードに従います。地図も切り替わります。</string>
     <string name="look_colours">色</string>
     <string name="look_colours_meguri">Meguri</string>
     <string name="look_colours_wallpaper">壁紙</string>
