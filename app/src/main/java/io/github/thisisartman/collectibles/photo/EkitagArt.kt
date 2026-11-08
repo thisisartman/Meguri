@@ -135,7 +135,7 @@ object EkitagArt {
      * empty); null when no stamp is found, and the screenshot is kept. Layout from the owner's notes (Telegram 491,
      * 2026-11-09): little empty space, the stamp near the top with a little room above, the name large on two lines.
      */
-    fun render(screenshot: Bitmap, first: String, second: String = "", size: Int = 1200): Bitmap? {
+    fun render(screenshot: Bitmap, first: String, second: String = "", size: Int = 1200, bold: Typeface = Typeface.DEFAULT_BOLD, regular: Typeface = Typeface.DEFAULT): Bitmap? {
         val scale = min(1f, WORK.toFloat() / screenshot.width)
         val sw = max(1, (screenshot.width * scale).roundToInt()); val sh = max(1, (screenshot.height * scale).roundToInt())
         val small = Bitmap.createScaledBitmap(screenshot, sw, sh, true)
@@ -179,10 +179,10 @@ object EkitagArt {
         val lum = (0.2126f * Color.red(inkColour) + 0.7152f * Color.green(inkColour) + 0.0722f * Color.blue(inkColour)) / 255f
         val textColour = if (lum > 0.42f) Color.rgb((Color.red(inkColour) * 0.42f / lum).toInt(), (Color.green(inkColour) * 0.42f / lum).toInt(), (Color.blue(inkColour) * 0.42f / lum).toInt()) else inkColour
         val maxW = size * 0.88f
-        fun line(text: String, sizeShare: Float, bold: Boolean, baseline: Float) {
+        fun line(text: String, sizeShare: Float, isBold: Boolean, baseline: Float) {
             if (text.isBlank()) return
             val p = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = textColour; typeface = if (bold) Typeface.DEFAULT_BOLD else Typeface.DEFAULT
+                color = textColour; typeface = if (isBold) bold else regular
                 textSize = size * sizeShare; textAlign = Paint.Align.CENTER
             }
             if (p.measureText(text) > maxW) p.textSize *= maxW / p.measureText(text)

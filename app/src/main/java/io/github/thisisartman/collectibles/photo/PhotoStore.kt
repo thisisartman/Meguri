@@ -55,7 +55,12 @@ object PhotoStore {
             circle -> runCatching { CoverCrop.crop(whole) }.getOrNull()?.also { whole.recycle() } ?: whole
             ekitagTitle != null -> runCatching {
                 // "first\nsecond": the station's name in the app's language first
-                EkitagArt.render(whole, ekitagTitle.substringBefore('\n'), ekitagTitle.substringAfter('\n', ""))
+                // M PLUS Rounded 1c, the owner's pick (Telegram 500, 2026-11-09)
+                EkitagArt.render(
+                    whole, ekitagTitle.substringBefore('\n'), ekitagTitle.substringAfter('\n', ""),
+                    bold = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_bold) ?: android.graphics.Typeface.DEFAULT_BOLD,
+                    regular = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_medium) ?: android.graphics.Typeface.DEFAULT,
+                )
             }.getOrNull()?.also { whole.recycle() } ?: whole
             else -> whole
         }
