@@ -79,7 +79,13 @@ enum class MapSection(val types: Set<ItemType>) {
 fun ItemRow.toPin(): MapPin? {
     val lat = item.lat ?: return null
     val lng = item.lng ?: return null
-    return MapPin(item.id, lat, lng, item.type, findCount > 0)
+    // The display picture, as in My book: your photo, else the downloaded card picture, else the category icon
+    return MapPin(
+        item.id, lat, lng, item.type, findCount > 0,
+        picture = photoUri,
+        cardCode = item.code.takeIf { item.type == ItemType.MANHOLE_CARD },
+        customTypeId = item.customTypeId,
+    )
 }
 
 /** Full-screen map (#47, #51): tap a pin for a card with Details and Directions (#52). */

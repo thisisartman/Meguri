@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -38,7 +39,10 @@ import org.maplibre.geojson.FeatureCollection
 import org.maplibre.geojson.Point
 
 /** One item on a map. */
-data class MapPin(val id: String, val lat: Double, val lng: Double, val type: ItemType, val collected: Boolean)
+data class MapPin(
+    val id: String, val lat: Double, val lng: Double, val type: ItemType, val collected: Boolean,
+    val picture: String? = null, val cardCode: String? = null, val customTypeId: String? = null,
+)
 
 /**
  * The map (#47). The offline Niigata pack inside the trip area (#9, [OfflineMap]), online OpenFreeMap tiles elsewhere.
@@ -89,6 +93,12 @@ fun MeguriMap(
     val types = LocalTypeColors.current
     val hollow = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
     val routeColor = androidx.compose.material3.MaterialTheme.colorScheme.primary.toArgb()
+    val groupText = androidx.compose.material3.MaterialTheme.colorScheme.onPrimary.toArgb()
+    val groupEdge = androidx.compose.material3.MaterialTheme.colorScheme.surface.toArgb()
+    val customTypes = LocalCustomTypes.current
+    val markerPx = with(androidx.compose.ui.platform.LocalDensity.current) { (if (inCard) 26.dp else 40.dp).roundToPx() }
+    // Marker bitmaps by look, kept while this map is shown; the ones added to the current style are tracked apart
+    val markerCache = remember { HashMap<String, android.graphics.Bitmap>() }
     // A flat map (owner, 2026-11-08: the textures looked odd). Land is set apart from the page (owner, 2026-11-09,
     // S23 screenshot: in the page colour the search bar and sheet had no edge against the map): lighter than the
     // page in dark mode, a shade darker in light mode. Water is the land tinted with the accent.
@@ -203,22 +213,40 @@ fun MeguriMap(
                         PropertyFactory.lineJoin(org.maplibre.android.style.layers.Property.LINE_JOIN_ROUND),
                     ),
                 )
-                s.addSource(GeoJsonSource(SRC))
-                s.addLayer(
-                    CircleLayer(LAYER, SRC).withProperties(
-                        // Small at regional zoom, so a line of stations doesn't hide the place names; full size near you
-                        PropertyFactory.circleRadius(
-                            Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 2f), Expression.stop(11, 4f), Expression.stop(13, 7f)),
-                        ),
-                        PropertyFactory.circleStrokeWidth(
-                            Expression.interpolate(Expression.linear(), Expression.zoom(), Expression.stop(8, 1f), Expression.stop(13, 3f)),
-                        ),
-                        PropertyFactory.circleStrokeColor(Expression.get("color")),
-                        PropertyFactory.circleColor(
-                            // Hollow pins take the page colour, so in dark mode "still to get" isn't the brightest thing on the map
-                            Expression.switchCase(Expression.get("collected"), Expression.get("color"), Expression.color(hollow)),
-                        ),
+                // Pins as pictures (owner, 2026-11-09, option A, after Immich's map): items close together on screen
+                // merge into a gold circle with how many; each single item is its own picture marker
+                s.addSource(
+                    GeoJsonSource(
+                        SRC,
+                        org.maplibre.android.style.sources.GeoJsonOptions()
+                            .withCluster(true).withClusterRadius(if (inCard) 28 else 44).withClusterMaxZoom(16),
                     ),
+                )
+                s.addLayer(
+                    CircleLayer(LAYER_GROUP, SRC).withProperties(
+                        PropertyFactory.circleRadius(Expression.literal(if (inCard) 13f else 19f)),
+                        PropertyFactory.circleColor(Expression.color(routeColor)),
+                        PropertyFactory.circleStrokeWidth(Expression.literal(2f)),
+                        PropertyFactory.circleStrokeColor(Expression.color(groupEdge)),
+                    ).withFilter(Expression.has("point_count")),
+                )
+                s.addLayer(
+                    org.maplibre.android.style.layers.SymbolLayer(LAYER_GROUP_COUNT, SRC).withProperties(
+                        PropertyFactory.textField(Expression.toString(Expression.get("point_count_abbreviated"))),
+                        // The offline pack carries its own font names; the online styles use OpenFreeMap's
+                        PropertyFactory.textFont(arrayOf(if (offlineStyle != null) "NotoSans-Medium" else "Noto Sans Bold")),
+                        PropertyFactory.textSize(if (inCard) 11f else 13f),
+                        PropertyFactory.textColor(Expression.color(groupText)),
+                        PropertyFactory.textAllowOverlap(true), PropertyFactory.textIgnorePlacement(true),
+                    ).withFilter(Expression.has("point_count")),
+                )
+                s.addLayer(
+                    org.maplibre.android.style.layers.SymbolLayer(LAYER, SRC).withProperties(
+                        PropertyFactory.iconImage(Expression.get("img")),
+                        PropertyFactory.iconAllowOverlap(true), PropertyFactory.iconIgnorePlacement(true),
+                        PropertyFactory.iconOffset(Expression.get("off")),
+                        PropertyFactory.symbolSortKey(Expression.get("rank")),
+                    ).withFilter(Expression.not(Expression.has("point_count"))),
                 )
                 style = s
             }
@@ -228,17 +256,91 @@ fun MeguriMap(
             m.addOnMapClickListener { point ->
                 val p = m.projection.toScreenLocation(point)
                 val box = android.graphics.RectF(p.x - slop, p.y - slop, p.x + slop, p.y + slop)
-                val hit = m.queryRenderedFeatures(box, LAYER).minByOrNull { f ->
+                val dpx = context.resources.displayMetrics.density
+                val hit = m.queryRenderedFeatures(box, LAYER, LAYER_GROUP).minByOrNull { f ->
                     val g = f.geometry() as? Point ?: return@minByOrNull Float.MAX_VALUE
                     val s = m.projection.toScreenLocation(LatLng(g.latitude(), g.longitude()))
-                    (s.x - p.x) * (s.x - p.x) + (s.y - p.y) * (s.y - p.y)
+                    // Where the marker is drawn: items sharing a spot are pushed apart by "off" (dp)
+                    val off = runCatching { f.getProperty("off").asJsonArray }.getOrNull()
+                    val x = s.x + (off?.get(0)?.asFloat ?: 0f) * dpx
+                    val y = s.y + (off?.get(1)?.asFloat ?: 0f) * dpx
+                    (x - p.x) * (x - p.x) + (y - p.y) * (y - p.y)
                 }
-                if (hit != null) tapPin(hit.getStringProperty("id")) else tapMap()
+                val g = hit?.geometry() as? Point
+                when {
+                    hit == null -> tapMap()
+                    hit.hasProperty("point_count") && g != null -> {
+                        val zoom = runCatching { m.style?.getSourceAs<GeoJsonSource>(SRC)?.getClusterExpansionZoom(hit) }.getOrNull()
+                            ?: (m.cameraPosition.zoom + 2).toInt()
+                        if (interactive) m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(g.latitude(), g.longitude()), zoom.toDouble()), 450)
+                    }
+                    else -> tapPin(hit.getStringProperty("id"))
+                }
                 true
             }
         }
     }
     LaunchedEffect(map, anchor) { map?.let { emitAnchor(it) } }
+    val cardsHave by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsState()
+    val looks = remember(pins, customTypes, cardsHave, types, markerPx) {
+        pins.map { p ->
+            val custom = p.customTypeId?.let { customTypes[it] }
+            p to MapMarkers.Look(
+                picture = p.picture,
+                cardCode = p.cardCode?.takeIf { it in cardsHave },
+                icon = if (p.type == ItemType.CUSTOM && custom != null) customIconRes(custom.icon) else typeIcon(p.type),
+                ring = if (p.type == ItemType.CUSTOM && custom != null) custom.color.toInt() else types.of(p.type).toArgb(),
+                collected = p.collected, sizePx = markerPx,
+            )
+        }
+    }
+    val addedTo = remember { java.util.WeakHashMap<Style, HashSet<String>>() }
+    suspend fun ensureMarkers(s: Style, wanted: Collection<MapMarkers.Look>) {
+        val added = addedTo.getOrPut(s) { HashSet() }
+        val missing = wanted.filter { it.key !in added }.distinctBy { it.key }
+        if (missing.isEmpty()) return
+        val drawn = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            missing.associate { l -> l.key to (markerCache[l.key] ?: MapMarkers.draw(context, l).also { markerCache[l.key] = it }) }
+        }
+        if (!s.isFullyLoaded) return
+        s.addImages(HashMap(drawn)); added += drawn.keys
+    }
+    fun publishMarkers(s: Style) {
+        val added = addedTo[s] ?: return
+        // Items on the same spot never separate by zooming (Urasa's stamp hid under its Ekitag on the Poco):
+        // once their group opens they sit side by side around the spot
+        val spread = HashMap<String, Pair<Float, Float>>()
+        looks.groupBy { (p, _) -> "%.5f,%.5f".format(java.util.Locale.US, p.lat, p.lng) }.values.filter { it.size > 1 }.forEach { same ->
+            val step = markerPx / context.resources.displayMetrics.density * 0.6f
+            same.forEachIndexed { i, (p, _) ->
+                val a = 2 * Math.PI * i / same.size - Math.PI
+                spread[p.id] = (step * kotlin.math.cos(a)).toFloat() to (step * kotlin.math.sin(a)).toFloat()
+            }
+        }
+        s.getSourceAs<GeoJsonSource>(SRC)?.setGeoJson(
+            FeatureCollection.fromFeatures(
+                looks.map { (p, l) ->
+                    Feature.fromGeometry(Point.fromLngLat(p.lng, p.lat)).apply {
+                        addStringProperty("id", p.id)
+                        // The picture once it is drawn; until then the category icon
+                        addStringProperty("img", if (l.key in added) l.key else l.plain.key)
+                        // Pictures and collected items draw above the rest
+                        addNumberProperty("rank", (if (l.picture != null || l.cardCode != null) 2 else 0) + (if (l.collected) 1 else 0))
+                        val (dx, dy) = spread[p.id] ?: (0f to 0f)
+                        addProperty("off", com.google.gson.JsonArray().apply { add(dx); add(dy) })
+                    }
+                },
+            ),
+        )
+    }
+    // Pictures: drawn off the main thread, then each marker switches from its icon to its picture
+    LaunchedEffect(style, looks) {
+        val s = style ?: return@LaunchedEffect
+        if (looks.none { it.second.picture != null || it.second.cardCode != null }) return@LaunchedEffect
+        ensureMarkers(s, looks.map { it.second.plain })
+        ensureMarkers(s, looks.map { it.second })
+        publishMarkers(s)
+    }
     // Pins and position follow the data; the camera is placed once, around you and the nearest pins.
     // A remembered camera counts as placed (it was placed on an earlier visit)
     var placed by remember { mutableStateOf(memoryKey != null && CameraMemory.saved[memoryKey] != null) }
@@ -280,17 +382,9 @@ fun MeguriMap(
     LaunchedEffect(style, pins, here, route) {
         val s = style ?: return@LaunchedEffect
         val m = map ?: return@LaunchedEffect
-        s.getSourceAs<GeoJsonSource>(SRC)?.setGeoJson(
-            FeatureCollection.fromFeatures(
-                pins.map { p ->
-                    Feature.fromGeometry(Point.fromLngLat(p.lng, p.lat)).apply {
-                        addStringProperty("id", p.id)
-                        addBooleanProperty("collected", p.collected)
-                        addStringProperty("color", colorHex(types.of(p.type)))
-                    }
-                },
-            ),
-        )
+        // Category icons first (a handful, quick), so every item shows at once; pictures follow below
+        ensureMarkers(s, looks.map { it.second.plain })
+        publishMarkers(s)
         s.getSourceAs<GeoJsonSource>(SRC_HERE)?.setGeoJson(
             FeatureCollection.fromFeatures(listOfNotNull(here?.let { Feature.fromGeometry(Point.fromLngLat(it.second, it.first)) })),
         )
@@ -378,6 +472,8 @@ private fun colorHex(c: Color) = String.format("#%06X", c.toArgb() and 0xFFFFFF)
 
 private const val SRC = "items"
 private const val LAYER = "items-pins"
+private const val LAYER_GROUP = "items-groups"
+private const val LAYER_GROUP_COUNT = "items-group-count"
 private const val SRC_HERE = "here"
 private const val SRC_ROUTE = "route"
 private const val LAYER_ROUTE = "route-line"
