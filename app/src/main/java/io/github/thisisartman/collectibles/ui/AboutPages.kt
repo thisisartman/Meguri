@@ -54,6 +54,10 @@ val SOURCES = listOf(
     Credit("Nominatim", R.string.credit_nominatim, "ODbL", "https://nominatim.org", "https://operations.osmfoundation.org/policies/nominatim/"),
     Credit("Eki kara Manhole", R.string.credit_ekikara, "© GKP", "https://ekikaramanhole.whitebeach.org/", "https://www.gk-p.jp/mhcard/"),
     Credit("国土交通省 (MLIT)", R.string.credit_mlit_dams, "PDL 1.0", "https://www.mlit.go.jp/river/kankyo/campaign/shunnkan/damcard.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
+    // Roadside stations: MLIT's list.xlsx (as of R8.9.4), positions from OpenStreetMap (build_michi.py, 2026-11-08)
+    Credit("国土交通省 (MLIT)", R.string.credit_mlit_michi, "PDL 1.0", "https://www.mlit.go.jp/road/Michi-no-Eki/list.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
+    // A few dam positions came from Wikidata (loadgeo.py: wikidata_st_dams.json, wikidata_gongendo.json)
+    Credit("Wikidata", R.string.credit_wikidata, "CC0 1.0", "https://www.wikidata.org", CC0),
     Credit("国土地理院 (GSI)", R.string.credit_gsi, "Terms", "https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html", "https://www.gsi.go.jp/LAW/2930-index.html"),
 )
 
@@ -147,6 +151,10 @@ fun PrivacyPage() {
     Text(
         stringResource(R.string.privacy_online), Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+    )
+    Text(
+        stringResource(R.string.privacy_online_sub), Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     listOf(
         Credit("OpenFreeMap", R.string.privacy_tiles, "Privacy", "https://openfreemap.org", "https://openfreemap.org/privacy/"),

@@ -696,6 +696,8 @@
     <string name="credit_nominatim">Finding a place when you add an item</string>
     <string name="credit_ekikara">Manhole card list and card pictures. Pictures © GKP and each city</string>
     <string name="credit_mlit_dams">Dam card list. 出典：国土交通省ウェブサイト</string>
+    <string name="credit_mlit_michi">Roadside station list. 出典：国土交通省ウェブサイト</string>
+    <string name="credit_wikidata">Positions of some dams</string>
     <string name="credit_gsi">Shrine and temple map symbols. 出典：国土地理院</string>
     <string name="credit_noto">Map labels</string>
     <string name="credit_mplus">Names on Ekitag pictures</string>
@@ -712,7 +714,8 @@
     <string name="credit_play_location">Your position and alerts</string>
     <string name="credit_mlkit">Scanning cards and reading Japanese text, on the phone</string>
     <string name="privacy_intro">Meguri has no account and no server. Your finds, photos and settings stay on this phone, and in the backups you save. Nothing is collected about you.</string>
-    <string name="privacy_online">What goes online, and only when you use it</string>
+    <string name="privacy_online">Online services</string>
+    <string name="privacy_online_sub">Meguri connects to these services only when you use the feature listed. Tap a name to open the service, or the button for its privacy policy.</string>
     <string name="privacy_tiles">Map tiles outside the offline pack: the area you look at</string>
     <string name="privacy_places">Place search when adding an item: the name you type</string>
     <string name="privacy_cards">Card pictures, when you tap Download: the card codes</string>
