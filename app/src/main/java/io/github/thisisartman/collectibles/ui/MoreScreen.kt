@@ -586,7 +586,7 @@ fun MoreScreen(
                     title = { Text(stringResource(R.string.cards_remove_title)) },
                     text = { Text(stringResource(R.string.cards_remove_text)) },
                     confirmButton = {
-                        TextButton(onClick = { confirmRemove = false; CardPictures.removeAll(ctx) }) { Text(stringResource(R.string.remove)) }
+                        TextButton(onClick = { confirmRemove = false; CardPictures.removeAll(ctx) }) { Text(stringResource(R.string.cards_remove_confirm)) }
                     },
                     dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(android.R.string.cancel)) } },
                 )

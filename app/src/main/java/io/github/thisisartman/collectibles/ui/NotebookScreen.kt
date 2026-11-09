@@ -83,6 +83,11 @@ object NotebookSession {
         work = null; workBoxes = emptyList(); adding = null; dateMs = null
     }
 
+    /** The page is saved: let go of the stamps' pictures, which would otherwise stay in memory. */
+    fun finish() {
+        work = null; workBoxes = emptyList(); adding = null; dateMs = null
+    }
+
     /** The item just made on the Add page becomes the choice of the stamp that asked for it. */
     fun added(itemId: String) {
         adding?.let { it.chosen = itemId; it.query = "" }

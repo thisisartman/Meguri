@@ -332,6 +332,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         Page {
                             NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new-for-notebook") }, onSaved = { n ->
                                 nav.popBackStack(NEARBY, inclusive = false)
+                                NotebookSession.finish()
                                 appScope.launch { snackbar.showSnackbar(context.resources.getQuantityString(R.plurals.nb_saved, n, n)) }
                             })
                         }

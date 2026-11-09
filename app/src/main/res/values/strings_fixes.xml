@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Strings added by the 2026-11-09 review fixes, kept apart from strings.xml so parallel work merges cleanly -->
 <resources>
-    <string name="remove">Remove</string>
+    <string name="cards_remove_confirm">Remove</string>
     <string name="logs_saved">Logs saved</string>
     <string name="logs_save_failed">Couldn\'t save the logs</string>
     <string name="cards_all_here">All card pictures are already on this phone</string>
