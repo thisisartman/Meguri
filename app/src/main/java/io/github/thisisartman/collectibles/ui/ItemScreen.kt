@@ -250,11 +250,6 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
     }
 }
 
-@Composable
-private fun NameBlock(item: Item, ja: Boolean, lineNames: List<String>) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { NameText(item, ja, lineNames) }
-}
-
 /** Round 5, D2: the two things you do with a place on a trip day, as icon buttons. */
 @Composable
 private fun Actions(item: Item, meters: Double?) {

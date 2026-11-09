@@ -730,27 +730,6 @@ fun TypeChip(type: ItemType, extra: String? = null) {
 fun distanceText(meters: Double?): String? = meters?.let { val (res, v) = formatDistance(it); stringResource(res, v) }
 
 @Composable
-private fun NearTile(row: ItemRow, name: String, meters: Double?, onOpen: () -> Unit, onGotIt: () -> Unit, onPhoto: () -> Unit) {
-    // Wider with large text, so the name and distance still fit
-    val width = 150.dp * LocalDensity.current.fontScale.coerceIn(1f, 1.6f)
-    Card(
-        Modifier.width(width).clickable(onClick = onOpen),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainer),
-        shape = RoundedCornerShape(12.dp),
-    ) {
-        Column(Modifier.padding(10.dp)) {
-            Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
-            TypeChip(row.item.type)
-            // Distance on its own line: it is what the tile is for, and it must not be the part that gets cut
-            Text(distanceText(meters) ?: "", style = MaterialTheme.typography.labelLarge.copy(fontFeatureSettings = "tnum"), maxLines = 1)
-            Spacer(Modifier.height(8.dp))
-            Button(onClick = onGotIt, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_got_it, name)), contentPadding = PaddingValues(vertical = 4.dp)) { Text(stringResource(R.string.got_it)) }
-            InkOutlinedButton(onClick = onPhoto, modifier = Modifier.fillMaxWidth().spoken(stringResource(R.string.a11y_photo, name)), contentPadding = PaddingValues(vertical = 2.dp)) { Text(stringResource(R.string.photo)) }
-        }
-    }
-}
-
-@Composable
 fun summaryTitle(s: CollectionSummary, lineName: String?): String = when {
     s.type == ItemType.MANHOLE_CARD -> stringResource(R.string.type_manhole_plural) + sep() + s.title.ifEmpty { stringResource(R.string.book_no_prefecture) }.let { prefectureName(it, isJapanese()) }
     s.type == ItemType.EKI_STAMP && s.lineId != null -> stringResource(R.string.type_eki_plural) + sep() + (lineName ?: s.lineId)

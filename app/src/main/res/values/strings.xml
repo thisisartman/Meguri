@@ -3,21 +3,12 @@
     <string name="sep">" · "</string>
     <string name="nav_nearby">Nearby</string>
     <string name="nav_book">My book</string>
-    <string name="nav_more">More</string>
 
-    <string name="nearby_title">Nearby</string>
-    <string name="nearby_still_to_get">Not collected, nearest first</string>
-    <string name="nearby_still_to_get_no_fix">Not collected</string>
-    <string name="nearby_all_far">Nothing to get within %1$d km; the nearest is %2$s away.</string>
-    <string name="nearby_approximate">approximate</string>
-    <string name="nearby_my_book">My book</string>
     <string name="nearby_location_off">Location is switched off · A to Z</string>
     <string name="nearby_location_not_allowed">Location not allowed · A to Z</string>
     <string name="nearby_no_position">No position yet · A to Z</string>
     <string name="nearby_try_again">Try again</string>
     <string name="nearby_from_fix">From your position at %1$s</string>
-    <string name="nearby_from_now">From your position now</string>
-    <string name="nearby_nothing_left">Nothing left to get near here</string>
     <string name="nearby_empty_book">Nothing logged yet. Tap + to log your first find.</string>
     <string name="nearby_allow_location">Allow location</string>
     <string name="nearby_allow_in_settings">Allow location in Settings</string>
@@ -40,7 +31,6 @@
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
     <string name="logged">Collected %1$s · %2$s</string>
-    <string name="had_before_app">Collected</string>
     <string name="last">Last: %1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
@@ -66,31 +56,15 @@
     <string name="item_office_hours">Office hours</string>
     <string name="item_station">Station</string>
     <string name="item_stamp_location">Stamp location</string>
-    <string name="item_phone">Phone</string>
-    <string name="item_distance">Distance</string>
-    <string name="item_open_maps">Open in Maps</string>
     <string name="item_wave">Wave %1$s · %2$s</string>
     <string name="item_wave_only">Wave %1$s</string>
-    <string name="item_no_finds">Not collected</string>
-    <string name="item_add_photo">Add a photo</string>
-    <string name="item_remove_before_app">Mark as not collected</string>
-    <string name="item_found_at">%1$s · %2$s</string>
-    <string name="item_no_position">no position</string>
     <string name="back">Back</string>
     <string name="nearby_finding">Finding your position…</string>
-    <string name="nearby_no_catalogue">No catalogue loaded yet. A catalogue lists what there is to collect and where, so Meguri can show what is near you. Without one you can still log anything with +.</string>
-    <string name="nearby_load_catalogue">Load a catalogue</string>
-    <string name="nearby_all_done">You have everything in your catalogue.</string>
     <string name="book_mark_choose">Choose the ones you have</string>
     <string name="item_finding_position">finding position…</string>
     <string name="item_position_saved">location saved</string>
     <string name="item_find_map">Map</string>
-    <string name="item_remove_confirm_title">Mark as not collected?</string>
-    <string name="item_remove_confirm_text">%1$s will count as not collected again.</string>
-    <string name="item_remove_confirm">Mark as not collected</string>
-    <string name="nearby_around_here">Around here · within %1$d km</string>
     <string name="nearby_next">Next: %1$s · %2$s</string>
-    <string name="nearby_elsewhere">Elsewhere</string>
     <string name="item_directions">Directions · %1$s</string>
     <string name="item_directions_plain">Directions</string>
     <string name="item_call">Call</string>
@@ -100,28 +74,15 @@
     <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Not collected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
     <string name="line_nearest">Nearest not collected: %2$s · %1$s</string>
 
-    <string name="log_title">Log a find</string>
-    <string name="log_search">Search name or code</string>
-    <string name="log_near_you">Nearest first</string>
-    <string name="log_recent">Recent</string>
-    <string name="log_not_in_list">Not in the list?</string>
-    <string name="log_nothing_yet">Nothing to suggest yet. Add what you got with New below.</string>
     <string name="new_needs_name">Type a name to save.</string>
-    <string name="log_not_in_list_sub">Add a new goshuin, stamp or card here, with this find</string>
-    <string name="log_new">New</string>
     <string name="new_title">New item</string>
-    <string name="new_type">Category</string>
-    <string name="new_name_ja">Name in Japanese</string>
-    <string name="new_name_romaji">Name in romaji (optional)</string>
     <string name="new_save">Save and log</string>
 
     <string name="more_title">Settings</string>
     <string name="more_language">Language</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
-    <string name="more_backup_section">Your data</string>
     <string name="more_backup">Back up now</string>
-    <string name="more_backup_sub">Saves all finds to a file you choose, without photos. To carry photos too, use \"Back up with photos\".</string>
     <string name="more_backup_done">Backup saved: %1$s</string>
     <string name="more_backup_done_named">Saved %1$s: %2$s</string>
     <string name="more_backup_failed">Couldn\'t save the backup</string>
@@ -148,9 +109,6 @@
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
     <string name="more_auto_sub_failed">The last backup failed. Tap to pick the folder again.</string>
     <string name="more_auto_now">Back up now</string>
-    <string name="more_auto_body">Once a week, to the folder "%1$s" on this phone. Keeps the last %2$d.</string>
-    <string name="more_auto_change">Change folder</string>
-    <string name="more_auto_off">Turn off</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
     <string name="more_import_done">Catalogue loaded: %1$d new, %2$d updated, %3$d railway lines</string>
@@ -163,16 +121,11 @@
     <string name="logs_crash_test">Crash test</string>
     <string name="logs_about">What Meguri recorded: errors and crashes, and with Developer mode every page and action. Saved on this phone only. Export them to send with a bug report.</string>
     <string name="more_about">About</string>
-    <string name="more_about_sub">Version %1$s · works offline · your data stays on this phone · Map data © OpenStreetMap contributors · Icons: Material Icons (Apache 2.0), Mapbox Maki and Temaki (CC0) · Font on Ekitag pictures: M PLUS Rounded 1c (SIL Open Font Licence) · Shrine and temple symbols: 出典：国土地理院 · Dam card list: 出典：国土交通省ウェブサイト</string>
 
     <!-- Alerts (M4) -->
-    <string name="alerts_title">Alerts</string>
     <string name="trip_title">Travelling alerts</string>
-    <string name="trip_sub_off">Checks where you are every few minutes until midnight and tells you when something to get is close. For trains and walks.</string>
     <string name="trip_sub_on">On until %1$s. Turn it off here or from its notification.</string>
     <string name="trip_needs_location">Travelling alerts need location access.</string>
-    <string name="bg_title">Alerts when the app is closed</string>
-    <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
     <string name="bg_sub_on">Tells you when you are near something you have not collected, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
@@ -181,8 +134,6 @@
     <string name="bg_dialog_title">Allow location all the time?</string>
     <string name="bg_dialog_text">Android asks on a separate page. Choose \"Allow all the time\" so alerts can come while the app is closed. Meguri never sends your location anywhere.</string>
     <string name="bg_dialog_go">Continue</string>
-    <string name="alert_distance">Alert distance</string>
-    <string name="alert_for">Alert for</string>
     <string name="quiet_title">Quiet at night</string>
     <string name="quiet_sub">No alerts from 22:00 to 07:00</string>
     <string name="setup_title">Keep alerts working in the background</string>
@@ -210,8 +161,6 @@
     <string name="map_title_cards">Cards on the map</string>
     <string name="map_collected">Collected</string>
     <string name="map_not_collected">Not collected</string>
-    <string name="map_details">Details</string>
-    <string name="map_expand">Expand</string>
     <string name="nearby_tab_stamps">Stamps</string>
     <string name="nearby_tab_cards">Cards</string>
     <string name="nearby_kind_all">All</string>
@@ -219,7 +168,6 @@
     <string name="nearby_sort_near">Nearest</string>
     <string name="nearby_sort_az">A to Z</string>
     <string name="nearby_tile_size">Tile size</string>    <string name="nearby_empty_kind">Nothing here yet.</string>
-    <string name="a11y_log_find">Log a find</string>
 
     <!-- Welcome before a catalogue (#58, Legion) -->
     <string name="welcome_title">Welcome to Meguri</string>
@@ -230,17 +178,14 @@
     <string name="welcome_other_ways">Moving from another phone? More, Restore from a backup. Anything not in a catalogue can still be logged with +.</string>
 
     <!-- Colour setting (#57, Legion) -->
-    <string name="look_device_colours">Device colours</string>
     <string name="look_device_colours_sub">Use your phone\'s wallpaper colours instead of Meguri\'s own. The colours for each category stay the same.</string>
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">Stamp</string>
-    <string name="photo_kind_proof">Proof (Ekitag or card)</string>
     <string name="photo_kind_other">Other photo</string>
     <string name="photo_add_title">Add a photo</string>
     <string name="photo_take">Take a photo</string>
     <string name="photo_pick">Choose from the gallery</string>
-    <string name="photo_edit_title">This photo</string>
     <string name="photo_remove">Remove photo</string>
     <string name="photo_remove_note">Removes Meguri\'s copy. A photo you took with the camera stays in your gallery.</string>
     <string name="photo_done">Done</string>
@@ -251,10 +196,6 @@
     <string name="nearby_search">Search stamps and cards</string>
     <string name="nearby_search_clear">Clear search</string>
     <string name="nearby_recenter">Back to where you are</string>
-    <string name="pin_from_you">%1$s from you</string>
-    <string name="sort_tip">Nearest: the distance under each item is how far it is from you. A to Z: names in alphabetical order.</string>
-    <string name="tip_dismiss">Got it, hide this tip</string>
-    <string name="date_not_recorded">Date not recorded</string>
     <string name="item_photos">Photos</string>
     <string name="photo_add_kind">Add: %1$s</string>
     <string name="kind_station_stamp">Station stamp</string>
@@ -303,8 +244,6 @@
     <string name="type_museum">Museum stamp</string>
     <string name="type_dam">Dam card</string>
     <string name="collection_name_taken">You already have a category with this name.</string>
-    <string name="more_backup_photos">Back up with photos</string>
-    <string name="more_backup_photos_sub">For a new phone: the same backup with every photo inside. Restore it there and the photos come back in Meguri.</string>
     <string name="menu_trip">Trip</string>
     <string name="trip_screen">Trip</string>
     <string name="trip_from">From</string>
@@ -344,7 +283,6 @@
     <string name="trip_share_directions">Directions: %1$s</string>
     <string name="trip_route_until">%1$s → %2$s until %3$s</string>
     <string name="trip_get_off_next">Get off next: %1$s, %2$s</string>
-    <string name="trip_plan_route">Plan a route</string>
     <string name="trip_clear">Clear the plan</string>
     <string name="trip_report">Trip report</string>
     <string name="trip_report_collected">%1$d collected</string>
@@ -366,7 +304,6 @@
     <string name="photo_cover_clear">Stop using as display picture</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
     <string name="settings_alerts">Alerts</string>
-    <string name="settings_alerts_sub">Distance for each category, what alerts, Travelling alerts, quiet hours</string>
     <string name="settings_data">Backup and data</string>
     <string name="settings_look">Appearance</string>
     <string name="settings_catalogue">Catalogue</string>
@@ -380,19 +317,13 @@
     <string name="sort_tip_near_text">: how far each item is from you</string>
     <string name="sort_tip_az">A to Z</string>
     <string name="sort_tip_az_text">: names in alphabetical order</string>
-    <string name="profile_title">You</string>
     <string name="profile_today">today</string>
     <string name="profile_open_map">Open map</string>
     <string name="profile_collections">Collections</string>
-    <string name="profile_map_empty">Places show up here as you collect.</string>
     <string name="map_title_collected">Where you collected</string>
     <plurals name="profile_finds">
         <item quantity="one">find</item>
         <item quantity="other">finds</item>
-    </plurals>
-    <plurals name="profile_kinds">
-        <item quantity="one">category</item>
-        <item quantity="other">categories</item>
     </plurals>
     <string name="onb_welcome">Welcome to Meguri</string>
     <string name="onb_question">Are you starting fresh, or do you already have cards, stamps or goshuin to put in?</string>
@@ -442,7 +373,6 @@
     <string name="onb_finished_how">Your finds are in My book (bottom right), with your photos and details; open one there to add photos.</string>
     <string name="onb_finished_profile">Go to My book</string>
     <string name="onb_finished_done">Done</string>
-    <string name="profile_collected">Collected</string>
     <plurals name="profile_collections">
         <item quantity="one">category</item>
         <item quantity="other">categories</item>
@@ -496,10 +426,8 @@
     <string name="timeline_title">Timeline</string>
     <string name="timeline_sub">Everything you collected, by day</string>
     <string name="timeline_empty">Nothing with a day yet. Each find you log keeps its day; things you had before the app have none.</string>
-    <string name="filter_all">All</string>
     <string name="filter_to_get">Not collected</string>
     <string name="filter_have">Collected</string>
-    <string name="filter_series">Series %1$s</string>
     <string name="photo_hint_setting">Suggest new photos</string>
     <string name="photo_hint_setting_sub">When you take a photo with the camera near something you have not collected, Meguri offers to add it. Needs access to your photos.</string>
     <string name="photo_hint_title">Photo near %1$s</string>
@@ -518,7 +446,6 @@
     <string name="cards_done">Card pictures: %1$d downloaded, %2$d not found</string>
     <string name="cards_remove">Remove card pictures</string>
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
-    <string name="scan_card">Scan a card or cover</string>
     <string name="scan_or_maybe">Or is it %1$s?</string>
     <string name="nb_review_title">Stamps on this page</string>
     <string name="nb_review_hint">Drag a box to move it or its corner to resize it. Tap a box, then its cross, to remove it.</string>
@@ -570,7 +497,6 @@
     <string name="add_new_kind_pick">Choose card, stamp or other for the new category.</string>
     <string name="add_new_kind_note">It becomes a category of its own, with its own place in My book.</string>
     <string name="add_save_photo">Save + photo</string>
-    <string name="scan_card_sub">Photograph a manhole card or cover: Meguri straightens it, reads the code or cuts out the cover, and finds it</string>
     <string name="scan_reading">Reading the card…</string>
     <string name="scan_unavailable">The scanner isn\'t available on this phone (it needs Google Play services). Add the photo from the item page instead.</string>
     <string name="scan_no_match">Which card is this?</string>
@@ -611,12 +537,8 @@
     <string name="alerts_categories">Alert categories</string>
     <string name="alerts_categories_sub">%1$d of %2$d</string>
     <string name="alerts_same">Default (%1$s)</string>
-    <string name="alerts_distance_for">Distance</string>
     <string name="alerts_station_short">Only where you get off today</string>
-    <string name="settings_alerts_live">%1$s · %2$s · %3$d of %4$d categories</string>
     <string name="backup_section">Backup</string>
-    <string name="backup_now_photos">Saves a file with your finds and their photos</string>
-    <string name="backup_now_plain">Saves a file with your finds (no photos)</string>
     <string name="photos_section">Photos</string>
     <string name="photos_kept">Photos kept in Meguri</string>
     <string name="photos_kept_sub">%1$d photos · %2$s</string>

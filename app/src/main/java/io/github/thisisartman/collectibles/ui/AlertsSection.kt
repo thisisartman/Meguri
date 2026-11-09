@@ -310,40 +310,6 @@ fun AlertCategoriesSection(vm: AlertsViewModel = hiltViewModel()) {
     )
 }
 
-/**
- * A distance chosen from a short menu: 200 m, 500 m, 1 km. With [sameAs], the first choice is "Same" (null),
- * meaning the main distance.
- */
-@Composable
-private fun DistanceRow(title: String, sub: String?, value: Int?, sameAs: Int?, indent: Boolean = false, onPick: (Int?) -> Unit) {
-    var open by remember { mutableStateOf(false) }
-    val sameText = sameAs?.let { stringResource(R.string.alerts_same, radiusText(it)) }
-    Box {
-        Row(
-            Modifier.fillMaxWidth().clickable { open = true }.heightIn(min = 48.dp)
-                .padding(start = if (indent) 48.dp else 16.dp, end = 16.dp, top = 8.dp, bottom = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(title, style = if (indent) MaterialTheme.typography.bodyMedium else MaterialTheme.typography.bodyLarge)
-                if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            Text(
-                if (value == null) sameText.orEmpty() else radiusText(value),
-                style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-            )
-            Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-        }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
-            if (sameText != null) DropdownMenuItem(text = { Text(sameText) }, onClick = { open = false; onPick(null) })
-            AlertSettings.RADIUS_CHOICES.forEach { r ->
-                DropdownMenuItem(text = { Text(radiusText(r)) }, onClick = { open = false; onPick(r) })
-            }
-        }
-    }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-}
-
 /** "200 m", "500 m", "1 km": the alert distances as the owner wrote them. */
 fun radiusText(m: Int): String = if (m % 1000 == 0) "${m / 1000} km" else "$m m"
 

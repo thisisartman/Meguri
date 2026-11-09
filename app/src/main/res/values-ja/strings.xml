@@ -3,21 +3,12 @@
     <string name="sep">"・"</string>
     <string name="nav_nearby">近く</string>
     <string name="nav_book">コレクション</string>
-    <string name="nav_more">その他</string>
 
-    <string name="nearby_title">近く</string>
-    <string name="nearby_still_to_get_no_fix">未取得</string>
-    <string name="nearby_all_far">%1$d km以内に未取得はありません。最寄りは%2$s先です。</string>
-    <string name="nearby_approximate">おおよその位置</string>
-    <string name="nearby_still_to_get">未取得・近い順</string>
-    <string name="nearby_my_book">コレクション</string>
     <string name="nearby_location_off">位置情報がオフです・名前順</string>
     <string name="nearby_location_not_allowed">位置情報が許可されていません・名前順</string>
     <string name="nearby_no_position">現在地がまだ取れません・名前順</string>
     <string name="nearby_try_again">もう一度試す</string>
     <string name="nearby_from_fix">%1$s時点の現在地から</string>
-    <string name="nearby_from_now">現在地から</string>
-    <string name="nearby_nothing_left">この近くに未取得はありません</string>
     <string name="nearby_empty_book">まだ記録がありません。＋をタップして最初の記録を。</string>
     <string name="nearby_allow_in_settings">設定で位置情報を許可</string>
     <string name="nearby_turn_on_location">位置情報をオンにする</string>
@@ -40,7 +31,6 @@
     <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを集めた・%2$s</string>
-    <string name="had_before_app">取得済み</string>
     <string name="last">最新：%1$s</string>
     <string name="count">%1$d / %2$d</string>
     <string name="km">%1$s km</string>
@@ -66,31 +56,15 @@
     <string name="item_office_hours">受付時間</string>
     <string name="item_station">駅</string>
     <string name="item_stamp_location">設置場所</string>
-    <string name="item_phone">電話</string>
-    <string name="item_distance">距離</string>
-    <string name="item_open_maps">地図で開く</string>
     <string name="item_wave">第%1$s弾・%2$s</string>
     <string name="item_wave_only">第%1$s弾</string>
-    <string name="item_no_finds">未取得</string>
-    <string name="item_add_photo">写真を追加</string>
-    <string name="item_remove_before_app">未取得に戻す</string>
-    <string name="item_found_at">%1$s・%2$s</string>
-    <string name="item_no_position">位置なし</string>
     <string name="back">戻る</string>
     <string name="nearby_finding">現在地を取得中…</string>
-    <string name="nearby_no_catalogue">カタログがまだありません。カタログには集められるものと場所が入っていて、近くのものを表示できます。カタログがなくても、+ でどれでも記録できます。</string>
-    <string name="nearby_load_catalogue">カタログを読み込む</string>
-    <string name="nearby_all_done">カタログのすべてを取得済みです。</string>
     <string name="book_mark_choose">持っているものを選択</string>
     <string name="item_finding_position">位置を取得中…</string>
     <string name="item_position_saved">位置あり</string>
     <string name="item_find_map">地図</string>
-    <string name="item_remove_confirm_title">未取得に戻しますか？</string>
-    <string name="item_remove_confirm_text">%1$sは未取得に戻ります。</string>
-    <string name="item_remove_confirm">未取得に戻す</string>
-    <string name="nearby_around_here">%1$d km以内</string>
     <string name="nearby_next">次：%1$s・%2$s</string>
-    <string name="nearby_elsewhere">その他の地域</string>
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>
@@ -100,28 +74,15 @@
     <string name="item_remove_find_text">%1$sの取得を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
     <string name="line_nearest">最寄りの未取得：%2$s・%1$s</string>
 
-    <string name="log_title">記録する</string>
-    <string name="log_search">名前・コードで検索</string>
-    <string name="log_near_you">近い順</string>
-    <string name="log_recent">最近</string>
-    <string name="log_nothing_yet">まだ候補がありません。下の「新規」で追加してください。</string>
     <string name="new_needs_name">名前を入力すると保存できます。</string>
-    <string name="log_not_in_list">リストにない場合は</string>
-    <string name="log_not_in_list_sub">新しく追加して、そのまま記録できます</string>
-    <string name="log_new">追加</string>
     <string name="new_title">新しい項目</string>
-    <string name="new_type">カテゴリー</string>
-    <string name="new_name_ja">名前（日本語）</string>
-    <string name="new_name_romaji">名前（ローマ字・任意）</string>
     <string name="new_save">保存して記録</string>
 
     <string name="more_title">設定</string>
     <string name="more_language">言語</string>
     <string name="more_english">English</string>
     <string name="more_japanese">日本語</string>
-    <string name="more_backup_section">データ</string>
     <string name="more_backup">今すぐバックアップ</string>
-    <string name="more_backup_sub">すべての記録を選んだファイルに保存します（写真は含みません）。写真も含めるには「写真ごとバックアップ」を使います。</string>
     <string name="more_backup_done">バックアップ完了：%1$s</string>
     <string name="more_backup_done_named">%1$s に保存しました：%2$s</string>
     <string name="more_backup_failed">バックアップを保存できませんでした</string>
@@ -147,10 +108,7 @@
     <string name="more_auto_sub_on">オン。最初のバックアップを準備中です。</string>
     <string name="more_auto_sub_last">オン。前回のバックアップ：%1$s</string>
     <string name="more_auto_sub_failed">前回のバックアップに失敗しました。タップしてフォルダを選び直してください。</string>
-    <string name="more_auto_body">週に1回、この端末の「%1$s」フォルダに保存します。最新の%2$d件を残します。</string>
     <string name="more_auto_now">今すぐバックアップ</string>
-    <string name="more_auto_change">フォルダを変更</string>
-    <string name="more_auto_off">オフにする</string>
     <string name="more_import">カタログを読み込む（CSV）</string>
     <string name="more_import_sub">項目と路線を追加・更新します。記録は削除されません。</string>
     <string name="more_import_done">カタログを読み込みました：新規%1$d件、更新%2$d件、路線%3$d本</string>
@@ -163,16 +121,11 @@
     <string name="logs_crash_test">クラッシュテスト</string>
     <string name="logs_about">Meguriの記録：エラーとクラッシュ、開発者モードではすべての画面と操作。この端末にのみ保存されます。不具合を報告するときは書き出して添えてください。</string>
     <string name="more_about">このアプリについて</string>
-    <string name="more_about_sub">バージョン%1$s・オフラインで動作・データはこの端末にのみ保存・地図データ © OpenStreetMap contributors・アイコン：Material Icons（Apache 2.0）、Mapbox Maki・Temaki（CC0）・エキタグ画像のフォント：M PLUS Rounded 1c（SIL Open Font License）・神社と寺院の記号：出典：国土地理院・ダムカード一覧：出典：国土交通省ウェブサイト</string>
 
     <!-- Alerts (M4) -->
-    <string name="alerts_title">通知</string>
     <string name="trip_title">移動中の通知</string>
-    <string name="trip_sub_off">当日23:59まで数分ごとに現在地を確認し、未取得のものが近くにあると知らせます。電車や散歩のときに。</string>
     <string name="trip_sub_on">%1$sまでオン。ここか通知からオフにできます。</string>
     <string name="trip_needs_location">移動中の通知には位置情報の許可が必要です。</string>
-    <string name="bg_title">アプリを閉じていても通知</string>
-    <string name="bg_sub_off">Googleの位置情報サービスを使うため、電池の消費は少なめです。位置情報を「常に許可」にする必要があります。</string>
     <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
@@ -181,8 +134,6 @@
     <string name="bg_dialog_title">位置情報を常に許可しますか?</string>
     <string name="bg_dialog_text">別の画面で設定します。「常に許可」を選ぶと、アプリを閉じていても通知が届きます。位置情報が外部に送られることはありません。</string>
     <string name="bg_dialog_go">続ける</string>
-    <string name="alert_distance">通知する距離</string>
-    <string name="alert_for">通知する種類</string>
     <string name="quiet_title">夜は通知しない</string>
     <string name="quiet_sub">22:00〜7:00は通知しません</string>
     <string name="setup_title">バックグラウンドでも通知を届ける</string>
@@ -210,8 +161,6 @@
     <string name="map_title_cards">カードの地図</string>
     <string name="map_collected">取得済み</string>
     <string name="map_not_collected">未取得</string>
-    <string name="map_details">詳細</string>
-    <string name="map_expand">拡大</string>
     <string name="nearby_tab_stamps">スタンプ</string>
     <string name="nearby_tab_cards">カード</string>
     <string name="nearby_kind_all">すべて</string>
@@ -219,7 +168,6 @@
     <string name="nearby_sort_near">近い順</string>
     <string name="nearby_sort_az">名前順</string>
     <string name="nearby_tile_size">表示サイズ</string>    <string name="nearby_empty_kind">まだありません。</string>
-    <string name="a11y_log_find">記録する</string>
 
     <!-- Welcome before a catalogue (#58, Legion) -->
     <string name="welcome_title">Meguriへようこそ</string>
@@ -230,17 +178,14 @@
     <string name="welcome_other_ways">別の端末から移る場合は、その他、バックアップから復元。カタログにないものも + で記録できます。</string>
 
     <!-- Colour setting (#57, Legion) -->
-    <string name="look_device_colours">端末の色を使う</string>
     <string name="look_device_colours_sub">Meguriの色の代わりに、壁紙に合わせた端末の色を使います。種類ごとの色は変わりません。</string>
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">スタンプ</string>
-    <string name="photo_kind_proof">証明（Ekitag・カード）</string>
     <string name="photo_kind_other">その他の写真</string>
     <string name="photo_add_title">写真を追加</string>
     <string name="photo_take">写真を撮る</string>
     <string name="photo_pick">ギャラリーから選ぶ</string>
-    <string name="photo_edit_title">この写真</string>
     <string name="photo_remove">写真を削除</string>
     <string name="photo_remove_note">Meguri内の写真を削除します。カメラで撮った写真はギャラリーに残ります。</string>
     <string name="photo_done">完了</string>
@@ -251,10 +196,6 @@
     <string name="nearby_search">スタンプやカードを検索</string>
     <string name="nearby_search_clear">検索を消す</string>
     <string name="nearby_recenter">現在地に戻る</string>
-    <string name="pin_from_you">現在地から%1$s</string>
-    <string name="sort_tip">近い順：各項目の下の距離は、現在地からの距離です。名前順：名前のアルファベット順・五十音順です。</string>
-    <string name="tip_dismiss">わかりました。このヒントを閉じる</string>
-    <string name="date_not_recorded">日付の記録なし</string>
     <string name="item_photos">写真</string>
     <string name="photo_add_kind">追加：%1$s</string>
     <string name="kind_station_stamp">駅スタンプ</string>
@@ -303,8 +244,6 @@
     <string name="type_museum">博物館スタンプ</string>
     <string name="type_dam">ダムカード</string>
     <string name="collection_name_taken">同じ名前のカテゴリーがあります。</string>
-    <string name="more_backup_photos">写真ごとバックアップ</string>
-    <string name="more_backup_photos_sub">新しい端末へ移るとき用：写真もすべて含めます。新しい端末で復元すると写真がMeguriに戻ります。</string>
     <string name="menu_trip">トリップ</string>
     <string name="trip_screen">トリップ</string>
     <string name="trip_from">出発</string>
@@ -344,7 +283,6 @@
     <string name="trip_share_directions">経路：%1$s</string>
     <string name="trip_route_until">%1$s → %2$s（%3$sまで）</string>
     <string name="trip_get_off_next">次に降りる駅：%1$s・%2$s</string>
-    <string name="trip_plan_route">経路を計画</string>
     <string name="trip_clear">計画を消す</string>
     <string name="trip_report">トリップレポート</string>
     <string name="trip_report_collected">%1$d件 集めた</string>
@@ -366,7 +304,6 @@
     <string name="photo_cover_clear">表示写真をやめる</string>
     <string name="alert_station_rule">駅スタンプは、今日のトリップで降りる駅でだけ通知します（メニューのトリップ）。通過する駅では通知せず、トリップを計画していなければ駅の通知はありません。</string>
     <string name="settings_alerts">通知</string>
-    <string name="settings_alerts_sub">種類ごとの距離、通知するもの、移動中の通知、夜間</string>
     <string name="settings_data">バックアップとデータ</string>
     <string name="settings_look">表示</string>
     <string name="settings_catalogue">カタログ</string>
@@ -380,17 +317,12 @@
     <string name="sort_tip_near_text">：各項目までの距離</string>
     <string name="sort_tip_az">名前順</string>
     <string name="sort_tip_az_text">：名前のアルファベット・五十音順</string>
-    <string name="profile_title">マイページ</string>
     <string name="profile_today">今日</string>
     <string name="profile_open_map">地図を開く</string>
     <string name="profile_collections">コレクション</string>
-    <string name="profile_map_empty">集めると、その場所がここに表示されます。</string>
     <string name="map_title_collected">集めた場所</string>
     <plurals name="profile_finds">
         <item quantity="other">取得</item>
-    </plurals>
-    <plurals name="profile_kinds">
-        <item quantity="other">種類</item>
     </plurals>
     <string name="onb_welcome">Meguriへようこそ</string>
     <string name="onb_question">はじめから始めますか？それとも、持っているカード・スタンプ・御朱印を登録しますか？</string>
@@ -437,7 +369,6 @@
     <string name="onb_finished_how">取得したものは右下の「マイブック」にあります。開いて写真や詳細を追加できます。</string>
     <string name="onb_finished_profile">マイブックへ</string>
     <string name="onb_finished_done">完了</string>
-    <string name="profile_collected">集めたもの</string>
     <plurals name="profile_collections">
         <item quantity="other">カテゴリー</item>
     </plurals>
@@ -490,10 +421,8 @@
     <string name="timeline_title">タイムライン</string>
     <string name="timeline_sub">集めたものを日ごとに</string>
     <string name="timeline_empty">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
-    <string name="filter_all">すべて</string>
     <string name="filter_to_get">未取得</string>
     <string name="filter_have">取得済み</string>
-    <string name="filter_series">第%1$s弾</string>
     <string name="photo_hint_setting">新しい写真を提案</string>
     <string name="photo_hint_setting_sub">カメラで未取得のものの近くで撮った写真を、Meguriが追加するよう提案します。写真へのアクセスが必要です。</string>
     <string name="photo_hint_title">%1$sの近くの写真</string>
@@ -512,7 +441,6 @@
     <string name="cards_done">カードの画像：%1$d枚ダウンロード、%2$d枚見つからず</string>
     <string name="cards_remove">カードの画像を削除</string>
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
-    <string name="scan_card">カード・ふたをスキャン</string>
     <string name="scan_or_maybe">%1$sですか？</string>
     <string name="nb_review_title">このページのスタンプ</string>
     <string name="nb_review_hint">枠をドラッグで移動、角で大きさを変更。枠をタップして×で削除。</string>
@@ -561,7 +489,6 @@
     <string name="add_new_kind_pick">新しい種類のカード・スタンプ・その他を選んでください。</string>
     <string name="add_new_kind_note">独立したカテゴリーとして、マイブックに加わります。</string>
     <string name="add_save_photo">保存＋写真</string>
-    <string name="scan_card_sub">マンホールカードやふたを撮ると、補正してコードを読むか、ふたを切り抜いて探します</string>
     <string name="scan_reading">カードを読み取り中…</string>
     <string name="scan_unavailable">この端末ではスキャナーを使えません（Google Play開発者サービスが必要）。アイテムのページから写真を追加してください。</string>
     <string name="scan_no_match">どのカードですか？</string>
@@ -601,12 +528,8 @@
     <string name="alerts_categories">通知カテゴリー</string>
     <string name="alerts_categories_sub">%2$d中%1$d</string>
     <string name="alerts_same">デフォルト（%1$s）</string>
-    <string name="alerts_distance_for">距離</string>
     <string name="alerts_station_short">今日降りる駅だけ</string>
-    <string name="settings_alerts_live">%1$s · %2$s · %4$d中%3$dカテゴリー</string>
     <string name="backup_section">バックアップ</string>
-    <string name="backup_now_photos">記録と写真をファイルに保存します</string>
-    <string name="backup_now_plain">記録をファイルに保存します（写真なし）</string>
     <string name="photos_section">写真</string>
     <string name="photos_kept">Meguriに保存した写真</string>
     <string name="photos_kept_sub">%1$d枚 · %2$s</string>
