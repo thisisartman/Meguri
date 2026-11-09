@@ -28,7 +28,14 @@ object StationMatch {
         return (ja + en).distinct().toList()
     }
 
+    /**
+     * Characters the text reader mixes up on worn stamps, folded the same way on both sides (calibration on the owner's
+     * notebook, 2026-11-09: 柏崎 read as 格埼, 浦佐 as 蒲佐), plus old and new forms of the same character.
+     */
+    private val LOOKALIKE = mapOf('埼' to '崎', '﨑' to '崎', '嵜' to '崎', '格' to '柏', '蒲' to '浦', '澤' to '沢', '濱' to '浜', '邊' to '辺', '邉' to '辺', '髙' to '高')
+
     private fun foldJa(s: String) = Normalizer.normalize(s, Normalizer.Form.NFKC).removeSuffix("駅").replace("ヶ", "ケ").replace("ヵ", "ケ")
+        .map { LOOKALIKE[it] ?: it }.joinToString("")
     private fun foldEn(s: String) = Normalizer.normalize(s.lowercase(), Normalizer.Form.NFD).replace(Regex("\\p{Mn}+"), "")
         .replace("station", "").replace("ou", "o").replace("uu", "u").filter { it.isLetter() }
 
@@ -50,6 +57,22 @@ object StationMatch {
         return best.toFloat() / maxOf(token.length, name.length)
     }
 
+    /** 0..1 for romaji: one minus the typo distance over the longer name (a misread letter costs little; another place, a lot). */
+    internal fun latinSimilarity(a: String, b: String): Float {
+        if (a.isEmpty() || b.isEmpty()) return 0f
+        if (a == b) return 1f
+        val d = IntArray(b.length + 1) { it }
+        for (i in 1..a.length) {
+            var prev = d[0]; d[0] = i
+            for (j in 1..b.length) {
+                val tmp = d[j]
+                d[j] = minOf(d[j] + 1, d[j - 1] + 1, prev + if (a[i - 1] == b[j - 1]) 0 else 1)
+                prev = tmp
+            }
+        }
+        return (1f - d[b.length].toFloat() / maxOf(a.length, b.length)).coerceAtLeast(0f)
+    }
+
     /**
      * The best matches for [text] among [candidates], best first, with scores. When the runner-up is about as good,
      * the best is held below [ASSIGN], so a near tie is offered, not chosen.
@@ -61,7 +84,7 @@ object StationMatch {
             val ja = foldJa(c.nameJa); val en = c.nameRomaji?.let { foldEn(it) }
             val s = toks.maxOf { t ->
                 val isLatin = t.all { it.code < 0x3000 }
-                if (isLatin) en?.let { similarity(foldEn(t), it) } ?: 0f else similarity(foldJa(t), ja)
+                if (isLatin) en?.let { latinSimilarity(foldEn(t), it) } ?: 0f else similarity(foldJa(t), ja)
             }
             Match(c.id, s)
         }.filter { it.score > 0f }.sortedByDescending { it.score }.take(5)

@@ -39,4 +39,18 @@ class StationMatchTest {
         val m = StationMatch.match("新瀉駅", stations)
         assertTrue(m.isEmpty() || m.first().score < StationMatch.ASSIGN)
     }
+
+    // Calibration on the owner's notebook pages (Poco, 2026-11-09)
+    @Test fun romajiOfAStationNotInMeguriIsNotOffered() {
+        val c = listOf(StationMatch.Candidate("hakusan", "白山駅", "Hakusan Station"), StationMatch.Candidate("asakusabashi", "浅草橋駅", "Asakusabashi Station"))
+        val m = StationMatch.match("浅\nASAKUSA\nSTA", c)
+        assertTrue(m.none { it.score >= StationMatch.SUGGEST })
+    }
+
+    @Test fun misreadLookalikesStillFindTheStation() {
+        val c = listOf(StationMatch.Candidate("kashiwazaki", "柏崎駅", "Kashiwazaki Station"), StationMatch.Candidate("nagaoka", "長岡駅", "Nagaoka Station"))
+        val m = StationMatch.match("海·山の自然\n[信越本線格埼駅、", c)
+        assertEquals("kashiwazaki", m.first().id)
+        assertTrue(m.first().score >= StationMatch.ASSIGN)
+    }
 }
