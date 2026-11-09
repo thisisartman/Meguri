@@ -158,7 +158,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 item { Facts(item) }
             }
             item { SectionTitle(stringResource(R.string.item_photos)) }
-            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId) }
+            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId, shownUri = r?.photoUri) }
             if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->

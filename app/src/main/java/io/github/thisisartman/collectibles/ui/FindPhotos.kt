@@ -108,7 +108,7 @@ private val LocalSlot = androidx.compose.runtime.compositionLocalOf { 96.dp }
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null) {
+fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null, shownUri: String? = null) {
     var adding by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Photo?>(null) }
     var fullscreen by remember { mutableStateOf<String?>(null) }
@@ -173,13 +173,20 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
                     KindChips(type, kind) { kind = it }
                     // The photo shown for this item on tiles, in lists and on its page
                     val isCover = p.id == coverId
+                    // With none chosen, the newest photo is shown; say so, and offer to keep it
+                    if (!isCover && coverId == null && p.contentUri == shownUri) {
+                        Text(
+                            stringResource(R.string.photo_cover_auto), style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                     if (isCover) {
                         InkOutlinedButton(onClick = { actions.setCover(null); editing = null }, modifier = Modifier.fillMaxWidth()) {
                             Text(stringResource(R.string.photo_cover_clear))
                         }
                     } else {
                         androidx.compose.material3.FilledTonalButton(onClick = { actions.setCover(p.id); editing = null }, modifier = Modifier.fillMaxWidth()) {
-                            Text(stringResource(R.string.photo_cover_set))
+                            Text(stringResource(if (coverId == null && p.contentUri == shownUri) R.string.photo_cover_keep else R.string.photo_cover_set))
                         }
                     }
                 }

@@ -723,4 +723,6 @@
     <string name="privacy_play">Position for alerts and the card scanner run through Google Play services on this phone</string>
     <string name="a11y_plus">Scan, search or add</string>
     <string name="tip_got_it">Got it</string>
+    <string name="photo_cover_auto">This is the display picture for now: with none chosen, the newest photo is shown.</string>
+    <string name="photo_cover_keep">Keep as display picture</string>
 </resources>

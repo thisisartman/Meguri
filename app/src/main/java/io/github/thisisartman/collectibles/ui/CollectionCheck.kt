@@ -217,7 +217,7 @@ fun CollectionCheckScreen(
                                 }
                             }
                             Spacer(Modifier.height(4.dp))
-                            Text(tileName(r.item.displayName(ja)), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                            Text(tileName(r.item.shortName(ja)), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

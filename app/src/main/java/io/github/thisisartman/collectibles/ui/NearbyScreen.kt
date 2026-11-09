@@ -496,6 +496,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                                 // A card named by its design ("Kaen doki") shows its code, so a code search shows why it matched
                                                 r.item.code?.takeIf { c -> r.item.type == ItemType.MANHOLE_CARD && !r.item.displayName(ja).contains(c.takeLast(4)) },
                                                 r.item.nameJa.takeIf { !ja && it != r.item.displayName(ja) },
+                                                kindName(r.item),
                                                 r.item.prefecture?.let { prefectureName(it, ja) },
                                                 stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
                                             ).joinToString(sep()),

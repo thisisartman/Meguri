@@ -705,4 +705,6 @@
     <string name="privacy_play">通知のための現在地とカードスキャンは、スマホのGoogle Playサービスを使います</string>
     <string name="a11y_plus">スキャン、検索、追加</string>
     <string name="tip_got_it">わかりました</string>
+    <string name="photo_cover_auto">いまはこの写真が表示画像です（選んでいないときは最新の写真）。</string>
+    <string name="photo_cover_keep">表示画像として固定</string>
 </resources>
