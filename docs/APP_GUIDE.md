@@ -179,7 +179,7 @@ The sheet sits at the height of its content, capped per step (60% of the screen 
 
 <p><img src="guide-media/shots/01-nearby.png" width="300" alt="Nearby"></p>
 
-*Figure 1. Nearby. The gold circles on the map are groups, with how many items each holds; the other pins are single items. In the sheet: the "Stamps" and "Cards" tabs with how many you have, the category chips, "Sort" and "Tile size", then the tiles, nearest first. Urasa's tile carries the Ekitag badge in its corner.*
+*Figure 1. Nearby. The gold circles on the map are groups, with how many items each holds; the other pins are single items. In the sheet: the "Stamps" and "Cards" tabs with how many you have, the category chips (a category pill since 0.5), "Sort" and "Tile size", then the tiles, nearest first. Urasa's tile carries the Ekitag badge in its corner.*
 
 **Search bar (top).**
 - Search icon, then a text field with the hint "Search stamps and cards". Typing searches everything (section 2.4). The keyboard's search key closes the keyboard.
@@ -221,8 +221,8 @@ Top to bottom:
 
 1. **Tabs** (hidden while searching): "Stamps", "Cards", and "Other" when you have items in your own categories that are neither a card nor a stamp. Each tab shows a second line "collected / total" for the tab, blank until the list has loaded (`ui/NearbyScreen.kt:259-280`). Your own categories go under Stamps or Cards by their icon (section 3.15). Tap a tab: shows its items and resets the category filter to "All".
 2. **Filter row.**
-   - While searching: "%1$d found for “%2$s”" in place of the chips.
-   - Otherwise: chip "All", then one chip per category in the tab (plural label), shown only when the tab holds more than one category. Tap a chip to show only that category.
+   - While searching: "%1$d found for “%2$s”" in place of the category pill.
+   - Otherwise, when the tab holds more than one category: the category pill, the same one as on Alerts (`ui/CategoryPill.kt`). It shows "All categories" with a layers icon, or the chosen category with its colour dot, and a drop-down arrow. Tap: Android's menu with "All categories" and each category in the tab (plural label), the chosen line highlighted. Pick one to show only that category. (Up to 0.4.0 this was a scrolling row of chips, as in Figures 1 and 4.)
    - "Sort" (icon, right). The icon shows the order in use: an arrow for nearest, A over Z for name. Tap: a menu with "Nearest" and "A to Z", the current one ticked. Until you dismiss it, the menu also holds a tip under the two orders: "Nearest: how far each item is from you" and "A to Z: names in alphabetical order", with "Got it". "Got it" saves `tips` preferences key `sort`, and the tip never shows again. (Figure 3)
    - "Tile size" (icon, right). Tap: shows or hides a slider with three stops, small to large circles at its ends (48, 64 and 84 dp; 64 dp to start) (`ui/NearbyScreen.kt:588`). The size is kept while the app runs, not saved.
 3. **Tiles**, in a grid that fills the width. Each tile shows the item's mark (section 3.3), its short name on two lines, and its distance, or "No stamp here" / "None here" for an item marked empty. Empty items are faded and always last. An Ekitag tile has a small Ekitag badge at its top right. Tap a tile: opens the item page. The grid holds collected and uncollected items alike.
@@ -232,7 +232,7 @@ Top to bottom:
 
 <p><img src="guide-media/sort-menu.gif" width="300" alt="The Sort menu"></p>
 
-*Figure 3. The Sort menu, opened from the arrow at the right of the chips. "Nearest" is ticked; the lines under it say what each order means, and "Got it" hides them.*
+*Figure 3. The Sort menu, opened from the arrow at the right of the filter row. "Nearest" is ticked; the lines under it say what each order means, and "Got it" hides them.*
 
 **Back.** On Nearby, Back leaves the app, unless the + card, a pin card, a sort menu or the onboarding is open; then it closes that first.
 
@@ -242,14 +242,14 @@ Top to bottom:
 
 <p><img src="guide-media/shots/04-search.png" width="300" alt="Search results for urasa"></p>
 
-*Figure 4. Searching "urasa". The chips narrow the results to one category. Each row gives the category, prefecture and whether you have it, so Urasa's Ekitag and its station stamp read apart. The keyboard is cut off the picture.*
+*Figure 4. Searching "urasa". The chips (a category pill since 0.5) narrow the results to one category. Each row gives the category, prefecture and whether you have it, so Urasa's Ekitag and its station stamp read apart. The keyboard is cut off the picture.*
 
 **What it searches.** Every item in both tabs and every category, with the shared forgiving search (section 3.8): Japanese and romaji names, any part of a card code, the town and the place name (`ui/Search.kt:20-21`). Results are ordered by match score, then distance.
 
 **What is shown.**
 - The sheet tucks away while the bar has focus or results are open (`ui/NearbyScreen.kt:183`, `ui/NearbyScreen.kt:210`).
 - A list drops down under the search bar. It stays open after the keyboard closes. A tap on the map, a result, the cross or "Show on map" closes it.
-- Category chips, when the results hold more than one category: "All", then one chip per category with its icon. Tap to narrow the results.
+- The category pill, when the results hold more than one category: "All categories" or one category, picked from its menu, narrows the results (same pill as on the sheet).
 - Up to eight result rows (`ui/NearbyScreen.kt:483`). Each row: the category icon; the name with the typed text in bold where it appears as written; a second line with the card code (for a manhole card whose name does not contain it), the Japanese name (English mode), the category (so a station's stamp and its Ekitag read apart), the prefecture, and "Collected" or "Uncollected"; on the right the distance with an arrow. Tap a row: opens the item page. (Figure 4)
 - "Nothing here yet." when nothing matches.
 - "Show on map", when any result has a position. Tap: closes the list and fits the map to every result, not only the eight listed (`ui/NearbyScreen.kt:514-524`).

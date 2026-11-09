@@ -309,48 +309,21 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                 }
-                // Chips scroll on the left; sort and size are icons pinned on the right (owner: icons over words)
+                // The category pill on the left, as on Alerts (owner, 2026-11-09: it replaced a scrolling row of chips);
+                // sort and size are icons pinned on the right (owner: icons over words)
                 Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                    // The row fades out at an edge where more chips are, so it shows that it scrolls; drawn, not a
-                    // layer of its own, so nothing unlabelled sits over Sort (sweep 2026-11-09, findings 4 and 5)
-                    val chipScroll = rememberScrollState()
-                    val fadeW = with(density) { 32.dp.toPx() }
-                    Row(
-                        Modifier.weight(1f)
-                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
-                            .drawWithContent {
-                                drawContent()
-                                if (chipScroll.canScrollForward) drawRect(
-                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                        listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black),
-                                        startX = size.width - fadeW, endX = size.width,
-                                    ),
-                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
-                                )
-                                if (chipScroll.canScrollBackward) drawRect(
-                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
-                                        listOf(androidx.compose.ui.graphics.Color.Black, androidx.compose.ui.graphics.Color.Transparent),
-                                        startX = 0f, endX = fadeW,
-                                    ),
-                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
-                                )
-                            }
-                            .horizontalScroll(chipScroll).padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        // The kind filters only apply to a tab, not to a search across everything
+                    Row(Modifier.weight(1f).padding(start = 12.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                        // The category filter only applies to a tab, not to a search across everything
                         if (searching) Text(
                             androidx.compose.ui.res.pluralStringResource(R.plurals.nearby_found, shown.size, shown.size, query.trim()),
                             Modifier.padding(start = 4.dp),
                             style = MaterialTheme.typography.titleSmall,
                             maxLines = 2,
+                        ) else if (kinds.size > 1) CategoryPill(
+                            selected = kind, types = kinds,
+                            label = { stringResource(it.pluralLabel()) },
+                            onSelect = { kind = it },
                         )
-                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
-                        if (!searching && kinds.size > 1) kinds.forEach { t ->
-                            // 48 dp tall, so each chip is a whole tap target (finding 3)
-                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel()), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
-                        }
                     }
                     Box {
                         IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }, modifier = Modifier.size(48.dp)) {
@@ -520,21 +493,12 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     // Show on map closes it
                     if (searching && (searchFocused || listOpen)) {
                         HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                        if (matchKinds.size > 1) {
-                            Row(
-                                Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 12.dp, vertical = 4.dp),
-                                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                            ) {
-                                FilterChip(selected = searchKind == null, onClick = { searchKind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
-                                matchKinds.forEach { t ->
-                                    FilterChip(
-                                        selected = searchKind == t, onClick = { searchKind = t },
-                                        label = { Text(stringResource(t.pluralLabel())) },
-                                        leadingIcon = { TypeIcon(t, 16.dp) },
-                                    )
-                                }
-                            }
-                        }
+                        if (matchKinds.size > 1) CategoryPill(
+                            selected = searchKind, types = matchKinds,
+                            label = { stringResource(it.pluralLabel()) },
+                            onSelect = { searchKind = it },
+                            modifier = Modifier.padding(horizontal = 12.dp),
+                        )
                         if (shown.isEmpty() && loadedRows != null) {
                             Text(stringResource(R.string.nearby_empty_kind), Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
