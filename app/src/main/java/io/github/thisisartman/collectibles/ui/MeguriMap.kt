@@ -101,14 +101,13 @@ fun MeguriMap(
     val markerCache = remember { HashMap<String, android.graphics.Bitmap>() }
     // A flat map (owner, 2026-11-08: the textures looked odd). Land is set apart from the page (owner, 2026-11-09,
     // S23 screenshot: in the page colour the search bar and sheet had no edge against the map): lighter than the
-    // page in dark mode, a shade darker in light mode. Water is the land tinted with the accent.
+    // page in dark mode, a shade darker in light mode. Water is a plain grey a step from the land (owner, 2026-11-09:
+    // the gold-tinted water "looks incredibly ugly"; the gold stays in the app, not on the map).
     val page = androidx.compose.material3.MaterialTheme.colorScheme.background
     val ink = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
     val land = androidx.compose.ui.graphics.lerp(page, ink, if (dark) 0.16f else 0.06f)
     val landColor = land.toArgb()
-    val waterColor = androidx.compose.ui.graphics.lerp(
-        land, androidx.compose.material3.MaterialTheme.colorScheme.primary, if (dark) 0.22f else 0.16f,
-    ).toArgb()
+    val waterColor = androidx.compose.ui.graphics.lerp(land, ink, if (dark) 0.22f else 0.10f).toArgb()
     // On the lighter dark-mode land the style's grey roads would vanish, so they are lifted above it
     val roads = if (dark) androidx.compose.ui.graphics.lerp(land, ink, 0.18f).toArgb() to androidx.compose.ui.graphics.lerp(land, ink, 0.32f).toArgb() else null
     val tapPin by rememberUpdatedState(onPinTap)

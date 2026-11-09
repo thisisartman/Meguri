@@ -9,6 +9,7 @@
   - Card pictures: a failed download says "couldn't be downloaded: tap Card pictures to try again" (it said "not found").
   - The Nagaoka mascot card is "Kawagutchi" (かわぐっち), not "Kawagucchi".
   - The log names each page with its arguments (it wrote "trip-report?day={day}").
+- Map: water is a plain grey a step from the land, no longer tinted gold.
 
 ## 0.4.0 (2026-11-09, stable)
 Everything below since beta.9, plus these last changes:
