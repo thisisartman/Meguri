@@ -105,9 +105,11 @@ fun MeguriMap(
     // the gold-tinted water "looks incredibly ugly"; the gold stays in the app, not on the map).
     val page = androidx.compose.material3.MaterialTheme.colorScheme.background
     val ink = androidx.compose.material3.MaterialTheme.colorScheme.onBackground
-    val land = androidx.compose.ui.graphics.lerp(page, ink, if (dark) 0.16f else 0.06f)
+    // In light mode a neutral light grey: the cream page colour made the land beige, which read as yellow beside the
+    // roads and gold groups (owner, 2026-11-09: "revert that to a light gray")
+    val land = if (dark) androidx.compose.ui.graphics.lerp(page, ink, 0.16f) else androidx.compose.ui.graphics.Color(0xFFEDEDED)
     val landColor = land.toArgb()
-    val waterColor = androidx.compose.ui.graphics.lerp(land, ink, if (dark) 0.22f else 0.10f).toArgb()
+    val waterColor = if (dark) androidx.compose.ui.graphics.lerp(land, ink, 0.22f).toArgb() else 0xFFD7DADD.toInt()
     // On the lighter dark-mode land the style's grey roads would vanish, so they are lifted above it
     val roads = if (dark) androidx.compose.ui.graphics.lerp(land, ink, 0.18f).toArgb() to androidx.compose.ui.graphics.lerp(land, ink, 0.32f).toArgb() else null
     val tapPin by rememberUpdatedState(onPinTap)
