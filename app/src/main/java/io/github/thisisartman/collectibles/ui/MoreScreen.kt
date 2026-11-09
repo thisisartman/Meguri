@@ -20,6 +20,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Box
 import kotlinx.coroutines.flow.stateIn
@@ -88,12 +91,14 @@ class MoreViewModel @Inject constructor(
     val catalogue = kotlinx.coroutines.flow.MutableStateFlow<Map<String, Map<ItemType, Int>>>(emptyMap())
     /** Names of the categories the person added (Settings list summary). */
     val customNames = kotlinx.coroutines.flow.MutableStateFlow<List<String>>(emptyList())
+    val findCount = kotlinx.coroutines.flow.MutableStateFlow(0)
     fun refresh() {
         viewModelScope.launch {
             catalogue.value = db.dao().allItems().filter { it.prefecture != null }
                 .groupBy { it.prefecture!! }.toSortedMap()
                 .mapValues { (_, l) -> l.groupingBy { it.type }.eachCount() }
             customNames.value = db.dao().allCollectionTypes().map { it.name }
+            findCount.value = db.dao().allFinds().size
             customCounts.value = db.dao().allItems().mapNotNull { it.customTypeId }.groupingBy { it }.eachCount()
         }
     }
@@ -309,6 +314,7 @@ fun MoreScreen(
     LaunchedEffect(Unit) { vm.refresh() }
     val catalogue by vm.catalogue.collectAsState()
     val customNames by vm.customNames.collectAsState()
+    val findCount by vm.findCount.collectAsState()
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
         Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
@@ -341,26 +347,38 @@ fun MoreScreen(
                 val a = alerts.settings
                 SectionLine(
                     titles.getValue(S_ALERTS),
-                    stringResource(
-                        R.string.settings_alerts_live,
-                        stringResource(if (a.geofenceOn) R.string.alerts_mode_always else if (a.tripOn) R.string.alerts_mode_trip else R.string.alerts_mode_off),
+                    listOfNotNull(
+                        stringResource(if (a.geofenceOn) R.string.alerts_mode_always else if (a.tripOn) R.string.alerts_line_trip else R.string.alerts_mode_off),
                         radiusText(a.radiusM),
-                        ALERT_TYPES.count { it.first in a.types }, ALERT_TYPES.size,
-                    ),
+                        pluralStringResource(R.plurals.alerts_line_categories, ALERT_TYPES.count { it.first in a.types }, ALERT_TYPES.count { it.first in a.types }),
+                        if (a.quietOn) stringResource(R.string.alerts_line_quiet) else null,
+                    ).joinToString(" · "),
                     R.drawable.ic_settings_alerts,
                 ) { section = S_ALERTS }
-                SectionLine(titles.getValue(S_DATA), autoSub, R.drawable.ic_settings_backup) { section = S_DATA }
-                SectionLine(
-                    titles.getValue(S_COLLECTIONS),
-                    if (customNames.isEmpty()) stringResource(R.string.settings_collections_sub) else customNames.joinToString(", "),
-                    R.drawable.ic_settings_categories,
-                ) { section = S_COLLECTIONS }
+                val findsText = pluralStringResource(R.plurals.data_finds, findCount, findCount)
+                val dataLine = when {
+                    !autoOn -> stringResource(R.string.data_line_off, findsText)
+                    autoFailed -> autoSub
+                    autoLast != null -> stringResource(
+                        R.string.data_line_on,
+                        SimpleDateFormat(if (ja) "M月d日 HH:mm" else "d MMM HH:mm", if (ja) Locale.JAPAN else Locale.ENGLISH).format(Date(autoLast)),
+                        findsText,
+                    )
+                    else -> autoSub
+                }
+                SectionLine(titles.getValue(S_DATA), dataLine, R.drawable.ic_settings_backup) { section = S_DATA }
                 SectionLine(
                     titles.getValue(S_CATALOGUE),
-                    catalogue.keys.joinToString(", ") { prefectureName(it, ja) }.ifEmpty { stringResource(R.string.settings_catalogue_sub) },
+                    run {
+                        val pics by CardPictures.have.collectAsState()
+                        listOfNotNull(
+                            catalogue.keys.joinToString(", ") { prefectureName(it, ja) }.ifEmpty { null },
+                            if (pics.isNotEmpty()) pluralStringResource(R.plurals.catalogue_line_pictures, pics.size, pics.size) else null,
+                        ).joinToString(" · ").ifEmpty { stringResource(R.string.settings_catalogue_sub) }
+                    },
                     R.drawable.ic_settings_catalogue,
                 ) { section = S_CATALOGUE }
-                SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME), R.drawable.ic_settings_help) { section = S_HELP }
+                SectionLine(titles.getValue(S_HELP), stringResource(R.string.settings_help_sub, BuildConfig.VERSION_NAME), R.drawable.ic_settings_help, last = true) { section = S_HELP }
             }
             S_COLLECTIONS -> {
                 // Owner, 2026-11-09: "categories you added yourself"; tap one to change it, remove it when empty
@@ -460,6 +478,12 @@ fun MoreScreen(
                         askPhotos.launch(BackupRestore.photoPermission())
                     }
                 }
+                // Your own categories are data (owner, 2026-11-09: "alerts is just about notifications")
+                SectionTitle(stringResource(R.string.more_my_collections))
+                MoreRow(
+                    stringResource(R.string.cat_yours),
+                    if (customNames.isEmpty()) stringResource(R.string.settings_collections_sub) else customNames.joinToString(", "),
+                ) { section = S_COLLECTIONS }
                 SectionTitle(stringResource(R.string.photos_section))
                 PhotoHintRow()
                 val photoSummary by vm.photos.collectAsState()
@@ -601,7 +625,7 @@ private fun parentOf(section: String?): String? = when (section) {
     S_INSTALLED -> S_CATALOGUE
     S_ABOUT -> S_HELP
     S_ALERT_CATS -> S_ALERTS
-    S_WEEKLY, S_PHOTOS -> S_DATA
+    S_WEEKLY, S_PHOTOS, S_COLLECTIONS -> S_DATA
     else -> null
 }
 
@@ -639,18 +663,24 @@ private const val S_PHOTOS = "photos"
 
 /** One section on the Settings list: its name, what is set now, and an arrow. */
 @Composable
-private fun SectionLine(title: String, sub: String, icon: Int, onClick: () -> Unit) {
+private fun SectionLine(title: String, sub: String, icon: Int, last: Boolean = false, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().clickable(onClick = onClick).heightIn(min = 68.dp).padding(horizontal = 18.dp, vertical = 12.dp),
         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
     ) {
-        androidx.compose.material3.Icon(
-            androidx.compose.ui.res.painterResource(icon), contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        Box(
+            Modifier.size(40.dp).clip(androidx.compose.foundation.shape.CircleShape)
+                .background(MaterialTheme.colorScheme.secondaryContainer),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) {
+            androidx.compose.material3.Icon(
+                androidx.compose.ui.res.painterResource(icon), contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp),
+            )
+        }
         androidx.compose.foundation.layout.Spacer(Modifier.width(16.dp))
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.bodyLarge)
+            Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold)
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
         androidx.compose.material3.Icon(
@@ -658,7 +688,7 @@ private fun SectionLine(title: String, sub: String, icon: Int, onClick: () -> Un
             contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
-    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+    if (!last) HorizontalDivider(Modifier.padding(start = 74.dp, end = 18.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }
 
 /** The picker's storage root is refused by Android, so open it somewhere it accepts. */

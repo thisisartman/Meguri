@@ -368,12 +368,12 @@
     <string name="settings_alerts">通知</string>
     <string name="settings_alerts_sub">種類ごとの距離、通知するもの、近接モード、夜間</string>
     <string name="settings_data">バックアップとデータ</string>
-    <string name="settings_look">表示と言語</string>
+    <string name="settings_look">表示</string>
     <string name="settings_catalogue">カタログ</string>
     <string name="settings_catalogue_sub">新潟・埼玉・東京を内蔵・カードの画像・CSVで追加</string>
     <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）とオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
-    <string name="settings_help_sub">ログ・バージョン %1$s・クレジット</string>
+    <string name="settings_help_sub">新機能・ログ・バージョン %1$s</string>
     <string name="settings_collections_sub">自分で追加したカテゴリーと、新しい追加</string>
     <string name="photo_kind_label">種類</string>
     <string name="sort_tip_near">近い順</string>
@@ -596,11 +596,11 @@
     <string name="alerts_mode_trip">移動中</string>
     <string name="alerts_mode_always">常に</string>
     <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間（近接モード）。常に：Meguriを閉じていても。</string>
-    <string name="alerts_how_close">距離</string>
+    <string name="alerts_how_close">近接通知の設定</string>
     <string name="alerts_every">すべてのカテゴリー</string>
-    <string name="alerts_categories">カテゴリー</string>
+    <string name="alerts_categories">通知するカテゴリー</string>
     <string name="alerts_categories_sub">%2$d中%1$d</string>
-    <string name="alerts_same">同じ（%1$s）</string>
+    <string name="alerts_same">デフォルト（%1$s）</string>
     <string name="alerts_distance_for">距離</string>
     <string name="alerts_station_short">今日降りる駅だけ</string>
     <string name="settings_alerts_live">%1$s · %2$s · %4$d中%3$dカテゴリー</string>
@@ -635,14 +635,28 @@
         <item quantity="other">%1$d件のアイテムがあります。カテゴリーを削除するには、先に移動か削除をしてください。</item>
     </plurals>
     <string name="cat_empty">自分で追加したカテゴリーがここに表示されます。下のボタンか、＋の「追加」から作れます。</string>
-    <string name="alerts_target_own">このカテゴリーだけの距離です。ほかは共通の距離のままです。</string>
-    <string name="alerts_target_same">共通の距離を使っています。スライダーを動かすと、このカテゴリーだけの距離になります。</string>
-    <string name="alerts_use_main">共通の距離に戻す</string>
+    <string name="alerts_target_own">カスタムの距離です。ほかのカテゴリーはデフォルトを使います。</string>
+    <string name="alerts_target_same">デフォルトを使っています。スライダーを動かすとカスタムの距離になります。</string>
+    <string name="alerts_use_main">デフォルトに戻す</string>
     <string name="cat_save">保存</string>
     <string name="about_dev_mode">開発者モード</string>
     <string name="about_dev_mode_sub">タップ、画面、読み込み、バックアップ、スキャンをすべて記録し、不具合を追えるようにします。「ヘルプと情報」の「ログ」で見られます。</string>
     <string name="about_dev_mode_dev">開発版では常にオン：タップ、画面、読み込み、バックアップ、スキャンをすべて記録します。</string>
-    <string name="alerts_own_list">個別の距離（%1$d）</string>
-    <string name="alerts_own_hide">個別の距離を隠す</string>
-    <string name="alerts_own_show">個別の距離を表示</string>
+    <string name="alerts_own_list">カスタムの距離（%1$d）</string>
+    <string name="alerts_own_hide">カスタムの距離を隠す</string>
+    <string name="alerts_own_show">カスタムの距離を表示</string>
+    <string name="cat_yours">自分のカテゴリー</string>
+    <string name="alerts_line_trip">移動中</string>
+    <plurals name="alerts_line_categories">
+        <item quantity="other">%1$dカテゴリー</item>
+    </plurals>
+    <string name="alerts_line_quiet">夜間 22:00〜7:00 は通知なし</string>
+    <plurals name="data_finds">
+        <item quantity="other">%1$d件の記録</item>
+    </plurals>
+    <string name="data_line_on">毎週、前回 %1$s · %2$s</string>
+    <string name="data_line_off">毎週のバックアップはオフ · %1$s</string>
+    <plurals name="catalogue_line_pictures">
+        <item quantity="other">カード画像%1$d枚</item>
+    </plurals>
 </resources>

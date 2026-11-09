@@ -368,12 +368,12 @@
     <string name="settings_alerts">Alerts</string>
     <string name="settings_alerts_sub">Distance for each category, what alerts, Proximity mode, quiet hours</string>
     <string name="settings_data">Backup and data</string>
-    <string name="settings_look">Appearance and language</string>
+    <string name="settings_look">Appearance</string>
     <string name="settings_catalogue">Catalogue</string>
     <string name="settings_catalogue_sub">Niigata, Saitama and Tokyo built in · card pictures · load a CSV for more</string>
     <string name="settings_catalogue_note">The app comes with the catalogue and an offline map of Niigata, Saitama and Tokyo: manhole cards, station stamps, Ekitag, dam cards and roadside stations. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
-    <string name="settings_help_sub">Logs · version %1$s · credits</string>
+    <string name="settings_help_sub">What\'s new · logs · version %1$s</string>
     <string name="settings_collections_sub">Categories you added yourself, and adding one</string>
     <string name="photo_kind_label">Type</string>
     <string name="sort_tip_near">Nearest</string>
@@ -606,11 +606,11 @@
     <string name="alerts_mode_trip">Travelling</string>
     <string name="alerts_mode_always">Always</string>
     <string name="alerts_mode_sub">Travelling: until midnight, or during a trip (Proximity mode). Always: also when Meguri is closed.</string>
-    <string name="alerts_how_close">How close</string>
-    <string name="alerts_every">For every category</string>
-    <string name="alerts_categories">Categories</string>
+    <string name="alerts_how_close">Proximity alert settings</string>
+    <string name="alerts_every">All categories</string>
+    <string name="alerts_categories">Categories that alert</string>
     <string name="alerts_categories_sub">%1$d of %2$d</string>
-    <string name="alerts_same">Same (%1$s)</string>
+    <string name="alerts_same">Default (%1$s)</string>
     <string name="alerts_distance_for">Distance</string>
     <string name="alerts_station_short">Only where you get off today</string>
     <string name="settings_alerts_live">%1$s · %2$s · %3$d of %4$d categories</string>
@@ -649,14 +649,31 @@
         <item quantity="other">It has %1$d items. To remove the category, move or delete them first.</item>
     </plurals>
     <string name="cat_empty">Categories you add yourself show here. Add one below, or from + then Add.</string>
-    <string name="alerts_target_own">Its own distance. The others keep the main one.</string>
-    <string name="alerts_target_same">Uses the main distance. Move the slider to give it its own.</string>
-    <string name="alerts_use_main">Use the main distance</string>
+    <string name="alerts_target_own">Custom distance. The other categories use the default.</string>
+    <string name="alerts_target_same">Uses the default. Move the slider to set a custom distance.</string>
+    <string name="alerts_use_main">Revert to default</string>
     <string name="cat_save">Save</string>
     <string name="about_dev_mode">Developer mode</string>
     <string name="about_dev_mode_sub">Logs every tap, page, import, backup and scan, so a problem can be traced. Open them in Help and about, then Logs.</string>
     <string name="about_dev_mode_dev">Always on in the dev build: every tap, page, import, backup and scan is logged.</string>
-    <string name="alerts_own_list">Own distances (%1$d)</string>
-    <string name="alerts_own_hide">Hide own distances</string>
-    <string name="alerts_own_show">Show own distances</string>
+    <string name="alerts_own_list">Custom distances (%1$d)</string>
+    <string name="alerts_own_hide">Hide custom distances</string>
+    <string name="alerts_own_show">Show custom distances</string>
+    <string name="cat_yours">Your categories</string>
+    <string name="alerts_line_trip">While travelling</string>
+    <plurals name="alerts_line_categories">
+        <item quantity="one">%1$d category</item>
+        <item quantity="other">%1$d categories</item>
+    </plurals>
+    <string name="alerts_line_quiet">quiet 22:00–07:00</string>
+    <plurals name="data_finds">
+        <item quantity="one">%1$d find</item>
+        <item quantity="other">%1$d finds</item>
+    </plurals>
+    <string name="data_line_on">Weekly, last %1$s · %2$s</string>
+    <string name="data_line_off">Weekly backup off · %1$s</string>
+    <plurals name="catalogue_line_pictures">
+        <item quantity="one">%1$d card picture</item>
+        <item quantity="other">%1$d card pictures</item>
+    </plurals>
 </resources>

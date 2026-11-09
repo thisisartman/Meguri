@@ -23,6 +23,8 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
+import androidx.compose.foundation.background
+import androidx.compose.ui.draw.clip
 import androidx.compose.material3.Slider
 import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.ui.text.style.TextAlign
@@ -298,12 +300,7 @@ fun AlertCategoriesSection(vm: AlertsViewModel = hiltViewModel()) {
             }
             Switch(checked = alerts, onCheckedChange = null)
         }
-        if (alerts) {
-            val own = remember(tick) { s.ownRadius(t) }
-            DistanceRow(stringResource(R.string.alerts_distance_for), null, own, sameAs = main, indent = true) { r ->
-                s.setRadiusFor(t, r); vm.geofences.refreshInBackground(); tick++
-            }
-        } else HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(Modifier.padding(top = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
     }
     Text(
         stringResource(R.string.alert_station_rule),
@@ -368,15 +365,20 @@ private fun DistanceSlider(
                 Text(stringResource(R.string.alerts_how_close), style = MaterialTheme.typography.bodyLarge)
                 Box {
                     Row(
-                        Modifier.clickable { menu = true }.heightIn(min = 40.dp),
+                        Modifier.padding(top = 6.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .clickable { menu = true }
+                            .heightIn(min = 40.dp)
+                            .padding(start = 14.dp, end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         if (target != null) { TypeDot(target); Spacer(Modifier.width(6.dp)) }
                         Text(
                             target?.let { t -> stringResource(ALERT_TYPES.first { it.first == t }.second) } ?: every,
-                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
-                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                     }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
                         DropdownMenuItem(text = { Text(every) }, onClick = { menu = false; onTarget(null) })
