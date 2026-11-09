@@ -2,6 +2,7 @@ package io.github.thisisartman.collectibles.ui
 
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
 import kotlinx.coroutines.launch
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.horizontalScroll
@@ -308,8 +309,31 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 // Chips scroll on the left; sort and size are icons pinned on the right (owner: icons over words)
                 Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // The row fades out at an edge where more chips are, so it shows that it scrolls; drawn, not a
+                    // layer of its own, so nothing unlabelled sits over Sort (sweep 2026-11-09, findings 4 and 5)
+                    val chipScroll = rememberScrollState()
+                    val fadeW = with(density) { 32.dp.toPx() }
                     Row(
-                        Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                        Modifier.weight(1f)
+                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                if (chipScroll.canScrollForward) drawRect(
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black),
+                                        startX = size.width - fadeW, endX = size.width,
+                                    ),
+                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                                )
+                                if (chipScroll.canScrollBackward) drawRect(
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(androidx.compose.ui.graphics.Color.Black, androidx.compose.ui.graphics.Color.Transparent),
+                                        startX = 0f, endX = fadeW,
+                                    ),
+                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                                )
+                            }
+                            .horizontalScroll(chipScroll).padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -320,13 +344,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             style = MaterialTheme.typography.titleSmall,
                             maxLines = 2,
                         )
-                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
                         if (!searching && kinds.size > 1) kinds.forEach { t ->
-                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
+                            // 48 dp tall, so each chip is a whole tap target (finding 3)
+                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel()), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
                         }
                     }
                     Box {
-                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }) {
+                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }, modifier = Modifier.size(48.dp)) {
                             // The button shows the order in use: nearest, or A over Z
                             Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
                         }
@@ -361,7 +386,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             }
                         }
                     }
-                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }) {
+                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }, modifier = Modifier.size(48.dp)) {
                         Icon(
                             painterResource(R.drawable.ic_grid_view),
                             contentDescription = stringResource(R.string.nearby_tile_size),
@@ -443,7 +468,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             if (here.fix != null) {
                 androidx.compose.material3.SmallFloatingActionButton(
                     onClick = { recenter++ },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = peek + 12.dp),
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = peek + 12.dp).size(48.dp),
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary,
                 ) { Icon(painterResource(R.drawable.ic_my_location), contentDescription = stringResource(R.string.nearby_recenter)) }
