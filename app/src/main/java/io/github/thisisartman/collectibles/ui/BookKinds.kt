@@ -208,7 +208,10 @@ fun KindScreen(vm: MainViewModel, key: String, nav: NavHostController, onBack: (
         LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = 16.dp)) {
             if (pins.isNotEmpty()) item(key = "map") {
                 Surface(Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(170.dp), shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
-                    MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null, inCard = true)
+                    MeguriMap(
+                        pins, null, Modifier.fillMaxSize(), interactive = false,
+                        onPinTap = { nav.openItem(it) }, onMapTap = { nav.openMap(MapSection.COLLECTED, kind = key) }, memoryKey = null, inCard = true,
+                    )
                 }
             }
             item(key = "groups") {

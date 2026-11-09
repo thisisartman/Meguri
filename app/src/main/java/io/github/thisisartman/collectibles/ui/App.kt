@@ -64,7 +64,8 @@ private const val BOOK = "book"
 private const val MORE = "more"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
-fun NavHostController.openMap(section: MapSection = MapSection.ALL) = navigate("map/${section.name}")
+fun NavHostController.openMap(section: MapSection = MapSection.ALL, kind: String? = null) =
+    navigate("map/${section.name}" + (kind?.let { "?kind=" + android.net.Uri.encode(it) } ?: ""))
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
 fun NavHostController.openTab(route: String) = navigate(route) {
     popUpTo(NEARBY) { saveState = true }
@@ -293,9 +294,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
                         Page { LineScreen(vm, id, nav, onBack = { nav.popBackStack() }) }
                     }
-                    composable("map/{section}", listOf(navArgument("section") { type = NavType.StringType })) {
+                    composable("map/{section}?kind={kind}", listOf(navArgument("section") { type = NavType.StringType }, navArgument("kind") { type = NavType.StringType; nullable = true; defaultValue = null })) {
                         val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
-                        MapScreen(vm, nav, section)
+                        MapScreen(vm, nav, section, kind = it.arguments?.getString("kind"))
                     }
                     composable("kind/{key}", listOf(navArgument("key") { type = NavType.StringType })) {
                         Page { KindScreen(vm, it.arguments?.getString("key").orEmpty(), nav, onBack = { nav.popBackStack() }) }

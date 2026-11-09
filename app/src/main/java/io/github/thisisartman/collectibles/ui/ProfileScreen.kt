@@ -72,7 +72,7 @@ fun BookSummary(vm: MainViewModel, nav: NavHostController) {
             Row(Modifier.padding(vertical = 14.dp), horizontalArrangement = Arrangement.SpaceEvenly) {
                 Total(totals.finds, pluralStringResource(R.plurals.profile_finds, totals.finds), Modifier.weight(1f))
                 // Collections started (owner, 2026-11-08: "kinds" didn't say anything)
-                val started = summaries.count { it.collected > 0 }
+                val started = remember(rows) { rows.filter { it.collected }.map { r -> r.item.customTypeId ?: r.item.type.name }.distinct().size }
                 Total(started, pluralStringResource(R.plurals.profile_collections, started), Modifier.weight(1f))
                 Total(totals.today, stringResource(R.string.profile_today), Modifier.weight(1f))
             }
@@ -84,7 +84,7 @@ fun BookSummary(vm: MainViewModel, nav: NavHostController) {
                 shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceVariant,
             ) {
                 Box(Modifier.fillMaxSize()) {
-                    MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null, inCard = true)
+                    MeguriMap(pins, null, Modifier.fillMaxSize(), interactive = false, onPinTap = { nav.openItem(it) }, onMapTap = { nav.openMap(MapSection.COLLECTED) }, memoryKey = null, inCard = true)
                     Surface(
                         Modifier.align(Alignment.BottomEnd).padding(10.dp).heightIn(min = 40.dp).clickable { nav.openMap(MapSection.COLLECTED) },
                         shape = RoundedCornerShape(20.dp), shadowElevation = 2.dp,

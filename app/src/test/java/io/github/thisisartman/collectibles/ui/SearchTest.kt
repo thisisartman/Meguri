@@ -30,6 +30,12 @@ class SearchTest {
         assertEquals(100, fuzzyScore("tokyo", listOf("Toukyou")))
     }
 
+    @Test fun lettersInOrderStayAnAbbreviation() {
+        assertEquals(0, fuzzyScore("urasa", listOf("Michi-no-Eki Yuki no Furusato Yasuzuka", "道の駅 雪のふるさと やすづか")))
+        assertEquals(0, fuzzyScore("urasa", listOf("Michi-no-Eki Umiterasu Nadachi")))
+        assertEquals(100, fuzzyScore("urasa", listOf("Urasa Station")))
+    }
+
     @Test fun unrelatedDoesNotMatch() {
         assertEquals(0, fuzzyScore("sanjo", minami))
         assertEquals(0, fuzzyScore("", minami))

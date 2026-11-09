@@ -90,13 +90,17 @@ fun ItemRow.toPin(): MapPin? {
 
 /** Full-screen map (#47, #51): tap a pin for a card with Details and Directions (#52). */
 @Composable
-fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection) {
+fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection, kind: String? = null) {
     val ja = isJapanese()
     val context = LocalContext.current
     val rows by vm.rows.collectAsStateWithLifecycle()
     val here by vm.here.collectAsStateWithLifecycle()
     val custom = LocalCustomTypes.current
-    val shown = remember(rows, section, custom) { rows.filter { section.has(it.item, custom) && (section != MapSection.COLLECTED || it.collected) } }
+    // From a category page: only that category (review finding 35)
+    val inKind = remember(rows, kind) { kind?.let { k -> BookKinds.rowsOf(k, rows).map { it.item.id }.toSet() } }
+    val shown = remember(rows, section, custom, inKind) {
+        rows.filter { section.has(it.item, custom) && (section != MapSection.COLLECTED || it.collected) && (inKind == null || it.item.id in inKind) }
+    }
     val pins = remember(shown) { shown.mapNotNull { it.toPin() } }
     val tick = rememberTick()
     var picked by rememberSaveable { mutableStateOf<String?>(null) }

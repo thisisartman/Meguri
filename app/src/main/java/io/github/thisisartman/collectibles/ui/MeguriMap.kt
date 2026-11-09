@@ -273,6 +273,7 @@ fun MeguriMap(
                         val zoom = runCatching { m.style?.getSourceAs<GeoJsonSource>(SRC)?.getClusterExpansionZoom(hit) }.getOrNull()
                             ?: (m.cameraPosition.zoom + 2).toInt()
                         if (interactive) m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(g.latitude(), g.longitude()), zoom.toDouble()), 450)
+                        else tapMap()
                     }
                     else -> tapPin(hit.getStringProperty("id"))
                 }

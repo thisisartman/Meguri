@@ -57,7 +57,9 @@ private fun scoreOne(q: String, c: String): Int {
     if (q.isEmpty() || c.isEmpty()) return 0
     if (c.startsWith(q)) return 100
     if (c.contains(q)) return 80
-    if (isSubsequence(q, c) && q.length >= 3 && isLatin(q)) return 50
+    // Letters in order, as an abbreviation of the name: from its first letter, within twice the typed length
+    // ("urasa" matched "yukinofurusatoyasuzuka" across the whole name; review 2026-11-09)
+    if (q.length >= 3 && isLatin(q) && q[0] == c[0] && isSubsequence(q, c.take(q.length * 2))) return 50
     // Typos: compare with the start of the name of the same length, and allow 1 (short) or 2 (long) edits
     if (q.length >= 4 && isLatin(q)) {
         val allowed = if (q.length >= 7) 2 else 1
