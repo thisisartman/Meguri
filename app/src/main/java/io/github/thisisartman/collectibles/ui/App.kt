@@ -338,7 +338,11 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     }
                     composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }
                     composable("trip") { Page { TripScreen(vm, nav, snackbar, onBack = { nav.popBackStack() }, onAlready = { nav.navigate("trip-check") }) } }
-                    composable("trip-report") { Page { TripReportScreen(vm, onBack = { nav.popBackStack() }) } }
+                    // A Timeline day header opens its own day (finding 34); from Trip, the newest day
+                    composable("trip-report?day={day}", listOf(navArgument("day") { type = NavType.LongType; defaultValue = -1L })) {
+                        val day = it.arguments?.getLong("day")?.takeIf { d -> d >= 0 }
+                        Page { TripReportScreen(vm, day, onBack = { nav.popBackStack() }) }
+                    }
                     composable("timeline") { Page { TimelineScreen(vm, nav, onBack = { nav.popBackStack() }) } }
                     composable("trip-check") {
                         // The route's things as today's plan has them (Already went, #46 and owner item 9)

@@ -65,7 +65,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -89,12 +88,13 @@ private data class ReportSpec(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Unit) {
     val ja = isJapanese()
     val context = LocalContext.current
     val times by vm.findTimes.collectAsStateWithLifecycle()
     val days = remember(times) { TripReport.days(times) }
-    var day by rememberSaveable { mutableStateOf<Long?>(null) }
+    // The day it was opened on (a Timeline day header), else the newest
+    var day by rememberSaveable { mutableStateOf(startDay) }
     val chosen = day ?: days.firstOrNull()?.first
     val rowsById by vm.rows.collectAsStateWithLifecycle()
     val items = remember(rowsById) { rowsById.associateBy { it.item.id } }
@@ -104,7 +104,6 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
         finds.mapNotNull { f -> items[f.find.itemId]?.item?.let { i -> ReportRow(f.find, i, i.customTypeId?.let { customTypes[it]?.name }) } }
     }
     val trip = remember { vm.currentTrip() }
-    val dayFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()) }
 
     // Everything the image needs, resolved here so the drawing code needs no Compose
     val scheme = MaterialTheme.colorScheme
@@ -130,7 +129,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
                 listOfNotNull(items[t.from]?.item?.displayName(ja), items[t.to]?.item?.displayName(ja)).takeIf { it.size == 2 }?.joinToString(" → ")
             }
             ReportSpec(
-                title = dayFormat.format(Date(chosen)), subtitle = routeLine, countText = countText,
+                title = Dates.day(context, chosen), subtitle = routeLine, countText = countText,
                 kinds = TripReport.byKind(rows).map { (k, n) ->
                     val sample = rows.first { (it.collection ?: it.item.type.name) == k }
                     kindFmt.format(sample.collection ?: typeNames[sample.item.type] ?: k, n) to colorFor(sample)
@@ -158,7 +157,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(days, key = { it.first }) { (d, n) ->
-                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, dayFormat.format(Date(d)), n)) },
+                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, dateText(d), n)) },
                     modifier = Modifier.heightIn(min = 48.dp))
             }
         }
