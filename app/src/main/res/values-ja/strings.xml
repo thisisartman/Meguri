@@ -642,4 +642,7 @@
     <string name="about_dev_mode">開発者モード</string>
     <string name="about_dev_mode_sub">タップ、画面、読み込み、バックアップ、スキャンをすべて記録し、不具合を追えるようにします。「ヘルプと情報」の「ログ」で見られます。</string>
     <string name="about_dev_mode_dev">開発版では常にオン：タップ、画面、読み込み、バックアップ、スキャンをすべて記録します。</string>
+    <string name="alerts_own_list">個別の距離（%1$d）</string>
+    <string name="alerts_own_hide">個別の距離を隠す</string>
+    <string name="alerts_own_show">個別の距離を表示</string>
 </resources>

@@ -34,6 +34,10 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -196,10 +200,12 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     // Owner, 2026-11-09: one slider, and a menu above it says what it sets: every category, or one of them
     var target by remember { mutableStateOf<ItemType?>(null) }
     val own = remember(tick, target) { target?.let { s.ownRadius(it) } }
+    val owns = remember(tick) { ALERT_TYPES.mapNotNull { (t, label) -> s.ownRadius(t)?.let { Triple(t, label, it) } } }
     DistanceSlider(
         value = own ?: main,
         target = target,
         targetIsOwn = own != null,
+        owns = owns,
         onTarget = { target = it },
         onReset = { target?.let { s.setRadiusFor(it, null) }; vm.geofences.refreshInBackground(); tick++ },
     ) { r ->
@@ -349,7 +355,7 @@ fun radiusText(m: Int): String = if (m % 1000 == 0) "${m / 1000} km" else "$m m"
  */
 @Composable
 private fun DistanceSlider(
-    value: Int, target: ItemType?, targetIsOwn: Boolean,
+    value: Int, target: ItemType?, targetIsOwn: Boolean, owns: List<Triple<ItemType, Int, Int>>,
     onTarget: (ItemType?) -> Unit, onReset: () -> Unit, onPick: (Int) -> Unit,
 ) {
     val choices = AlertSettings.RADIUS_CHOICES
@@ -408,6 +414,42 @@ private fun DistanceSlider(
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (targetIsOwn) TextButton(onClick = onReset, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.alerts_use_main)) }
+        }
+        // Owner, 2026-11-09: the categories with their own distance, one per line under the slider, folding away
+        if (owns.isNotEmpty()) {
+            var open by rememberSaveable { mutableStateOf(true) }
+            Row(
+                Modifier.fillMaxWidth().clickable { open = !open }.heightIn(min = 48.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.alerts_own_list, owns.size),
+                    Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Icon(
+                    if (open) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
+                    contentDescription = stringResource(if (open) R.string.alerts_own_hide else R.string.alerts_own_show),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            AnimatedVisibility(open) {
+                Column {
+                    owns.forEach { (t, label, m) ->
+                        Row(
+                            Modifier.fillMaxWidth().clickable { onTarget(t) }.heightIn(min = 40.dp).padding(start = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TypeDot(t)
+                            Spacer(Modifier.width(10.dp))
+                            Text(stringResource(label), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(
+                                radiusText(m), style = MaterialTheme.typography.bodyMedium,
+                                color = if (t == target) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)

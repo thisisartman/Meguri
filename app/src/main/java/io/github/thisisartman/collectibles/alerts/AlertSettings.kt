@@ -65,14 +65,19 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
 
     /** A category's own distance, or null when it uses the main one ("Same"). */
     fun ownRadius(type: ItemType): Int? =
-        if (prefs.contains(KEY_RADIUS_PREFIX + type.name)) snap(prefs.getInt(KEY_RADIUS_PREFIX + type.name, DEFAULT_RADIUS_M)) else null
+        resolveOwn(if (prefs.contains(KEY_RADIUS_PREFIX + type.name)) prefs.getInt(KEY_RADIUS_PREFIX + type.name, SAME) else null, type)
 
     /** The alert distance for one category: its own, else the main one. */
     fun radiusFor(type: ItemType): Int = ownRadius(type) ?: radiusM
 
     /** null goes back to the main distance. */
     fun setRadiusFor(type: ItemType, meters: Int?) = prefs.edit().apply {
-        if (meters == null) remove(KEY_RADIUS_PREFIX + type.name) else putInt(KEY_RADIUS_PREFIX + type.name, meters)
+        // A category that starts with its own distance (stations) remembers "Same" explicitly
+        when {
+            meters != null -> putInt(KEY_RADIUS_PREFIX + type.name, meters)
+            type in STARTING_OWN -> putInt(KEY_RADIUS_PREFIX + type.name, SAME)
+            else -> remove(KEY_RADIUS_PREFIX + type.name)
+        }
     }.apply()
 
     fun snapshot() = AlertPrefs(radiusM, types, quietOn, QUIET_FROM, QUIET_TO, COOLDOWN_MS, ItemType.entries.associateWith { radiusFor(it) })
@@ -101,6 +106,18 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         /** Three choices (owner, 2026-11-09). A distance saved before (300 m) reads as the nearest of them. */
         val RADIUS_CHOICES = listOf(200, 500, 1000)
         fun snap(m: Int): Int = RADIUS_CHOICES.minBy { kotlin.math.abs(it - m) }
+
+        /** Owner, 2026-11-09: station stamps start at 200 m (stations sit close together on a line). */
+        val STARTING_OWN = mapOf(ItemType.EKI_STAMP to 200)
+        /** Saved for a category that was set back to the main distance. */
+        const val SAME = -1
+
+        /** A category's own distance from what is saved: nothing saved means its starting one, if any. */
+        fun resolveOwn(saved: Int?, type: ItemType): Int? = when {
+            saved == SAME -> null
+            saved != null -> snap(saved)
+            else -> STARTING_OWN[type]
+        }
         private const val KEY_RADIUS_PREFIX = "radius_"
         val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
         val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2

@@ -656,4 +656,7 @@
     <string name="about_dev_mode">Developer mode</string>
     <string name="about_dev_mode_sub">Logs every tap, page, import, backup and scan, so a problem can be traced. Open them in Help and about, then Logs.</string>
     <string name="about_dev_mode_dev">Always on in the dev build: every tap, page, import, backup and scan is logged.</string>
+    <string name="alerts_own_list">Own distances (%1$d)</string>
+    <string name="alerts_own_hide">Hide own distances</string>
+    <string name="alerts_own_show">Show own distances</string>
 </resources>
