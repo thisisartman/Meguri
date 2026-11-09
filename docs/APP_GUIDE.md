@@ -12,6 +12,7 @@ Line numbers follow the working copy as checked on 2026-11-09: commit `c5e5a75` 
 - Where a text has a singular and a plural form, both are given ("%d photo" / "%d photos"), or the guide writes "(s)" to stand for both.
 - Quoted examples such as "86 Station stamps · 48 Manhole cards" show how filled-in text looks; they are not fixed strings.
 - Source references have the form `path:line`. A path that does not start with `app/` is relative to `app/src/main/java/io/github/thisisartman/collectibles/`. For example `ui/App.kt:205` means `app/src/main/java/io/github/thisisartman/collectibles/ui/App.kt`, line 205.
+- Pictures and moving pictures were taken from the 0.4.0 development build on a phone in dark theme, with the owner's own collection; the moving pictures show taps that were cancelled or undone, so nothing in the collection changed.
 - "Not confirmed from code" marks something the code does not settle, or that would need a test on a phone.
 - A dash shown as a value (no date) is the string `no_date`.
 
@@ -172,6 +173,10 @@ The sheet sits at the height of its content, capped per step (60% of the screen 
 
 ### 2.3 Nearby
 
+<p><img src="guide-media/shots/01-nearby.png" width="260" alt="Nearby"> <img src="guide-media/map-group.gif" width="260" alt="Tapping a group zooms in; Back closes a pin's card"> <img src="guide-media/sort-menu.gif" width="260" alt="The Sort menu"></p>
+
+*Nearby · Tapping a group zooms in; Back closes a pin's card · The Sort menu*
+
 **How you get there.** It is the start page (`ui/App.kt:277`), and "Nearby" in the bottom bar. Tapping "Nearby" or "My book" keeps each tab's state (`ui/App.kt:69-73`).
 
 **Layout.** A map fills the screen (section 3.9). A sheet of round tiles sits over its lower part. A search bar floats at the top. Two small items float over the map: the "Back to where you are" (icon) button and the map's credit button.
@@ -224,6 +229,10 @@ Top to bottom:
 
 ### 2.4 Search (on Nearby)
 
+<p><img src="guide-media/shots/04-search.png" width="260" alt="Search for "urasa""></p>
+
+*Search for "urasa"*
+
 **How you get there.** Tap the Nearby search bar, or tap + then "Search" (the app goes back to Nearby and focuses the bar after 0.25 s, so the keyboard comes up) (`ui/App.kt:360-364`, `ui/NearbyScreen.kt:128-131`).
 
 **What it searches.** Every item in both tabs and every category, with the shared forgiving search (section 3.8): Japanese and romaji names, any part of a card code, the town and the place name (`ui/Search.kt:20-21`). Results are ordered by match score, then distance.
@@ -238,6 +247,10 @@ Top to bottom:
 - While searching, the sheet's grid and the map pins also show the results, and the filter row shows "%1$d found for “%2$s”".
 
 ### 2.5 The + card
+
+<p><img src="guide-media/shots/02-plus.png" width="260" alt="The + card"></p>
+
+*The + card*
 
 **How you get there.** Tap the gold + circle in the bottom bar, on Nearby or My book (`ui/App.kt:225-246`).
 
@@ -388,9 +401,13 @@ Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the
 
 ### 2.10 Item page
 
+<p><img src="guide-media/shots/06-item.png" width="260" alt="Item page of a station stamp"> <img src="guide-media/station-ekitag.gif" width="260" alt="The Ekitag row opens the station's Ekitag"> <img src="guide-media/remove-item.gif" width="260" alt="More options, Remove from my collection (cancelled)"></p>
+
+*Item page of a station stamp · The Ekitag row opens the station's Ekitag · More options, Remove from my collection (cancelled)*
+
 **How you get there.** Tap any tile, list row, search result, pin card text or timeline row; an alert or its "Collect" action; or the end of a scan or add (route `item/{id}`, `ui/ItemScreen.kt`).
 
-**Top bar.** "Back" (icon); the category name as the title (your own category by its own name); "Edit details" (icon, a pencil), which opens the Edit details sheet.
+**Top bar.** "Back" (icon); the category name as the title (your own category by its own name); "Edit details" (icon, a pencil), which opens the Edit details sheet; "More options" (icon, three dots), shown for an item you added or one you have collected. Its menu has "Remove item" for an item you added ("Remove this item?", "It leaves Meguri with its finds and photos. Photos you took with the camera stay in your gallery."), or "Remove from my collection" for a catalogue item ("Remove from your collection?", "Every find of it and their photos leave Meguri; it goes back to not collected. Photos you took with the camera stay in your gallery."). Each asks first, with "Cancel" and "Remove" (`ui/ItemScreen.kt`, `data/CollectionRepository.kt` `removeItem`).
 
 **Header.**
 - The item's mark, 64 dp. When it has a picture (your photo or a downloaded card picture), tap it to open the picture full screen (`ui/ItemScreen.kt:127-136`).
@@ -473,11 +490,19 @@ Saving marks the item as edited. From then on a catalogue load leaves the whole 
 
 ### 2.11 Photo viewer
 
+<p><img src="guide-media/shots/07-photo.png" width="260" alt="Photo viewer"></p>
+
+*Photo viewer*
+
 Two views of one picture, used on the item page, in the photo dialog and in the scan result (`ui/PhotoViewer.kt`).
 - **Card size.** The whole photo on black, up to 420 dp tall, read at 1200 px. A spinner while loading; a grey picture icon if it cannot be read. Tap the photo or "View full screen" (icon, bottom right) for full screen.
 - **Full screen.** The photo on black over the whole screen, at the stored copy's full size (3000 px on the long side). Pinch to zoom from 1 to 6 times; drag to look around while zoomed; double-tap to zoom to 2.5 times, or back. "Close" (icon) at the top right, or Back, closes it.
 
 ### 2.12 My book
+
+<p><img src="guide-media/shots/10-book.png" width="260" alt="My book"> <img src="guide-media/shots/17-menu.png" width="260" alt="The My book menu"></p>
+
+*My book · The My book menu*
 
 **How you get there.** "My book" in the bottom bar; "Go to My book" at the end of the onboarding (route `book`, `ui/BookScreen.kt`, `ui/ProfileScreen.kt`).
 
@@ -553,6 +578,10 @@ Not confirmed from code: tapping a day header opens the Trip report on the newes
 
 ### 2.17 Collection check, and Already went
 
+<p><img src="guide-media/shots/11-check.png" width="260" alt="Categories"> <img src="guide-media/shots/12-check-prefs.png" width="260" alt="Prefectures"> <img src="guide-media/shots/13-check-deck.png" width="260" alt="The deck"> <img src="guide-media/deck-swipe.gif" width="260" alt="Swipe left to skip, Undo brings it back"></p>
+
+*Categories · Prefectures · The deck · Swipe left to skip, Undo brings it back*
+
 Two screens share a route family: Collection check is a card deck (`ui/CollectionDeck.kt`); Already went keeps a page of tiles (`ui/CollectionCheck.kt`).
 
 **How you get there.**
@@ -580,6 +609,10 @@ Two screens share a route family: Collection check is a card deck (`ui/Collectio
 - Button "Add %d to my collection": makes a find for each ticked item on the chosen day, at noon, with no place or photo. The snackbar "Added %1$d to your collection" offers "Undo".
 
 ### 2.18 Trip
+
+<p><img src="guide-media/shots/18-trip.png" width="260" alt="Trip"></p>
+
+*Trip*
 
 **How you get there.** "Trip" in the My book menu (route `trip`, `ui/TripScreen.kt`). A trip is one day. The plan is kept for today only and forgets itself after 23:59 (`data/TripStore.kt:11-36`).
 
@@ -637,6 +670,10 @@ With nothing left: "Nothing left to collect along the line." The text goes to An
 
 ### 2.19 Trip report
 
+<p><img src="guide-media/shots/19-report.png" width="260" alt="Trip report"></p>
+
+*Trip report*
+
 **How you get there.** "Trip report" (icon) on the Trip page, or a day header on the Timeline (route `trip-report`, `ui/TripReportScreen.kt`).
 
 **What is on it.**
@@ -682,6 +719,10 @@ The route also accepts `ALL`, `STAMPS`, `CARDS` and `MINE`, titled "Map", "Stamp
 
 #### 2.21.1 Settings list
 
+<p><img src="guide-media/shots/23-settings.png" width="260" alt="Settings"></p>
+
+*Settings*
+
 Title "Settings". Five rows, each with a round icon badge, a bold name, a grey line saying what is set now, and an arrow (`ui/MoreScreen.kt:334-386`).
 
 | Row | Grey line |
@@ -696,6 +737,10 @@ Tap a row to open its page.
 
 #### 2.21.2 Appearance
 
+<p><img src="guide-media/shots/24-appearance.png" width="260" alt="Appearance"></p>
+
+*Appearance*
+
 - "Theme": "Phone", "Light", "Dark". "Phone follows your phone's dark mode. The map changes with it." The status bar and navigation bar icons follow the chosen theme (`ui/Theme.kt:192-216`).
 - "Colours" (Android 12 and later only): "Meguri", "Wallpaper". "Use your phone's wallpaper colours instead of Meguri's own. The colours for each category stay the same."
 - "Language": "English", "日本語".
@@ -705,6 +750,10 @@ Tap a row to open its page.
 Each choice is one tap and is saved at once (section 5.1).
 
 #### 2.21.3 Alerts
+
+<p><img src="guide-media/shots/26-alerts.png" width="260" alt="Alerts"> <img src="guide-media/alerts-slider.gif" width="260" alt="The distance slider"></p>
+
+*Alerts · The distance slider*
 
 (`ui/AlertsSection.kt:98-251`)
 
@@ -757,10 +806,14 @@ Ekitag and your own categories are not listed and never alert (`ui/AlertsSection
 
 #### 2.21.5 Backup and data
 
+<p><img src="guide-media/shots/28-data.png" width="260" alt="Backup and data"></p>
+
+*Backup and data*
+
 (`ui/MoreScreen.kt:463-499`)
 
 **"Backup"**
-- "Back up now", with "Saves a file with your finds and their photos" or "Saves a file with your finds (no photos)". Which one follows "Include photos" on the Weekly backup page (on to start with). That switch shows only while weekly backup is on, so with weekly backup off, "Back up now" includes photos unless the switch was turned off at a time when weekly backup was on (`ui/MoreScreen.kt:466-473`, `ui/MoreScreen.kt:504-512`). Tap: Android's save dialog, named `collectibles-backup-photos-YYYYMMDD-HHMM.zip` or `collectibles-backup-YYYYMMDD-HHMM.zip`. Then a snackbar "Saved %1$s: %2$s" (file name and counts, such as "21 finds, 119 items"), "Backup saved: %1$s", or "Couldn't save the backup".
+- "Back up now", with "Saves a file with your finds, with or without photos". Tap: a dialog, "Include your photos? The file is larger with them.", with "Cancel", "Without photos" and "With photos". Either choice opens Android's save dialog, named `collectibles-backup-photos-YYYYMMDD-HHMM.zip` or `collectibles-backup-YYYYMMDD-HHMM.zip`. Then a snackbar "Saved %1$s: %2$s" (file name and counts, such as "21 finds, 119 items"), "Backup saved: %1$s", or "Couldn't save the backup".
 - "Weekly backup": the words, with the state line, open the Weekly backup page; the switch on the right, behind a thin line, turns it on or off. On opens Android's folder picker, starting in Documents; picking a folder turns it on and starts the first backup. Off stops it at once (`ui/MoreScreen.kt:474-476`, `data/AutoBackup.kt:68-90`).
 - "Restore from a backup", with "Replaces everything here with a backup file. Your current data is saved to Downloads first." Tap: Android's file picker, then the restore dialog (below).
 - "Find my photos again", with "Needs access to all photos, to match them to your finds.", shown only while photos from a restore still need finding. Tap: asks for photo access, then matches photos to gallery pictures (section 3.13).
@@ -821,6 +874,10 @@ Nothing on this page can be tapped.
 
 #### 2.21.9 Catalogue
 
+<p><img src="guide-media/shots/30-catalogue.png" width="260" alt="Catalogue"></p>
+
+*Catalogue*
+
 (`ui/MoreScreen.kt:548-575`)
 - "Installed catalogues", with "%1$d prefecture(s) · load a CSV for more". Tap: the Installed catalogues page.
 - "Card pictures", with one of:
@@ -840,11 +897,19 @@ Nothing on this page can be tapped.
 
 #### 2.21.11 Help and about
 
+<p><img src="guide-media/shots/32-help.png" width="260" alt="Help and about"></p>
+
+*Help and about*
+
 - "What's new", with the version. Tap: the What's new dialog.
 - "Logs", with "What the app recorded, to send when something goes wrong". Tap: the Logs page.
 - "About", with "Version, licences and credits". Tap: the About page.
 
 #### 2.21.12 About
+
+<p><img src="guide-media/shots/33-about.png" width="260" alt="About"></p>
+
+*About*
 
 (`ui/MoreScreen.kt:595-627`, `ui/AboutPages.kt`)
 - The app icon, "Meguri", and "Version %1$s" with the version and code, such as "Version 0.3.0-beta.9 (11)". Tap the version: copies it and shows "Version copied".
@@ -853,6 +918,10 @@ Nothing on this page can be tapped.
 - "Developer": "Developer mode" switch, "Logs every tap, page, import, backup and scan, so a problem can be traced. Open them in Help and about, then Logs." In the dev build the switch is on and cannot be changed, with "Always on in the dev build: every tap, page, import, backup and scan is logged."
 
 #### 2.21.13 Map and data sources, Fonts and icons, Third-party licences
+
+<p><img src="guide-media/shots/34-sources.png" width="260" alt="Map and data sources"></p>
+
+*Map and data sources*
 
 Each is a list of credits (`ui/AboutPages.kt:43-142`). "Map and data sources" starts with "Where the map, places and catalogue come from. Tap a name to open its site, or the licence beside it."; "Third-party licences" with "Tap a name to open the project, or its licence." Each row shows the name in gold, what it is used for, and the site address. Tap the row: opens the site. Tap the licence button on the right: opens the licence.
 
