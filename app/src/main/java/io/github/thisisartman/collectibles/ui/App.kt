@@ -239,7 +239,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                                         modifier = Modifier.size(56.dp),
                                     ) {
                                         androidx.compose.foundation.layout.Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                            Icon(icon, contentDescription = stringResource(R.string.log_title), modifier = Modifier.size(30.dp))
+                                            Icon(icon, contentDescription = stringResource(R.string.a11y_plus), modifier = Modifier.size(30.dp))
                                         }
                                     }
                                 }

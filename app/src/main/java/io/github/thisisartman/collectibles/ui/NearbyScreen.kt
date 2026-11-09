@@ -298,7 +298,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         }
                     }
                     Box {
-                        IconButton(onClick = { sortOpen = true; if (!tips.getBoolean(TIP_SORT, false)) sortTip = true }) {
+                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }) {
                             // The button shows the order in use: nearest, or A over Z
                             Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
                         }
@@ -310,6 +310,26 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     leadingIcon = { Icon(painterResource(if (az) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = null) },
                                     trailingIcon = { if (byName == az) Icon(Icons.Filled.Check, contentDescription = null) },
                                 )
+                            }
+                            // What the orders mean, in the menu itself until "Got it" (it used to stay on the page and
+                            // looked like part of Tile size; sweep 2026-11-09)
+                            if (sortTip) {
+                                HorizontalDivider()
+                                Text(
+                                    androidx.compose.ui.text.buildAnnotatedString {
+                                        val bold = androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
+                                        withStyle(bold) { append(stringResource(R.string.sort_tip_near)) }
+                                        append(stringResource(R.string.sort_tip_near_text))
+                                        append("\n")
+                                        withStyle(bold) { append(stringResource(R.string.sort_tip_az)) }
+                                        append(stringResource(R.string.sort_tip_az_text))
+                                    },
+                                    Modifier.padding(horizontal = 12.dp, vertical = 8.dp).widthIn(max = 260.dp),
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                TextButton(onClick = { sortTip = false; tips.edit().putBoolean(TIP_SORT, true).apply() }, modifier = Modifier.padding(start = 4.dp)) {
+                                    Text(stringResource(R.string.tip_got_it))
+                                }
                             }
                         }
                     }
@@ -334,30 +354,6 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                 .semantics { contentDescription = sizeLabel },
                         )
                         Box(Modifier.size(20.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
-                    }
-                }
-                // What the sort orders mean, once (owner, 2026-11-07)
-                AnimatedVisibility(visible = sortTip) {
-                    Surface(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    ) {
-                        Row(Modifier.padding(start = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                androidx.compose.ui.text.buildAnnotatedString {
-                                    val bold = androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                                    withStyle(bold) { append(stringResource(R.string.sort_tip_near)) }
-                                    append(stringResource(R.string.sort_tip_near_text))
-                                    append("\n")
-                                    withStyle(bold) { append(stringResource(R.string.sort_tip_az)) }
-                                    append(stringResource(R.string.sort_tip_az_text))
-                                }, Modifier.weight(1f).padding(vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
-                            IconButton(onClick = { sortTip = false; tips.edit().putBoolean(TIP_SORT, true).apply() }) {
-                                Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.tip_dismiss))
-                            }
-                        }
                     }
                 }
                 if (shown.isEmpty() && loadedRows != null) {
