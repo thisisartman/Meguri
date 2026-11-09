@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -88,8 +89,10 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
         if (typed.isEmpty()) opts else rankSearch(opts, typed, { fuzzyScore(typed, listOf(it.label)) }, { null })
     }
     val newKind = typed.isNotEmpty() && exact == null
+    // A kind typed here gets "Note what I paid", on by default as in New category (finding 37)
+    var newKindCost by rememberSaveable { mutableStateOf(true) }
     val hasCost = when {
-        exact == null -> false
+        exact == null -> newKind && newKindCost
         exact.type == ItemType.GOSHUIN -> true
         exact.customId != null -> customTypes.firstOrNull { it.id == exact.customId }?.hasCost == true
         else -> false
@@ -109,7 +112,7 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
             // A kind you typed: made once, then used like any other (a colour not yet taken, the card or stamp icon)
             val cat = category ?: Category.OTHER
             val color = CUSTOM_COLORS.firstOrNull { c -> customTypes.none { it.color == c } } ?: CUSTOM_COLORS[customTypes.size % CUSTOM_COLORS.size]
-            vm.addCollectionType(typed, color, cat.icon(), hasCost = false) { id -> vm.addNew(ItemType.CUSTOM, nameJa, romaji, id, place, null, done) }
+            vm.addCollectionType(typed, color, cat.icon(), hasCost = newKindCost) { id -> vm.addNew(ItemType.CUSTOM, nameJa, romaji, id, place, yen, done) }
         }
     }
 
@@ -184,6 +187,15 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
                     stringResource(if (category == null) R.string.add_new_kind_pick else R.string.add_new_kind_note),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+                // One switch for the whole row, read with its words (as in New category)
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .toggleable(value = newKindCost, role = androidx.compose.ui.semantics.Role.Switch) { newKindCost = it },
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(stringResource(R.string.collection_has_cost), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                    androidx.compose.material3.Switch(checked = newKindCost, onCheckedChange = null)
+                }
             }
 
             // Where: your position by default, or a place found on OpenStreetMap (online)
