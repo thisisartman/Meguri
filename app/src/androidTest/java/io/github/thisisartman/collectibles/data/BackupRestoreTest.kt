@@ -56,7 +56,7 @@ class BackupRestoreTest {
         // Safety copies from every test, however Android renamed them. Only this app's own files can match.
         context.contentResolver.delete(
             MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),
-            "${MediaStore.Downloads.DISPLAY_NAME} LIKE 'collectibles-pre-restore-%'", null,
+            "${MediaStore.Downloads.DISPLAY_NAME} LIKE 'meguri-pre-restore-%'", null,
         )
     }
 

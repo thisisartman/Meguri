@@ -53,7 +53,7 @@ class PhotoBackupTest {
         work.deleteRecursively()
         val images = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY)
         resolver.delete(images, "${MediaStore.Images.Media.DISPLAY_NAME} LIKE ?", arrayOf("$marker%"))
-        resolver.delete(MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), "${MediaStore.Downloads.DISPLAY_NAME} LIKE 'collectibles-pre-restore-%'", null)
+        resolver.delete(MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY), "${MediaStore.Downloads.DISPLAY_NAME} LIKE 'meguri-pre-restore-%'", null)
     }
 
     /** A picture in the gallery, as the camera would leave it. */

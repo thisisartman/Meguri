@@ -38,7 +38,7 @@ class LogsViewModel @Inject constructor(private val log: FileLog) : ViewModel() 
     }
 
     fun exportFileName(): String =
-        "collectibles-log-${SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())}.txt"
+        "meguri-log-${SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())}.txt"
 
     fun export(resolver: ContentResolver, uri: Uri) {
         viewModelScope.launch {

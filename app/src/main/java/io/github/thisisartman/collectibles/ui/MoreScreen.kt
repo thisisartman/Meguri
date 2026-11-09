@@ -738,11 +738,6 @@ private fun SectionLine(title: String, sub: String, icon: Int, last: Boolean = f
 /** The file types the catalogue picker offers (Settings and the onboarding). */
 internal val CATALOGUE_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*")
 
-/** The suggested name for a Back up now file; one with photos says so. */
-private fun backupFileName(photos: Boolean): String {
-    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-    return if (photos) "collectibles-backup-photos-$stamp.zip" else "collectibles-backup-$stamp.zip"
-}
 
 /** The picker's storage root is refused by Android, so open it somewhere it accepts. */
 private val STARTING_FOLDER = DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Documents")

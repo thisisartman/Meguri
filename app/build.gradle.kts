@@ -132,13 +132,13 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
 }
 
-// Copies the built APKs to build/dist as collectibles-<dev|release>-v<version>-<yyyymmdd-hhmm>.apk.
+// Copies the built APKs to build/dist as meguri-<dev|release>-v<version>-<yyyymmdd-hhmm>.apk.
 listOf("debug" to "dev", "release" to "release").forEach { (type, label) ->
     val cap = type.replaceFirstChar { it.uppercase() }
     // Only local strings here: the rename lambda must not reach back into the build script,
     // or the configuration cache cannot store the task. The time is read inside the lambda,
     // so it is taken when the copy runs, not frozen in the cached configuration.
-    val prefix = "collectibles-$label-v$appVersionName-"
+    val prefix = "meguri-$label-v$appVersionName-"
     tasks.register<Copy>("dist$cap") {
         dependsOn("assemble$cap")
         from(layout.buildDirectory.dir("outputs/apk/$type")) { include("*.apk") }

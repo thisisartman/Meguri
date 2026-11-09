@@ -253,7 +253,7 @@ class BackupRestore @Inject constructor(
     private suspend fun saveSafetyCopy(): String? {
         if (dao.itemCount() == 0 && dao.findTotal() == 0 && dao.lineCount() == 0) return null
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        val name = "collectibles-pre-restore-$stamp.zip"
+        val name = "meguri-pre-restore-$stamp.zip"
         val resolver = context.contentResolver
         val uri = resolver.insert(
             MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),

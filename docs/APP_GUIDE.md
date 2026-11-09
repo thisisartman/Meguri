@@ -813,7 +813,7 @@ Ekitag and your own categories are not listed and never alert (`ui/AlertsSection
 (`ui/MoreScreen.kt:463-499`)
 
 **"Backup"**
-- "Back up now", with "Saves a file with your finds, with or without photos". Tap: a dialog, "Include your photos? The file is larger with them.", with "Cancel", "Without photos" and "With photos". Either choice opens Android's save dialog, named `collectibles-backup-photos-YYYYMMDD-HHMM.zip` or `collectibles-backup-YYYYMMDD-HHMM.zip`. Then a snackbar "Saved %1$s: %2$s" (file name and counts, such as "21 finds, 119 items"), "Backup saved: %1$s", or "Couldn't save the backup".
+- "Back up now", with "Saves a file with your finds, with or without photos". Tap: a dialog, "Include your photos? The file is larger with them.", with "Cancel", "Without photos" and "With photos". Either choice opens Android's save dialog, named `meguri-backup-photos-YYYYMMDD-HHMM.zip` or `meguri-backup-YYYYMMDD-HHMM.zip`. Then a snackbar "Saved %1$s: %2$s" (file name and counts, such as "21 finds, 119 items"), "Backup saved: %1$s", or "Couldn't save the backup".
 - "Weekly backup": the words, with the state line, open the Weekly backup page; the switch on the right, behind a thin line, turns it on or off. On opens Android's folder picker, starting in Documents; picking a folder turns it on and starts the first backup. Off stops it at once (`ui/MoreScreen.kt:474-476`, `data/AutoBackup.kt:68-90`).
 - "Restore from a backup", with "Replaces everything here with a backup file. Your current data is saved to Downloads first." Tap: Android's file picker, then the restore dialog (below).
 - "Find my photos again", with "Needs access to all photos, to match them to your finds.", shown only while photos from a restore still need finding. Tap: asks for photo access, then matches photos to gallery pictures (section 3.13).
@@ -971,7 +971,7 @@ Section 4.6 lists every online call found in the code, including two this page l
 
 **What is on it.**
 - "Back" (icon) and "Logs".
-- "Export logs": Android's save dialog, named `collectibles-log-YYYYMMDD-HHMM.txt`. The file starts with the app id, version, phone model, Android version and whether the detailed log is on, then every kept log file (`debug/LogsViewModel.kt:39-65`). Then a snackbar "Logs saved" or "Couldn't save the logs" (English in both languages).
+- "Export logs": Android's save dialog, named `meguri-log-YYYYMMDD-HHMM.txt`. The file starts with the app id, version, phone model, Android version and whether the detailed log is on, then every kept log file (`debug/LogsViewModel.kt:39-65`). Then a snackbar "Logs saved" or "Couldn't save the logs" (English in both languages).
 - "Refresh": reads the log again.
 - "Crash test" (dev build only): crashes the app on purpose, to test crash logging.
 - "What Meguri recorded: errors and crashes, and with Developer mode every page and action. Saved on this phone only. Export them to send with a bug report."
@@ -1181,7 +1181,7 @@ App settings (alerts, theme, language, weekly backup) are not in backups.
 **Restore** (`data/BackupRestore.kt:64-230`).
 1. The file is checked without changing anything: it must be a zip with the database (at most 256 MB; each picture at most 64 MB); the database must open, pass SQLite's integrity and link checks, and have a schema from this version or older (`data/BackupRestore.kt:121-155`). Otherwise the restore is refused with one of the messages in section 2.21.5.
 2. An older backup is opened as its own database, so it is brought up to date the way the app is.
-3. A safety copy of the current data, with photos, is saved to Downloads as `collectibles-pre-restore-YYYYMMDD-HHMMSS.zip`. If it cannot be saved, nothing is replaced (`data/BackupRestore.kt:252-276`). With no data on the phone there is nothing to protect and no copy is made.
+3. A safety copy of the current data, with photos, is saved to Downloads as `meguri-pre-restore-YYYYMMDD-HHMMSS.zip`. If it cannot be saved, nothing is replaced (`data/BackupRestore.kt:252-276`). With no data on the phone there is nothing to protect and no copy is made.
 4. Everything is replaced in one transaction, so a failure leaves the old data.
 5. Pictures carried in the backup are put back as Meguri's copies, for every photo whose picture this phone cannot open.
 6. Any photo still without a picture is searched for in the gallery (relinking), if the app may see all photos. A picture matches by its gallery id and name, else name, folder and size, else date taken and size; two equal matches count as none, so a photo is marked missing rather than showing the wrong picture (`data/PhotoMatcher.kt:12-31`). Without full access, "Find my photos again" shows on Backup and data until it is done; a restart part-way through carries on at the next start.
@@ -1190,7 +1190,7 @@ App settings (alerts, theme, language, weekly backup) are not in backups.
 **Weekly backup** (`data/AutoBackup.kt`).
 - Turning it on keeps access to the chosen folder, makes one backup at once, and schedules one every 7 days (first after 7 days).
 - Each start of the app also makes one if the last success is more than 7 days old, since Android can stop scheduled work for an app left unused.
-- Name: `collectibles-auto-YYYYMMDD-HHMMSS` (the dev build uses `collectibles-dev-auto-`, so it never prunes the real app's backups).
+- Name: `meguri-auto-YYYYMMDD-HHMMSS` (the dev build uses `meguri-dev-auto-`, so it never prunes the real app's backups). Files from before 0.4.0, named `collectibles-auto-` (dev: `collectibles-dev-auto-`), count as the app's own too, and the newest are kept by the date in the name (`data/AutoBackup.kt`).
 - Each backup is read back and checked like a restore before it counts.
 - Then older backups of this app in the folder are deleted down to "Keep", unless the new one has fewer finds than the one before, in which case all are kept.
 - A failed attempt is tried up to three times. Lost access to the folder, or a failure, shows "The last backup failed. Tap to pick the folder again."
@@ -1361,7 +1361,7 @@ All of the following is on the phone. Android's cloud backup and device-to-devic
 | Backup snapshot | `no_backup/export-<id>.db` | Temporary, deleted after each backup |
 | Debug pictures (dev build only) | App's external files, `scan-debug/` and `stamp-debug/` | What the scanner returned and read, for tuning (`ui/ScanCard.kt:216-223`, `ui/NotebookScreen.kt:121-126`) |
 | Camera originals | Gallery, `DCIM/CollectiblesTracker/` | Yours; never deleted by the app |
-| Safety copies before a restore | Downloads, `collectibles-pre-restore-*.zip` | |
+| Safety copies before a restore | Downloads, `meguri-pre-restore-*.zip` | |
 | Backups, weekly backups, exported logs | Where you choose | |
 | Settings | App preferences files `alerts`, `trip`, `backup`, `catalogue`, `look`, `dev_mode`, `whats_new`, `tips`, `onboarding`, `location` | Section 5.1 and 5.4 |
 | App language | Android's per-app language setting | Android 13+ |

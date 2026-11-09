@@ -136,7 +136,7 @@ class AutoBackup @Inject constructor(
     }
 
     private fun prune(dir: DocumentFile) {
-        dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }.sortedByDescending { it.name }.drop(keep).forEach { it.delete() }
+        dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }.sortedByDescending { stampOf(it.name ?: "") }.drop(keep).forEach { it.delete() }
     }
 
     enum class Outcome { Saved, NoFolder, LostAccess, Failed }
@@ -145,10 +145,17 @@ class AutoBackup @Inject constructor(
         const val KEEP = 4
         val KEEP_CHOICES = listOf(2, 4, 8)
         /** The dev build has its own names, so pruning in a shared folder never touches the real app's backups (#42). */
-        fun prefixFor(dev: Boolean) = if (dev) "collectibles-dev-auto-" else "collectibles-auto-"
-        fun ownFile(prefix: String) = Regex("^" + Regex.escape(prefix) + "\\d{8}-\\d{6}( \\(\\d+\\))?(\\.zip)?$")
+        fun prefixFor(dev: Boolean) = if (dev) "meguri-dev-auto-" else "meguri-auto-"
+        /** Before 0.4.0 the files were named collectibles-...; they are still this app's own, so pruning includes them. */
+        private fun oldPrefixFor(dev: Boolean) = if (dev) "collectibles-dev-auto-" else "collectibles-auto-"
+        fun ownFile(dev: Boolean) = Regex(
+            "^(?:" + Regex.escape(prefixFor(dev)) + "|" + Regex.escape(oldPrefixFor(dev)) + ")(\\d{8}-\\d{6})( \\(\\d+\\))?(\\.zip)?$",
+        )
+        private val STAMP = Regex("(\\d{8}-\\d{6})")
+        /** The date and time in a backup's name, for newest-first order across old and new names. */
+        fun stampOf(name: String) = STAMP.find(name)?.value ?: ""
         val PREFIX = prefixFor(BuildConfig.DEBUG)
-        val OWN_FILE = ownFile(PREFIX)
+        val OWN_FILE = ownFile(BuildConfig.DEBUG)
         private const val WORK_WEEKLY = "auto-backup-weekly"
         private const val WORK_NOW = "auto-backup-now"
         private const val KEY_FOLDER = "auto_folder"
