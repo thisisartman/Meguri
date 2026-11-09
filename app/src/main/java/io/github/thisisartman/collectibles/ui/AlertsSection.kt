@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.AlertDialog
@@ -359,33 +360,44 @@ private fun DistanceSlider(
     var pos by remember(value, target) { mutableStateOf(choices.indexOf(value).coerceAtLeast(0).toFloat()) }
     var menu by remember { mutableStateOf(false) }
     val every = stringResource(R.string.alerts_every)
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
+    // 16 dp on every side of the section; 8 dp between its parts
+    Column(Modifier.fillMaxWidth().padding(16.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text(stringResource(R.string.alerts_how_close), style = MaterialTheme.typography.bodyLarge)
-                Box {
+                Box(Modifier.padding(top = 8.dp)) {
+                    // Pill: the same 12 dp inside on both ends (the arrow's own box carries 6 dp of it)
                     Row(
-                        Modifier.padding(top = 6.dp)
-                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
+                        Modifier.clip(androidx.compose.foundation.shape.RoundedCornerShape(50))
                             .background(MaterialTheme.colorScheme.secondaryContainer)
                             .clickable { menu = true }
                             .heightIn(min = 40.dp)
-                            .padding(start = 14.dp, end = 8.dp),
+                            .padding(start = 12.dp, end = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        if (target != null) { TypeDot(target); Spacer(Modifier.width(6.dp)) }
+                        PickerMark(target, MaterialTheme.colorScheme.onSecondaryContainer)
+                        Spacer(Modifier.width(8.dp))
                         Text(
                             target?.let { t -> stringResource(ALERT_TYPES.first { it.first == t }.second) } ?: every,
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                         Icon(Icons.Filled.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
                     }
+                    // Android's menu; the chosen line is highlighted, and a category with its own distance shows it
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(text = { Text(every) }, onClick = { menu = false; onTarget(null) })
+                        val chosen = Modifier.background(MaterialTheme.colorScheme.secondaryContainer)
+                        DropdownMenuItem(
+                            text = { Text(every) }, leadingIcon = { PickerMark(null, MaterialTheme.colorScheme.onSurfaceVariant) },
+                            onClick = { menu = false; onTarget(null) },
+                            modifier = if (target == null) chosen else Modifier,
+                        )
                         ALERT_TYPES.forEach { (t, label) ->
+                            val custom = owns.firstOrNull { it.first == t }?.third
                             DropdownMenuItem(
-                                text = { Text(stringResource(label)) }, leadingIcon = { TypeDot(t) },
+                                text = { Text(stringResource(label)) }, leadingIcon = { PickerMark(t, MaterialTheme.colorScheme.onSurfaceVariant) },
+                                trailingIcon = custom?.let { m -> { Text(radiusText(m), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) } },
                                 onClick = { menu = false; onTarget(t) },
+                                modifier = if (target == t) chosen else Modifier,
                             )
                         }
                     }
@@ -455,6 +467,18 @@ private fun DistanceSlider(
         }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+/** What the category picker shows in front of a name: the layers icon for All categories, else the category's dot,
+ * both in the same 18 dp slot so the names line up. */
+@Composable
+private fun PickerMark(type: ItemType?, tint: androidx.compose.ui.graphics.Color) {
+    Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) {
+        if (type == null) Icon(
+            androidx.compose.ui.res.painterResource(R.drawable.ic_all_categories), contentDescription = null,
+            tint = tint, modifier = Modifier.size(18.dp),
+        ) else Box(Modifier.size(10.dp).clip(androidx.compose.foundation.shape.CircleShape).background(LocalTypeColors.current.of(type)))
+    }
 }
 
 /** Off / Travelling / Always. */

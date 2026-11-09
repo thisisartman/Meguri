@@ -16,6 +16,7 @@
 - Settings list looks as proposed: each section's icon in a round badge, bold names, and a line saying what is set (Alerts: mode, distance, categories, quiet hours; Backup: last weekly backup and how many finds; Catalogue: prefectures and card pictures).
 - Alerts: Proximity alert settings, with the category menu on a pill; standard words: All categories, Default, Custom distances, Revert to default. Alert categories (which categories notify) is now only on or off for each; Keep alerts working is now Keep alerts working in the background.
 - Your own categories moved from the Settings list into Backup and data.
+- Proximity alert settings: All categories has its own icon; the menu highlights the chosen line and shows a category's custom distance; even spacing around the section and inside the pill.
 - Alerts: everything starts at 500 m and station stamps at 200 m. Under the slider, Own distances lists each category with its own distance, one per line (tap one to change it with the slider); the arrow folds the list away.
 - Alerts: Always no longer stops Proximity mode, so a planned trip keeps telling you where to get off. On a phone without Google Play services, Always says why it can't turn on.
 - Alerts: a menu under How close picks what the slider sets: every category, or one category, which then keeps its own distance ("Use the main distance" puts it back).
