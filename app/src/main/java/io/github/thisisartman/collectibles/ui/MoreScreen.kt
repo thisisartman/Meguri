@@ -216,8 +216,11 @@ fun MoreScreen(
             }
         },
         dismissButton = {
-            TextButton(onClick = { askBackup = false; withPhotos = false; saveBackup.launch(backupFileName(photos = false)) }) {
-                Text(stringResource(R.string.backup_without_photos))
+            Row {
+                TextButton(onClick = { askBackup = false }) { Text(stringResource(R.string.cancel)) }
+                TextButton(onClick = { askBackup = false; withPhotos = false; saveBackup.launch(backupFileName(photos = false)) }) {
+                    Text(stringResource(R.string.backup_without_photos))
+                }
             }
         },
     )
