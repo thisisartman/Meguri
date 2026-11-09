@@ -225,7 +225,8 @@ fun MeguriMap(
                 )
                 s.addLayer(
                     CircleLayer(LAYER_GROUP, SRC).withProperties(
-                        PropertyFactory.circleRadius(Expression.literal(if (inCard) 13f else 19f)),
+                        // A little larger: taps on a zoomed-out map kept landing beside the groups (owner's run, 2026-11-10)
+                        PropertyFactory.circleRadius(Expression.literal(if (inCard) 14f else 22f)),
                         PropertyFactory.circleColor(Expression.color(routeColor)),
                         PropertyFactory.circleStrokeWidth(Expression.literal(2f)),
                         PropertyFactory.circleStrokeColor(Expression.color(groupEdge)),
@@ -243,7 +244,11 @@ fun MeguriMap(
                 )
                 s.addLayer(
                     org.maplibre.android.style.layers.SymbolLayer(LAYER, SRC).withProperties(
-                        PropertyFactory.iconImage(Expression.get("img")),
+                        // Zoomed out, the category icon; from street level (14), the picture (owner, 2026-11-10: card
+                        // photos are unreadable zoomed out, and pictures swapping in late made group taps look janky)
+                        PropertyFactory.iconImage(
+                            Expression.step(Expression.zoom(), Expression.get("icon"), Expression.stop(PICTURE_ZOOM, Expression.get("img"))),
+                        ),
                         PropertyFactory.iconAllowOverlap(true), PropertyFactory.iconIgnorePlacement(true),
                         PropertyFactory.iconOffset(Expression.get("off")),
                         PropertyFactory.symbolSortKey(Expression.get("rank")),
@@ -253,7 +258,7 @@ fun MeguriMap(
             }
             // A 48 dp square around the finger, not a single point (owner, 2026-11-07: pins were hard to hit);
             // when several pins fall inside, the one nearest the finger wins
-            val slop = 24f * context.resources.displayMetrics.density
+            val slop = 28f * context.resources.displayMetrics.density
             m.addOnMapClickListener { point ->
                 val p = m.projection.toScreenLocation(point)
                 val box = android.graphics.RectF(p.x - slop, p.y - slop, p.x + slop, p.y + slop)
@@ -273,7 +278,8 @@ fun MeguriMap(
                     hit.hasProperty("point_count") && g != null -> {
                         val zoom = runCatching { m.style?.getSourceAs<GeoJsonSource>(SRC)?.getClusterExpansionZoom(hit) }.getOrNull()
                             ?: (m.cameraPosition.zoom + 2).toInt()
-                        if (interactive) m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(g.latitude(), g.longitude()), zoom.toDouble()), 450)
+                        // An even glide in, a little slower, so the group opening reads as one movement
+                        if (interactive) m.easeCamera(CameraUpdateFactory.newLatLngZoom(LatLng(g.latitude(), g.longitude()), zoom.toDouble()), 650)
                         else tapMap()
                     }
                     else -> tapPin(hit.getStringProperty("id"))
@@ -326,6 +332,7 @@ fun MeguriMap(
                         addStringProperty("id", p.id)
                         // The picture once it is drawn; until then the category icon
                         addStringProperty("img", if (l.key in added) l.key else l.plain.key)
+                        addStringProperty("icon", l.plain.key)
                         // Pictures and collected items draw above the rest
                         addNumberProperty("rank", (if (l.picture != null || l.cardCode != null) 2 else 0) + (if (l.collected) 1 else 0))
                         val (dx, dy) = spread[p.id] ?: (0f to 0f)
@@ -473,6 +480,8 @@ private fun dist2(p: MapPin, h: Pair<Double, Double>) = (p.lat - h.first).let { 
 private fun colorHex(c: Color) = String.format("#%06X", c.toArgb() and 0xFFFFFF)
 
 private const val SRC = "items"
+/** From this zoom (street level) markers show their picture; below it, the category icon. */
+private const val PICTURE_ZOOM = 14f
 private const val LAYER = "items-pins"
 private const val LAYER_GROUP = "items-groups"
 private const val LAYER_GROUP_COUNT = "items-group-count"
