@@ -29,53 +29,33 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in beta.9", "beta.9の新機能",
+            "New in 0.4.0", "0.4.0の新機能",
             listOf(
-                "Card lists: a grid with short names; filter by Collected and Not collected" to "カード一覧：短い名前のグリッドに。取得済み・未取得で絞り込み",
-                "Manhole covers: a cover photo is cut out as a circle; scan a cover and pick its card" to "マンホールのふた：ふたの写真を円形に切り抜き。ふたをスキャンしてカードを選択",
-                "Display picture: a cover, an Ekitag screenshot or a goshuin photo becomes it by itself" to "表示画像：ふた・エキタグ・御朱印の写真が自動で表示画像に",
+                "Map: every pin is its picture, or its category icon; grey until collected. Crowded places show how many; tap to zoom in" to "地図：ピンは写真またはカテゴリーのアイコン。未取得はグレー。多い場所は数で表示、タップで拡大",
+                "Collection check: choose a category and a prefecture, then swipe right for each one you have, left to skip" to "コレクションチェック：カテゴリーと都道府県を選び、持っているものは右へ、まだのものは左へスワイプ",
+                "Scan a notebook page: Meguri finds each stamp, cleans it and reads the station; choose a date or leave it as had before Meguri" to "手帳のページをスキャン：スタンプを見つけて整え、駅名を読み取り。日付を選ぶか、Meguri以前のものとして保存",
+                "Scan a card: when the code can't be read, Retake photo or Type code" to "カードのスキャン：コードが読めないときは撮り直しか入力",
+                "Search: any part of a card code, either language, nearest first, in every search box" to "検索：カード番号の一部、どちらの言語でも、近い順。すべての検索で",
+                "Stations: a station's stamp and its Ekitag are one tile; the badge fills in when you have the Ekitag" to "駅：駅スタンプとエキタグを1つのタイルに。エキタグを持つとバッジが塗られます",
+                "Remove: an item you added, or a catalogue item from your collection (More options on its page)" to "削除：自分で追加したアイテム、またはコレクションから外す（アイテムの「その他のオプション」）",
+                "Photos: name an Other photo; Remove asks first" to "写真：「その他」の写真に名前を。削除の前に確認",
             ),
         ),
         Section(
-            "New in beta.8", "beta.8の新機能",
+            "Settings", "設定",
             listOf(
-                "Scan a card: + → Scan. Meguri straightens the photo, reads the card code and finds the card" to "カードをスキャン：＋→スキャン。写真を補正し、コードを読み取ってカードを探します",
-                "Card pictures: Settings → Catalogue downloads each card's picture onto this phone; tiles show it greyed until collected" to "カードの画像：設定→カタログで各カードの画像を端末にダウンロード。未取得はグレーで表示",
-            ),
-        ),
-        Section(
-            "Also new since beta.6", "beta.6からの新機能",
-            listOf(
-                "Opening: a map of Japan that flies to you and what is near" to "起動：日本地図から現在地と近くのものへ",
-                "My book: one tile per type, each opens its collections with progress rings" to "マイブック：種類ごとのタイル。開くと各コレクションの進み具合",
-                "Share to Meguri: share photos from your gallery, grouped by place and date, then pick what each is" to "Meguriに共有：ギャラリーの写真を共有すると、場所と日付でまとめて登録",
-                "Edit details: names, place, hours, notes and position of any item; kept through catalogue updates" to "詳細の編集：名前・場所・時間・メモ・位置。カタログ更新でも残ります",
-                "Photo suggestions: a photo taken near something you haven't collected offers to attach itself (Settings, Backup and data; off until you turn it on)" to "写真の提案：未取得のものの近くで撮った写真を追加するよう提案（設定の「バックアップとデータ」でオン）",
-                "Photos: tap one to see it large, then full screen with zoom" to "写真：タップで大きく、全画面でズームも",
-                "Timeline: everything you collected, by day (My book)" to "タイムライン：集めたものを日ごとに（マイブック）",
-                "Filters: Collected / Not collected in each list" to "絞り込み：各リストで取得済み・未取得",
-                "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
-                "Menu: on My book (⋮); the search bar is only search" to "メニュー：マイブックの「⋮」に。検索バーは検索だけに",
-                "Ekitag: Niigata's Ekitag stations listed" to "エキタグ：新潟のエキタグ駅を追加",
-                "Stations: JR East stamps for Saitama and Tokyo (217 stations, 19 lines); the Joetsu Shinkansen from Tokyo" to "駅：埼玉・東京のJR東日本の駅スタンプ（217駅・19路線）、上越新幹線を東京から",
-                "Roadside stations: a new type, 64 michi-no-eki stamps in Niigata, Saitama and Tokyo" to "道の駅：新しい種類。新潟・埼玉・東京の64駅のスタンプ",
-                "Dam cards: Saitama and Tokyo added (14)" to "ダムカード：埼玉・東京を追加（14）",
-                "Photos on an item page: smaller squares, all on one line" to "アイテムの写真：小さめの枠で1行に",
+                "Appearance: Phone, Light or Dark; Meguri or Wallpaper colours" to "表示：端末・ライト・ダーク、Meguriか壁紙の色",
+                "Alerts: Off, Travelling or Always; one distance slider, with custom distances for any category" to "通知：オフ・移動中・常に。距離のスライダー1つ、カテゴリーごとのカスタム距離も",
+                "Backup and data: weekly backup with or without photos, how many to keep, Photos kept in Meguri, your categories" to "バックアップとデータ：毎週のバックアップ（写真あり・なし、残す数）、Meguriに保存した写真、自分のカテゴリー",
+                "About: credits with links to every source and licence, and a Privacy page" to "情報：すべての出典とライセンスへのリンク、プライバシー",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "Niigata: station order and positions checked; Kamitokoro added" to "新潟：駅の順番と位置を確認、上所駅を追加",
-                "Photos: a picture that can't be read shows the seal, not a grey box" to "写真：読めない写真は灰色ではなく印で表示",
-                "Pin card: icons all one size" to "ピンのカード：アイコンを同じ大きさに",
-            ),
-        ),
-        Section(
-            "Faster", "高速化",
-            listOf(
-                "Opening: the catalogue isn't read again on every start" to "起動：毎回カタログを読み直さなくなりました",
-                "Loading a region: written in one go" to "地域の読み込み：一度にまとめて保存",
+                "Dates look the same everywhere" to "日付の表示をアプリ全体でそろえました",
+                "Work started in Settings (backups, card pictures) keeps going when you leave" to "設定で始めた作業（バックアップ・カード画像）は画面を離れても続きます",
+                "Distances on Nearby update as you move" to "「近く」の距離は移動に合わせて更新",
             ),
         ),
     )
