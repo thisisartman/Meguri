@@ -83,8 +83,10 @@ class MoreViewModel @Inject constructor(
     val auto: AutoBackup,
     val log: FileLog,
     private val db: CollectiblesDb,
+    /** Runs long work for the life of the app, so leaving Settings does not cancel it (finding 32). */
+    val work: SettingsWork,
 ) : ViewModel() {
-    fun run(block: suspend () -> Unit) { viewModelScope.launch { block() } }
+    fun run(block: suspend () -> Unit) { work.launch(block) }
 
     /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */
     /** Prefecture -> how many items of each category are loaded (Catalogue pages). */
@@ -162,17 +164,14 @@ class MoreViewModel @Inject constructor(
     suspend fun cardCodes(): List<String> = db.dao().allItems()
         .filter { it.type == ItemType.MANHOLE_CARD }.mapNotNull { it.code }
 
-    /** Card pictures being downloaded: done and total, or null when idle. Survives leaving the screen. */
-    val cardProgress = kotlinx.coroutines.flow.MutableStateFlow<Pair<Int, Int>?>(null)
+    /** Card pictures being downloaded: done and total, or null when idle. Held by [work], so it survives leaving Settings. */
+    val cardProgress = work.cardProgress
 
-    fun downloadCards(context: android.content.Context, onDone: (Int, Int) -> Unit) {
-        if (cardProgress.value != null) return
-        viewModelScope.launch {
-            cardProgress.value = 0 to 0
-            val (ok, failed) = CardPictures.download(context.applicationContext, cardCodes()) { d, t -> cardProgress.value = d to t }
+    fun downloadCards(context: android.content.Context) {
+        val app = context.applicationContext
+        work.downloadCards({ progress -> CardPictures.download(app, cardCodes(), progress) }) { ok, failed ->
             log.i("Cards", "Card pictures: $ok downloaded, $failed failed")
-            cardProgress.value = null
-            onDone(ok, failed)
+            work.say(app.getString(SettingsWork.cardsDoneMessage(ok, failed), ok, failed))
         }
     }
 }
@@ -187,27 +186,46 @@ fun MoreScreen(
     val scope = rememberCoroutineScope()
     val failText = stringResource(R.string.more_backup_failed)
 
-    var withPhotos by remember { mutableStateOf(false) }
+    // The work below runs in the app's scope (finding 32): it reads words from the app, not this page, and its result
+    // goes to the app frame's snackbar, so both still work after Settings has closed
+    val app = context.applicationContext
+    // Back up now asks each time, with photos or without (finding 31); saveable, so the file picker can come back to it
+    var withPhotos by rememberSaveable { mutableStateOf(true) }
+    var askBackup by remember { mutableStateOf(false) }
     val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         val photos = withPhotos
         vm.run {
             val msg = runCatching { vm.io.exportBackup(uri, photos) }
                 .map {
-                    val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)?.name
-                    val counts = countsText(context.resources, it.finds, it.items)
-                    if (name != null) context.getString(R.string.more_backup_done_named, name, counts) else context.getString(R.string.more_backup_done, counts)
+                    val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(app, uri)?.name
+                    val counts = countsText(app.resources, it.finds, it.items)
+                    if (name != null) app.getString(R.string.more_backup_done_named, name, counts) else app.getString(R.string.more_backup_done, counts)
                 }
                 .getOrElse { vm.log.e("Backup", "Export failed", it); failText }
-            scope.launch { snackbar.showSnackbar(msg) }
+            vm.work.say(msg)
         }
     }
+    if (askBackup) AlertDialog(
+        onDismissRequest = { askBackup = false },
+        title = { Text(stringResource(R.string.more_backup)) },
+        text = { Text(stringResource(R.string.backup_ask_text)) },
+        confirmButton = {
+            TextButton(onClick = { askBackup = false; withPhotos = true; saveBackup.launch(backupFileName(photos = true)) }) {
+                Text(stringResource(R.string.backup_with_photos))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = { askBackup = false; withPhotos = false; saveBackup.launch(backupFileName(photos = false)) }) {
+                Text(stringResource(R.string.backup_without_photos))
+            }
+        },
+    )
     val openCatalog = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
         vm.run {
             val r = runCatching { vm.io.importCatalog(uri) }
-            val msg = catalogueMessage(context, r)
-            scope.launch { snackbar.showSnackbar(msg) }
+            vm.work.say(catalogueMessage(app, r))
         }
     }
     var pendingRestore by remember { mutableStateOf<PendingRestore?>(null) }
@@ -223,15 +241,15 @@ fun MoreScreen(
         vm.run {
             runCatching { vm.restore.restore(info) }
                 .onSuccess {
-                    Toast.makeText(context, restoreDone.format(countsText(context.resources, it.finds, it.items)), Toast.LENGTH_LONG).show()
+                    Toast.makeText(app, restoreDone.format(countsText(app.resources, it.finds, it.items)), Toast.LENGTH_LONG).show()
                     // Back to a fresh start: no screen may still point at a row that is gone.
-                    context.packageManager.getLaunchIntentForPackage(context.packageName)?.let { launch ->
-                        context.startActivity(Intent.makeRestartActivityTask(launch.component))
+                    app.packageManager.getLaunchIntentForPackage(app.packageName)?.let { launch ->
+                        app.startActivity(Intent.makeRestartActivityTask(launch.component))
                     }
                 }
                 .onFailure {
                     vm.log.e("Restore", "Restore failed", it)
-                    snackbar.showSnackbar(restoreFailed)
+                    vm.work.say(restoreFailed)
                 }
         }
     }
@@ -248,7 +266,7 @@ fun MoreScreen(
                 .onSuccess { pendingRestore = it }
                 .onFailure {
                     vm.log.w("Restore", "Backup refused: ${it.message}", it)
-                    snackbar.showSnackbar(
+                    vm.work.say(
                         when (it) {
                             is BackupError.NewerVersion -> newer
                             is BackupError.NotABackup -> notBackup
@@ -463,14 +481,8 @@ fun MoreScreen(
             S_DATA -> {
                 // Owner, 2026-11-09: weekly backup as a row with its own switch; its details one tap in. Photos grouped.
                 SectionTitle(stringResource(R.string.backup_section))
-                MoreRow(
-                    stringResource(R.string.more_backup),
-                    stringResource(if (vm.auto.includePhotos) R.string.backup_now_photos else R.string.backup_now_plain),
-                ) {
-                    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
-                    withPhotos = vm.auto.includePhotos
-                    saveBackup.launch(if (withPhotos) "collectibles-backup-photos-$stamp.zip" else "collectibles-backup-$stamp.zip")
-                }
+                // Its own choice each time, not the weekly backup's "Include photos" (finding 31)
+                MoreRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub)) { askBackup = true }
                 SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
                     if (on) pickFolder.launch(STARTING_FOLDER) else { vm.auto.disable(); autoTick++ }
                 }
@@ -555,18 +567,29 @@ fun MoreScreen(
                 val have by CardPictures.have.collectAsState()
                 var total by remember { mutableStateOf<Int?>(null) }
                 LaunchedEffect(Unit) { total = vm.cardCodes().size }
-                val doneText = stringResource(R.string.cards_done)
+                val allHere = total != null && total!! > 0 && have.size >= total!!
+                val allHereText = stringResource(R.string.cards_all_here)
                 MoreRow(
                     stringResource(R.string.cards_download),
                     progress?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
-                        ?: if (total != null && total!! > 0 && have.size >= total!!) stringResource(R.string.cards_all, have.size)
+                        ?: if (allHere) stringResource(R.string.cards_all, have.size)
                         else stringResource(R.string.cards_download_sub, have.size, total ?: 0),
                 ) {
-                    vm.downloadCards(ctx) { ok, failed -> scope.launch { snackbar.showSnackbar(doneText.format(ok, failed)) } }
+                    // Every picture already here: say so, rather than "0 downloaded, 0 not found" (finding 40)
+                    if (allHere && progress == null) scope.launch { snackbar.showSnackbar(allHereText) } else vm.downloadCards(ctx)
                 }
-                if (have.isNotEmpty() && progress == null) MoreRow(stringResource(R.string.cards_remove), null) {
-                    CardPictures.removeAll(ctx)
-                }
+                var confirmRemove by remember { mutableStateOf(false) }
+                if (have.isNotEmpty() && progress == null) MoreRow(stringResource(R.string.cards_remove), null) { confirmRemove = true }
+                // Asks first (finding 39)
+                if (confirmRemove) AlertDialog(
+                    onDismissRequest = { confirmRemove = false },
+                    title = { Text(stringResource(R.string.cards_remove_title)) },
+                    text = { Text(stringResource(R.string.cards_remove_text)) },
+                    confirmButton = {
+                        TextButton(onClick = { confirmRemove = false; CardPictures.removeAll(ctx) }) { Text(stringResource(R.string.remove)) }
+                    },
+                    dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(android.R.string.cancel)) } },
+                )
                 Text(
                     stringResource(R.string.settings_catalogue_note),
                     Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
@@ -584,7 +607,7 @@ fun MoreScreen(
                     )
                 }
                 MoreRow(stringResource(R.string.more_import), stringResource(R.string.more_import_sub)) {
-                    openCatalog.launch(arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*"))
+                    openCatalog.launch(CATALOGUE_TYPES)
                 }
             }
             S_HELP -> {
@@ -707,6 +730,15 @@ private fun SectionLine(title: String, sub: String, icon: Int, last: Boolean = f
         )
     }
     if (!last) HorizontalDivider(Modifier.padding(start = 74.dp, end = 18.dp), color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+/** The file types the catalogue picker offers (Settings and the onboarding). */
+internal val CATALOGUE_TYPES = arrayOf("text/csv", "text/comma-separated-values", "text/plain", "application/octet-stream", "*/*")
+
+/** The suggested name for a Back up now file; one with photos says so. */
+private fun backupFileName(photos: Boolean): String {
+    val stamp = SimpleDateFormat("yyyyMMdd-HHmm", Locale.US).format(Date())
+    return if (photos) "collectibles-backup-photos-$stamp.zip" else "collectibles-backup-$stamp.zip"
 }
 
 /** The picker's storage root is refused by Android, so open it somewhere it accepts. */

@@ -200,6 +200,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         if (r == SnackbarResult.ActionPerformed) vm.undo(l.findId) else vm.clearLogged()
     }
 
+    // Results of work that outlives its page (backup, restore, CSV, card pictures; finding 32)
+    LaunchedEffect(Unit) { vm.work.messages.collect { snackbar.showSnackbar(it) } }
+
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
     val topLevel = route == null || route in setOf(NEARBY, BOOK)

@@ -185,6 +185,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val onboarding = rememberOnboardingState()
     val ctxOnb = androidx.compose.ui.platform.LocalContext.current
     val prefectures = remember { PrefectureAsset.all(ctxOnb) }
+    // "I have a catalogue file" opens the file picker straight away, the same CSV load as in Settings (finding 36).
+    // Registered here, not in the onboarding branch, which leaves the screen once the catalogue has loaded
+    val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+    val openCatalog = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val app = ctxOnb.applicationContext
+        more.run { more.work.say(catalogueMessage(app, runCatching { more.io.importCatalog(uri) })) }
+    }
     // The picker and closing sheet carry on after the catalogue has loaded (#81 O3)
     val inOnboarding = noCatalogue || onboarding.afterLoad
     // Onboarding: the sheet sits at its content's height (measured), up to the step's cap, and snaps there
@@ -241,14 +249,13 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 if (noCatalogue) {
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
-                    val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
                     OnboardingSheet(
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         loadCounts = { more.io.bundledPrefectures() },
                         onLoad = { regions -> more.io.importBundled(regions) },
                         // Already have some: on to the picker of what you have (#81 O3)
                         onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
-                        onLoadFile = { nav.openMore() },
+                        onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },
                         onPermissionsAnswered = { vm.refreshPosition() },
                         // Measured for the sheet's height; capped, so the region list scrolls and Load stays in view
                         modifier = Modifier.heightIn(max = onbMax - 40.dp).onSizeChanged { onbContentPx = it.height },

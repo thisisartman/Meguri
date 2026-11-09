@@ -70,6 +70,8 @@ class MainViewModel @Inject constructor(
     private val trips: TripStore,
     /** The app log; screens use it for one-line detailed entries (screen changes, scans). */
     val log: io.github.thisisartman.collectibles.debug.FileLog,
+    /** Long work started from Settings or the onboarding; the app frame shows its messages. */
+    val work: SettingsWork,
 ) : ViewModel() {
 
     /** Null until the database has answered once (#78). One query: "loaded" and the rows arrive together. */
