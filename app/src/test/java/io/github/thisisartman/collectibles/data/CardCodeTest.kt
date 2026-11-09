@@ -53,4 +53,19 @@ class CardCodeTest {
     @Test fun aCardOnItsRightSideTurnsBack() = assertEquals(270, CardCode.turnToTopRight(780f, 500f, 840f, 600f))
 
     @Test fun aCardOnItsLeftSideTurnsForward() = assertEquals(90, CardCode.turnToTopRight(60f, 100f, 840f, 600f))
+
+    // S23 run, 2026-11-10: Nagaoka's Albirex BB card 15-202-C001 was read as 15-207-C001, "not in your catalogue"
+    private val nagaoka = setOf("15-202-A001", "15-202-B001", "15-202-C001", "15-202-D001", "15-100-A001", "11-207-C001")
+
+    @Test fun aMisreadDigitSuggestsTheCardOneCharacterAway() =
+        assertEquals("15-202-C001", CardCode.nearest("15-207-C001", nagaoka).first())
+
+    @Test fun nearestKeepsTheCardLetterBeforeOtherNumbers() =
+        // One character off in the town beats one off in the card letter, which beats two off
+        assertEquals(listOf("15-202-C001", "11-207-C001"), CardCode.nearest("15-207-C001", nagaoka).take(2))
+
+    @Test fun nearestOffersAtMostThreeAndNothingFarAway() {
+        assertEquals(true, CardCode.nearest("15-207-C001", nagaoka).size <= 3)
+        assertEquals(emptyList<String>(), CardCode.nearest("13-999-Z999", nagaoka))
+    }
 }

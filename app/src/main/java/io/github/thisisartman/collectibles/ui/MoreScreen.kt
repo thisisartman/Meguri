@@ -574,7 +574,7 @@ fun MoreScreen(
                 val allHereText = stringResource(R.string.cards_all_here)
                 MoreRow(
                     stringResource(R.string.cards_download),
-                    progress?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
+                    progress?.takeIf { it.second > 0 }?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
                         ?: if (allHere) stringResource(R.string.cards_all, have.size)
                         else stringResource(R.string.cards_download_sub, have.size, total ?: 0),
                 ) {

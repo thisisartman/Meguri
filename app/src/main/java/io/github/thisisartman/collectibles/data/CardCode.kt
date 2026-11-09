@@ -52,6 +52,22 @@ object CardCode {
     }
 
     /**
+     * Known codes close to a [code] that is not in the catalogue, for "Did you mean ...?": at most three, closest first.
+     * The reader misreads a digit now and then (S23 run, 2026-11-10: 15-202-C001 came back as 15-207-C001). Each
+     * differing character costs 1 (the card letter 2, it is printed large and rarely misread), up to 2 in all; ties
+     * keep the same prefecture, then the same town.
+     */
+    fun nearest(code: String, known: Set<String>, max: Int = 3): List<String> {
+        if (code.length != 11) return emptyList()
+        fun cost(k: String): Int = if (k.length != code.length) 99 else
+            k.indices.sumOf { i -> if (k[i] == code[i]) 0 else if (i == 7) 2 else 1 }
+        return known.asSequence().filter { it != code }.map { it to cost(it) }.filter { it.second <= 2 }
+            .sortedWith(compareBy<Pair<String, Int>> { it.second }.thenBy { if (it.first.take(2) == code.take(2)) 0 else 1 }
+                .thenBy { if (it.first.take(6) == code.take(6)) 0 else 1 }.thenBy { it.first })
+            .map { it.first }.take(max).toList()
+    }
+
+    /**
      * A code typed by hand, however it was typed ("15-202-a001", "15202A001", "15 202 A001"), as `NN-NNN-ANNN`;
      * null if it can't be one.
      */

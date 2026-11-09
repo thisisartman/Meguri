@@ -73,6 +73,13 @@ class ShareGroupingTest {
         assertEquals("goshuin", ShareGrouping.suggestions(rows, null, fallback = yahiko).single().first.item.id)
     }
 
+    /** S23 run, 2026-11-10: a scan has no position; 2 km around you held nothing ("Nothing here. Try a search"). */
+    @Test fun nearYouReachesPastTwoKilometres() {
+        val rows = listOf(item("station", ItemType.EKI_STAMP, niitsu), item("far", ItemType.MANHOLE_CARD, tsubame))
+        // From the museum the Niitsu station is between 2 and 3 km away; Tsubame much further, still within 50 km
+        assertEquals(listOf("station", "far"), ShareGrouping.suggestions(rows, null, fallback = museum).map { it.first.item.id })
+    }
+
     @Test fun atOneSpotTheStampComesBeforeItsEkitag() {
         // The Ekitag row sits on the station's own position (2026-11-08 catalogue); listed first, it must still lose
         val rows = listOf(item("tag", ItemType.EKITAG, niitsu), item("stamp", ItemType.EKI_STAMP, niitsu))

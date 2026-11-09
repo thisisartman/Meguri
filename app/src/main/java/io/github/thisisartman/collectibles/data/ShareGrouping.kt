@@ -53,6 +53,9 @@ object ShareGrouping {
         types: Set<ItemType>? = null, maxM: Double = 2_000.0, limit: Int = 8,
     ): List<Pair<ItemRow, Double>> {
         val at = centre ?: fallback ?: return emptyList()
+        // Near you (no position on the photo, as for a scan): 2 km around you is often empty, the owner's nearest
+        // station is 3 km away ("Nothing here", S23 run 2026-11-10); look 50 km out, nearest first
+        val reach = if (centre == null) maxOf(maxM, 50_000.0) else maxM
         return rows.asSequence()
             .filter { !it.noneHere && (types == null || it.item.type in types) }
             .mapNotNull { r ->
@@ -60,7 +63,7 @@ object ShareGrouping {
                 val lng = r.item.lng ?: return@mapNotNull null
                 r to distanceM(at.first, at.second, lat, lng)
             }
-            .filter { it.second <= maxM }
+            .filter { it.second <= reach }
             // At one spot a station's stamp and its Ekitag tie; a shared photo is more likely the paper stamp
             .sortedWith(compareBy({ it.second }, { it.first.item.type == ItemType.EKITAG }))
             .take(limit)

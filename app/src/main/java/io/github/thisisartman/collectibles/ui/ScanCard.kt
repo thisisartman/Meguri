@@ -251,7 +251,12 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
             if (page1 !== page0) page1?.recycle()
             page0?.recycle()
-            val alike = code?.let { c -> CardCode.lookalikes(c, known).mapNotNull { k -> cards.firstOrNull { it.item.code == k } } } ?: emptyList()
+            // Look-alike letters for a card that was found; for a code that isn't in the catalogue, the closest codes, as
+            // a digit is sometimes misread (S23 run, 2026-11-10: 15-202-C001 read as 15-207-C001)
+            val alike = code?.let { c ->
+                (if (match != null) CardCode.lookalikes(c, known) else CardCode.nearest(c, known))
+                    .mapNotNull { k -> cards.firstOrNull { it.item.code == k } }
+            } ?: emptyList()
             vm.log.d("Scan", "Result: ${match?.item?.id ?: "no match"}, cover $cover, card without a code $isCard, ${alike.size} look-alikes")
             result = Scan(photo, code, match, cover, near, alike)
             reading = false
@@ -336,8 +341,10 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                     if (row.collected) vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
                     else vm.collectWithPhoto(context, row, row.item.displayName(ja), s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
                 }) { Text(stringResource(if (row.collected) R.string.scan_add_photo else R.string.scan_collect)) }
-                // No code read: the person can usually read it, so type it (owner, 2026-11-09)
-                else if (s.code == null && !s.cover) TextButton(onClick = {
+                // No code read, or one that isn't in the catalogue (often a misread digit): the person can usually read
+                // it, so type it (owner, 2026-11-09; for a misread code, owner 2026-11-10: "there needs to be an option
+                // to add code")
+                else if (!s.cover) TextButton(onClick = {
                     result = null; typing = s
                     if (!tips.getBoolean("code_tutorial_seen", false)) tutorial = true
                 }) { Text(stringResource(R.string.scan_type_code)) }
@@ -353,6 +360,12 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             dismissButton = {
                 if (row != null) TextButton(onClick = { result = null; nav.openItem(row.item.id) }) { Text(stringResource(R.string.scan_open)) }
                 else if (s.code == null && !s.cover) TextButton(onClick = { result = null; retake++ }) { Text(stringResource(R.string.scan_retake)) }
+                // A code that isn't in the catalogue: Pick by hand stays beside Type code
+                else if (s.code != null) TextButton(onClick = {
+                    result = null
+                    vm.openShare(listOf(s.photo), io.github.thisisartman.collectibles.data.PhotoKind.STAMP)
+                    nav.navigate("share")
+                }) { Text(stringResource(R.string.scan_pick)) }
                 else TextButton(onClick = { result = null }) { Text(stringResource(android.R.string.cancel)) }
             },
         )

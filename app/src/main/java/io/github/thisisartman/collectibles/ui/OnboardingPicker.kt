@@ -3,6 +3,7 @@ package io.github.thisisartman.collectibles.ui
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -78,6 +79,7 @@ fun OnboardingPicker(
     distance: (ItemRow) -> Double?,
     onDone: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
+    origin: Any? = null,
 ) {
     val ja = isJapanese()
     val tick = rememberTick()
@@ -86,7 +88,7 @@ fun OnboardingPicker(
     var open by remember { mutableStateOf<String?>(null) }
     val tiles = remember { mutableStateMapOf<String, Rect>() }
     val places = remember(rows) { pickerPlaces(rows.filter { !it.collected }) }
-    val shown = remember(places, query.text, nearest) {
+    val shown = remember(places, query.text, nearest, if (nearest) origin else null) {
         val q = query.text.trim()
         // The shared search; while typing, the best match comes first (ties keep A to Z or nearest)
         fun score(p: PickerPlace) = p.rows.maxOf { r -> r.item.searchScore(q) }
@@ -94,6 +96,11 @@ fun OnboardingPicker(
         val sorted = sortPlaces(hits, ja, nearest, distance)
         if (q.isEmpty()) sorted else sorted.sortedByDescending { score(it) }
     }
+    // Back to the top whenever the order or the search changes. The grid otherwise keeps the old first tile in view:
+    // switching to Nearest kept Aburumagawa Dam (first A to Z) on screen, now 30 km down the list, and Urasa (2.5 km,
+    // first) sat above it out of sight (owner's S23 run, 2026-11-10; emulator log showed the list itself was right)
+    val gridState = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    androidx.compose.runtime.LaunchedEffect(nearest, query.text, if (nearest) origin else null) { gridState.scrollToItem(0) }
     val byId = remember(rows) { rows.associateBy { it.item.id } }
     androidx.compose.runtime.LaunchedEffect(shown) { state.pickerShown = shown.map { it.first } }
     // Back closes an open card; with none open, Nearby's handler keeps you in the picker (picks aren't lost)
@@ -101,8 +108,10 @@ fun OnboardingPicker(
     // After a pick the keyboard stays up, so one backspace clears the selected text for the next name (owner)
     val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val keyboard = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
+    val focus = androidx.compose.ui.platform.LocalFocusManager.current
 
-    Column(modifier.fillMaxWidth()) {
+    // Above the keyboard while typing, so Done stays in reach (owner's S23 run, 2026-11-10)
+    Column(modifier.fillMaxWidth().imePadding()) {
         Text(stringResource(R.string.onb_have_title), style = MaterialTheme.typography.headlineSmall)
         Text(stringResource(R.string.onb_have_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(8.dp))
@@ -124,13 +133,14 @@ fun OnboardingPicker(
         Spacer(Modifier.height(8.dp))
         BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             val boxW = with(LocalDensity.current) { maxWidth.toPx() }
-            LazyVerticalGrid(GridCells.Fixed(4), Modifier.fillMaxSize()) {
+            LazyVerticalGrid(GridCells.Fixed(4), Modifier.fillMaxSize(), state = gridState) {
                 items(shown, key = { it.key }) { p ->
                     val name = p.first.item.displayName(ja)
                     val done = p.rows.all { it.item.id in state.added }
                     Column(
                         Modifier.onGloballyPositioned { tiles[p.key] = it.boundsInParent() }
-                            .clickable { tick(); open = if (open == p.key) null else p.key }
+                            // Tapping a place puts the keyboard away, so its card and the grid show in full
+                            .clickable { tick(); focus.clearFocus(); keyboard?.hide(); open = if (open == p.key) null else p.key }
                             .padding(vertical = 6.dp, horizontal = 2.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -172,10 +182,12 @@ fun OnboardingPicker(
                         state.added = state.added.filter { it !in place.rows.map { r -> r.item.id } } + ids
                         open = null
                         tick()
-                        // Select the whole search text, so one backspace clears it for the next name (owner)
-                        query = query.copy(selection = TextRange(0, query.text.length))
-                        searchFocus.requestFocus()
-                        keyboard?.show()
+                        // Clear the search and put the keyboard away, so the grid and Done are in view (owner's S23
+                        // run, 2026-11-10: the keyboard covered half the grid and Done, and the old text stayed;
+                        // replaces the earlier keep-the-keyboard-up rule)
+                        query = TextFieldValue("")
+                        focus.clearFocus()
+                        keyboard?.hide()
                     },
                 )
             }
@@ -192,17 +204,9 @@ fun OnboardingPicker(
                     }
                 }
             }
-            Column(horizontalAlignment = Alignment.End) {
-                Text(pluralStringResource(R.plurals.onb_added, state.added.size, state.added.size), style = MaterialTheme.typography.labelLarge)
-                // The last one added, by name and kind, so the stack says what it holds (owner's review)
-                state.added.lastOrNull()?.let { byId[it] }?.let { r ->
-                    Text(
-                        r.item.displayName(ja) + " · " + stringResource(r.item.type.label()),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
-                        overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 220.dp),
-                    )
-                }
-            }
+            // Only the count: the last item's name beside it changed length and cut-off with every pick (owner's S23
+            // run, 2026-11-10); the circles already say what kinds were added
+            Text(pluralStringResource(R.plurals.onb_added, state.added.size, state.added.size), style = MaterialTheme.typography.labelLarge)
         }
         Button(onClick = { onDone(state.added) }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
             Text(stringResource(if (state.added.isEmpty()) R.string.onb_have_skip else R.string.onb_have_done))

@@ -230,6 +230,13 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         }
     }
     LaunchedEffect(picking) { if (picking) runCatching { sheet.bottomSheetState.expand() } }
+    // When the onboarding ends the sheet settles to its resting height, so the map shows (owner's S23 run, 2026-11-10:
+    // it stayed fully up from the picker)
+    var wasOnboarding by remember { mutableStateOf(inOnboarding) }
+    LaunchedEffect(inOnboarding) {
+        if (wasOnboarding && !inOnboarding) runCatching { sheet.bottomSheetState.partialExpand() }
+        wasOnboarding = inOnboarding
+    }
     val sheetDown = sheet.bottomSheetState.currentValue == androidx.compose.material3.SheetValue.PartiallyExpanded
     val pins = if (picking) remember(onboarding.pickerShown) { onboarding.pickerShown.mapNotNull { it.toPin() } } else pinsNearby
     LaunchedEffect(picking, sheetDown, onboarding.pickerShown) {
@@ -249,6 +256,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     val ctxPick = androidx.compose.ui.platform.LocalContext.current
                     OnboardingPicker(
                         onboarding, rows, { vm.distanceTo(it) },
+                        // Where you are, to about 1 km: Nearest sorts again when it moves that far (a first rough fix
+                        // sorted Tokamachi first and never updated, owner's S23 run 2026-11-10)
+                        origin = here.fix?.let { Math.round(it.lat * 100) to Math.round(it.lng * 100) },
                         onDone = { ids ->
                             if (ids.isEmpty()) { onboarding.step = OnboardingStep.START; onboarding.already = false }
                             else vm.markBeforeApp(ids.toSet()) { n ->
@@ -436,7 +446,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             var pinAt by remember { mutableStateOf<androidx.compose.ui.geometry.Offset?>(null) }
             MeguriMap(
                 pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
-                onPinTap = { tick(); picked = it }, onMapTap = { picked = null; focus.clearFocus(); listOpen = false },
+                onPinTap = { tick(); picked = it }, onMapTap = {
+                    picked = null; focus.clearFocus(); listOpen = false
+                    // A tap on the map closes "N added to My book" (it stayed up while the owner used the map, 2026-11-10)
+                    if (onboarding.step == OnboardingStep.FINISHED) { onboarding.step = OnboardingStep.START; onboarding.already = false }
+                },
                 anchor = pickedRow?.item?.lat?.let { lat -> pickedRow.item.lng?.let { lat to it } }, onAnchorScreen = { pinAt = it },
                 recenter = recenter,
                 fitTick = fitTick,

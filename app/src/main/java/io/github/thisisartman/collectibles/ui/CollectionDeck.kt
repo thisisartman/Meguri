@@ -160,7 +160,8 @@ private fun CardPicturesOffer(cards: List<ItemRow>, more: MoreViewModel = androi
     ) {
         Row(Modifier.padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                progress?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) } ?: stringResource(R.string.check_cards_missing),
+                // "0 of 0" until the list of codes is in: say nothing new until there is a total (S23 run, 2026-11-10)
+                progress?.takeIf { it.second > 0 }?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) } ?: stringResource(R.string.check_cards_missing),
                 Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer,
             )
             if (progress == null) TextButton(onClick = { more.downloadCards(context) }, modifier = Modifier.heightIn(min = 48.dp)) {
