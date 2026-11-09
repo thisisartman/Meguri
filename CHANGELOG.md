@@ -1,6 +1,7 @@
 # Changelog
 
 ## Next: 0.5 (the remaining big features; 0.6 will be the first public test beta)
+- To do, from the owner's S23 run (2026-11-10, full list in PROGRESS.md): one station page for a stamp and its Ekitag; "Type code" and closest codes when a scanned code isn't found; softer transitions everywhere; What's new in a bordered box; picker fixes; category icons on the zoomed-out map.
 - Nearby: the category filter is the same pill and menu as on Alerts ("All categories" or one category, with its colour dot), in place of a row of chips that scrolled. Search results use it too. Checked on the Poco and the S23.
 - Tested from first open on the S23 (dev copy, recorded): 7 things to fix, listed in Resources/Verification/s23-run-2026-11-09/FINDINGS.md; the picker skip turned out to be the test helper tapping "I'm starting fresh" (the picker opens), the rest fixed:
   - Nearby: Back clears a typed search before it leaves the app.
