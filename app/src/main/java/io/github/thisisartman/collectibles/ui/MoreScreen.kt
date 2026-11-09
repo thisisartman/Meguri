@@ -311,7 +311,7 @@ fun MoreScreen(
     val autoSub = when {
         !autoOn -> stringResource(R.string.more_auto_sub_off)
         autoFailed -> stringResource(R.string.more_auto_sub_failed)
-        else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it))) }
+        else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, dateTimeText(it)) }
             ?: stringResource(R.string.more_auto_sub_on)
     }
     val titles = mapOf(
@@ -383,7 +383,7 @@ fun MoreScreen(
                     autoFailed -> autoSub
                     autoLast != null -> stringResource(
                         R.string.data_line_on,
-                        SimpleDateFormat(if (ja) "M月d日 HH:mm" else "d MMM HH:mm", if (ja) Locale.JAPAN else Locale.ENGLISH).format(Date(autoLast)),
+                        dateTimeText(autoLast),
                         findsText,
                     )
                     else -> autoSub
@@ -748,7 +748,7 @@ private class PendingRestore(val info: BackupInfo, val now: CurrentCounts)
 
 @Composable
 private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: () -> Unit) {
-    val date = p.info.createdMs?.let { SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).format(Date(it)) } ?: "?"
+    val date = p.info.createdMs?.let { dateTimeText(it) } ?: "?"
     // A valid but empty backup would wipe everything: it needs a second, explicit step.
     val wipes = p.info.finds == 0 && p.now.finds > 0
     var sure by remember { mutableStateOf(false) }
