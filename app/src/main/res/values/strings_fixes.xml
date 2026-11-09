@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Strings added by the 2026-11-09 review fixes, kept apart from strings.xml so parallel work merges cleanly -->
+<resources>
+    <string name="remove">Remove</string>
+    <string name="logs_saved">Logs saved</string>
+    <string name="logs_save_failed">Couldn\'t save the logs</string>
+    <string name="cards_all_here">All card pictures are already on this phone</string>
+    <string name="cards_remove_title">Remove card pictures?</string>
+    <string name="cards_remove_text">The card pictures on this phone are removed. You can download them again later.</string>
+    <string name="backup_now_sub">Saves a file with your finds, with or without photos</string>
+    <string name="backup_ask_text">Include your photos? The file is larger with them.</string>
+    <string name="backup_with_photos">With photos</string>
+    <string name="backup_without_photos">Without photos</string>
+    <string name="nb_date">Date</string>
+    <string name="nb_no_date">No date</string>
+    <string name="nb_date_clear">Clear date</string>
+</resources>
