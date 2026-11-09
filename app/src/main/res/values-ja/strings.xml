@@ -11,9 +11,9 @@
     <string name="nearby_approximate">おおよその位置</string>
     <string name="nearby_still_to_get">未取得・近い順</string>
     <string name="nearby_my_book">コレクション</string>
-    <string name="nearby_location_off">位置情報がオフです・最近の項目を表示</string>
-    <string name="nearby_location_not_allowed">位置情報が許可されていません・最近の項目を表示</string>
-    <string name="nearby_no_position">現在地がまだ取れません・最近の項目を表示</string>
+    <string name="nearby_location_off">位置情報がオフです・名前順</string>
+    <string name="nearby_location_not_allowed">位置情報が許可されていません・名前順</string>
+    <string name="nearby_no_position">現在地がまだ取れません・名前順</string>
     <string name="nearby_try_again">もう一度試す</string>
     <string name="nearby_from_fix">%1$s時点の現在地から</string>
     <string name="nearby_from_now">現在地から</string>
@@ -167,17 +167,17 @@
 
     <!-- Alerts (M4) -->
     <string name="alerts_title">通知</string>
-    <string name="trip_title">近接モード</string>
+    <string name="trip_title">移動中の通知</string>
     <string name="trip_sub_off">当日23:59まで数分ごとに現在地を確認し、未取得のものが近くにあると知らせます。電車や散歩のときに。</string>
     <string name="trip_sub_on">%1$sまでオン。ここか通知からオフにできます。</string>
-    <string name="trip_needs_location">近接モードには位置情報の許可が必要です。</string>
+    <string name="trip_needs_location">移動中の通知には位置情報の許可が必要です。</string>
     <string name="bg_title">アプリを閉じていても通知</string>
     <string name="bg_sub_off">Googleの位置情報サービスを使うため、電池の消費は少なめです。位置情報を「常に許可」にする必要があります。</string>
     <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
     <string name="bg_sub_needs">位置情報の「常に許可」が必要です。タップして許可してください。</string>
-    <string name="bg_sub_no_play">この端末では使えません(Google Play開発者サービスがありません)。近接モードを使ってください。</string>
+    <string name="bg_sub_no_play">この端末では使えません(Google Play開発者サービスがありません)。移動中の通知を使ってください。</string>
     <string name="bg_dialog_title">位置情報を常に許可しますか?</string>
     <string name="bg_dialog_text">別の画面で設定します。「常に許可」を選ぶと、アプリを閉じていても通知が届きます。位置情報が外部に送られることはありません。</string>
     <string name="bg_dialog_go">続ける</string>
@@ -191,14 +191,14 @@
     <string name="notif_off">Meguriの通知がオフです。タップしてオンにしてください。</string>
     <string name="alerts_channel">未取得のものが近く</string>
     <string name="alerts_channel_sub">まだ持っていないものの近くに来たとき</string>
-    <string name="trip_channel">近接モード</string>
-    <string name="trip_channel_sub">近接モードがオンの間に表示</string>
+    <string name="trip_channel">移動中の通知</string>
+    <string name="trip_channel_sub">移動中の通知がオンの間に表示</string>
     <string name="alert_text">%1$s・あと%2$s</string>
     <string name="alert_text_here">%1$s・ここです</string>
     <string name="alert_done">集める</string>
     <string name="alert_dismiss">閉じる</string>
     <string name="alert_logged">%1$sを集めました</string>
-    <string name="trip_on_until">近接モード %1$sまで</string>
+    <string name="trip_on_until">移動中の通知 %1$sまで</string>
     <string name="trip_checking">近くの未取得を確認中</string>
     <string name="trip_nearest">最寄り：%1$s・%2$s</string>
     <string name="trip_stop">停止</string>
@@ -331,7 +331,7 @@
     <string name="trip_if_off">降りれば</string>
     <string name="trip_start">トリップ開始</string>
     <string name="trip_stop_trip">トリップ終了</string>
-    <string name="trip_on_note">近接モードは%1$sまでオン：次に降りる駅と近くのものを知らせます。</string>
+    <string name="trip_on_note">移動中の通知は%1$sまでオン：次に降りる駅と近くのものを知らせます。</string>
     <string name="trip_already">行った</string>
     <string name="trip_already_title">行ったトリップ</string>
     <string name="trip_already_hint">この経路で集めたものにチェックを付けます。上の日付で記録されます。</string>
@@ -366,12 +366,12 @@
     <string name="photo_cover_clear">表示写真をやめる</string>
     <string name="alert_station_rule">駅スタンプは、今日のトリップで降りる駅でだけ通知します（メニューのトリップ）。通過する駅では通知せず、トリップを計画していなければ駅の通知はありません。</string>
     <string name="settings_alerts">通知</string>
-    <string name="settings_alerts_sub">種類ごとの距離、通知するもの、近接モード、夜間</string>
+    <string name="settings_alerts_sub">種類ごとの距離、通知するもの、移動中の通知、夜間</string>
     <string name="settings_data">バックアップとデータ</string>
     <string name="settings_look">表示</string>
     <string name="settings_catalogue">カタログ</string>
-    <string name="settings_catalogue_sub">新潟・埼玉・東京を内蔵・カードの画像・CSVで追加</string>
-    <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）とオフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
+    <string name="settings_catalogue_sub">新潟・埼玉・東京・群馬を内蔵・カードの画像・CSVで追加</string>
+    <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）、上越線の群馬県内の駅スタンプ、オフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">新機能・ログ・バージョン %1$s</string>
     <string name="settings_collections_sub">自分で追加したカテゴリーと、新しい追加</string>
@@ -432,7 +432,7 @@
         <item quantity="other">%d件追加</item>
     </plurals>
     <plurals name="onb_finished_title">
-        <item quantity="other">マイページに%d件追加しました</item>
+        <item quantity="other">マイブックに%d件追加しました</item>
     </plurals>
     <string name="onb_finished_how">取得したものは右下の「マイブック」にあります。開いて写真や詳細を追加できます。</string>
     <string name="onb_finished_profile">マイブックへ</string>
@@ -504,7 +504,7 @@
     <string name="photo_hint_channel_sub">未取得のものの近くで撮った新しい写真</string>
     <string name="photo_view_fullscreen">全画面で見る</string>
     <string name="photo_view_close">閉じる</string>
-    <string name="type_roadside">道の駅スタンプ</string>
+    <string name="type_roadside">道の駅</string>
     <string name="type_roadside_plural">道の駅</string>
     <string name="cards_download">カードの画像</string>
     <string name="cards_download_sub">%2$d枚中%1$d枚がこの端末に。タップでカードのサイト（駅からマンホール）から残りを自分用にダウンロード。端末内だけに保存し、バックアップには含めません。画像の権利はGKPと各自治体にあります。</string>
@@ -551,7 +551,7 @@
     <string name="add_new">追加</string>
     <string name="add_name">名前</string>
     <string name="add_other_name">別の言語での名前（任意）</string>
-    <string name="add_category">カードかスタンプか</string>
+    <string name="add_category">カード・スタンプ・その他</string>
     <string name="add_cat_card">カード</string>
     <string name="add_cat_stamp">スタンプ</string>
     <string name="add_cat_other">その他</string>
@@ -595,7 +595,7 @@
     <string name="alerts_mode_off">オフ</string>
     <string name="alerts_mode_trip">移動中</string>
     <string name="alerts_mode_always">常に</string>
-    <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間（近接モード）。常に：Meguriを閉じていても。</string>
+    <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間。常に：Meguriを閉じていても。</string>
     <string name="alerts_how_close">近接通知の設定</string>
     <string name="alerts_every">すべてのカテゴリー</string>
     <string name="alerts_categories">通知カテゴリー</string>

@@ -126,6 +126,24 @@ class CollectionRepository @Inject constructor(
         return itemId to findId
     }
 
+    /**
+     * A new item with no find yet (finding 33): "Not in Meguri? Add it" from a notebook page. Saving the page then
+     * gives it its find, had before Meguri or on the date chosen, like every other stamp on the page. No position
+     * from the phone: the page is photographed at home, so only a place looked up counts.
+     */
+    suspend fun addItem(type: ItemType, nameJa: String, nameRomaji: String?, customTypeId: String? = null, place: PlaceHit? = null): String {
+        val itemId = newId()
+        dao.insertItem(
+            Item(
+                id = itemId, type = type, nameJa = nameJa.trim(), nameRomaji = nameRomaji?.trim()?.ifEmpty { null },
+                lat = place?.lat, lng = place?.lng, placeName = place?.name, address = place?.address, sourceUrl = place?.osmUrl,
+                origin = Origin.USER, createdAt = now(), updatedAt = now(), customTypeId = customTypeId,
+            ),
+        )
+        log.i("Log", "New item $itemId ($type) from a notebook page, no find yet")
+        return itemId
+    }
+
     // Your own collections (#64) and the details of a collection: how many (duplicates) and what you paid
     fun collectionTypes(): kotlinx.coroutines.flow.Flow<List<CollectionType>> = dao.observeCollectionTypes()
 
@@ -300,7 +318,13 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun addNotebookStamp(itemId: String, picture: android.net.Uri, acquiredAt: Long?): Boolean {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
-            dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt, beforeApp = acquiredAt == null, via = Via.MANUAL, createdAt = now()))
+            // A date given is a day without a time (stored at noon): BULK, like "Already went", so no "12:00" shows
+            dao.insertFind(
+                Acquisition(
+                    id = f, itemId = itemId, acquiredAt = acquiredAt, beforeApp = acquiredAt == null,
+                    via = if (acquiredAt == null) Via.MANUAL else Via.BULK, createdAt = now(),
+                ),
+            )
         }
         val ok = attachFromGallery(context, findId, picture, PhotoKind.STAMP)
         log.i("Notebook", "Stamp for item $itemId from a notebook page (photo copied: $ok)")

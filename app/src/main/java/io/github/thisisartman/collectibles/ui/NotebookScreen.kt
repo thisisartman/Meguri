@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -61,11 +63,40 @@ import kotlin.math.min
 object NotebookSession {
     var page: Uri? = null
     val boxes = mutableStateListOf<StampFind.Box>()
-    fun start(page: Uri, found: List<StampFind.Box>) { this.page = page; boxes.clear(); boxes.addAll(found) }
+
+    /**
+     * The stamps as read from the page and the choices made, kept here so a trip to the Add page and back does not
+     * read the page again or lose what was chosen (finding 33). [workBoxes] are the boxes they were read from: a
+     * change in the review reads them again.
+     */
+    internal var work by mutableStateOf<List<StampWork>?>(null)
+    internal var workBoxes: List<StampFind.Box> = emptyList()
+
+    /** The stamp whose "Not in Meguri? Add it" is open. */
+    internal var adding: StampWork? = null
+
+    /** The day the stamps were collected (local noon), or null: had before Meguri ("Notebook 4: date optional"). */
+    var dateMs by mutableStateOf<Long?>(null)
+
+    fun start(page: Uri, found: List<StampFind.Box>) {
+        this.page = page; boxes.clear(); boxes.addAll(found)
+        work = null; workBoxes = emptyList(); adding = null; dateMs = null
+    }
+
+    /** The page is saved: let go of the stamps' pictures, which would otherwise stay in memory. */
+    fun finish() {
+        work = null; workBoxes = emptyList(); adding = null; dateMs = null
+    }
+
+    /** The item just made on the Add page becomes the choice of the stamp that asked for it. */
+    fun added(itemId: String) {
+        adding?.let { it.chosen = itemId; it.query = "" }
+        adding = null
+    }
 }
 
 /** One stamp being matched: its picture as photographed and cleaned, what was read, and the station chosen. */
-private class StampWork(val original: Bitmap, val cleaned: Bitmap, val text: String, val matches: List<io.github.thisisartman.collectibles.data.StationMatch.Match>) {
+internal class StampWork(val original: Bitmap, val cleaned: Bitmap, val text: String, val matches: List<io.github.thisisartman.collectibles.data.StationMatch.Match>) {
     var showOriginal by mutableStateOf(false)
     var chosen by mutableStateOf<String?>(matches.firstOrNull()?.takeIf { it.score >= io.github.thisisartman.collectibles.data.StationMatch.ASSIGN }?.id)
     var skipped by mutableStateOf(false)
@@ -84,7 +115,8 @@ private fun isStampTarget(r: io.github.thisisartman.collectibles.data.ItemRow, c
 /**
  * Each stamp found, matched to a station by the name printed on it (owner's bands: 75% and up is chosen, 60 to 75%
  * is offered as "This seems to be ...", below that the person picks by typing). Cleaned by default, "Show original"
- * to switch. Saved as "had before Meguri" (no date), never at the photo's time and place.
+ * to switch. Saved as "had before Meguri" (no date), or on the day given under "Date", never at the photo's time and
+ * place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -94,14 +126,17 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
     val rows by vm.rows.collectAsStateWithLifecycle()
     val custom = LocalCustomTypes.current
     val targets = remember(rows, custom) { rows.filter { isStampTarget(it, custom) } }
-    var work by remember { mutableStateOf<List<StampWork>?>(null) }
+    val work = NotebookSession.work
     var saving by remember { mutableStateOf(false) }
     LaunchedEffect(NotebookSession.page) {
         val page = NotebookSession.page ?: return@LaunchedEffect
         val boxes = NotebookSession.boxes.toList()
+        // Back from the Add page (or Back from here and Done again with the same boxes): the stamps as they were
+        if (NotebookSession.work != null && NotebookSession.workBoxes == boxes) return@LaunchedEffect
+        NotebookSession.work = null
         val cands = targets.map { io.github.thisisartman.collectibles.data.StationMatch.Candidate(it.item.id, it.item.nameJa, it.item.nameRomaji) }
         val reader = com.google.mlkit.vision.text.TextRecognition.getClient(com.google.mlkit.vision.text.japanese.JapaneseTextRecognizerOptions.Builder().build())
-        work = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        val read = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
             val full = decodePage(context, page, 3000) ?: return@withContext emptyList()
             boxes.mapNotNull { b ->
                 val x = (b.left * full.width).toInt(); val y = (b.top * full.height).toInt()
@@ -127,6 +162,8 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
                 StampWork(small, cleaned, text, matches)
             }
         }
+        NotebookSession.workBoxes = boxes
+        NotebookSession.work = read
     }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -142,8 +179,10 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
             return@Column
         }
         androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            items(list.size) { i -> StampRow(list[i], i + 1, targets, rows, vm, ja, onAddNew) }
+            items(list.size) { i -> StampRow(list[i], i + 1, targets, rows, vm, ja) { NotebookSession.adding = list[i]; onAddNew() } }
         }
+        // Date, optional ("Notebook 4"): none means had before Meguri; a day saves the stamps on that day
+        NotebookDateRow()
         val ready = list.count { !it.skipped && it.chosen != null }
         Button(
             onClick = {
@@ -154,11 +193,54 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
                     f.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 95, it) }
                     w.chosen!! to Uri.fromFile(f)
                 }
-                vm.addNotebookStamps(out) { n -> saving = false; onSaved(n) }
+                vm.addNotebookStamps(out, NotebookSession.dateMs) { n -> saving = false; onSaved(n) }
             },
             enabled = ready > 0 && !saving,
-            modifier = Modifier.fillMaxWidth().padding(16.dp).heightIn(min = 48.dp),
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, bottom = 16.dp).heightIn(min = 48.dp),
         ) { Text(androidx.compose.ui.res.pluralStringResource(R.plurals.nb_save, ready, ready)) }
+    }
+}
+
+/** "Date": "No date" until one is picked; the picker offers no day after today. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NotebookDateRow() {
+    var picking by remember { mutableStateOf(false) }
+    val date = NotebookSession.dateMs
+    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(stringResource(R.string.nb_date), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+        androidx.compose.material3.InputChip(
+            selected = date != null,
+            onClick = { picking = true },
+            label = { Text(if (date != null) dateText(date) else stringResource(R.string.nb_no_date)) },
+            leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp)) },
+            trailingIcon = if (date == null) null else {
+                {
+                    IconButton(onClick = { NotebookSession.dateMs = null }, modifier = Modifier.size(32.dp)) {
+                        Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.nb_date_clear), modifier = Modifier.size(18.dp))
+                    }
+                }
+            },
+            modifier = Modifier.heightIn(min = 48.dp),
+        )
+    }
+    if (picking) {
+        val state = androidx.compose.material3.rememberDatePickerState(
+            initialSelectedDateMillis = Dates.pickerDay(date ?: System.currentTimeMillis()),
+            selectableDates = object : androidx.compose.material3.SelectableDates {
+                override fun isSelectableDate(utcTimeMillis: Long) = Dates.notFuture(utcTimeMillis, System.currentTimeMillis())
+            },
+        )
+        androidx.compose.material3.DatePickerDialog(
+            onDismissRequest = { picking = false },
+            confirmButton = {
+                androidx.compose.material3.TextButton(onClick = {
+                    state.selectedDateMillis?.let { NotebookSession.dateMs = Dates.noonFromPicker(it) }
+                    picking = false
+                }) { Text(stringResource(android.R.string.ok)) }
+            },
+            dismissButton = { androidx.compose.material3.TextButton(onClick = { picking = false }) { Text(stringResource(android.R.string.cancel)) } },
+        ) { androidx.compose.material3.DatePicker(state) }
     }
 }
 

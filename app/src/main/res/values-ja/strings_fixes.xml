@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cards_remove_confirm">削除</string>
+    <string name="logs_saved">ログを保存しました</string>
+    <string name="logs_save_failed">ログを保存できませんでした</string>
+    <string name="cards_all_here">カードの画像はすべてこの端末にあります</string>
+    <string name="cards_remove_title">カードの画像を削除しますか？</string>
+    <string name="cards_remove_text">この端末のカードの画像を削除します。あとでまたダウンロードできます。</string>
+    <string name="backup_now_sub">記録をファイルに保存します（写真ありかなしを選べます）</string>
+    <string name="backup_ask_text">写真も含めますか？含めるとファイルが大きくなります。</string>
+    <string name="backup_with_photos">写真あり</string>
+    <string name="backup_without_photos">写真なし</string>
+    <string name="nb_date">日付</string>
+    <string name="nb_no_date">日付なし</string>
+    <string name="nb_date_clear">日付を消す</string>
+    <string name="nb_new_where">場所を検索するか、空のままにします。</string>
+    <string name="nb_new_save">保存</string>
+</resources>

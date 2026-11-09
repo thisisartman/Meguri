@@ -35,7 +35,6 @@ import androidx.navigation.NavHostController
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.TripReport
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -55,7 +54,6 @@ fun TimelineScreen(vm: MainViewModel, nav: NavHostController, onBack: () -> Unit
         finds.mapNotNull { f -> val at = f.find.acquiredAt ?: return@mapNotNull null; byId[f.find.itemId]?.let { Triple(at, f.find, it) } }
             .groupBy { TripReport.dayStart(it.first) }.toSortedMap(compareByDescending { it })
     }
-    val dayFormat = remember { DateFormat.getDateInstance(DateFormat.FULL, Locale.getDefault()) }
     val time = remember { SimpleDateFormat("HH:mm", Locale.US) }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -71,10 +69,10 @@ fun TimelineScreen(vm: MainViewModel, nav: NavHostController, onBack: () -> Unit
             days.forEach { (day, list) ->
                 item(key = "d$day") {
                     Row(
-                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { nav.navigate("trip-report") }.padding(horizontal = 16.dp, vertical = 8.dp),
+                        Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { nav.navigate("trip-report?day=$day") }.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text(dayFormat.format(Date(day)), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                        Text(dateText(day), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                         Text(pluralStringResource(R.plurals.timeline_count, list.size, list.size), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }

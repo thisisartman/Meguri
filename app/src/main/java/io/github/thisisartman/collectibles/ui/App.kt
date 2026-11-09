@@ -149,6 +149,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         val canAskAgain = activity?.let { androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION) } ?: true
         locationBlocked = !granted && !canAskAgain && !LocationAccess.has(context)
         locationPrefs.edit().putBoolean("blocked", locationBlocked).apply()
+        // A no is remembered: the app does not ask again at start until the person taps something that needs it
+        LocationAccess.setDeclined(context, !granted && !LocationAccess.has(context))
         vm.refreshPosition()
     }
     val onAllowLocation: () -> Unit = {
@@ -162,9 +164,17 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         }
     }
     LaunchedEffect(Unit) { CameraCapture.cleanEmptyRows(resolver) }
-    // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81)
+    // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81).
+    // At most once per run, and not after a no (finding 42)
     LaunchedEffect(hasCatalogue) {
-        if (hasCatalogue == true) askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        if (hasCatalogue == true && LocationAccess.askAtStart(
+                granted = LocationAccess.has(context), askedThisRun = LocationAccess.askedThisRun,
+                declined = LocationAccess.declined(context), blocked = locationBlocked,
+            )
+        ) {
+            LocationAccess.askedThisRun = true
+            askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
     }
     LifecycleResumeEffect(Unit) {
         // Back from Settings with location allowed: the blocked note no longer applies
@@ -200,6 +210,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         val r = snackbar.showSnackbar(loggedText ?: "", actionLabel = undoText, duration = SnackbarDuration.Long)
         if (r == SnackbarResult.ActionPerformed) vm.undo(l.findId) else vm.clearLogged()
     }
+
+    // Results of work that outlives its page (backup, restore, CSV, card pictures; finding 32)
+    LaunchedEffect(Unit) { vm.work.messages.collect { snackbar.showSnackbar(it) } }
 
     val entry by nav.currentBackStackEntryAsState()
     val route = entry?.destination?.route
@@ -318,8 +331,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     composable("stamps") { Page { NotebookReviewScreen(onBack = { nav.popBackStack() }, onDone = { nav.navigate("stamps-match") }) } }
                     composable("stamps-match") {
                         Page {
-                            NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new") }, onSaved = { n ->
+                            NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new-for-notebook") }, onSaved = { n ->
                                 nav.popBackStack(NEARBY, inclusive = false)
+                                NotebookSession.finish()
                                 appScope.launch { snackbar.showSnackbar(context.resources.getQuantityString(R.plurals.nb_saved, n, n)) }
                             })
                         }
@@ -334,9 +348,23 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                             })
                         }
                     }
+                    // "Not in Meguri? Add it" on a notebook stamp (finding 33): the new item becomes that stamp's choice,
+                    // and Back returns to the stamps as they were
+                    composable("new-for-notebook") {
+                        Page {
+                            NewItemScreen(vm, forNotebook = true, onBack = { nav.popBackStack() }, onSaved = { itemId, _, _ ->
+                                NotebookSession.added(itemId)
+                                nav.popBackStack()
+                            })
+                        }
+                    }
                     composable("check") { Page { CollectionCheckScreen(vm, snackbar, onBack = { nav.popBackStack() }) } }
                     composable("trip") { Page { TripScreen(vm, nav, snackbar, onBack = { nav.popBackStack() }, onAlready = { nav.navigate("trip-check") }) } }
-                    composable("trip-report") { Page { TripReportScreen(vm, onBack = { nav.popBackStack() }) } }
+                    // A Timeline day header opens its own day (finding 34); from Trip, the newest day
+                    composable("trip-report?day={day}", listOf(navArgument("day") { type = NavType.LongType; defaultValue = -1L })) {
+                        val day = it.arguments?.getLong("day")?.takeIf { d -> d >= 0 }
+                        Page { TripReportScreen(vm, day, onBack = { nav.popBackStack() }) }
+                    }
                     composable("timeline") { Page { TimelineScreen(vm, nav, onBack = { nav.popBackStack() }) } }
                     composable("trip-check") {
                         // The route's things as today's plan has them (Already went, #46 and owner item 9)

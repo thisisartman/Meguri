@@ -23,8 +23,9 @@ class LogsViewModel @Inject constructor(private val log: FileLog) : ViewModel() 
     private val _lines = MutableStateFlow<List<String>>(emptyList())
     val lines: StateFlow<List<String>> = _lines.asStateFlow()
 
-    private val _message = MutableStateFlow<String?>(null)
-    val message: StateFlow<String?> = _message.asStateFlow()
+    /** The snackbar's words, as a string resource, so they follow the app language. */
+    private val _message = MutableStateFlow<Int?>(null)
+    val message: StateFlow<Int?> = _message.asStateFlow()
 
     init {
         refresh()
@@ -50,7 +51,7 @@ class LogsViewModel @Inject constructor(private val log: FileLog) : ViewModel() 
                 }.onFailure { log.e("Logs", "Export failed", it) }.isSuccess
             }
             if (ok) log.i("Logs", "Exported to $uri")
-            _message.value = if (ok) "Logs saved" else "Couldn't save the logs"
+            _message.value = if (ok) io.github.thisisartman.collectibles.R.string.logs_saved else io.github.thisisartman.collectibles.R.string.logs_save_failed
             refresh()
         }
     }

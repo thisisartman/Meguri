@@ -70,6 +70,8 @@ class MainViewModel @Inject constructor(
     private val trips: TripStore,
     /** The app log; screens use it for one-line detailed entries (screen changes, scans). */
     val log: io.github.thisisartman.collectibles.debug.FileLog,
+    /** Long work started from Settings or the onboarding; the app frame shows its messages. */
+    val work: SettingsWork,
 ) : ViewModel() {
 
     /** Null until the database has answered once (#78). One query: "loaded" and the rows arrive together. */
@@ -117,6 +119,15 @@ class MainViewModel @Inject constructor(
             val fix = location.current()
             _here.value = if (fix != null) Here(fix, true) else _here.value.copy(searching = false)
         }
+    }
+
+    /**
+     * Follows the position while it is collected (Nearby on screen): distances refresh as you move, every 30 s at
+     * most, through the same provider as a single fix (finding 41).
+     */
+    suspend fun followPosition() {
+        if (!location.hasPermission()) return
+        location.updates(30_000).collect { _here.value = Here(it, true) }
     }
 
     private var lastGotIt: Pair<String, Long>? = null
@@ -171,6 +182,15 @@ class MainViewModel @Inject constructor(
             emit(Logged(findId, nameRomaji?.ifBlank { null } ?: nameJa, System.currentTimeMillis()))
             onDone(itemId, findId)
         }
+    }
+
+    /** A new item with no find yet, for a notebook stamp: saving the page gives it its find (finding 33). */
+    fun addItemOnly(
+        type: ItemType, nameJa: String, nameRomaji: String?,
+        customTypeId: String? = null, place: io.github.thisisartman.collectibles.data.PlaceHit? = null,
+        onDone: (itemId: String) -> Unit,
+    ) {
+        viewModelScope.launch { onDone(repo.addItem(type, nameJa, nameRomaji, customTypeId, place)) }
     }
 
     private var lastLogged: Logged? = null
@@ -286,21 +306,39 @@ class MainViewModel @Inject constructor(
     val shared: StateFlow<List<io.github.thisisartman.collectibles.data.SharedPhoto>?> = _shared.asStateFlow()
     val shareCount: StateFlow<Int> = sharedUris.map { it.size }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    fun openShare(uris: List<android.net.Uri>) {
+    /** What the shared photos are filed as on a manhole card: a scanned card (or cover) says so, a gallery share is Other. */
+    private var shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
+
+    fun openShare(uris: List<android.net.Uri>, cardKind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER) {
         log.d("Share", "${uris.size} photos shared into Meguri")
         sharedUris.value = uris
         _shared.value = null
+        shareCardKind = cardKind
     }
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
     /** Notebook stamps: each (item, picture), saved as "had before Meguri" unless already collected; [onDone] gets how many. */
-    fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, onDone: (Int) -> Unit) {
+    fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, atMs: Long? = null, onDone: (Int) -> Unit) {
         viewModelScope.launch {
             var n = 0
             val t0 = System.currentTimeMillis()
-            for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, null)) n++
+            for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, atMs)) n++
             log.d("Notebook", "Saved $n of ${stamps.size} stamps from the page in ${System.currentTimeMillis() - t0} ms")
             onDone(n)
+        }
+    }
+
+    /**
+     * Scan, "Collect with this photo" (finding 29): a find now, placed where you are like Got it, with the scan as its
+     * photo, and the same "Collected ... Undo" snackbar as every other way of collecting.
+     */
+    fun collectWithPhoto(context: android.content.Context, row: ItemRow, name: String, uri: android.net.Uri, kind: String, onDone: (String) -> Unit) {
+        log.d("Tap", "Collect with this photo on ${row.item.id}")
+        viewModelScope.launch {
+            val findId = repo.logFind(row.item.id, Via.MANUAL)
+            emit(Logged(findId, name, System.currentTimeMillis()))
+            repo.attachFromGallery(context.applicationContext, findId, uri, kind)
+            onDone(findId)
         }
     }
 
@@ -321,9 +359,13 @@ class MainViewModel @Inject constructor(
     /** Adds each group's photos to the item chosen for it. Returns photos copied and items they went to. */
     suspend fun addShared(choices: List<Pair<String, io.github.thisisartman.collectibles.data.PhotoGroup>>): Pair<Int, Int> {
         var photos = 0
-        for ((itemId, group) in choices) photos += repo.addShared(itemId, group.photos, group.centre)
+        val types = rows.value.associate { it.item.id to it.item.type }
+        for ((itemId, group) in choices) {
+            photos += repo.addShared(itemId, group.photos, group.centre, sharedKind(types[itemId], shareCardKind))
+        }
         sharedUris.value = emptyList()
         _shared.value = null
+        shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
         return photos to choices.map { it.first }.distinct().size
     }
 
@@ -366,6 +408,13 @@ class MainViewModel @Inject constructor(
 
         fun isRepeatTap(last: Pair<String, Long>?, itemId: String, nowMs: Long): Boolean =
             last != null && last.first == itemId && nowMs - last.second < REPEAT_TAP_MS
+
+        /**
+         * The kind a shared photo is filed as (finding 30): a scan picked by hand onto a manhole card keeps what it is
+         * (the card, or a cover); anything else, or onto anything else, is Other, to sort later.
+         */
+        fun sharedKind(type: ItemType?, cardKind: String): String =
+            if (type == ItemType.MANHOLE_CARD) cardKind else io.github.thisisartman.collectibles.data.PhotoKind.OTHER
 
         fun summarise(rows: List<ItemRow>, lines: List<Line>, ls: List<LineStation>): List<CollectionSummary> {
             val out = mutableListOf<CollectionSummary>()

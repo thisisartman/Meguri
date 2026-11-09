@@ -331,15 +331,22 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             confirmButton = {
                 if (row != null) TextButton(onClick = {
                     result = null
-                    // A scan is the card itself
-                    vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
+                    // A scan is the card itself. Already collected: the photo joins its latest find. Not yet: a find now,
+                    // where you are, with "Collected ... Undo" like every other way of collecting (finding 29)
+                    if (row.collected) vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
+                    else vm.collectWithPhoto(context, row, row.item.displayName(ja), s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
                 }) { Text(stringResource(if (row.collected) R.string.scan_add_photo else R.string.scan_collect)) }
                 // No code read: the person can usually read it, so type it (owner, 2026-11-09)
                 else if (s.code == null && !s.cover) TextButton(onClick = {
                     result = null; typing = s
                     if (!tips.getBoolean("code_tutorial_seen", false)) tutorial = true
                 }) { Text(stringResource(R.string.scan_type_code)) }
-                else TextButton(onClick = { result = null; vm.openShare(listOf(s.photo)); nav.navigate("share") }) {
+                // Pick by hand: the photo is filed as what it shows on the card picked, the card or its cover (finding 30)
+                else TextButton(onClick = {
+                    result = null
+                    vm.openShare(listOf(s.photo), if (s.cover) io.github.thisisartman.collectibles.data.PhotoKind.MANHOLE else io.github.thisisartman.collectibles.data.PhotoKind.STAMP)
+                    nav.navigate("share")
+                }) {
                     Text(stringResource(R.string.scan_pick))
                 }
             },

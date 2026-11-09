@@ -65,7 +65,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -89,12 +88,13 @@ private data class ReportSpec(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
+fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Unit) {
     val ja = isJapanese()
     val context = LocalContext.current
     val times by vm.findTimes.collectAsStateWithLifecycle()
     val days = remember(times) { TripReport.days(times) }
-    var day by rememberSaveable { mutableStateOf<Long?>(null) }
+    // The day it was opened on (a Timeline day header), else the newest
+    var day by rememberSaveable { mutableStateOf(startDay) }
     val chosen = day ?: days.firstOrNull()?.first
     val rowsById by vm.rows.collectAsStateWithLifecycle()
     val items = remember(rowsById) { rowsById.associateBy { it.item.id } }
@@ -104,7 +104,6 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
         finds.mapNotNull { f -> items[f.find.itemId]?.item?.let { i -> ReportRow(f.find, i, i.customTypeId?.let { customTypes[it]?.name }) } }
     }
     val trip = remember { vm.currentTrip() }
-    val dayFormat = remember { DateFormat.getDateInstance(DateFormat.MEDIUM, Locale.getDefault()) }
 
     // Everything the image needs, resolved here so the drawing code needs no Compose
     val scheme = MaterialTheme.colorScheme
@@ -130,7 +129,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
                 listOfNotNull(items[t.from]?.item?.displayName(ja), items[t.to]?.item?.displayName(ja)).takeIf { it.size == 2 }?.joinToString(" → ")
             }
             ReportSpec(
-                title = dayFormat.format(Date(chosen)), subtitle = routeLine, countText = countText,
+                title = Dates.day(context, chosen), subtitle = routeLine, countText = countText,
                 kinds = TripReport.byKind(rows).map { (k, n) ->
                     val sample = rows.first { (it.collection ?: it.item.type.name) == k }
                     kindFmt.format(sample.collection ?: typeNames[sample.item.type] ?: k, n) to colorFor(sample)
@@ -158,7 +157,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(days, key = { it.first }) { (d, n) ->
-                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, dayFormat.format(Date(d)), n)) },
+                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, dateText(d), n)) },
                     modifier = Modifier.heightIn(min = 48.dp))
             }
         }
@@ -166,7 +165,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
             image?.let { bmp ->
                 Image(bmp.asImageBitmap(), contentDescription = spec?.let { it.title + ", " + it.countText },
                     // An outline, so the card reads as a card when its colour matches the page (light mode review)
-                    modifier = Modifier.aspectRatio(9f / 16f).clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier.aspectRatio(bmp.width.toFloat() / bmp.height).clip(RoundedCornerShape(12.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)))
             }
         }
@@ -195,7 +194,7 @@ fun TripReportScreen(vm: MainViewModel, onBack: () -> Unit) {
 
 private const val MAX_LINES = 10
 private const val W = 1080
-private const val H = 1920
+internal const val H = 1920
 
 /** Draws the 1080 × 1920 story image. */
 private fun render(context: Context, s: ReportSpec): Bitmap {
@@ -266,9 +265,18 @@ private fun render(context: Context, s: ReportSpec): Bitmap {
         c.drawText(time, W - pad - tw, y, timeP)
     }
     s.more?.let { y += 64f; if (y < bottom + 40f) c.drawText(it, pad + 44f, y, paint(38f, s.muted)) }
-    c.drawText(s.footer, pad, H - 110f, paint(40f, s.accent, bold = true))
-    return bmp
+    // As tall as what is on it (finding 15): one find no longer leaves most of a story image empty
+    val h = reportHeight(y)
+    c.drawText(s.footer, pad, h - 110f, paint(40f, s.accent, bold = true))
+    if (h >= H) return bmp
+    return Bitmap.createBitmap(bmp, 0, 0, W, h).also { if (it !== bmp) bmp.recycle() }
 }
+
+/** The image's height for content ending at [contentBottom]: room for the footer, at least 4:5, at most 9:16. */
+internal fun reportHeight(contentBottom: Float): Int = (contentBottom + REPORT_FOOTER_SPACE).toInt().coerceIn(REPORT_MIN_H, H)
+
+internal const val REPORT_MIN_H = 1350
+private const val REPORT_FOOTER_SPACE = 230f
 
 private fun sharedFile(context: Context, name: String): File = File(context.cacheDir, "shared").apply { mkdirs() }.let { File(it, name) }
 

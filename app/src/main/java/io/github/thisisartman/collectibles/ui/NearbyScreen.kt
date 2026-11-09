@@ -2,7 +2,9 @@ package io.github.thisisartman.collectibles.ui
 
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawWithContent
 import kotlinx.coroutines.launch
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -110,6 +112,20 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    // Distances follow you while Nearby is on screen, not only on return to the app (finding 41); restarts once
+    // location is allowed
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    val allowedNow = LocationAccess.has(ctx)
+    LaunchedEffect(lifecycle, allowedNow) {
+        if (allowedNow) lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) { vm.followPosition() }
+    }
+    // Read from the collected position, so a tile's distance redraws when it moves
+    fun distTo(r: ItemRow): Double? {
+        val f = here.fix ?: return null
+        val lat = r.item.lat ?: return null
+        val lng = r.item.lng ?: return null
+        return io.github.thisisartman.collectibles.location.distanceM(f.lat, f.lng, lat, lng)
+    }
     var tab by rememberSaveable { mutableStateOf(MapSection.STAMPS) }
     var kind by rememberSaveable { mutableStateOf<ItemType?>(null) }
     var byName by rememberSaveable { mutableStateOf(false) }
@@ -185,6 +201,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val onboarding = rememberOnboardingState()
     val ctxOnb = androidx.compose.ui.platform.LocalContext.current
     val prefectures = remember { PrefectureAsset.all(ctxOnb) }
+    // "I have a catalogue file" opens the file picker straight away, the same CSV load as in Settings (finding 36).
+    // Registered here, not in the onboarding branch, which leaves the screen once the catalogue has loaded
+    val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
+    val openCatalog = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        val app = ctxOnb.applicationContext
+        more.run { more.work.say(catalogueMessage(app, runCatching { more.io.importCatalog(uri) })) }
+    }
     // The picker and closing sheet carry on after the catalogue has loaded (#81 O3)
     val inOnboarding = noCatalogue || onboarding.afterLoad
     // Onboarding: the sheet sits at its content's height (measured), up to the step's cap, and snaps there
@@ -241,15 +265,20 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 if (noCatalogue) {
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
-                    val more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()
                     OnboardingSheet(
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         loadCounts = { more.io.bundledPrefectures() },
                         onLoad = { regions -> more.io.importBundled(regions) },
                         // Already have some: on to the picker of what you have (#81 O3)
                         onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
-                        onLoadFile = { nav.openMore() },
-                        onPermissionsAnswered = { vm.refreshPosition() },
+                        onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },
+                        // The onboarding has asked: the app does not ask again as the catalogue loads, nor at later
+                        // starts after a no (finding 42)
+                        onPermissionsAnswered = {
+                            LocationAccess.askedThisRun = true
+                            LocationAccess.setDeclined(ctxOnb, !LocationAccess.has(ctxOnb))
+                            vm.refreshPosition()
+                        },
                         // Measured for the sheet's height; capped, so the region list scrolls and Load stays in view
                         modifier = Modifier.heightIn(max = onbMax - 40.dp).onSizeChanged { onbContentPx = it.height },
                     )
@@ -280,8 +309,31 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 // Chips scroll on the left; sort and size are icons pinned on the right (owner: icons over words)
                 Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    // The row fades out at an edge where more chips are, so it shows that it scrolls; drawn, not a
+                    // layer of its own, so nothing unlabelled sits over Sort (sweep 2026-11-09, findings 4 and 5)
+                    val chipScroll = rememberScrollState()
+                    val fadeW = with(density) { 32.dp.toPx() }
                     Row(
-                        Modifier.weight(1f).horizontalScroll(rememberScrollState()).padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+                        Modifier.weight(1f)
+                            .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                if (chipScroll.canScrollForward) drawRect(
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(androidx.compose.ui.graphics.Color.Transparent, androidx.compose.ui.graphics.Color.Black),
+                                        startX = size.width - fadeW, endX = size.width,
+                                    ),
+                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                                )
+                                if (chipScroll.canScrollBackward) drawRect(
+                                    androidx.compose.ui.graphics.Brush.horizontalGradient(
+                                        listOf(androidx.compose.ui.graphics.Color.Black, androidx.compose.ui.graphics.Color.Transparent),
+                                        startX = 0f, endX = fadeW,
+                                    ),
+                                    blendMode = androidx.compose.ui.graphics.BlendMode.DstOut,
+                                )
+                            }
+                            .horizontalScroll(chipScroll).padding(start = 12.dp, end = 24.dp, top = 4.dp, bottom = 4.dp),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -292,13 +344,14 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             style = MaterialTheme.typography.titleSmall,
                             maxLines = 2,
                         )
-                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all)) })
+                        if (!searching) FilterChip(selected = kind == null, onClick = { kind = null }, label = { Text(stringResource(R.string.nearby_kind_all), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
                         if (!searching && kinds.size > 1) kinds.forEach { t ->
-                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel())) })
+                            // 48 dp tall, so each chip is a whole tap target (finding 3)
+                            FilterChip(selected = kind == t, onClick = { kind = t }, label = { Text(stringResource(t.pluralLabel()), maxLines = 1) }, modifier = Modifier.heightIn(min = 48.dp))
                         }
                     }
                     Box {
-                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }) {
+                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }, modifier = Modifier.size(48.dp)) {
                             // The button shows the order in use: nearest, or A over Z
                             Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
                         }
@@ -333,7 +386,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             }
                         }
                     }
-                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }) {
+                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }, modifier = Modifier.size(48.dp)) {
                         Icon(
                             painterResource(R.drawable.ic_grid_view),
                             contentDescription = stringResource(R.string.nearby_tile_size),
@@ -390,7 +443,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             Box(m) {
                                 RoundTile(
                                     r, tile, r.item.tileLabel(ja),
-                                    if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
+                                    if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
                                     ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
                                 )
@@ -421,7 +474,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
             if (here.fix != null) {
                 androidx.compose.material3.SmallFloatingActionButton(
                     onClick = { recenter++ },
-                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = peek + 12.dp),
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(end = 16.dp, bottom = peek + 12.dp).size(48.dp),
                     containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.primary,
                 ) { Icon(painterResource(R.drawable.ic_my_location), contentDescription = stringResource(R.string.nearby_recenter)) }
@@ -510,7 +563,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                                         )
                                     }
-                                    distanceText(vm.distanceTo(r))?.let { d ->
+                                    distanceText(distTo(r))?.let { d ->
                                         Spacer(Modifier.width(8.dp))
                                         DistanceArrow(d, here.fix?.let { it.lat to it.lng }, r.item.lat?.let { lat -> r.item.lng?.let { lat to it } }, MaterialTheme.typography.labelMedium)
                                     }
@@ -754,7 +807,7 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Mark(last, 26.dp)
                     Spacer(Modifier.width(8.dp))
-                    val whenText = if (last.lastAt != null) formatDate(last.lastAt, ja) else stringResource(R.string.no_date)
+                    val whenText = if (last.lastAt != null) dateText(last.lastAt) else stringResource(R.string.no_date)
                     Text(
                         stringResource(R.string.last, last.item.displayName(ja) + sep() + whenText),
                         style = MaterialTheme.typography.bodySmall,

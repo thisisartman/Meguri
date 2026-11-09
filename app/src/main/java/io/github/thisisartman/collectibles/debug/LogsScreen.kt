@@ -53,9 +53,10 @@ fun LogsScreen(onBack: () -> Unit, viewModel: LogsViewModel = hiltViewModel()) {
         if (uri != null) viewModel.export(resolver, uri)
     }
 
+    val context = LocalContext.current
     LaunchedEffect(message) {
         message?.let {
-            snackbar.showSnackbar(it)
+            snackbar.showSnackbar(context.getString(it))
             viewModel.clearMessage()
         }
     }
@@ -63,9 +64,13 @@ fun LogsScreen(onBack: () -> Unit, viewModel: LogsViewModel = hiltViewModel()) {
         if (lines.isNotEmpty()) listState.scrollToItem(lines.lastIndex)
     }
 
+    // No insets of its own: the app frame already keeps the page below the status bar, and a second inset put the
+    // title lower than on every other page (sweep 2026-11-09, finding 18)
     Scaffold(
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
                 title = { Text(stringResource(R.string.more_logs)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             )

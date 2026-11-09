@@ -65,25 +65,6 @@ internal fun noonOf(ms: Long): Long = java.util.Calendar.getInstance().apply {
     timeInMillis = ms; set(java.util.Calendar.HOUR_OF_DAY, 12); set(java.util.Calendar.MINUTE, 0); set(java.util.Calendar.SECOND, 0); set(java.util.Calendar.MILLISECOND, 0)
 }.timeInMillis
 
-/** The date picker works in UTC midnights. */
-private fun utcMidnight(localMs: Long): Long {
-    val c = java.util.Calendar.getInstance().apply { timeInMillis = localMs }
-    return java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply {
-        clear(); set(c.get(java.util.Calendar.YEAR), c.get(java.util.Calendar.MONTH), c.get(java.util.Calendar.DAY_OF_MONTH))
-    }.timeInMillis
-}
-
-private fun noonFromUtcDate(utcMs: Long): Long {
-    val u = java.util.Calendar.getInstance(java.util.TimeZone.getTimeZone("UTC")).apply { timeInMillis = utcMs }
-    return java.util.Calendar.getInstance().apply {
-        clear(); set(u.get(java.util.Calendar.YEAR), u.get(java.util.Calendar.MONTH), u.get(java.util.Calendar.DAY_OF_MONTH), 12, 0)
-    }.timeInMillis
-}
-
-@Composable
-private fun formatDay(ms: Long): String =
-    java.text.DateFormat.getDateInstance(java.text.DateFormat.MEDIUM, androidx.compose.ui.platform.LocalConfiguration.current.locales[0]).format(java.util.Date(ms))
-
 /**
  * Collection check (#68, owner's name): add everything you already have, one group per page, swiping left and
  * right; manhole cards first (owner, 2026-11-07). Tick the tiles you have and save the page; no dates or places
@@ -158,7 +139,7 @@ fun CollectionCheckScreen(
             actions = {
                 if (tripDay) androidx.compose.material3.AssistChip(
                     onClick = { pickDay = true },
-                    label = { Text(formatDay(dayMs)) },
+                    label = { Text(dateText(dayMs)) },
                     leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     modifier = Modifier.padding(end = 8.dp),
                 )
@@ -166,16 +147,16 @@ fun CollectionCheckScreen(
         )
         if (pickDay) {
             val state = androidx.compose.material3.rememberDatePickerState(
-                initialSelectedDateMillis = utcMidnight(dayMs),
+                initialSelectedDateMillis = Dates.pickerDay(dayMs),
                 selectableDates = object : androidx.compose.material3.SelectableDates {
-                    override fun isSelectableDate(utcTimeMillis: Long) = utcTimeMillis <= System.currentTimeMillis()
+                    override fun isSelectableDate(utcTimeMillis: Long) = Dates.notFuture(utcTimeMillis, System.currentTimeMillis())
                 },
             )
             androidx.compose.material3.DatePickerDialog(
                 onDismissRequest = { pickDay = false },
                 confirmButton = {
                     androidx.compose.material3.TextButton(onClick = {
-                        state.selectedDateMillis?.let { dayMs = noonFromUtcDate(it) }
+                        state.selectedDateMillis?.let { dayMs = Dates.noonFromPicker(it) }
                         pickDay = false
                     }) { Text(stringResource(android.R.string.ok)) }
                 },

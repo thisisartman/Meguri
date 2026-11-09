@@ -152,7 +152,7 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.trip_clear))
                 }
                 IconButton(onClick = { nav.navigate("trip-report") }) {
-                    Icon(painterResource(R.drawable.ic_image), contentDescription = stringResource(R.string.trip_report))
+                    Icon(painterResource(R.drawable.ic_assessment), contentDescription = stringResource(R.string.trip_report))
                 }
                 IconButton(onClick = { linkOpen = true }) { Icon(painterResource(R.drawable.ic_link), contentDescription = stringResource(R.string.trip_link)) }
                 IconButton(enabled = plan != null, onClick = {
