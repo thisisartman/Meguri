@@ -65,7 +65,12 @@ private val BUILT_IN = listOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD, ItemType
  */
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
-fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: String, findId: String, withPhoto: Boolean) -> Unit) {
+fun NewItemScreen(
+    vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: String, findId: String, withPhoto: Boolean) -> Unit,
+    // From a notebook page (finding 33): only the item is made here; saving the page gives it its find, had before
+    // Meguri or on the page's date, so no photo, cost or position from the phone (the page is photographed at home)
+    forNotebook: Boolean = false,
+) {
     val customTypes by vm.collectionTypes.collectAsStateWithLifecycle()
     val ja = isJapanese()
     var name by rememberSaveable { mutableStateOf("") }
@@ -106,13 +111,17 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
         val romaji = if (latin) name.trim() else otherName.trim().ifBlank { null }
         val yen = cost.toIntOrNull()?.takeIf { hasCost }
         val done = { itemId: String, findId: String -> onSaved(itemId, findId, withPhoto) }
+        fun add(type: ItemType, customId: String?) {
+            if (forNotebook) vm.addItemOnly(type, nameJa, romaji, customId, place) { itemId -> onSaved(itemId, "", false) }
+            else vm.addNew(type, nameJa, romaji, customId, place, yen, done)
+        }
         if (exact != null) {
-            vm.addNew(exact.type, nameJa, romaji, exact.customId, place, yen, done)
+            add(exact.type, exact.customId)
         } else {
             // A kind you typed: made once, then used like any other (a colour not yet taken, the card or stamp icon)
             val cat = category ?: Category.OTHER
             val color = CUSTOM_COLORS.firstOrNull { c -> customTypes.none { it.color == c } } ?: CUSTOM_COLORS[customTypes.size % CUSTOM_COLORS.size]
-            vm.addCollectionType(typed, color, cat.icon(), hasCost = newKindCost) { id -> vm.addNew(ItemType.CUSTOM, nameJa, romaji, id, place, yen, done) }
+            vm.addCollectionType(typed, color, cat.icon(), hasCost = newKindCost) { id -> add(ItemType.CUSTOM, id) }
         }
     }
 
@@ -210,7 +219,7 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
                     TextButton(onClick = { place = null }) { Text(stringResource(R.string.new_use_position)) }
                 }
             } else {
-                Text(stringResource(R.string.new_where_position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(stringResource(if (forNotebook) R.string.nb_new_where else R.string.new_where_position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val runSearch = {
                     val q = placeQuery.ifBlank { name }
                     if (q.isNotBlank() && !searching) {
@@ -249,7 +258,7 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
                     if (list.isNotEmpty()) Text(stringResource(R.string.osm_credit), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            if (hasCost) {
+            if (hasCost && !forNotebook) {
                 OutlinedTextField(
                     value = cost, onValueChange = { v -> cost = v.filter { it.isDigit() }.take(7) },
                     label = { Text(stringResource(R.string.new_cost)) }, singleLine = true, prefix = { Text("¥") },
@@ -263,13 +272,13 @@ fun NewItemScreen(vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: Strin
         }
         // Saving collects it today, here; "Save and add photo" opens the camera straight after
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            InkOutlinedButton(onClick = { save(true) }, enabled = ok, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+            if (!forNotebook) InkOutlinedButton(onClick = { save(true) }, enabled = ok, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                 Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(stringResource(R.string.add_save_photo), maxLines = 1)
             }
             Button(onClick = { save(false) }, enabled = ok, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
-                Text(stringResource(R.string.new_save), maxLines = 1)
+                Text(stringResource(if (forNotebook) R.string.nb_new_save else R.string.new_save), maxLines = 1)
             }
         }
     }

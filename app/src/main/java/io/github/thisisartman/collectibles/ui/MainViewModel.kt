@@ -175,6 +175,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /** A new item with no find yet, for a notebook stamp: saving the page gives it its find (finding 33). */
+    fun addItemOnly(
+        type: ItemType, nameJa: String, nameRomaji: String?,
+        customTypeId: String? = null, place: io.github.thisisartman.collectibles.data.PlaceHit? = null,
+        onDone: (itemId: String) -> Unit,
+    ) {
+        viewModelScope.launch { onDone(repo.addItem(type, nameJa, nameRomaji, customTypeId, place)) }
+    }
+
     private var lastLogged: Logged? = null
 
     private fun emit(l: Logged) {
@@ -296,11 +305,11 @@ class MainViewModel @Inject constructor(
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
     /** Notebook stamps: each (item, picture), saved as "had before Meguri" unless already collected; [onDone] gets how many. */
-    fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, onDone: (Int) -> Unit) {
+    fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, atMs: Long? = null, onDone: (Int) -> Unit) {
         viewModelScope.launch {
             var n = 0
             val t0 = System.currentTimeMillis()
-            for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, null)) n++
+            for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, atMs)) n++
             log.d("Notebook", "Saved $n of ${stamps.size} stamps from the page in ${System.currentTimeMillis() - t0} ms")
             onDone(n)
         }

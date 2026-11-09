@@ -320,7 +320,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     composable("stamps") { Page { NotebookReviewScreen(onBack = { nav.popBackStack() }, onDone = { nav.navigate("stamps-match") }) } }
                     composable("stamps-match") {
                         Page {
-                            NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new") }, onSaved = { n ->
+                            NotebookMatchScreen(vm, onBack = { nav.popBackStack() }, onAddNew = { nav.navigate("new-for-notebook") }, onSaved = { n ->
                                 nav.popBackStack(NEARBY, inclusive = false)
                                 appScope.launch { snackbar.showSnackbar(context.resources.getQuantityString(R.plurals.nb_saved, n, n)) }
                             })
@@ -333,6 +333,16 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                                 nav.popBackStack()
                                 nav.openItem(itemId)
                                 if (withPhoto) photo.capture(findId)
+                            })
+                        }
+                    }
+                    // "Not in Meguri? Add it" on a notebook stamp (finding 33): the new item becomes that stamp's choice,
+                    // and Back returns to the stamps as they were
+                    composable("new-for-notebook") {
+                        Page {
+                            NewItemScreen(vm, forNotebook = true, onBack = { nav.popBackStack() }, onSaved = { itemId, _, _ ->
+                                NotebookSession.added(itemId)
+                                nav.popBackStack()
                             })
                         }
                     }

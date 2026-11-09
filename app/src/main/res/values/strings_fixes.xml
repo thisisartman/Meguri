@@ -14,4 +14,6 @@
     <string name="nb_date">Date</string>
     <string name="nb_no_date">No date</string>
     <string name="nb_date_clear">Clear date</string>
+    <string name="nb_new_where">Find its place, or leave it empty.</string>
+    <string name="nb_new_save">Save</string>
 </resources>
