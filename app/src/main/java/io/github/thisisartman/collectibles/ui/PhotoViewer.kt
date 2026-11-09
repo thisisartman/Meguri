@@ -81,7 +81,7 @@ fun LargePhoto(uri: String, modifier: Modifier = Modifier, onFullscreen: () -> U
             bmp != null -> Image(
                 bmp.asImageBitmap(), contentDescription = stringResource(R.string.photo_view_fullscreen),
                 contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxWidth().pointerInput(uri) { detectTapGestures(onTap = { onFullscreen() }) },
+                modifier = Modifier.fillMaxWidth().heightIn(max = 420.dp).pointerInput(uri) { detectTapGestures(onTap = { onFullscreen() }) },
             )
             done -> Icon(painterResource(R.drawable.ic_image), contentDescription = null, tint = Color.Gray)
             else -> CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 2.dp)

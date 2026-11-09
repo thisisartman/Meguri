@@ -726,4 +726,8 @@
     <string name="item_remove_collection">コレクションから外す</string>
     <string name="item_remove_collection_title">コレクションから外しますか？</string>
     <string name="item_remove_collection_text">記録と写真がMeguriから削除され、未収集に戻ります。カメラで撮った写真はギャラリーに残ります。</string>
+    <string name="photo_another">別の写真</string>
+    <string name="photo_other_name">名前（任意）</string>
+    <string name="photo_remove_title">この写真を削除しますか？</string>
+    <string name="photo_missing">見つかりません</string>
 </resources>

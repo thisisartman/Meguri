@@ -1,5 +1,9 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.foundation.shape.RoundedCornerShape
+
+import androidx.compose.ui.draw.clip
+
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.background
@@ -142,8 +146,9 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
             if (p != null) PhotoSquare(p, if (p.id == coverId) label + " ★" else label) { editing = p }
             else EmptySquare(label) { adding = kind }
         }
-        extra.forEach { p -> PhotoSquare(p, stringResource(kindLabel(type, p.role)) + if (p.id == coverId) " ★" else "") { editing = p } }
-        EmptySquare(stringResource(R.string.photo_kind_other)) { adding = PhotoKind.OTHER }
+        extra.forEach { p -> PhotoSquare(p, photoLabel(type, p.role) + if (p.id == coverId) " ★" else "") { editing = p } }
+        // Once there is an Other photo, the add square says "Another photo" so two squares don't share a name
+        EmptySquare(stringResource(if (extra.any { isOther(it.role) }) R.string.photo_another else R.string.photo_kind_other)) { adding = PhotoKind.OTHER }
     }
     }
     }
@@ -162,15 +167,35 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
     }
 
     editing?.let { p ->
-        var kind by remember(p.id) { mutableStateOf(if (p.role in kinds || p.role == PhotoKind.OTHER) p.role else kinds.firstOrNull { sameKind(p.role, it, type) } ?: PhotoKind.OTHER) }
+        var kind by remember(p.id) { mutableStateOf(if (p.role in kinds || isOther(p.role)) (if (isOther(p.role)) PhotoKind.OTHER else p.role) else kinds.firstOrNull { sameKind(p.role, it, type) } ?: PhotoKind.OTHER) }
+        // An Other photo can carry its own name ("Gundam collaboration"; owner, 2026-11-09), kept in photo.role
+        var otherName by remember(p.id) { mutableStateOf(p.role.takeIf { it.startsWith(OTHER_PREFIX) }?.removePrefix(OTHER_PREFIX).orEmpty()) }
+        var confirmRemove by remember(p.id) { mutableStateOf(false) }
+        val newRole = if (kind == PhotoKind.OTHER && otherName.isNotBlank()) OTHER_PREFIX + otherName.trim() else kind
+        if (confirmRemove) AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(stringResource(R.string.photo_remove_title)) },
+            text = { Text(stringResource(R.string.photo_remove_note)) },
+            confirmButton = {
+                TextButton(onClick = { confirmRemove = false; actions.remove(p.id); editing = null }) {
+                    Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(R.string.cancel)) } },
+        )
         AlertDialog(
             onDismissRequest = { editing = null },
-            title = { Text(stringResource(R.string.photo_edit_title)) },
+            title = { Text(photoLabel(type, newRole)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Card size, whole, with fullscreen a tap away (owner, 2026-11-08)
                     LargePhoto(p.contentUri, onFullscreen = { fullscreen = p.contentUri })
                     KindChips(type, kind) { kind = it }
+                    if (kind == PhotoKind.OTHER) androidx.compose.material3.OutlinedTextField(
+                        value = otherName, onValueChange = { otherName = it.take(40) },
+                        label = { Text(stringResource(R.string.photo_other_name)) }, singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
                     // The photo shown for this item on tiles, in lists and on its page
                     val isCover = p.id == coverId
                     // With none chosen, the newest photo is shown; say so, and offer to keep it
@@ -192,7 +217,7 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
                 }
             },
             confirmButton = {
-                TextButton(onClick = { if (kind != p.role) actions.setKind(p.id, kind); editing = null }) { Text(stringResource(R.string.photo_done)) }
+                TextButton(onClick = { if (newRole != p.role) actions.setKind(p.id, newRole); editing = null }) { Text(stringResource(R.string.photo_done)) }
             },
             dismissButton = {
                 // What removing does is a tooltip on the button (long press), not a line in the dialog (owner, 2026-11-09)
@@ -202,7 +227,7 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
                     tooltip = { PlainTooltip { Text(stringResource(R.string.photo_remove_note)) } },
                     state = androidx.compose.material3.rememberTooltipState(),
                 ) {
-                    TextButton(onClick = { actions.remove(p.id); editing = null }) {
+                    TextButton(onClick = { confirmRemove = true }) {
                         Text(stringResource(R.string.photo_remove), color = MaterialTheme.colorScheme.error)
                     }
                 }
@@ -268,7 +293,7 @@ private fun PhotoSquare(p: Photo, label: String, onClick: () -> Unit) {
         Modifier.width(SLOT).clickable(onClick = onClick).spoken(stringResource(R.string.a11y_photo_kind, label)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        PhotoThumb(p.contentUri, SLOT)
+        PhotoThumb(p.contentUri, SLOT, fallback = { MissingPhoto(SLOT) })
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 4.dp))
     }
 }
@@ -364,5 +389,27 @@ fun KindAddIcon(type: ItemType, kind: String) {
                 contentAlignment = Alignment.Center,
             ) { Icon(androidx.compose.material.icons.Icons.Filled.Add, contentDescription = null, modifier = Modifier.size(11.dp)) }
         }
+    }
+}
+
+/** A named Other photo keeps its name after this prefix in photo.role. */
+const val OTHER_PREFIX = "other:"
+
+fun isOther(role: String) = role == PhotoKind.OTHER || role.startsWith(OTHER_PREFIX)
+
+/** The words for a photo's kind: its own name for a named Other photo. */
+@Composable
+fun photoLabel(type: ItemType, role: String): String =
+    if (role.startsWith(OTHER_PREFIX)) role.removePrefix(OTHER_PREFIX) else stringResource(kindLabel(type, role))
+
+/** In place of a photo that can no longer be found (deleted from the gallery before Meguri kept copies). */
+@Composable
+private fun MissingPhoto(size: androidx.compose.ui.unit.Dp) {
+    Column(
+        Modifier.size(size).clip(RoundedCornerShape(size * 0.16f)).background(MaterialTheme.colorScheme.surfaceVariant),
+        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
+    ) {
+        Icon(painterResource(R.drawable.ic_image), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+        Text(stringResource(R.string.photo_missing), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
     }
 }

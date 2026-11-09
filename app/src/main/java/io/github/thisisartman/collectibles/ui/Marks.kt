@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.res.painterResource
+
 import android.graphics.Bitmap
 import android.net.Uri
 import android.util.Size
@@ -50,7 +52,7 @@ fun Mark(row: ItemRow, size: Dp, modifier: Modifier = Modifier) {
         row.collected && row.item.type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD && row.item.code != null ->
             Seal(row.item.sealLabel(ja), LocalTypeColors.current.of(row.item.type), size, modifier)
         row.collected -> Seal("", colorOf(row.item), size, modifier, icon = iconOf(row.item))
-        else -> EmptySlot(size, modifier)
+        else -> EmptySlot(size, modifier, icon = iconOf(row.item))
     }
     // The card's own picture when downloaded (#53): greyed until collected; your photo still comes first
     val cards by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsState()
@@ -146,17 +148,23 @@ fun Seal(label: String, color: androidx.compose.ui.graphics.Color, size: Dp, mod
 }
 
 @Composable
-fun EmptySlot(size: Dp, modifier: Modifier = Modifier, strong: Boolean = false) {
+fun EmptySlot(size: Dp, modifier: Modifier = Modifier, strong: Boolean = false, @androidx.annotation.DrawableRes icon: Int? = null) {
     val dash = LocalTypeColors.current.dash
     // strong: the nearest slot still to get in a stamp book, a solid darker ring (round 5, E2)
     val ink = androidx.compose.material3.MaterialTheme.colorScheme.onSurface
-    Canvas(modifier.size(size)) {
-        val w = (if (strong) 3 else 2).dp.toPx()
-        drawCircle(
-            color = if (strong) ink else dash,
-            radius = (this.size.minDimension - w) / 2,
-            center = Offset(this.size.width / 2, this.size.height / 2),
-            style = Stroke(width = w, pathEffect = if (strong) null else PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
+    Box(modifier.size(size), contentAlignment = Alignment.Center) {
+        Canvas(Modifier.size(size)) {
+            val w = (if (strong) 3 else 2).dp.toPx()
+            drawCircle(
+                color = if (strong) ink else dash,
+                radius = (this.size.minDimension - w) / 2,
+                center = Offset(this.size.width / 2, this.size.height / 2),
+                style = Stroke(width = w, pathEffect = if (strong) null else PathEffect.dashPathEffect(floatArrayOf(5.dp.toPx(), 4.dp.toPx()))),
+            )
+        }
+        // Its category icon in grey: not collected yet, but you can see what it is (a station stamp or its Ekitag)
+        if (icon != null) androidx.compose.material3.Icon(
+            painterResource(icon), contentDescription = null, tint = dash, modifier = Modifier.size(size * 0.42f),
         )
     }
 }

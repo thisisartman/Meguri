@@ -287,7 +287,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         }
                     }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                        Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }) }
+                        Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }, onOpenItem = { id -> nav.openItem(id) }) }
                     }
                     composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }

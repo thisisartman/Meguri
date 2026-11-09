@@ -370,6 +370,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     // A new sort, tab or filter starts from the top (keys would otherwise hold the old place)
                     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
                     LaunchedEffect(byName, tab, kind, query) { grid.scrollToItem(0) }
+                    // A station's stamp and its Ekitag are one tile (owner, 2026-11-09); an Ekitag shows on its own
+                    // only when its station isn't in the list (the Ekitag filter, or no stamp for it)
+                    val ekitags = remember(rows) { ekitagByStation(rows) }
+                    val stationIds = remember(shown) { shown.filter { it.item.type == ItemType.EKI_STAMP }.map { stationKey(it) }.toSet() }
+                    val tiles = remember(shown, stationIds) { shown.filter { it.item.type != ItemType.EKITAG || stationKey(it) !in stationIds } }
                     LazyVerticalGrid(
                         state = grid,
                         columns = GridCells.Adaptive(cell),
@@ -379,7 +384,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp)
                             .onGloballyPositioned { gridTopPx = it.positionInParent().y.toInt() },
                     ) {
-                        itemsIndexed(shown, key = { _, r -> r.item.id }) { i, r ->
+                        itemsIndexed(tiles, key = { _, r -> r.item.id }) { i, r ->
                             // The first row's tallest tile sets the resting height; top padding 4 dp
                             val m = if (i == 0) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
                             Box(m) {
@@ -387,6 +392,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     r, tile, r.item.tileLabel(ja),
                                     if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
+                                    ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
                                 )
                             }
                         }
@@ -590,7 +596,7 @@ private const val TIP_SORT = "sort"
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable
-internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
+internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit, ekitag: ItemRow? = null) {
     Column(
         // Faded when you found nothing there
         Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (row.noneHere) 0.45f else 1f),
@@ -599,17 +605,19 @@ internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, 
         // An Ekitag sits on its station's spot with the same name: a small badge says which tile is the Ekitag
         androidx.compose.foundation.layout.Box {
             Mark(row, size)
-            if (row.item.type == ItemType.EKITAG) {
+            // The badge: an Ekitag on its own, or a station's Ekitag folded into its tile (filled once you have it)
+            val badgeHave = if (row.item.type == ItemType.EKITAG) row.collected else ekitag?.collected
+            if (row.item.type == ItemType.EKITAG || ekitag != null) {
                 androidx.compose.material3.Surface(
                     shape = androidx.compose.foundation.shape.CircleShape,
-                    color = MaterialTheme.colorScheme.surface,
+                    color = if (ekitag != null && badgeHave == true) LocalTypeColors.current.ekitag else MaterialTheme.colorScheme.surface,
                     shadowElevation = 1.dp,
                     modifier = Modifier.align(Alignment.TopEnd).size(size * 0.34f),
                 ) {
                     androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
                         androidx.compose.material3.Icon(
                             androidx.compose.ui.res.painterResource(R.drawable.ic_type_ekitag), contentDescription = stringResource(R.string.type_ekitag),
-                            tint = LocalTypeColors.current.ekitag, modifier = Modifier.size(size * 0.22f),
+                            tint = if (ekitag != null && badgeHave == true) MaterialTheme.colorScheme.surface else LocalTypeColors.current.ekitag, modifier = Modifier.size(size * 0.22f),
                         )
                     }
                 }
@@ -759,3 +767,10 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
         }
     }
 }
+
+/** Where a station item stands; a station's stamp and its Ekitag share it. */
+internal fun stationKey(r: ItemRow): String? = r.item.lat?.let { la -> r.item.lng?.let { lo -> "%.4f,%.4f".format(java.util.Locale.US, la, lo) } }
+
+/** Each station's Ekitag, by the station's spot. */
+internal fun ekitagByStation(rows: List<ItemRow>): Map<String?, ItemRow> =
+    rows.filter { it.item.type == ItemType.EKITAG && stationKey(it) != null }.associateBy { stationKey(it) }

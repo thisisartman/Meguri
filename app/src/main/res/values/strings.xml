@@ -745,4 +745,8 @@
     <string name="item_remove_collection">Remove from my collection</string>
     <string name="item_remove_collection_title">Remove from your collection?</string>
     <string name="item_remove_collection_text">Every find of it and their photos leave Meguri; it goes back to not collected. Photos you took with the camera stay in your gallery.</string>
+    <string name="photo_another">Another photo</string>
+    <string name="photo_other_name">Name (optional)</string>
+    <string name="photo_remove_title">Remove this photo?</string>
+    <string name="photo_missing">Not found</string>
 </resources>

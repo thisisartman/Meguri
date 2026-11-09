@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
@@ -67,7 +69,7 @@ import io.github.thisisartman.collectibles.data.ItemType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
+fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem: (String) -> Unit = {}) {
     val ja = isJapanese()
     val row by remember(itemId) { vm.itemRow(itemId) }.collectAsStateWithLifecycle(null)
     val finds by remember(itemId) { vm.finds(itemId) }.collectAsStateWithLifecycle(emptyList())
@@ -109,6 +111,9 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
             },
         )
         if (r == null) return@Column
+        // A station's Ekitag, folded into the station on Nearby (owner, 2026-11-09)
+        val allRows by vm.rows.collectAsStateWithLifecycle()
+        val ekitag = if (r.item.type == io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP) remember(allRows, r) { ekitagByStation(allRows)[stationKey(r)] } else null
         if (editing) ItemEditSheet(r.item, vm, onDismiss = { editing = false })
         if (confirmItem) {
             val own = r.item.origin == io.github.thisisartman.collectibles.data.Origin.USER
@@ -180,6 +185,7 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 }
             }
             item { Actions(item, meters) }
+            ekitag?.let { e -> item { EkitagRow(e) { onOpenItem(e.item.id) } } }
             // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
             if (!r.collected) item { NoneHereRow(item, r.noneHere, onSet = { tick(); vm.setNoneHere(item.id, it) }) }
             // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
@@ -490,5 +496,25 @@ private fun NoneHereRow(item: Item, marked: Boolean, onSet: (Boolean) -> Unit) {
         TextButton(onClick = { onSet(true) }, modifier = Modifier.padding(horizontal = 8.dp)) {
             Text(stringResource(R.string.none_here_ask, stringResource(noneHereLabel(item.type))))
         }
+    }
+}
+
+/** A station's Ekitag on the station's page: its state, and a tap opens it. */
+@Composable
+private fun EkitagRow(e: io.github.thisisartman.collectibles.data.ItemRow, onOpen: () -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().clickable(onClick = onOpen).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Mark(e, 40.dp)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.type_ekitag), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                stringResource(if (e.collected) R.string.state_collected else R.string.state_to_get),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
