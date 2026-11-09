@@ -417,8 +417,8 @@ private fun CollectionRow(
     }
     // Owner, 2026-11-07: something you had before the app shows the day it was added; a dash if there is no date at all
     val whenText = when {
-        !a.beforeApp && a.acquiredAt != null -> formatDateTime(a.acquiredAt, ja)
-        a.createdAt > 0 -> stringResource(R.string.added_on, formatDate(a.createdAt, ja))
+        !a.beforeApp && a.acquiredAt != null -> dateTimeText(a.acquiredAt)
+        a.createdAt > 0 -> stringResource(R.string.added_on, dateText(a.createdAt))
         else -> stringResource(R.string.no_date)
     }
     var confirmRemove by remember { mutableStateOf(false) }
@@ -447,7 +447,7 @@ private fun CollectionRow(
         else -> null
     }
     Row(Modifier.fillMaxWidth().clickable { editing = true }.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-        Icon(painterResource(R.drawable.ic_collect), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+        Icon(painterResource(R.drawable.ic_history), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).padding(vertical = 8.dp)) {
             // The date, then "×2" for duplicates and "¥500" when what you paid is noted
