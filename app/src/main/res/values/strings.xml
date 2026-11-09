@@ -185,7 +185,7 @@
     <string name="alert_for">Alert for</string>
     <string name="quiet_title">Quiet at night</string>
     <string name="quiet_sub">No alerts from 22:00 to 07:00</string>
-    <string name="setup_title">Keep alerts working</string>
+    <string name="setup_title">Keep alerts working in the background</string>
     <string name="setup_sub">Set battery use for Meguri to Unrestricted, so the phone does not stop alerts.</string>
     <string name="setup_sub_samsung">Set battery use for Meguri to Unrestricted and keep it out of Sleeping apps, so the phone does not stop alerts.</string>
     <string name="notif_off">Notifications are off for Meguri. Alerts need them: tap to turn them on.</string>
@@ -608,7 +608,7 @@
     <string name="alerts_mode_sub">Travelling: until midnight, or during a trip (Proximity mode). Always: also when Meguri is closed.</string>
     <string name="alerts_how_close">Proximity alert settings</string>
     <string name="alerts_every">All categories</string>
-    <string name="alerts_categories">Categories that alert</string>
+    <string name="alerts_categories">Alert categories</string>
     <string name="alerts_categories_sub">%1$d of %2$d</string>
     <string name="alerts_same">Default (%1$s)</string>
     <string name="alerts_distance_for">Distance</string>

@@ -185,7 +185,7 @@
     <string name="alert_for">通知する種類</string>
     <string name="quiet_title">夜は通知しない</string>
     <string name="quiet_sub">22:00〜7:00は通知しません</string>
-    <string name="setup_title">通知が届かなくなるのを防ぐ</string>
+    <string name="setup_title">バックグラウンドでも通知を届ける</string>
     <string name="setup_sub">Meguriの電池の使用を「制限なし」にしてください。</string>
     <string name="setup_sub_samsung">Meguriの電池の使用を「制限なし」にし、「スリープ中のアプリ」に入れないでください。</string>
     <string name="notif_off">Meguriの通知がオフです。タップしてオンにしてください。</string>
@@ -598,7 +598,7 @@
     <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間（近接モード）。常に：Meguriを閉じていても。</string>
     <string name="alerts_how_close">近接通知の設定</string>
     <string name="alerts_every">すべてのカテゴリー</string>
-    <string name="alerts_categories">通知するカテゴリー</string>
+    <string name="alerts_categories">通知カテゴリー</string>
     <string name="alerts_categories_sub">%2$d中%1$d</string>
     <string name="alerts_same">デフォルト（%1$s）</string>
     <string name="alerts_distance_for">距離</string>
