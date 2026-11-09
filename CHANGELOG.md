@@ -16,6 +16,12 @@
 - Settings list looks as proposed: each section's icon in a round badge, bold names, and a line saying what is set (Alerts: mode, distance, categories, quiet hours; Backup: last weekly backup and how many finds; Catalogue: prefectures and card pictures).
 - Alerts: Proximity alert settings, with the category menu on a pill; standard words: All categories, Default, Custom distances, Revert to default. Alert categories (which categories notify) is now only on or off for each; Keep alerts working is now Keep alerts working in the background.
 - Your own categories moved from the Settings list into Backup and data.
+- Nearby: a station's stamp and its Ekitag are one tile; the Ekitag badge in its corner fills in once you have it. The station's page has an Ekitag row that opens it. Empty tiles show their category icon in grey.
+- Item page: More options, Remove item (an item you added: it leaves Meguri with its finds and photos) or Remove from my collection (a catalogue item goes back to not collected); both ask first. A category with items says how to empty it.
+- Photos: the viewer shows the whole photo with its kind as the title; an Other photo can be named ("Gundam collaboration"); Remove photo asks first; a photo that can no longer be found says "Not found"; the add square reads "Another photo" once there is one.
+- Finds on an item page use the phone's date style and a history icon.
+- A category page's map opens the full map with only that category; pins on the small maps open their item; My book's categories count counts each category you have something in.
+- Search: letters in order count only as an abbreviation from the start of a name ("urasa" no longer finds roadside stations 40 km away).
 - Privacy: place search is described as it works (the name and the area around your position, also for pasted Google Maps links), and pasted short links are said to be opened once.
 - Collection check is a card deck: choose a category, then a prefecture, then go through what you don't have yet one at a time. Swipe right (or "Have it") and it is saved as had before Meguri; swipe left (or "Not yet") for the next. The whole card shows large. "Undo" takes back the last swipe, even after going back to the prefecture list.
 - docs/APP_GUIDE.md: a full guide to every page, feature and background facility.
