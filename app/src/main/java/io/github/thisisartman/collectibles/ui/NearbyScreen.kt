@@ -220,6 +220,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val picking = onboarding.step == OnboardingStep.HAVE
     // Back closes a tapped pin's card first (seen on the Poco, 2026-11-09: Back left the app with the card open)
     androidx.activity.compose.BackHandler(enabled = picked != null) { picked = null }
+    // Back clears a search before it leaves the app (S23 run, 2026-11-09: Back with "urasa" in the bar left Meguri)
+    androidx.activity.compose.BackHandler(enabled = picked == null && searching) { query = ""; listOpen = false; focus.clearFocus() }
     // Back steps through the onboarding (seen on the emulator: it left the app mid-picker and the picks were lost)
     androidx.activity.compose.BackHandler(enabled = inOnboarding && onboarding.step != OnboardingStep.START) {
         when (onboarding.step) {

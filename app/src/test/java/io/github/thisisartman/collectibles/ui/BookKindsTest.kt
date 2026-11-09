@@ -43,6 +43,20 @@ class BookKindsTest {
         assertEquals(1, g[0].collected)
     }
 
+    /** S23 run, 2026-11-09: lines came in catalogue order, the started one in the fourth row. */
+    @Test fun startedLinesFirstThenNearestThenOtherStations() {
+        val lines2 = mapOf("a1" to setOf("far"), "b1" to setOf("near"), "c1" to setOf("started"), "c2" to setOf("started"))
+        val rows2 = listOf(
+            row("a1", ItemType.EKI_STAMP), row("b1", ItemType.EKI_STAMP), row("c1", ItemType.EKI_STAMP, got = true),
+            row("c2", ItemType.EKI_STAMP), row("o1", ItemType.EKI_STAMP),
+        )
+        val km = mapOf("a1" to 150.0, "b1" to 4.0, "c1" to 90.0, "c2" to 80.0, "o1" to 1.0)
+        val g = BookKinds.groups("EKI_STAMP", rows2, { lines2[it].orEmpty() }, { r -> km[r.item.id] })
+        assertEquals(listOf("l:started", "l:near", "l:far", "l:"), g.map { it.key })
+        // With no position, started lines still come first
+        assertEquals(listOf("l:started", "l:far", "l:near", "l:"), BookKinds.groups("EKI_STAMP", rows2, { lines2[it].orEmpty() }).map { it.key })
+    }
+
     @Test fun cardsGroupByPrefectureAndYourOwnIsOneGroup() {
         assertEquals(listOf("p:新潟県", "p:東京都"), BookKinds.groups("MANHOLE_CARD", rows, lineOf).map { it.key })
         val own = BookKinds.groups("custom:lids", rows, lineOf).single()

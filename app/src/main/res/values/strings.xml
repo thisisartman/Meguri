@@ -443,7 +443,7 @@
     <string name="cards_download">Card pictures</string>
     <string name="cards_download_sub">%1$d of %2$d on this phone. Tap to download the rest from the card site (Eki kara Manhole), for your own use: they stay on this phone, not in backups. Pictures © GKP and each city.</string>
     <string name="cards_progress">Downloading %1$d of %2$d…</string>
-    <string name="cards_done">Card pictures: %1$d downloaded, %2$d not found</string>
+    <string name="cards_done">Card pictures: %1$d downloaded. %2$d couldn\'t be downloaded: tap Card pictures to try again</string>
     <string name="cards_remove">Remove card pictures</string>
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
     <string name="scan_or_maybe">Or is it %1$s?</string>

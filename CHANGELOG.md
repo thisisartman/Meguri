@@ -2,7 +2,13 @@
 
 ## Next: 0.5 (the remaining big features; 0.6 will be the first public test beta)
 - Nearby: the category filter is the same pill and menu as on Alerts ("All categories" or one category, with its colour dot), in place of a row of chips that scrolled. Search results use it too. Checked on the Poco and the S23.
-- Tested from first open on the S23 (dev copy, recorded): 7 things to fix, listed in Resources/Verification/s23-run-2026-11-09/FINDINGS.md; the main one, "I already have some" skips the picker after loading. Fixes wait for the owner's go-ahead.
+- Tested from first open on the S23 (dev copy, recorded): 7 things to fix, listed in Resources/Verification/s23-run-2026-11-09/FINDINGS.md; the picker skip turned out to be the test helper tapping "I'm starting fresh" (the picker opens), the rest fixed:
+  - Nearby: Back clears a typed search before it leaves the app.
+  - Collection check offers the card picture download while pictures are missing (a fresh phone showed only icons).
+  - Station stamps: lines you have started come first, then the nearest.
+  - Card pictures: a failed download says "couldn't be downloaded: tap Card pictures to try again" (it said "not found").
+  - The Nagaoka mascot card is "Kawagutchi" (かわぐっち), not "Kawagucchi".
+  - The log names each page with its arguments (it wrote "trip-report?day={day}").
 
 ## 0.4.0 (2026-11-09, stable)
 Everything below since beta.9, plus these last changes:

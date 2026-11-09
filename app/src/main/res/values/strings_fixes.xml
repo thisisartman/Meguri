@@ -16,4 +16,6 @@
     <string name="nb_date_clear">Clear date</string>
     <string name="nb_new_where">Find its place, or leave it empty.</string>
     <string name="nb_new_save">Save</string>
+    <string name="check_cards_missing">Card pictures aren\'t on this phone yet, so cards show as icons.</string>
+    <string name="check_cards_download">Download %1$d</string>
 </resources>

@@ -88,16 +88,23 @@ object BookKinds {
 
     /**
      * A kind's collections: station stamps by line (a station on two lines counts in both; stations on no line go
-     * last), everything else by prefecture; your own collections are one group.
+     * last), everything else by prefecture; your own collections are one group. Lines you have started come first
+     * (most collected first), then the others by their nearest station when [distance] knows it (S23 run,
+     * 2026-11-09: the started line sat in the fourth row, under lines 150 km away).
      */
-    fun groups(key: String, rows: List<ItemRow>, lineOf: (String) -> Set<String>): List<Group> {
+    fun groups(key: String, rows: List<ItemRow>, lineOf: (String) -> Set<String>, distance: (ItemRow) -> Double? = { null }): List<Group> {
         val of = rowsOf(key, rows).filter { !it.noneHere }
         if (key.startsWith("custom:")) return listOf(Group(key, null, null, of, of.count { it.collected }, of.size))
         val type = ItemType.valueOf(key)
         if (type == ItemType.EKI_STAMP) {
             val byLine = linkedMapOf<String, MutableList<ItemRow>>()
             for (r in of) lineOf(r.item.id).ifEmpty { setOf("") }.forEach { byLine.getOrPut(it) { mutableListOf() } += r }
-            return byLine.entries.sortedBy { it.key.isEmpty() }.map { (line, list) ->
+            val nearest = byLine.mapValues { (_, list) -> list.mapNotNull(distance).minOrNull() ?: Double.MAX_VALUE }
+            return byLine.entries.sortedWith(
+                compareBy<Map.Entry<String, MutableList<ItemRow>>> { it.key.isEmpty() }
+                    .thenByDescending { e -> e.value.count { it.collected } }
+                    .thenBy { nearest[it.key] },
+            ).map { (line, list) ->
                 Group("l:$line", line.ifEmpty { null }, null, list, list.count { it.collected }, list.size)
             }
         }
@@ -193,7 +200,7 @@ fun KindScreen(vm: MainViewModel, key: String, nav: NavHostController, onBack: (
     val customTypes = LocalCustomTypes.current
     val lineOf = remember(lineStations) { val m = lineStations.groupBy({ it.itemId }, { it.lineId }); { id: String -> m[id].orEmpty().toSet() } }
     val kind = remember(rows, lineStations) { BookKinds.kinds(rows, lineOf).firstOrNull { it.key == key } }
-    val groups = remember(rows, lineStations) { BookKinds.groups(key, rows, lineOf) }
+    val groups = remember(rows, lineStations) { BookKinds.groups(key, rows, lineOf, vm::distanceTo) }
     val mine = remember(rows) { BookKinds.rowsOf(key, rows).filter { it.collected } }
     val pins = remember(mine) { mine.mapNotNull { it.toPin() } }
     val recent = remember(mine) { mine.sortedByDescending { it.lastAt ?: 0L }.take(20) }

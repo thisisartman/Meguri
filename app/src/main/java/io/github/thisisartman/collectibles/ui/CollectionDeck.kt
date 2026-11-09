@@ -121,11 +121,14 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
         )
         when {
             categories.isEmpty() -> Text(stringResource(R.string.check_nothing), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            category == null -> ChoiceList(
-                stringResource(R.string.check_pick_category),
-                categories.map { c -> Triple(c.key, c.name, c.rows) },
-                lead = { key -> categories.first { it.key == key }.rows.first().item.let { ItemTypeIcon(it, 24.dp) } },
-            ) { categoryKey = it }
+            category == null -> Column {
+                CardPicturesOffer(categories.firstOrNull { it.type == ItemType.MANHOLE_CARD }?.rows.orEmpty())
+                ChoiceList(
+                    stringResource(R.string.check_pick_category),
+                    categories.map { c -> Triple(c.key, c.name, c.rows) },
+                    lead = { key -> categories.first { it.key == key }.rows.first().item.let { ItemTypeIcon(it, 24.dp) } },
+                ) { categoryKey = it }
+            }
             prefecture == null -> ChoiceList(
                 stringResource(R.string.check_pick_prefecture),
                 category.rows.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().map { (p, l) -> Triple(p, prefectureLabel(p, ja), l) },
@@ -137,6 +140,35 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
 
 @Composable
 private fun prefectureLabel(p: String, ja: Boolean) = if (p.isEmpty()) stringResource(R.string.check_no_prefecture) else prefectureName(p, ja)
+
+/**
+ * Card pictures are not on a fresh phone, so the deck showed a seal for every card (S23 run, 2026-11-09). Offered here,
+ * where they matter, until all are down; the download is the Catalogue one and carries on after leaving.
+ */
+@Composable
+private fun CardPicturesOffer(cards: List<ItemRow>, more: MoreViewModel = androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel()) {
+    val codes = remember(cards) { cards.mapNotNull { it.item.code }.toSet() }
+    val have by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsStateWithLifecycle()
+    val progress by more.cardProgress.collectAsStateWithLifecycle()
+    val missing = codes.count { it !in have }
+    if (codes.isEmpty() || missing == 0) return
+    val context = androidx.compose.ui.platform.LocalContext.current
+    Surface(
+        Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Row(Modifier.padding(start = 14.dp, end = 4.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                progress?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) } ?: stringResource(R.string.check_cards_missing),
+                Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            if (progress == null) TextButton(onClick = { more.downloadCards(context) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                Text(stringResource(R.string.check_cards_download, missing))
+            }
+        }
+    }
+}
 
 /** A list of choices, each with how many you have of it and an arrow. */
 @Composable

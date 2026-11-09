@@ -22,7 +22,7 @@ TOWN = {
 }
 # Designs the cities publish (see make_catalog.py DESIGNS for how Nagaoka's were tied to codes).
 DESIGNS = {
-    "15-202-D001": ("かわぐっち", "Kawagucchi"),
+    "15-202-D001": ("かわぐっち", "Kawagutchi"),
     "15-202-E001": ("あぶらげんしん", "Abura Genshin"),
     "15-202-F001": ("長岡の四季", "Four seasons"),
 }

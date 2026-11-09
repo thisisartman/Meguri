@@ -93,8 +93,11 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     // Every page change, in the detailed log: the route and its id, line, section or key
     androidx.compose.runtime.DisposableEffect(nav) {
         val listener = androidx.navigation.NavController.OnDestinationChangedListener { _, dest, args ->
-            val arg = listOf("id", "section", "key", "kind", "group").mapNotNull { k -> args?.getString(k)?.let { "$k=$it" } }
-            vm.log.d("Nav", (dest.route ?: "?") + if (arg.isEmpty()) "" else " (" + arg.joinToString() + ")")
+            // Every argument the page was opened with, by name (the S23 run logged "trip-report?day={day}": the
+            // pattern, not the day); the route without its optional part, which the arguments now carry
+            val arg = args?.keySet().orEmpty().filterNot { it.startsWith("android-support-nav") }.sorted()
+                .mapNotNull { k -> @Suppress("DEPRECATION") args?.get(k)?.let { "$k=$it" } }
+            vm.log.d("Nav", (dest.route?.substringBefore('?') ?: "?") + if (arg.isEmpty()) "" else " (" + arg.joinToString() + ")")
         }
         nav.addOnDestinationChangedListener(listener)
         onDispose { nav.removeOnDestinationChangedListener(listener) }

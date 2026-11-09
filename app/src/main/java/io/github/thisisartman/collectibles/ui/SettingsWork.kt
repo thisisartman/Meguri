@@ -39,7 +39,7 @@ class SettingsWork @Inject constructor() {
     /** Card pictures being downloaded: done and total, or null when idle. */
     val cardProgress: StateFlow<Pair<Int, Int>?> = _cardProgress.asStateFlow()
 
-    /** Starts the card picture download unless one is already running; [onDone] gets (downloaded, not found). */
+    /** Starts the card picture download unless one is already running; [onDone] gets (downloaded, failed). */
     fun downloadCards(download: suspend (onProgress: (Int, Int) -> Unit) -> Pair<Int, Int>, onDone: (Int, Int) -> Unit) {
         if (_cardProgress.value != null) return
         _cardProgress.value = 0 to 0
@@ -54,8 +54,11 @@ class SettingsWork @Inject constructor() {
     }
 
     companion object {
-        /** What to say when a card picture download ends: nothing was missing, or how many came and how many were not found. */
-        fun cardsDoneMessage(downloaded: Int, notFound: Int): Int =
-            if (downloaded == 0 && notFound == 0) R.string.cards_all_here else R.string.cards_done
+        /**
+         * What to say when a card picture download ends: nothing was missing, or how many came and how many could not
+         * be downloaded (a network failure counts too: the S23 run's "2 not found" came down on the next tap).
+         */
+        fun cardsDoneMessage(downloaded: Int, failed: Int): Int =
+            if (downloaded == 0 && failed == 0) R.string.cards_all_here else R.string.cards_done
     }
 }

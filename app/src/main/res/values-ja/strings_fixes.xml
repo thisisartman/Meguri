@@ -15,4 +15,6 @@
     <string name="nb_date_clear">日付を消す</string>
     <string name="nb_new_where">場所を検索するか、空のままにします。</string>
     <string name="nb_new_save">保存</string>
+    <string name="check_cards_missing">カードの画像がまだこの端末にないため、カードはアイコンで表示されます。</string>
+    <string name="check_cards_download">%1$d枚をダウンロード</string>
 </resources>
