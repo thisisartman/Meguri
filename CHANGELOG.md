@@ -12,7 +12,7 @@ Everything below since beta.9, plus these last changes:
 - Dates follow the phone's date style everywhere.
 - 75 unused texts and some dead code removed.
 - Files Meguri saves are named meguri- (backups, weekly backups, the safety copy before a restore, exported logs). Weekly backup still clears out its old collectibles- files.
-- docs/APP_GUIDE.md has 20 screenshots and 6 moving pictures of actions.
+- docs/APP_GUIDE.md has 20 screenshots and 6 moving pictures of actions, as 26 numbered figures beside the text they show, each with a caption.
 - Known limits: the stamp finder found no stamps on 2 of the 10 notebook pages (stamps that touch or run off the page). Not yet tried on a phone: the notebook date chip, live distances while walking, the Settings messages after leaving, the onboarding CSV picker.
 
 ### Earlier in 0.4.0 (after beta.9)
