@@ -1,6 +1,20 @@
 # Changelog
 
-## Next (after beta.9)
+## 0.4.0 (2026-11-09, stable)
+Everything below since beta.9, plus these last changes:
+- Back up now asks each time: Without photos or With photos, or Cancel. Backups, restores, card picture downloads and CSV imports keep running after you leave Settings, and their message shows when they finish.
+- Scan: a collected card keeps where you were, with Undo in the message. A photo picked by hand is filed as the card's photo.
+- Notebook stamps: the page you were working on is still there after going to Add and back; Add it makes the item without a find; the date is optional, and dated saves count as had before Meguri. Matching tuned on 10 pages of the owner's notebook: misread look-alike characters (柏崎 read as 格埼) still find the station, and a station Meguri doesn't have (Asakusa) is no longer offered as a different one.
+- Nearby: Back closes a tapped pin's card before it leaves the app. Distances update as you move (at most every 30 s or 20 m). Location is asked for once per visit, not again after a no.
+- Timeline: a day opens its trip report. Trip report: a cleaner icon, and the picture is as tall as its content.
+- Filter chips are 48 dp tall and fade at the edge when they scroll.
+- Wording: Collected and Not collected everywhere; "Card, stamp or other"; Roadside station; Travelling alerts; "added to My book"; Gunma named with the catalogue.
+- Dates follow the phone's date style everywhere.
+- 75 unused texts and some dead code removed.
+- docs/APP_GUIDE.md has 20 screenshots and 6 moving pictures of actions.
+- Known limits: the stamp finder found no stamps on 2 of the 10 notebook pages (stamps that touch or run off the page). Not yet tried on a phone: the notebook date chip, live distances while walking, the Settings messages after leaving, the onboarding CSV picker.
+
+### Earlier in 0.4.0 (after beta.9)
 - Map: the land is a shade apart from the app (lighter in dark mode, slightly darker in light mode), so the search bar and the sheet have a clear edge. Roads in dark mode are lighter to match.
 - + opens a small card just above it with three square buttons (Scan, Search, Add); the bottom bar stays usable. + again, a tap outside or Back closes it.
 - (Earlier today: three large buttons in a sheet.) Scan, Search, Add. Add opens an empty form: a name, card or stamp, and its type. A type you write that Meguri doesn't have becomes a type of its own, with its own place in My book.
