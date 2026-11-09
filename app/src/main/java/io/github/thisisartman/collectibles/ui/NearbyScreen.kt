@@ -218,6 +218,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val peek = if (dropdownShown && !inOnboarding) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
     // The picker (#81 O3) opens expanded; pulled down, the map shows what it lists and frames it (idle while covered)
     val picking = onboarding.step == OnboardingStep.HAVE
+    // Back closes a tapped pin's card first (seen on the Poco, 2026-11-09: Back left the app with the card open)
+    androidx.activity.compose.BackHandler(enabled = picked != null) { picked = null }
     // Back steps through the onboarding (seen on the emulator: it left the app mid-picker and the picks were lost)
     androidx.activity.compose.BackHandler(enabled = inOnboarding && onboarding.step != OnboardingStep.START) {
         when (onboarding.step) {
