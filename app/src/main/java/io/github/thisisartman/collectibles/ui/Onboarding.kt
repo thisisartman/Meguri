@@ -115,7 +115,11 @@ fun OnboardingSheet(
         state.step = OnboardingStep.REGIONS
     }
     Column(modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-        when (state.step) {
+        // Each step comes in, rather than replacing the last at the touch (owner, 2026-11-10: "I already have some"
+        // moved on "the moment my finger touches the button")
+        androidx.compose.animation.AnimatedContent(targetState = state.step, transitionSpec = Motion.step(), label = "onboarding") { step ->
+        Column(Modifier.fillMaxWidth()) {
+        when (step) {
             OnboardingStep.START -> {
                 Text(stringResource(R.string.onb_welcome), style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(6.dp))
@@ -197,6 +201,8 @@ fun OnboardingSheet(
                 Text(stringResource(R.string.onb_loading), style = MaterialTheme.typography.titleMedium)
             }
         }
+        }
+        }
     }
 }
 
@@ -204,7 +210,8 @@ private fun Set<String>.toggle(v: String) = if (v in this) this - v else this + 
 
 @Composable
 private fun Choice(title: String, sub: String, onClick: () -> Unit) {
-    Surface(Modifier.fillMaxWidth().clickable(onClick = onClick), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
+    // Surface's own onClick: the ripple is clipped to the card and shows while the next step comes in
+    Surface(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceVariant) {
         Column(Modifier.padding(16.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -119,6 +119,12 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
             },
             navigationIcon = { IconButton(onClick = back) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
+        // Categories, prefectures and the deck step in and out instead of swapping at the tap (owner, 2026-11-10)
+        androidx.compose.animation.AnimatedContent(
+            targetState = categoryKey to prefecture, transitionSpec = Motion.step(), label = "check",
+        ) { (ck, pf) ->
+        val category = categories.firstOrNull { it.key == ck }
+        val pref = pf
         when {
             categories.isEmpty() -> Text(stringResource(R.string.check_nothing), Modifier.padding(16.dp), color = MaterialTheme.colorScheme.onSurfaceVariant)
             category == null -> Column {
@@ -129,11 +135,12 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
                     lead = { key -> categories.first { it.key == key }.rows.first().item.let { ItemTypeIcon(it, 24.dp) } },
                 ) { categoryKey = it }
             }
-            prefecture == null -> ChoiceList(
+            pref == null -> ChoiceList(
                 stringResource(R.string.check_pick_prefecture),
                 category.rows.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().map { (p, l) -> Triple(p, prefectureLabel(p, ja), l) },
             ) { prefecture = it }
-            else -> Deck(vm, category.rows.filter { it.item.prefecture.orEmpty() == prefecture }, category.key + "|" + prefecture, history) { prefecture = null }
+            else -> Deck(vm, category.rows.filter { it.item.prefecture.orEmpty() == pref }, category.key + "|" + pref, history) { prefecture = null }
+        }
         }
     }
 }

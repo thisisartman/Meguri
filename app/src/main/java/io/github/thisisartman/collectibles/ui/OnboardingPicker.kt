@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -217,7 +218,13 @@ fun OnboardingPicker(
 @Composable
 private fun PlaceCard(place: PickerPlace, added: List<String>, ja: Boolean, modifier: Modifier, onOk: (List<String>) -> Unit) {
     val checked = remember(place.key) { mutableStateMapOf<String, Boolean>().apply { place.rows.forEach { put(it.item.id, it.item.id in added || place.rows.size == 1) } } }
-    Surface(modifier, shape = RoundedCornerShape(16.dp), shadowElevation = 8.dp, tonalElevation = 2.dp) {
+    // Grows in from a little smaller instead of popping up (owner, 2026-11-10)
+    val appear = remember(place.key) { androidx.compose.animation.core.Animatable(0f) }
+    androidx.compose.runtime.LaunchedEffect(place.key) { appear.animateTo(1f, androidx.compose.animation.core.tween(Motion.STEP_MS)) }
+    Surface(
+        modifier.graphicsLayer { alpha = appear.value; val s = 0.92f + 0.08f * appear.value; scaleX = s; scaleY = s },
+        shape = RoundedCornerShape(16.dp), shadowElevation = 8.dp, tonalElevation = 2.dp,
+    ) {
         Column(Modifier.padding(12.dp)) {
             Text(place.first.item.displayName(ja), style = MaterialTheme.typography.titleSmall, maxLines = 2)
             place.rows.forEach { r ->

@@ -283,13 +283,14 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             // Landscape and wide screens: content keeps a readable width, centred (overnight review round 10)
             androidx.compose.foundation.layout.Box(Modifier.fillMaxSize().padding(padding), contentAlignment = androidx.compose.ui.Alignment.TopCenter) {
                 // No crossfade between pages: the map draws on its own surface and stayed on screen for the fade
-                // before the next page's background appeared (owner, 2026-11-07)
+                // before the next page's background appeared (owner, 2026-11-07). Pages slide in opaque instead, so a
+                // change of page is seen, not jumped to (owner, 2026-11-10)
                 NavHost(
                     nav, startDestination = NEARBY, modifier = Modifier.widthIn(max = 640.dp).fillMaxSize(),
-                    enterTransition = { androidx.compose.animation.EnterTransition.None },
-                    exitTransition = { androidx.compose.animation.ExitTransition.None },
-                    popEnterTransition = { androidx.compose.animation.EnterTransition.None },
-                    popExitTransition = { androidx.compose.animation.ExitTransition.None },
+                    enterTransition = { Motion.pageEnter },
+                    exitTransition = { Motion.pageExit },
+                    popEnterTransition = { Motion.pagePopEnter },
+                    popExitTransition = { Motion.pagePopExit },
                 ) {
                     composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, focusSearch = searchTick, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     // Every page but the maps sits on a solid background: the item page had none, so for a moment
