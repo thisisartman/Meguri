@@ -707,4 +707,15 @@
     <string name="tip_got_it">わかりました</string>
     <string name="photo_cover_auto">いまはこの写真が表示画像です（選んでいないときは最新の写真）。</string>
     <string name="photo_cover_keep">表示画像として固定</string>
+    <string name="check_pick_category">カテゴリー、都道府県の順に選び、持っているものは右へ、まだのものは左へスワイプします。</string>
+    <string name="check_pick_prefecture">都道府県を選んでください。</string>
+    <string name="check_no_prefecture">都道府県なし</string>
+    <plurals name="check_left">
+        <item quantity="other">残り%1$d</item>
+    </plurals>
+    <string name="check_have">持っている</string>
+    <string name="check_not_yet">まだ</string>
+    <string name="check_all_had">すべて持っています</string>
+    <string name="check_done">チェック完了</string>
+    <string name="check_pick_another">ほかの都道府県を選ぶ</string>
 </resources>

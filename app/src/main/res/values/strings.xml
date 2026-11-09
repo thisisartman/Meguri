@@ -725,4 +725,16 @@
     <string name="tip_got_it">Got it</string>
     <string name="photo_cover_auto">This is the display picture for now: with none chosen, the newest photo is shown.</string>
     <string name="photo_cover_keep">Keep as display picture</string>
+    <string name="check_pick_category">Choose a category, then a prefecture. Then swipe right for each one you have, left to skip.</string>
+    <string name="check_pick_prefecture">Choose a prefecture.</string>
+    <string name="check_no_prefecture">No prefecture</string>
+    <plurals name="check_left">
+        <item quantity="one">%1$d to check</item>
+        <item quantity="other">%1$d to check</item>
+    </plurals>
+    <string name="check_have">Have it</string>
+    <string name="check_not_yet">Not yet</string>
+    <string name="check_all_had">You have them all</string>
+    <string name="check_done">All checked</string>
+    <string name="check_pick_another">Choose another prefecture</string>
 </resources>

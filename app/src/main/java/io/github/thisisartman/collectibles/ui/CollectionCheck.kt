@@ -99,6 +99,9 @@ fun CollectionCheckScreen(
     only: Set<String>? = null,
     tripDay: Boolean = false,
 ) {
+    // The plain Collection check is a deck now: category, prefecture, then swipe (owner, 2026-11-09). The trip's
+    // "Already went" keeps the page of tiles below, since it is one route's things on one day.
+    if (only == null && !tripDay) { CollectionCheckFlow(vm, onBack); return }
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
