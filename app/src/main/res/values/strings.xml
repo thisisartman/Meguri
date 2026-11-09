@@ -676,4 +676,46 @@
         <item quantity="one">%1$d card picture</item>
         <item quantity="other">%1$d card pictures</item>
     </plurals>
+    <string name="about_app_name" translatable="false">Meguri</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_version_copied">Version copied</string>
+    <string name="about_credits">Credits</string>
+    <string name="about_sources">Map and data sources</string>
+    <string name="about_sources_intro">Where the map, places and catalogue come from. Tap a name to open its site, or the licence beside it.</string>
+    <string name="about_art">Fonts and icons</string>
+    <string name="about_licences">Third-party licences</string>
+    <string name="about_licences_sub">%1$d libraries Meguri is built with</string>
+    <string name="about_licences_intro">Tap a name to open the project, or its licence.</string>
+    <string name="about_legal">Legal</string>
+    <string name="about_privacy">Privacy</string>
+    <string name="about_privacy_sub">Your finds stay on this phone</string>
+    <string name="about_developer">Developer</string>
+    <string name="credit_osm">Map data, station positions and places</string>
+    <string name="credit_openfreemap">Map tiles when online</string>
+    <string name="credit_protomaps">Offline map pack</string>
+    <string name="credit_nominatim">Finding a place when you add an item</string>
+    <string name="credit_ekikara">Manhole card list and card pictures. Pictures © GKP and each city</string>
+    <string name="credit_mlit_dams">Dam card list. 出典：国土交通省ウェブサイト</string>
+    <string name="credit_gsi">Shrine and temple map symbols. 出典：国土地理院</string>
+    <string name="credit_noto">Map labels</string>
+    <string name="credit_mplus">Names on Ekitag pictures</string>
+    <string name="credit_material_icons">Icons across the app</string>
+    <string name="credit_maki">Map and category icons</string>
+    <string name="credit_temaki">Map and category icons</string>
+    <string name="credit_compose">The app\'s screens</string>
+    <string name="credit_androidx">Screens, lifecycle and navigation</string>
+    <string name="credit_room">The database on this phone</string>
+    <string name="credit_work">Weekly backups and photo checks</string>
+    <string name="credit_hilt">Wiring the app together</string>
+    <string name="credit_serialization">Backups and catalogue files</string>
+    <string name="credit_maplibre">The map</string>
+    <string name="credit_play_location">Your position and alerts</string>
+    <string name="credit_mlkit">Scanning cards and reading Japanese text, on the phone</string>
+    <string name="privacy_intro">Meguri has no account and no server. Your finds, photos and settings stay on this phone, and in the backups you save. Nothing is collected about you.</string>
+    <string name="privacy_online">What goes online, and only when you use it</string>
+    <string name="privacy_tiles">Map tiles outside the offline pack: the area you look at</string>
+    <string name="privacy_places">Place search when adding an item: the name you type</string>
+    <string name="privacy_cards">Card pictures, when you tap Download: the card codes</string>
+    <string name="privacy_directions">Directions open Google Maps with the place</string>
+    <string name="privacy_play">Position for alerts and the card scanner run through Google Play services on this phone</string>
 </resources>

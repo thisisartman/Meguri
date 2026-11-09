@@ -306,6 +306,10 @@ fun MoreScreen(
         S_INSTALLED to stringResource(R.string.settings_installed),
         S_ABOUT to stringResource(R.string.more_about),
         S_ALERT_CATS to stringResource(R.string.alerts_categories),
+        S_SOURCES to stringResource(R.string.about_sources),
+        S_ART to stringResource(R.string.about_art),
+        S_LICENCES to stringResource(R.string.about_licences),
+        S_PRIVACY to stringResource(R.string.about_privacy),
         S_WEEKLY to stringResource(R.string.more_auto),
         S_PHOTOS to stringResource(R.string.photos_kept),
     )
@@ -589,10 +593,15 @@ fun MoreScreen(
                 MoreRow(stringResource(R.string.more_about), stringResource(R.string.help_about_sub)) { section = S_ABOUT }
             }
             S_ABOUT -> {
-                Text(
-                    stringResource(R.string.more_about_sub, BuildConfig.VERSION_NAME),
-                    Modifier.padding(16.dp), style = MaterialTheme.typography.bodyMedium,
-                )
+                // Laid out like Fossify, Breezy Weather and Organic Maps (owner, 2026-11-09)
+                AboutHeader()
+                SectionTitle(stringResource(R.string.about_credits))
+                MoreRow(stringResource(R.string.about_sources), SOURCES.joinToString(", ") { it.name }) { section = S_SOURCES }
+                MoreRow(stringResource(R.string.about_art), ART.joinToString(", ") { it.name }) { section = S_ART }
+                SectionTitle(stringResource(R.string.about_legal))
+                MoreRow(stringResource(R.string.about_licences), stringResource(R.string.about_licences_sub, LIBRARIES.size)) { section = S_LICENCES }
+                MoreRow(stringResource(R.string.about_privacy), stringResource(R.string.about_privacy_sub)) { section = S_PRIVACY }
+                SectionTitle(stringResource(R.string.about_developer))
                 // Developer mode (owner, 2026-11-09): the release writes the detailed log only with this on.
                 // The dev build always does, so there it shows on and cannot be changed.
                 var dev by remember { mutableStateOf(BuildConfig.DEBUG || io.github.thisisartman.collectibles.debug.DevMode.on(context)) }
@@ -616,6 +625,10 @@ fun MoreScreen(
                 }
                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
             }
+            S_SOURCES -> CreditList(stringResource(R.string.about_sources_intro), SOURCES)
+            S_ART -> CreditList(null, ART)
+            S_LICENCES -> CreditList(stringResource(R.string.about_licences_intro), LIBRARIES)
+            S_PRIVACY -> PrivacyPage()
         }
     }
 }
@@ -625,6 +638,7 @@ private fun parentOf(section: String?): String? = when (section) {
     S_INSTALLED -> S_CATALOGUE
     S_ABOUT -> S_HELP
     S_ALERT_CATS -> S_ALERTS
+    S_SOURCES, S_ART, S_LICENCES, S_PRIVACY -> S_ABOUT
     S_WEEKLY, S_PHOTOS, S_COLLECTIONS -> S_DATA
     else -> null
 }
@@ -658,6 +672,10 @@ private const val S_HELP = "help"
 private const val S_INSTALLED = "installed"
 private const val S_ABOUT = "about"
 private const val S_ALERT_CATS = "alert_categories"
+private const val S_SOURCES = "sources"
+private const val S_ART = "art"
+private const val S_LICENCES = "licences"
+private const val S_PRIVACY = "privacy"
 private const val S_WEEKLY = "weekly"
 private const val S_PHOTOS = "photos"
 
