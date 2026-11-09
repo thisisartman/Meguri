@@ -10,6 +10,7 @@ import android.os.CancellationSignal
 import androidx.core.content.ContextCompat
 import androidx.core.location.LocationManagerCompat
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import java.util.concurrent.Executors
@@ -84,6 +85,24 @@ class LocationSource @Inject constructor(@ApplicationContext private val context
                 }
             }
         }
+    }
+
+    /**
+     * Positions as they change, at most every [intervalMs] and only after a move of [minMetres], for as long as it is
+     * collected (Nearby while it is on screen; finding 41). Empty without permission or a provider.
+     */
+    @SuppressLint("MissingPermission")
+    fun updates(intervalMs: Long = 30_000, minMetres: Float = 20f): kotlinx.coroutines.flow.Flow<Fix> = kotlinx.coroutines.flow.callbackFlow {
+        val m = lm
+        // The fused provider where there is one (Android 12+): it keeps GPS off when it can, so following costs little
+        val fused = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S &&
+            m != null && runCatching { m.isProviderEnabled(LocationManager.FUSED_PROVIDER) }.getOrDefault(false)
+        val provider = if (!hasPermission()) null else if (fused) LocationManager.FUSED_PROVIDER else provider()
+        if (m == null || provider == null) { close(); return@callbackFlow }
+        val listener = android.location.LocationListener { trySend(it.toFix()) }
+        runCatching { m.requestLocationUpdates(provider, intervalMs, minMetres, listener, android.os.Looper.getMainLooper()) }
+            .onFailure { close(); return@callbackFlow }
+        awaitClose { runCatching { m.removeUpdates(listener) } }
     }
 
     private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else null, time)

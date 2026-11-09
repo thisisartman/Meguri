@@ -3,6 +3,7 @@ package io.github.thisisartman.collectibles.ui
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.draw.alpha
 import kotlinx.coroutines.launch
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -110,6 +111,20 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val ctx = androidx.compose.ui.platform.LocalContext.current
+    // Distances follow you while Nearby is on screen, not only on return to the app (finding 41); restarts once
+    // location is allowed
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    val allowedNow = LocationAccess.has(ctx)
+    LaunchedEffect(lifecycle, allowedNow) {
+        if (allowedNow) lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) { vm.followPosition() }
+    }
+    // Read from the collected position, so a tile's distance redraws when it moves
+    fun distTo(r: ItemRow): Double? {
+        val f = here.fix ?: return null
+        val lat = r.item.lat ?: return null
+        val lng = r.item.lng ?: return null
+        return io.github.thisisartman.collectibles.location.distanceM(f.lat, f.lng, lat, lng)
+    }
     var tab by rememberSaveable { mutableStateOf(MapSection.STAMPS) }
     var kind by rememberSaveable { mutableStateOf<ItemType?>(null) }
     var byName by rememberSaveable { mutableStateOf(false) }
@@ -256,7 +271,13 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         // Already have some: on to the picker of what you have (#81 O3)
                         onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
                         onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },
-                        onPermissionsAnswered = { vm.refreshPosition() },
+                        // The onboarding has asked: the app does not ask again as the catalogue loads, nor at later
+                        // starts after a no (finding 42)
+                        onPermissionsAnswered = {
+                            LocationAccess.askedThisRun = true
+                            LocationAccess.setDeclined(ctxOnb, !LocationAccess.has(ctxOnb))
+                            vm.refreshPosition()
+                        },
                         // Measured for the sheet's height; capped, so the region list scrolls and Load stays in view
                         modifier = Modifier.heightIn(max = onbMax - 40.dp).onSizeChanged { onbContentPx = it.height },
                     )
@@ -392,7 +413,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             Box(m) {
                                 RoundTile(
                                     r, tile, r.item.tileLabel(ja),
-                                    if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(vm.distanceTo(r)),
+                                    if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
                                 )
                             }
@@ -511,7 +532,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                             maxLines = 1, overflow = TextOverflow.Ellipsis,
                                         )
                                     }
-                                    distanceText(vm.distanceTo(r))?.let { d ->
+                                    distanceText(distTo(r))?.let { d ->
                                         Spacer(Modifier.width(8.dp))
                                         DistanceArrow(d, here.fix?.let { it.lat to it.lng }, r.item.lat?.let { lat -> r.item.lng?.let { lat to it } }, MaterialTheme.typography.labelMedium)
                                     }

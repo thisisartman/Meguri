@@ -148,6 +148,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         val canAskAgain = activity?.let { androidx.core.app.ActivityCompat.shouldShowRequestPermissionRationale(it, Manifest.permission.ACCESS_FINE_LOCATION) } ?: true
         locationBlocked = !granted && !canAskAgain && !LocationAccess.has(context)
         locationPrefs.edit().putBoolean("blocked", locationBlocked).apply()
+        // A no is remembered: the app does not ask again at start until the person taps something that needs it
+        LocationAccess.setDeclined(context, !granted && !LocationAccess.has(context))
         vm.refreshPosition()
     }
     val onAllowLocation: () -> Unit = {
@@ -161,9 +163,17 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         }
     }
     LaunchedEffect(Unit) { CameraCapture.cleanEmptyRows(resolver) }
-    // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81)
+    // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81).
+    // At most once per run, and not after a no (finding 42)
     LaunchedEffect(hasCatalogue) {
-        if (hasCatalogue == true) askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        if (hasCatalogue == true && LocationAccess.askAtStart(
+                granted = LocationAccess.has(context), askedThisRun = LocationAccess.askedThisRun,
+                declined = LocationAccess.declined(context), blocked = locationBlocked,
+            )
+        ) {
+            LocationAccess.askedThisRun = true
+            askLocation.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
     }
     LifecycleResumeEffect(Unit) {
         // Back from Settings with location allowed: the blocked note no longer applies

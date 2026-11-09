@@ -121,6 +121,15 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Follows the position while it is collected (Nearby on screen): distances refresh as you move, every 30 s at
+     * most, through the same provider as a single fix (finding 41).
+     */
+    suspend fun followPosition() {
+        if (!location.hasPermission()) return
+        location.updates(30_000).collect { _here.value = Here(it, true) }
+    }
+
     private var lastGotIt: Pair<String, Long>? = null
 
     fun gotIt(row: ItemRow, name: String, onLogged: (String) -> Unit = {}) {
