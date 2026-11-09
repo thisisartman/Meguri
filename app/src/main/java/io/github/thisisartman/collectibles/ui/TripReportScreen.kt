@@ -165,7 +165,7 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
             image?.let { bmp ->
                 Image(bmp.asImageBitmap(), contentDescription = spec?.let { it.title + ", " + it.countText },
                     // An outline, so the card reads as a card when its colour matches the page (light mode review)
-                    modifier = Modifier.aspectRatio(9f / 16f).clip(RoundedCornerShape(12.dp))
+                    modifier = Modifier.aspectRatio(bmp.width.toFloat() / bmp.height).clip(RoundedCornerShape(12.dp))
                         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(12.dp)))
             }
         }
@@ -194,7 +194,7 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
 
 private const val MAX_LINES = 10
 private const val W = 1080
-private const val H = 1920
+internal const val H = 1920
 
 /** Draws the 1080 × 1920 story image. */
 private fun render(context: Context, s: ReportSpec): Bitmap {
@@ -265,9 +265,18 @@ private fun render(context: Context, s: ReportSpec): Bitmap {
         c.drawText(time, W - pad - tw, y, timeP)
     }
     s.more?.let { y += 64f; if (y < bottom + 40f) c.drawText(it, pad + 44f, y, paint(38f, s.muted)) }
-    c.drawText(s.footer, pad, H - 110f, paint(40f, s.accent, bold = true))
-    return bmp
+    // As tall as what is on it (finding 15): one find no longer leaves most of a story image empty
+    val h = reportHeight(y)
+    c.drawText(s.footer, pad, h - 110f, paint(40f, s.accent, bold = true))
+    if (h >= H) return bmp
+    return Bitmap.createBitmap(bmp, 0, 0, W, h).also { if (it !== bmp) bmp.recycle() }
 }
+
+/** The image's height for content ending at [contentBottom]: room for the footer, at least 4:5, at most 9:16. */
+internal fun reportHeight(contentBottom: Float): Int = (contentBottom + REPORT_FOOTER_SPACE).toInt().coerceIn(REPORT_MIN_H, H)
+
+internal const val REPORT_MIN_H = 1350
+private const val REPORT_FOOTER_SPACE = 230f
 
 private fun sharedFile(context: Context, name: String): File = File(context.cacheDir, "shared").apply { mkdirs() }.let { File(it, name) }
 
