@@ -74,6 +74,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
     val lines by vm.lines.collectAsStateWithLifecycle()
     val stations by vm.lineStations.collectAsStateWithLifecycle()
     val photo = LocalPhoto.current
+    var more by remember { mutableStateOf(false) }
+    var confirmItem by remember { mutableStateOf(false) }
     val r = row
     var editing by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
 
@@ -91,10 +93,38 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit) {
                 if (r != null) IconButton(onClick = { editing = true }) {
                     Icon(androidx.compose.material.icons.Icons.Filled.Edit, contentDescription = stringResource(R.string.edit_title))
                 }
+                // Remove (owner, 2026-11-09): an item you added goes entirely; a catalogue item leaves your collection
+                val own = r?.item?.origin == io.github.thisisartman.collectibles.data.Origin.USER
+                if (r != null && (own || r.collected)) Box {
+                    IconButton(onClick = { more = true }) {
+                        Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.more_options))
+                    }
+                    androidx.compose.material3.DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
+                        androidx.compose.material3.DropdownMenuItem(
+                            text = { Text(stringResource(if (own) R.string.item_remove else R.string.item_remove_collection)) },
+                            onClick = { more = false; confirmItem = true },
+                        )
+                    }
+                }
             },
         )
         if (r == null) return@Column
         if (editing) ItemEditSheet(r.item, vm, onDismiss = { editing = false })
+        if (confirmItem) {
+            val own = r.item.origin == io.github.thisisartman.collectibles.data.Origin.USER
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { confirmItem = false },
+                title = { Text(stringResource(if (own) R.string.item_remove_title else R.string.item_remove_collection_title)) },
+                text = { Text(stringResource(if (own) R.string.item_remove_text else R.string.item_remove_collection_text)) },
+                confirmButton = {
+                    androidx.compose.material3.TextButton(onClick = {
+                        confirmItem = false
+                        vm.removeItem(r.item.id, alsoItem = own) { if (own) onBack() }
+                    }) { Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error) }
+                },
+                dismissButton = { androidx.compose.material3.TextButton(onClick = { confirmItem = false }) { Text(stringResource(R.string.cancel)) } },
+            )
+        }
         val item = r.item
         val name = item.displayName(ja)
         // A station says which lines it is on (round 5, D2)

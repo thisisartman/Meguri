@@ -645,8 +645,8 @@
     <string name="cat_edit_title">Edit category</string>
     <string name="cat_remove">Remove</string>
     <plurals name="cat_remove_blocked">
-        <item quantity="one">It has %1$d item. To remove the category, move or delete it first.</item>
-        <item quantity="other">It has %1$d items. To remove the category, move or delete them first.</item>
+        <item quantity="one">It has %1$d item. To remove the category, remove the item first: open it, then More options, Remove item.</item>
+        <item quantity="other">It has %1$d items. To remove the category, remove them first: open each, then More options, Remove item.</item>
     </plurals>
     <string name="cat_empty">Categories you add yourself show here. Add one below, or from + then Add.</string>
     <string name="alerts_target_own">Custom distance. The other categories use the default.</string>
@@ -737,4 +737,12 @@
     <string name="check_all_had">You have them all</string>
     <string name="check_done">All checked</string>
     <string name="check_pick_another">Choose another prefecture</string>
+    <string name="remove">Remove</string>
+    <string name="more_options">More options</string>
+    <string name="item_remove">Remove item</string>
+    <string name="item_remove_title">Remove this item?</string>
+    <string name="item_remove_text">It leaves Meguri with its finds and photos. Photos you took with the camera stay in your gallery.</string>
+    <string name="item_remove_collection">Remove from my collection</string>
+    <string name="item_remove_collection_title">Remove from your collection?</string>
+    <string name="item_remove_collection_text">Every find of it and their photos leave Meguri; it goes back to not collected. Photos you took with the camera stay in your gallery.</string>
 </resources>

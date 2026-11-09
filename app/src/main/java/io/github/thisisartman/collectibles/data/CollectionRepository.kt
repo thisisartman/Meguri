@@ -164,6 +164,23 @@ class CollectionRepository @Inject constructor(
         return made
     }
 
+    /**
+     * Removes every find of an item with its photos (Meguri's copies; camera originals stay in the gallery). An item
+     * you added yourself goes too; a catalogue item stays, back to not collected (owner, 2026-11-09: "yes. or remove").
+     */
+    suspend fun removeItem(itemId: String, alsoItem: Boolean) {
+        val findIds = dao.allFinds().filter { it.itemId == itemId }.map { it.id }.toSet()
+        val photos = dao.allPhotos().filter { it.acquisitionId in findIds }
+        db.withTransaction {
+            if (alsoItem) dao.setCover(itemId, null, now())
+            photos.forEach { dao.deletePhoto(it.id) }
+            findIds.forEach { dao.deleteFind(it) }
+            if (alsoItem) dao.deleteItem(itemId)
+        }
+        photos.forEach { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri) }
+        log.i("Log", if (alsoItem) "Removed item $itemId with ${findIds.size} finds and ${photos.size} photos" else "Took $itemId out of the collection: ${findIds.size} finds, ${photos.size} photos")
+    }
+
     suspend fun removeFinds(findIds: Collection<String>) {
         db.withTransaction { findIds.forEach { dao.deleteFind(it) } }
         log.i("Log", "Removed ${findIds.size} finds")

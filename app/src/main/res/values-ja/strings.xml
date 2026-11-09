@@ -632,7 +632,7 @@
     <string name="cat_edit_title">カテゴリーを編集</string>
     <string name="cat_remove">削除</string>
     <plurals name="cat_remove_blocked">
-        <item quantity="other">%1$d件のアイテムがあります。カテゴリーを削除するには、先に移動か削除をしてください。</item>
+        <item quantity="other">%1$d件のアイテムがあります。カテゴリーを削除するには、各アイテムを開き、その他のオプションから削除してください。</item>
     </plurals>
     <string name="cat_empty">自分で追加したカテゴリーがここに表示されます。下のボタンか、＋の「追加」から作れます。</string>
     <string name="alerts_target_own">カスタムの距離です。ほかのカテゴリーはデフォルトを使います。</string>
@@ -718,4 +718,12 @@
     <string name="check_all_had">すべて持っています</string>
     <string name="check_done">チェック完了</string>
     <string name="check_pick_another">ほかの都道府県を選ぶ</string>
+    <string name="remove">削除</string>
+    <string name="more_options">その他のオプション</string>
+    <string name="item_remove">アイテムを削除</string>
+    <string name="item_remove_title">このアイテムを削除しますか？</string>
+    <string name="item_remove_text">記録と写真ごとMeguriから削除されます。カメラで撮った写真はギャラリーに残ります。</string>
+    <string name="item_remove_collection">コレクションから外す</string>
+    <string name="item_remove_collection_title">コレクションから外しますか？</string>
+    <string name="item_remove_collection_text">記録と写真がMeguriから削除され、未収集に戻ります。カメラで撮った写真はギャラリーに残ります。</string>
 </resources>

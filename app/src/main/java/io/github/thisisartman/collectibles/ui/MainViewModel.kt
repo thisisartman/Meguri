@@ -221,6 +221,10 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { repo.attachFromGallery(context, findId, uri, kind) }
     }
     fun setPhotoKind(photoId: String, kind: String) { viewModelScope.launch { repo.setPhotoKind(photoId, kind) } }
+    fun removeItem(itemId: String, alsoItem: Boolean, onDone: () -> Unit = {}) {
+        viewModelScope.launch { repo.removeItem(itemId, alsoItem); onDone() }
+    }
+
     fun removePhoto(photoId: String) { viewModelScope.launch { repo.removePhoto(photoId) } }
 
     fun markBeforeApp(ids: Set<String>, onDone: (Int) -> Unit) {

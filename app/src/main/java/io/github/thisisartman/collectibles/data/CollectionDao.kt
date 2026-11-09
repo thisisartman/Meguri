@@ -83,6 +83,9 @@ interface CollectionDao {
     @Query("DELETE FROM acquisition WHERE id = :id")
     suspend fun deleteFind(id: String)
 
+    @Query("DELETE FROM item WHERE id = :id")
+    suspend fun deleteItem(id: String)
+
     @Query("DELETE FROM acquisition WHERE item_id = :itemId AND before_app = 1")
     suspend fun deleteBeforeAppFinds(itemId: String): Int
 
