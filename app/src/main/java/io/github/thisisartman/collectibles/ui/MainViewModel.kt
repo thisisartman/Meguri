@@ -284,10 +284,14 @@ class MainViewModel @Inject constructor(
     val shared: StateFlow<List<io.github.thisisartman.collectibles.data.SharedPhoto>?> = _shared.asStateFlow()
     val shareCount: StateFlow<Int> = sharedUris.map { it.size }.stateIn(viewModelScope, SharingStarted.Eagerly, 0)
 
-    fun openShare(uris: List<android.net.Uri>) {
+    /** What the shared photos are filed as on a manhole card: a scanned card (or cover) says so, a gallery share is Other. */
+    private var shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
+
+    fun openShare(uris: List<android.net.Uri>, cardKind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER) {
         log.d("Share", "${uris.size} photos shared into Meguri")
         sharedUris.value = uris
         _shared.value = null
+        shareCardKind = cardKind
     }
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
@@ -299,6 +303,20 @@ class MainViewModel @Inject constructor(
             for ((itemId, uri) in stamps) if (repo.addNotebookStamp(itemId, uri, null)) n++
             log.d("Notebook", "Saved $n of ${stamps.size} stamps from the page in ${System.currentTimeMillis() - t0} ms")
             onDone(n)
+        }
+    }
+
+    /**
+     * Scan, "Collect with this photo" (finding 29): a find now, placed where you are like Got it, with the scan as its
+     * photo, and the same "Collected ... Undo" snackbar as every other way of collecting.
+     */
+    fun collectWithPhoto(context: android.content.Context, row: ItemRow, name: String, uri: android.net.Uri, kind: String, onDone: (String) -> Unit) {
+        log.d("Tap", "Collect with this photo on ${row.item.id}")
+        viewModelScope.launch {
+            val findId = repo.logFind(row.item.id, Via.MANUAL)
+            emit(Logged(findId, name, System.currentTimeMillis()))
+            repo.attachFromGallery(context.applicationContext, findId, uri, kind)
+            onDone(findId)
         }
     }
 
@@ -319,9 +337,13 @@ class MainViewModel @Inject constructor(
     /** Adds each group's photos to the item chosen for it. Returns photos copied and items they went to. */
     suspend fun addShared(choices: List<Pair<String, io.github.thisisartman.collectibles.data.PhotoGroup>>): Pair<Int, Int> {
         var photos = 0
-        for ((itemId, group) in choices) photos += repo.addShared(itemId, group.photos, group.centre)
+        val types = rows.value.associate { it.item.id to it.item.type }
+        for ((itemId, group) in choices) {
+            photos += repo.addShared(itemId, group.photos, group.centre, sharedKind(types[itemId], shareCardKind))
+        }
         sharedUris.value = emptyList()
         _shared.value = null
+        shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
         return photos to choices.map { it.first }.distinct().size
     }
 
@@ -364,6 +386,13 @@ class MainViewModel @Inject constructor(
 
         fun isRepeatTap(last: Pair<String, Long>?, itemId: String, nowMs: Long): Boolean =
             last != null && last.first == itemId && nowMs - last.second < REPEAT_TAP_MS
+
+        /**
+         * The kind a shared photo is filed as (finding 30): a scan picked by hand onto a manhole card keeps what it is
+         * (the card, or a cover); anything else, or onto anything else, is Other, to sort later.
+         */
+        fun sharedKind(type: ItemType?, cardKind: String): String =
+            if (type == ItemType.MANHOLE_CARD) cardKind else io.github.thisisartman.collectibles.data.PhotoKind.OTHER
 
         fun summarise(rows: List<ItemRow>, lines: List<Line>, ls: List<LineStation>): List<CollectionSummary> {
             val out = mutableListOf<CollectionSummary>()
