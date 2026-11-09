@@ -699,9 +699,9 @@
     <string name="privacy_online">オンラインサービス</string>
     <string name="privacy_online_sub">Meguriがこれらのサービスに接続するのは、書かれている機能を使ったときだけです。名前をタップするとサービスが、ボタンでプライバシーポリシーが開きます。</string>
     <string name="privacy_tiles">オフライン地図の外の地図タイル：見ている範囲</string>
-    <string name="privacy_places">アイテム追加時の場所検索：入力した名前</string>
+    <string name="privacy_places">場所検索（アイテムの追加・編集時と、貼ったGoogleマップのリンクの場所）：名前と、近くの場所を先に出すための現在地周辺の範囲（約50 km）</string>
     <string name="privacy_cards">「ダウンロード」を押したときのカード画像：カード番号</string>
-    <string name="privacy_directions">経路はGoogleマップで場所を開きます</string>
+    <string name="privacy_directions">経路はGoogleマップで場所を開きます。旅に貼ったGoogleマップのリンクは、行き先を調べるために一度開きます</string>
     <string name="privacy_play">通知のための現在地とカードスキャンは、スマホのGoogle Playサービスを使います</string>
     <string name="a11y_plus">スキャン、検索、追加</string>
     <string name="tip_got_it">わかりました</string>

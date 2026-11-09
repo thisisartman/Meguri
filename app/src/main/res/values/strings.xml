@@ -717,9 +717,9 @@
     <string name="privacy_online">Online services</string>
     <string name="privacy_online_sub">Meguri connects to these services only when you use the feature listed. Tap a name to open the service, or the button for its privacy policy.</string>
     <string name="privacy_tiles">Map tiles outside the offline pack: the area you look at</string>
-    <string name="privacy_places">Place search when adding an item: the name you type</string>
+    <string name="privacy_places">Place search, when adding or editing an item and for places in a pasted Google Maps link: the name, and the area around your position (about 50 km) so nearby places come first</string>
     <string name="privacy_cards">Card pictures, when you tap Download: the card codes</string>
-    <string name="privacy_directions">Directions open Google Maps with the place</string>
+    <string name="privacy_directions">Directions open Google Maps with the place. A Google Maps link pasted into Trip is opened once to see where it leads</string>
     <string name="privacy_play">Position for alerts and the card scanner run through Google Play services on this phone</string>
     <string name="a11y_plus">Scan, search or add</string>
     <string name="tip_got_it">Got it</string>

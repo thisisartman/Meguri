@@ -16,6 +16,7 @@
 - Settings list looks as proposed: each section's icon in a round badge, bold names, and a line saying what is set (Alerts: mode, distance, categories, quiet hours; Backup: last weekly backup and how many finds; Catalogue: prefectures and card pictures).
 - Alerts: Proximity alert settings, with the category menu on a pill; standard words: All categories, Default, Custom distances, Revert to default. Alert categories (which categories notify) is now only on or off for each; Keep alerts working is now Keep alerts working in the background.
 - Your own categories moved from the Settings list into Backup and data.
+- Privacy: place search is described as it works (the name and the area around your position, also for pasted Google Maps links), and pasted short links are said to be opened once.
 - Collection check is a card deck: choose a category, then a prefecture, then go through what you don't have yet one at a time. Swipe right (or "Have it") and it is saved as had before Meguri; swipe left (or "Not yet") for the next. The whole card shows large. "Undo" takes back the last swipe, even after going back to the prefecture list.
 - docs/APP_GUIDE.md: a full guide to every page, feature and background facility.
 - Search results name their category, so a station's stamp and its Ekitag read apart. Collection check shows each card's code ("Saitama-ken A001"). The photo shown as display picture by default says so, with "Keep as display picture".
