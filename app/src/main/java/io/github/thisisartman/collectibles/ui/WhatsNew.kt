@@ -31,7 +31,7 @@ object WhatsNew {
         Section(
             "New in beta.9", "beta.9の新機能",
             listOf(
-                "Card lists: a grid with short names; filter by Have and To get" to "カード一覧：短い名前のグリッドに。取得済み・未取得で絞り込み",
+                "Card lists: a grid with short names; filter by Collected and Not collected" to "カード一覧：短い名前のグリッドに。取得済み・未取得で絞り込み",
                 "Manhole covers: a cover photo is cut out as a circle; scan a cover and pick its card" to "マンホールのふた：ふたの写真を円形に切り抜き。ふたをスキャンしてカードを選択",
                 "Display picture: a cover, an Ekitag screenshot or a goshuin photo becomes it by itself" to "表示画像：ふた・エキタグ・御朱印の写真が自動で表示画像に",
             ),
@@ -39,7 +39,7 @@ object WhatsNew {
         Section(
             "New in beta.8", "beta.8の新機能",
             listOf(
-                "Scan a card: + → Scan a card. Meguri straightens the photo, reads the card code and finds the card" to "カードをスキャン：＋→カードをスキャン。写真を補正し、コードを読み取ってカードを探します",
+                "Scan a card: + → Scan. Meguri straightens the photo, reads the card code and finds the card" to "カードをスキャン：＋→スキャン。写真を補正し、コードを読み取ってカードを探します",
                 "Card pictures: Settings → Catalogue downloads each card's picture onto this phone; tiles show it greyed until collected" to "カードの画像：設定→カタログで各カードの画像を端末にダウンロード。未取得はグレーで表示",
             ),
         ),
@@ -50,10 +50,10 @@ object WhatsNew {
                 "My book: one tile per type, each opens its collections with progress rings" to "マイブック：種類ごとのタイル。開くと各コレクションの進み具合",
                 "Share to Meguri: share photos from your gallery, grouped by place and date, then pick what each is" to "Meguriに共有：ギャラリーの写真を共有すると、場所と日付でまとめて登録",
                 "Edit details: names, place, hours, notes and position of any item; kept through catalogue updates" to "詳細の編集：名前・場所・時間・メモ・位置。カタログ更新でも残ります",
-                "Photo suggestions: a photo taken near something you haven't collected offers to attach itself (Settings, Alerts; off until you turn it on)" to "写真の提案：未取得のものの近くで撮った写真を追加するよう提案（設定のアラートでオン）",
+                "Photo suggestions: a photo taken near something you haven't collected offers to attach itself (Settings, Backup and data; off until you turn it on)" to "写真の提案：未取得のものの近くで撮った写真を追加するよう提案（設定の「バックアップとデータ」でオン）",
                 "Photos: tap one to see it large, then full screen with zoom" to "写真：タップで大きく、全画面でズームも",
                 "Timeline: everything you collected, by day (My book)" to "タイムライン：集めたものを日ごとに（マイブック）",
-                "Filters: To get / Have and card series in each list" to "絞り込み：各リストで未取得・取得済み・弾",
+                "Filters: Collected / Not collected in each list" to "絞り込み：各リストで取得済み・未取得",
                 "Map: a flat look, the same online and offline" to "地図：オンラインでもオフラインでも同じ、すっきりした見た目",
                 "Menu: on My book (⋮); the search bar is only search" to "メニュー：マイブックの「⋮」に。検索バーは検索だけに",
                 "Ekitag: Niigata's Ekitag stations listed" to "エキタグ：新潟のエキタグ駅を追加",

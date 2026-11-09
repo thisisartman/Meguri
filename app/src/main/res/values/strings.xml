@@ -6,14 +6,14 @@
     <string name="nav_more">More</string>
 
     <string name="nearby_title">Nearby</string>
-    <string name="nearby_still_to_get">Uncollected, nearest first</string>
-    <string name="nearby_still_to_get_no_fix">Uncollected</string>
+    <string name="nearby_still_to_get">Not collected, nearest first</string>
+    <string name="nearby_still_to_get_no_fix">Not collected</string>
     <string name="nearby_all_far">Nothing to get within %1$d km; the nearest is %2$s away.</string>
     <string name="nearby_approximate">approximate</string>
     <string name="nearby_my_book">My book</string>
-    <string name="nearby_location_off">Location is switched off · showing recent items</string>
-    <string name="nearby_location_not_allowed">Location not allowed · showing recent items</string>
-    <string name="nearby_no_position">No position yet · showing recent items</string>
+    <string name="nearby_location_off">Location is switched off · A to Z</string>
+    <string name="nearby_location_not_allowed">Location not allowed · A to Z</string>
+    <string name="nearby_no_position">No position yet · A to Z</string>
     <string name="nearby_try_again">Try again</string>
     <string name="nearby_from_fix">From your position at %1$s</string>
     <string name="nearby_from_now">From your position now</string>
@@ -35,7 +35,7 @@
     <string name="a11y_photo">Photo of %1$s</string>
     <string name="a11y_remove_find">Remove the collection from %1$s</string>
     <string name="state_collected">Collected</string>
-    <string name="state_to_get">Uncollected</string>
+    <string name="state_to_get">Not collected</string>
     <string name="got_it_again">Collect again</string>
     <string name="photo">Photo</string>
     <string name="undo">Undo</string>
@@ -71,9 +71,9 @@
     <string name="item_open_maps">Open in Maps</string>
     <string name="item_wave">Wave %1$s · %2$s</string>
     <string name="item_wave_only">Wave %1$s</string>
-    <string name="item_no_finds">Uncollected</string>
+    <string name="item_no_finds">Not collected</string>
     <string name="item_add_photo">Add a photo</string>
-    <string name="item_remove_before_app">Mark as uncollected</string>
+    <string name="item_remove_before_app">Mark as not collected</string>
     <string name="item_found_at">%1$s · %2$s</string>
     <string name="item_no_position">no position</string>
     <string name="back">Back</string>
@@ -85,9 +85,9 @@
     <string name="item_finding_position">finding position…</string>
     <string name="item_position_saved">location saved</string>
     <string name="item_find_map">Map</string>
-    <string name="item_remove_confirm_title">Mark as uncollected?</string>
-    <string name="item_remove_confirm_text">%1$s will count as uncollected again.</string>
-    <string name="item_remove_confirm">Mark as uncollected</string>
+    <string name="item_remove_confirm_title">Mark as not collected?</string>
+    <string name="item_remove_confirm_text">%1$s will count as not collected again.</string>
+    <string name="item_remove_confirm">Mark as not collected</string>
     <string name="nearby_around_here">Around here · within %1$d km</string>
     <string name="nearby_next">Next: %1$s · %2$s</string>
     <string name="nearby_elsewhere">Elsewhere</string>
@@ -97,8 +97,8 @@
     <string name="item_on_lines">On %1$s</string>
     <string name="item_remove_find">Remove</string>
     <string name="item_remove_find_title">Remove this collection?</string>
-    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
-    <string name="line_nearest">Nearest uncollected: %2$s · %1$s</string>
+    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Not collected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
+    <string name="line_nearest">Nearest not collected: %2$s · %1$s</string>
 
     <string name="log_title">Log a find</string>
     <string name="log_search">Search name or code</string>
@@ -167,17 +167,17 @@
 
     <!-- Alerts (M4) -->
     <string name="alerts_title">Alerts</string>
-    <string name="trip_title">Proximity mode</string>
+    <string name="trip_title">Travelling alerts</string>
     <string name="trip_sub_off">Checks where you are every few minutes until midnight and tells you when something to get is close. For trains and walks.</string>
     <string name="trip_sub_on">On until %1$s. Turn it off here or from its notification.</string>
-    <string name="trip_needs_location">Proximity mode needs location access.</string>
+    <string name="trip_needs_location">Travelling alerts need location access.</string>
     <string name="bg_title">Alerts when the app is closed</string>
     <string name="bg_sub_off">Uses Google location services, which costs little battery. Needs location set to \"Allow all the time\".</string>
-    <string name="bg_sub_on">Tells you when you are near something uncollected, even with Meguri closed.</string>
+    <string name="bg_sub_on">Tells you when you are near something you have not collected, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
     <string name="bg_sub_needs">Needs location set to \"Allow all the time\". Tap to allow it.</string>
-    <string name="bg_sub_no_play">Not available on this phone (no Google Play services). Use Proximity mode.</string>
+    <string name="bg_sub_no_play">Not available on this phone (no Google Play services). Use Travelling alerts.</string>
     <string name="bg_dialog_title">Allow location all the time?</string>
     <string name="bg_dialog_text">Android asks on a separate page. Choose \"Allow all the time\" so alerts can come while the app is closed. Meguri never sends your location anywhere.</string>
     <string name="bg_dialog_go">Continue</string>
@@ -191,14 +191,14 @@
     <string name="notif_off">Notifications are off for Meguri. Alerts need them: tap to turn them on.</string>
     <string name="alerts_channel">Near something to get</string>
     <string name="alerts_channel_sub">When you are close to something you still need</string>
-    <string name="trip_channel">Proximity mode</string>
-    <string name="trip_channel_sub">Shown while Proximity mode is on</string>
+    <string name="trip_channel">Travelling alerts</string>
+    <string name="trip_channel_sub">Shown while Travelling alerts are on</string>
     <string name="alert_text">%1$s · %2$s away</string>
     <string name="alert_text_here">%1$s · you are here</string>
     <string name="alert_done">Collect</string>
     <string name="alert_dismiss">Dismiss</string>
     <string name="alert_logged">Collected %1$s</string>
-    <string name="trip_on_until">Proximity mode on until %1$s</string>
+    <string name="trip_on_until">Travelling alerts on until %1$s</string>
     <string name="trip_checking">Looking for things to get nearby</string>
     <string name="trip_nearest">Nearest: %1$s · %2$s</string>
     <string name="trip_stop">Stop</string>
@@ -209,7 +209,7 @@
     <string name="map_title_stamps">Stamps on the map</string>
     <string name="map_title_cards">Cards on the map</string>
     <string name="map_collected">Collected</string>
-    <string name="map_not_collected">Uncollected</string>
+    <string name="map_not_collected">Not collected</string>
     <string name="map_details">Details</string>
     <string name="map_expand">Expand</string>
     <string name="nearby_tab_stamps">Stamps</string>
@@ -223,7 +223,7 @@
 
     <!-- Welcome before a catalogue (#58, Legion) -->
     <string name="welcome_title">Welcome to Meguri</string>
-    <string name="welcome_what">Your own record of manhole cards, station stamps and goshuin: what you have, and what is uncollected near you. It works offline.</string>
+    <string name="welcome_what">Your own record of manhole cards, station stamps and goshuin: what you have, and what you have not collected near you. It works offline.</string>
     <string name="welcome_catalogue">A catalogue lists what there is to collect and where. Start with the Niigata one, which comes with the app, or load your own CSV file.</string>
     <string name="welcome_load_bundled">Load the Niigata catalogue</string>
     <string name="welcome_load_file">Load a CSV file</string>
@@ -331,7 +331,7 @@
     <string name="trip_if_off">if you get off</string>
     <string name="trip_start">Start trip</string>
     <string name="trip_stop_trip">Stop trip</string>
-    <string name="trip_on_note">Proximity mode is on until %1$s: it tells you where to get off next and what is close.</string>
+    <string name="trip_on_note">Travelling alerts are on until %1$s: they tell you where to get off next and what is close.</string>
     <string name="trip_already">Already went</string>
     <string name="trip_already_title">Already went</string>
     <string name="trip_already_hint">Tick what you got along this route. They are saved on the day at the top.</string>
@@ -366,12 +366,12 @@
     <string name="photo_cover_clear">Stop using as display picture</string>
     <string name="alert_station_rule">Station stamps alert only at stations you get off at in today\'s trip (menu, Trip). Riding through a station never alerts, and with no trip planned there are no station alerts.</string>
     <string name="settings_alerts">Alerts</string>
-    <string name="settings_alerts_sub">Distance for each category, what alerts, Proximity mode, quiet hours</string>
+    <string name="settings_alerts_sub">Distance for each category, what alerts, Travelling alerts, quiet hours</string>
     <string name="settings_data">Backup and data</string>
     <string name="settings_look">Appearance</string>
     <string name="settings_catalogue">Catalogue</string>
-    <string name="settings_catalogue_sub">Niigata, Saitama and Tokyo built in · card pictures · load a CSV for more</string>
-    <string name="settings_catalogue_note">The app comes with the catalogue and an offline map of Niigata, Saitama and Tokyo: manhole cards, station stamps, Ekitag, dam cards and roadside stations. Load a CSV to add or update items; your finds are never removed.</string>
+    <string name="settings_catalogue_sub">Niigata, Saitama, Tokyo and Gunma built in · card pictures · load a CSV for more</string>
+    <string name="settings_catalogue_note">The app comes with the catalogue of Niigata, Saitama and Tokyo (manhole cards, station stamps, Ekitag, dam cards and roadside stations), the station stamps of Gunma on the Joetsu Line, and an offline map. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">What\'s new · logs · version %1$s</string>
     <string name="settings_collections_sub">Categories you added yourself, and adding one</string>
@@ -436,8 +436,8 @@
         <item quantity="other">%d added</item>
     </plurals>
     <plurals name="onb_finished_title">
-        <item quantity="one">%d added to your profile</item>
-        <item quantity="other">%d added to your profile</item>
+        <item quantity="one">%d added to My book</item>
+        <item quantity="other">%d added to My book</item>
     </plurals>
     <string name="onb_finished_how">Your finds are in My book (bottom right), with your photos and details; open one there to add photos.</string>
     <string name="onb_finished_profile">Go to My book</string>
@@ -497,8 +497,8 @@
     <string name="timeline_sub">Everything you collected, by day</string>
     <string name="timeline_empty">Nothing with a day yet. Each find you log keeps its day; things you had before the app have none.</string>
     <string name="filter_all">All</string>
-    <string name="filter_to_get">To get</string>
-    <string name="filter_have">Have</string>
+    <string name="filter_to_get">Not collected</string>
+    <string name="filter_have">Collected</string>
     <string name="filter_series">Series %1$s</string>
     <string name="photo_hint_setting">Suggest new photos</string>
     <string name="photo_hint_setting_sub">When you take a photo with the camera near something you have not collected, Meguri offers to add it. Needs access to your photos.</string>
@@ -510,7 +510,7 @@
     <string name="photo_hint_channel_sub">A new photo taken near something you have not collected</string>
     <string name="photo_view_fullscreen">View full screen</string>
     <string name="photo_view_close">Close</string>
-    <string name="type_roadside">Roadside station stamp</string>
+    <string name="type_roadside">Roadside station</string>
     <string name="type_roadside_plural">Roadside stations</string>
     <string name="cards_download">Card pictures</string>
     <string name="cards_download_sub">%1$d of %2$d on this phone. Tap to download the rest from the card site (Eki kara Manhole), for your own use: they stay on this phone, not in backups. Pictures © GKP and each city.</string>
@@ -560,7 +560,7 @@
     <string name="add_new">Add</string>
     <string name="add_name">Name</string>
     <string name="add_other_name">Name in another language (optional)</string>
-    <string name="add_category">Card or stamp</string>
+    <string name="add_category">Card, stamp or other</string>
     <string name="add_cat_card">Card</string>
     <string name="add_cat_stamp">Stamp</string>
     <string name="add_cat_other">Other</string>
@@ -605,7 +605,7 @@
     <string name="alerts_mode_off">Off</string>
     <string name="alerts_mode_trip">Travelling</string>
     <string name="alerts_mode_always">Always</string>
-    <string name="alerts_mode_sub">Travelling: until midnight, or during a trip (Proximity mode). Always: also when Meguri is closed.</string>
+    <string name="alerts_mode_sub">Travelling: until midnight, or during a trip. Always: also when Meguri is closed.</string>
     <string name="alerts_how_close">Proximity alert settings</string>
     <string name="alerts_every">All categories</string>
     <string name="alerts_categories">Alert categories</string>
@@ -660,7 +660,7 @@
     <string name="alerts_own_hide">Hide custom distances</string>
     <string name="alerts_own_show">Show custom distances</string>
     <string name="cat_yours">Your categories</string>
-    <string name="alerts_line_trip">While travelling</string>
+    <string name="alerts_line_trip">Travelling</string>
     <plurals name="alerts_line_categories">
         <item quantity="one">%1$d category</item>
         <item quantity="other">%1$d categories</item>
