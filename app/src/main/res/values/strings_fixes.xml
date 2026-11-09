@@ -18,4 +18,7 @@
     <string name="nb_new_save">Save</string>
     <string name="check_cards_missing">Card pictures aren\'t on this phone yet, so cards show as icons.</string>
     <string name="check_cards_download">Download %1$d</string>
+    <string name="station_title">Station</string>
+    <string name="station_collect_stamp">Collect stamp</string>
+    <string name="station_collect_stamp_again">Stamp again</string>
 </resources>

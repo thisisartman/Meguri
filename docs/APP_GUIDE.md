@@ -432,7 +432,7 @@ Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the
 
 **Directions.** A tonal button "Directions · %1$s" (with the distance), or "Directions" when the distance is unknown. Shown when the item has a position and you are not already within 25 m of it (`ui/ItemScreen.kt:223-238`). Tap: section 3.11.
 
-**Ekitag row** (a station stamp whose station has an Ekitag). The Ekitag's mark, "Ekitag", and "Collected" or "Not collected", with an arrow. Tap: opens the station's Ekitag page (`ui/ItemScreen.kt:188`, `ui/ItemScreen.kt:499-515`). (Figure 8)
+**Station page** (a station stamp whose station has an Ekitag, since 0.5). The stamp and its Ekitag share one page: opening either, from a pin, a tile, search or the timeline, shows the station (title "Station"). Under Directions, an Ekitag section shows the Ekitag's mark, "Collected" or "Not collected", and its own "Collect" / "Collect again"; the Ekitag's finds follow under it. The photo grid holds both: an "Ekitag screenshot" goes on the Ekitag, every other photo on the stamp. The bottom button is the stamp's: "Collect stamp" / "Stamp again" (`ui/ItemScreen.kt`, `stationPair` in `ui/NearbyScreen.kt`).
 
 <p><img src="guide-media/station-ekitag.gif" width="300" alt="The Ekitag row opening the Ekitag"></p>
 

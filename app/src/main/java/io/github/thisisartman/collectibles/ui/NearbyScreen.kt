@@ -788,3 +788,18 @@ internal fun stationKey(r: ItemRow): String? = r.item.lat?.let { la -> r.item.ln
 /** Each station's Ekitag, by the station's spot. */
 internal fun ekitagByStation(rows: List<ItemRow>): Map<String?, ItemRow> =
     rows.filter { it.item.type == ItemType.EKITAG && stationKey(it) != null }.associateBy { stationKey(it) }
+
+/**
+ * The station page an item belongs on: a station stamp with its Ekitag, or an Ekitag with its station stamp, by the
+ * same spot as the Nearby tile (owner, 2026-11-10: the stamp and its Ekitag opened two separate pages). Null for
+ * anything else, and for an Ekitag with no station stamp at its spot.
+ */
+internal fun stationPair(rows: List<ItemRow>, id: String): Pair<ItemRow, ItemRow?>? {
+    val r = rows.firstOrNull { it.item.id == id } ?: return null
+    val key = stationKey(r) ?: return null
+    return when (r.item.type) {
+        ItemType.EKI_STAMP -> r to ekitagByStation(rows)[key]
+        ItemType.EKITAG -> rows.firstOrNull { it.item.type == ItemType.EKI_STAMP && stationKey(it) == key }?.let { it to r }
+        else -> null
+    }
+}

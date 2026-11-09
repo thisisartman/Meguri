@@ -65,12 +65,23 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.FindWithPhotos
 import io.github.thisisartman.collectibles.data.Item
+import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem: (String) -> Unit = {}) {
+    // An Ekitag with a station stamp at its spot opens the station's page, which holds both (owner, 2026-11-10)
+    val all by vm.rows.collectAsStateWithLifecycle()
+    val stationId = remember(all, itemId) { stationPair(all, itemId)?.first?.item?.id }
+    StationOrItem(vm, stationId ?: itemId, onBack, onOpenItem)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem: (String) -> Unit) {
     val ja = isJapanese()
+    val all by vm.rows.collectAsStateWithLifecycle()
     val row by remember(itemId) { vm.itemRow(itemId) }.collectAsStateWithLifecycle(null)
     val finds by remember(itemId) { vm.finds(itemId) }.collectAsStateWithLifecycle(emptyList())
     val lines by vm.lines.collectAsStateWithLifecycle()
@@ -87,7 +98,9 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
             // Your own kinds by their own name ("Aquarium stamp"), not "My collection"
             title = {
                 val custom = r?.item?.customTypeId?.let { LocalCustomTypes.current[it]?.name }
-                Text(custom ?: r?.item?.type?.let { stringResource(it.label()) } ?: "")
+                // A station page with its Ekitag is the station, not only its stamp
+                val isStation = r != null && stationPair(all, r.item.id)?.second != null
+                Text(if (isStation) stringResource(R.string.station_title) else custom ?: r?.item?.type?.let { stringResource(it.label()) } ?: "")
             },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             // Edit its name, place or position (owner, 2026-11-08)
@@ -113,7 +126,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
         if (r == null) return@Column
         // A station's Ekitag, folded into the station on Nearby (owner, 2026-11-09)
         val allRows by vm.rows.collectAsStateWithLifecycle()
-        val ekitag = if (r.item.type == io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP) remember(allRows, r) { ekitagByStation(allRows)[stationKey(r)] } else null
+        val ekitag = if (r.item.type == io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP) remember(allRows, r) { stationPair(allRows, r.item.id)?.second } else null
+        val tagFinds by remember(ekitag?.item?.id) { ekitag?.let { vm.finds(it.item.id) } ?: kotlinx.coroutines.flow.flowOf(emptyList()) }.collectAsStateWithLifecycle(emptyList())
         if (editing) ItemEditSheet(r.item, vm, onDismiss = { editing = false })
         if (confirmItem) {
             val own = r.item.origin == io.github.thisisartman.collectibles.data.Origin.USER
@@ -141,15 +155,21 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
         val confirm = rememberConfirm()
         // Photos go on the latest collection; with none yet, adding a photo collects the item first
         val target = finds.firstOrNull()?.find?.id
-        val photoActions = remember(target, r.item.id) {
+        // On a station page an Ekitag screenshot belongs to the Ekitag (its own find), every other photo to the stamp
+        val tagTarget = tagFinds.firstOrNull()?.find?.id
+        val photoActions = remember(target, tagTarget, r.item.id, ekitag?.item?.id) {
+            fun owner(kind: String): Pair<ItemRow, String?> =
+                if (ekitag != null && kind == io.github.thisisartman.collectibles.data.PhotoKind.EKITAG) ekitag to tagTarget else r to target
             FindPhotoActions(
                 takePhoto = { kind ->
-                    if (target != null) { vm.nextPhotoKind(target, kind); photo.capture(target) }
-                    else vm.gotIt(r, name) { id -> vm.nextPhotoKind(id, kind); photo.capture(id) }
+                    val (who, t) = owner(kind)
+                    if (t != null) { vm.nextPhotoKind(t, kind); photo.capture(t) }
+                    else vm.gotIt(who, who.item.displayName(ja)) { id -> vm.nextPhotoKind(id, kind); photo.capture(id) }
                 },
                 pickPhoto = { uri, kind ->
-                    if (target != null) vm.addGalleryPhoto(context, target, uri, kind)
-                    else vm.gotIt(r, name) { id -> vm.addGalleryPhoto(context, id, uri, kind) }
+                    val (who, t) = owner(kind)
+                    if (t != null) vm.addGalleryPhoto(context, t, uri, kind)
+                    else vm.gotIt(who, who.item.displayName(ja)) { id -> vm.addGalleryPhoto(context, id, uri, kind) }
                 },
                 setKind = vm::setPhotoKind,
                 remove = vm::removePhoto,
@@ -185,7 +205,20 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
                 }
             }
             item { Actions(item, meters) }
-            ekitag?.let { e -> item { EkitagRow(e) { onOpenItem(e.item.id) } } }
+            // The station's Ekitag, on this page: its state, Collect, and its own finds (owner, 2026-11-10)
+            ekitag?.let { e ->
+                item {
+                    EkitagSection(
+                        e, onCollect = { confirm(); vm.gotIt(e, e.item.displayName(ja)) },
+                    )
+                }
+                items(tagFinds, key = { "tag-" + it.find.id }) { f ->
+                    CollectionRow(
+                        f, ja, e.item.displayName(ja), onRemoveBeforeApp = { vm.unmarkBeforeApp(e.item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                        hasCost = false, onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
+                    )
+                }
+            }
             // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
             if (!r.collected) item { NoneHereRow(item, r.noneHere, onSet = { tick(); vm.setNoneHere(item.id, it) }) }
             // Where to get it right under the header: the one fact a collector needs (map-app study, 2026-11-07)
@@ -194,7 +227,8 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
                 item { Facts(item) }
             }
             item { SectionTitle(stringResource(R.string.item_photos)) }
-            item { ItemPhotos(item.type, finds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId, shownUri = r?.photoUri) }
+            // The station's photos and the Ekitag's screenshots in one grid
+            item { ItemPhotos(item.type, finds.flatMap { it.photos } + tagFinds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId, shownUri = r?.photoUri) }
             if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
@@ -228,7 +262,11 @@ fun ItemScreen(vm: MainViewModel, itemId: String, onBack: () -> Unit, onOpenItem
                 }
                 PhotoKindMenu(item.type, menu, onDismiss = { menu = false }, onPick = { menuKind = it })
             }
-            val collectLabel = stringResource(if (r.collected) R.string.got_it_again else R.string.got_it)
+            // On a station page the bottom button is the stamp's; the Ekitag has its own in its section
+            val collectLabel = stringResource(
+                if (ekitag != null) (if (r.collected) R.string.station_collect_stamp_again else R.string.station_collect_stamp)
+                else if (r.collected) R.string.got_it_again else R.string.got_it,
+            )
             val collectContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
                 Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
@@ -494,22 +532,31 @@ private fun NoneHereRow(item: Item, marked: Boolean, onSet: (Boolean) -> Unit) {
     }
 }
 
-/** A station's Ekitag on the station's page: its state, and a tap opens it. */
+/**
+ * A station's Ekitag on the station's own page (owner, 2026-11-10: one station, one page): its mark and state, and
+ * Collect right here; its finds follow under it. Its screenshots are in the page's photo grid.
+ */
 @Composable
-private fun EkitagRow(e: io.github.thisisartman.collectibles.data.ItemRow, onOpen: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().clickable(onClick = onOpen).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+private fun EkitagSection(e: ItemRow, onCollect: () -> Unit) {
+    androidx.compose.material3.Surface(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
+        shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLow,
     ) {
-        Mark(e, 40.dp)
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(stringResource(R.string.type_ekitag), style = MaterialTheme.typography.bodyLarge)
-            Text(
-                stringResource(if (e.collected) R.string.state_collected else R.string.state_to_get),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+        Row(Modifier.heightIn(min = 64.dp).padding(start = 12.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Mark(e, 40.dp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(stringResource(R.string.type_ekitag), style = MaterialTheme.typography.titleSmall)
+                Text(
+                    stringResource(if (e.collected) R.string.state_collected else R.string.state_to_get),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (e.collected) LocalTypeColors.current.of(ItemType.EKITAG) else MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+            val label = stringResource(if (e.collected) R.string.got_it_again else R.string.got_it)
+            if (e.collected) InkOutlinedButton(onClick = onCollect, modifier = Modifier.heightIn(min = 48.dp)) { Text(label) }
+            else Button(onClick = onCollect, modifier = Modifier.heightIn(min = 48.dp)) { Text(label) }
         }
-        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
