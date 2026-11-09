@@ -1,5 +1,9 @@
 # Changelog
 
+## Next: 0.5 (the remaining big features; 0.6 will be the first public test beta)
+- Nearby: the category filter is the same pill and menu as on Alerts ("All categories" or one category, with its colour dot), in place of a row of chips that scrolled. Search results use it too. Checked on the Poco and the S23.
+- Tested from first open on the S23 (dev copy, recorded): 7 things to fix, listed in Resources/Verification/s23-run-2026-11-09/FINDINGS.md; the main one, "I already have some" skips the picker after loading.
+
 ## 0.4.0 (2026-11-09, stable)
 Everything below since beta.9, plus these last changes:
 - Back up now asks each time: Without photos or With photos, or Cancel. Backups, restores, card picture downloads and CSV imports keep running after you leave Settings, and their message shows when they finish.
