@@ -153,6 +153,7 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
         val context = LocalContext.current
         val tick = rememberTick()
         val confirm = rememberConfirm()
+        val ekitagLabel = stringResource(R.string.type_ekitag)
         // Photos go on the latest collection; with none yet, adding a photo collects the item first
         val target = finds.firstOrNull()?.find?.id
         // On a station page an Ekitag screenshot belongs to the Ekitag (its own find), every other photo to the stamp
@@ -209,7 +210,8 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
             ekitag?.let { e ->
                 item {
                     EkitagSection(
-                        e, onCollect = { confirm(); vm.gotIt(e, e.item.displayName(ja)) },
+                        // Named with its kind: "Collected Urasa Station" read as the stamp (Poco check, 2026-11-10)
+                        e, onCollect = { confirm(); vm.gotIt(e, e.item.displayName(ja) + " · " + ekitagLabel) },
                     )
                 }
                 items(tagFinds, key = { "tag-" + it.find.id }) { f ->

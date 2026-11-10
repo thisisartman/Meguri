@@ -12,7 +12,7 @@ Line numbers follow the working copy as checked on 2026-11-09: commit `c5e5a75` 
 - Where a text has a singular and a plural form, both are given ("%d photo" / "%d photos"), or the guide writes "(s)" to stand for both.
 - Quoted examples such as "86 Station stamps · 48 Manhole cards" show how filled-in text looks; they are not fixed strings.
 - Source references have the form `path:line`. A path that does not start with `app/` is relative to `app/src/main/java/io/github/thisisartman/collectibles/`. For example `ui/App.kt:205` means `app/src/main/java/io/github/thisisartman/collectibles/ui/App.kt`, line 205.
-- Pictures and moving pictures were taken from the 0.4.0 development build on a phone in dark theme, with the owner's own collection; the moving pictures show taps that were cancelled or undone, so nothing in the collection changed.
+- Pictures were taken from the 0.5 development build on a phone in light theme; the moving pictures are from 0.4.0 in dark theme, with the owner's own collection; the moving pictures show taps that were cancelled or undone, so nothing in the collection changed.
 - "Not confirmed from code" marks something the code does not settle, or that would need a test on a phone.
 - A dash shown as a value (no date) is the string `no_date`.
 
@@ -179,7 +179,7 @@ The sheet sits at the height of its content, capped per step (60% of the screen 
 
 <p><img src="guide-media/shots/01-nearby.png" width="300" alt="Nearby"></p>
 
-*Figure 1. Nearby. The gold circles on the map are groups, with how many items each holds; the other pins are single items. In the sheet: the "Stamps" and "Cards" tabs with how many you have, the category chips (a category pill since 0.5), "Sort" and "Tile size", then the tiles, nearest first. Urasa's tile carries the Ekitag badge in its corner.*
+*Figure 1. Nearby. Zoomed out, the gold circles are groups with how many items each holds, and single items show their category icon (their picture from street level). In the sheet: the "Stamps" and "Cards" tabs with how many you have, the "All categories" menu, "Sort" and "Tile size", then the tiles, nearest first. Urasa's tile carries the Ekitag badge in its corner.*
 
 **Search bar (top).**
 - Search icon, then a text field with the hint "Search stamps and cards". Typing searches everything (section 2.4). The keyboard's search key closes the keyboard.
@@ -222,7 +222,7 @@ Top to bottom:
 1. **Tabs** (hidden while searching): "Stamps", "Cards", and "Other" when you have items in your own categories that are neither a card nor a stamp. Each tab shows a second line "collected / total" for the tab, blank until the list has loaded (`ui/NearbyScreen.kt:259-280`). Your own categories go under Stamps or Cards by their icon (section 3.15). Tap a tab: shows its items and resets the category filter to "All".
 2. **Filter row.**
    - While searching: "%1$d found for “%2$s”" in place of the category pill.
-   - Otherwise, when the tab holds more than one category: the category pill, the same one as on Alerts (`ui/CategoryPill.kt`). It shows "All categories" with a layers icon, or the chosen category with its colour dot, and a drop-down arrow. Tap: Android's menu with "All categories" and each category in the tab (plural label), the chosen line highlighted. Pick one to show only that category. (Up to 0.4.0 this was a scrolling row of chips, as in Figures 1 and 4.)
+   - Otherwise, when the tab holds more than one category: the category pill, the same one as on Alerts (`ui/CategoryPill.kt`). It shows "All categories" with a layers icon, or the chosen category with its colour dot, and a drop-down arrow. Tap: Android's menu with "All categories" and each category in the tab (plural label), the chosen line highlighted. Pick one to show only that category.
    - "Sort" (icon, right). The icon shows the order in use: an arrow for nearest, A over Z for name. Tap: a menu with "Nearest" and "A to Z", the current one ticked. Until you dismiss it, the menu also holds a tip under the two orders: "Nearest: how far each item is from you" and "A to Z: names in alphabetical order", with "Got it". "Got it" saves `tips` preferences key `sort`, and the tip never shows again. (Figure 3)
    - "Tile size" (icon, right). Tap: shows or hides a slider with three stops, small to large circles at its ends (48, 64 and 84 dp; 64 dp to start) (`ui/NearbyScreen.kt:588`). The size is kept while the app runs, not saved.
 3. **Tiles**, in a grid that fills the width. Each tile shows the item's mark (section 3.3), its short name on two lines, and its distance, or "No stamp here" / "None here" for an item marked empty. Empty items are faded and always last. An Ekitag tile has a small Ekitag badge at its top right. Tap a tile: opens the item page. The grid holds collected and uncollected items alike.
@@ -242,7 +242,7 @@ Top to bottom:
 
 <p><img src="guide-media/shots/04-search.png" width="300" alt="Search results for urasa"></p>
 
-*Figure 4. Searching "urasa". The chips (a category pill since 0.5) narrow the results to one category. Each row gives the category, prefecture and whether you have it, so Urasa's Ekitag and its station stamp read apart. The keyboard is cut off the picture.*
+*Figure 4. Searching "urasa". The "All categories" menu narrows the results to one category. Each row gives the category, prefecture and whether you have it, so Urasa's Ekitag and its station stamp read apart. The keyboard is cut off the picture.*
 
 **What it searches.** Every item in both tabs and every category, with the shared forgiving search (section 3.8): Japanese and romaji names, any part of a card code, the town and the place name (`ui/Search.kt:20-21`). Results are ordered by match score, then distance.
 
@@ -414,7 +414,7 @@ Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the
 
 <p><img src="guide-media/shots/06-item.png" width="300" alt="Item page of Urasa's station stamp"></p>
 
-*Figure 6. The item page of Urasa's station stamp, top to bottom: the header (picture, names, prefecture, lines, "Collected"), "Directions", the Ekitag row, "Where to get it", the photo squares, the one find under "Collected", and "Photo" and "Collect again" at the bottom.*
+*Figure 6. The Station page for Urasa, top to bottom: the header (the stamp's picture, names, prefecture, lines, "Collected"), "Directions", the Ekitag with its own "Collect", "Where to get it", the photo squares for both, the stamp's find under "Collected", and "Photo" and "Stamp again" at the bottom.*
 
 **Top bar.** "Back" (icon); the category name as the title (your own category by its own name); "Edit details" (icon, a pencil), which opens the Edit details sheet; "More options" (icon, three dots), shown for an item you added or one you have collected. Its menu has "Remove item" for an item you added ("Remove this item?", "It leaves Meguri with its finds and photos. Photos you took with the camera stay in your gallery."), or "Remove from my collection" for a catalogue item ("Remove from your collection?", "Every find of it and their photos leave Meguri; it goes back to not collected. Photos you took with the camera stay in your gallery."). Each asks first, with "Cancel" and "Remove" (`ui/ItemScreen.kt`, `data/CollectionRepository.kt` `removeItem`). (Figure 7)
 
@@ -434,9 +434,9 @@ Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the
 
 **Station page** (a station stamp whose station has an Ekitag, since 0.5). The stamp and its Ekitag share one page: opening either, from a pin, a tile, search or the timeline, shows the station (title "Station"). Under Directions, an Ekitag section shows the Ekitag's mark, "Collected" or "Not collected", and its own "Collect" / "Collect again"; the Ekitag's finds follow under it. The photo grid holds both: an "Ekitag screenshot" goes on the Ekitag, every other photo on the stamp. The bottom button is the stamp's: "Collect stamp" / "Stamp again" (`ui/ItemScreen.kt`, `stationPair` in `ui/NearbyScreen.kt`).
 
-<p><img src="guide-media/station-ekitag.gif" width="300" alt="The Ekitag row opening the Ekitag"></p>
+<p><img src="guide-media/shots/08-station-ekitag.png" width="300" alt="The Ekitag section of the Station page"></p>
 
-*Figure 8. On Urasa's station stamp page, tapping the Ekitag row opens Urasa's Ekitag, not collected yet.*
+*Figure 8. The Ekitag on the Station page: its mark, "Not collected", and "Collect". Once collected it reads "Collected" and "Collect again", and its finds appear under it.*
 
 **None here** (uncollected items only, `ui/ItemScreen.kt:443-464`).
 - Not marked: text button "No stamp here?" or "None here?". Tap: marks the place as checked and empty, with today's date.

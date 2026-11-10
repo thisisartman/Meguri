@@ -7,6 +7,8 @@
 - Motion: pages slide in from the side and back out; onboarding and Collection check steps fade and rise into place instead of swapping at the touch; the picker's place card grows in; choice cards show their press. One shared motion file (ui/Motion.kt).
 - Map: zoomed out, every marker shows its category icon (the blue manhole cover for cards); pictures show from street level. Tapping a group glides in and its pins fade in already drawn, with no late picture swap. Groups and their tap area are a little larger.
 - One station page: a station's stamp and its Ekitag open the same page, wherever you tap them. The Ekitag has its own section with Collect and its finds; Ekitag screenshots go on the Ekitag, other photos on the stamp; the bottom button reads "Collect stamp".
+- Collecting the Ekitag on a Station page says "Collected Urasa Station · Ekitag", not just the station's name.
+- docs/APP_GUIDE.md: screenshots retaken on the 0.5 build in light theme (Station page, category menu, map icons); the Ekitag figure is now a still of the Station page's Ekitag section.
 - What's new is laid out like AFinity's changelog: icon, title, the version in a pill, the notes in a tinted box that scrolls, Close.
 - Nearby: the category filter is the same pill and menu as on Alerts ("All categories" or one category, with its colour dot), in place of a row of chips that scrolled. Search results use it too. Checked on the Poco and the S23.
 - Tested from first open on the S23 (dev copy, recorded): 7 things to fix, listed in Resources/Verification/s23-run-2026-11-09/FINDINGS.md; the picker skip turned out to be the test helper tapping "I'm starting fresh" (the picker opens), the rest fixed:
