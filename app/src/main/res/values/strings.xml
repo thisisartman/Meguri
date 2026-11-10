@@ -52,6 +52,12 @@
     <string name="item_where">Where to get it</string>
     <string name="item_handed_out_at">Handed out at</string>
     <string name="item_hours">Hours</string>
+    <string name="open_until">Open now · until %1$s</string>
+    <string name="open_at">Closed now · opens at %1$s</string>
+    <string name="open_closed_for_today">Closed for today</string>
+    <string name="open_closed_today">Closed today</string>
+    <string name="open_today">Open today</string>
+    <string name="open_may_vary"> · dates may vary</string>
     <string name="item_office">Shrine or temple office</string>
     <string name="item_office_hours">Office hours</string>
     <string name="item_station">Station</string>

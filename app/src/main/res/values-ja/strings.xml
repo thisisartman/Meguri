@@ -52,6 +52,12 @@
     <string name="item_where">入手場所</string>
     <string name="item_handed_out_at">配布場所</string>
     <string name="item_hours">配布時間</string>
+    <string name="open_until">営業中・%1$sまで</string>
+    <string name="open_at">営業時間外・%1$sから</string>
+    <string name="open_closed_for_today">本日の営業は終了</string>
+    <string name="open_closed_today">本日は休み</string>
+    <string name="open_today">本日は営業日</string>
+    <string name="open_may_vary">・時期は変わることあり</string>
     <string name="item_office">授与所</string>
     <string name="item_office_hours">受付時間</string>
     <string name="item_station">駅</string>

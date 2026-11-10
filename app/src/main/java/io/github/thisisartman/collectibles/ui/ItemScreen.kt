@@ -362,7 +362,7 @@ private fun Facts(item: Item) {
     ) {
         Column(Modifier.padding(vertical = 4.dp)) {
             // Hours first: on a trip day the question is whether it is open
-            FactRow(painterResource(R.drawable.ic_schedule), stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"))
+            FactRow(painterResource(R.drawable.ic_schedule), stringResource(hoursLabel), listOfNotNull(item.hoursText, item.closedDays).joinToString("\n"), status = openLine(item))
             // A station's place is the station itself: repeating its Japanese name adds nothing (and breaks English mode)
             FactRow(androidx.compose.ui.graphics.vector.rememberVectorPainter(Icons.Filled.Place), stringResource(placeLabel), listOfNotNull(item.placeName?.takeIf { it != item.nameJa }, item.address).joinToString("\n"))
             item.placePhone?.takeIf { it.isNotBlank() }?.let { phone ->
@@ -380,7 +380,7 @@ private fun Facts(item: Item) {
 }
 
 @Composable
-private fun FactRow(icon: androidx.compose.ui.graphics.painter.Painter, label: String, value: String, onClick: (() -> Unit)? = null) {
+private fun FactRow(icon: androidx.compose.ui.graphics.painter.Painter, label: String, value: String, status: OpenLine? = null, onClick: (() -> Unit)? = null) {
     if (value.isBlank()) return
     Row(
         Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -392,6 +392,8 @@ private fun FactRow(icon: androidx.compose.ui.graphics.painter.Painter, label: S
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             if (label.isNotEmpty()) Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // Open now or closed, read from the hours text (0.5); left out when the text can't be read with confidence
+            status?.let { Text(it.text, style = MaterialTheme.typography.labelLarge, color = if (it.closed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary) }
             Text(value, style = MaterialTheme.typography.bodyMedium, color = if (onClick != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
         }
     }

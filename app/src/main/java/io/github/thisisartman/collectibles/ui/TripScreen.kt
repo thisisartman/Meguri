@@ -336,6 +336,7 @@ private fun StopRow(
                         if (own.row.collected) Icon(Icons.Filled.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp).padding(end = 2.dp))
                         Text(sub, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
+                    own?.takeIf { !it.row.collected }?.let { ClosedWarning(it.row.item) }
                 }
                 val desc = stringResource(R.string.trip_get_off_at, station?.item?.displayName(ja) ?: "")
                 FilterChip(
@@ -363,12 +364,20 @@ private fun StopRow(
                             if (!t.counts && !r.collected) add(stringResource(R.string.trip_if_off))
                         }.joinToString(" · ")
                         Text(sub, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        if (!r.collected) ClosedWarning(r.item)
                     }
                     if (r.collected) Icon(Icons.Filled.Check, contentDescription = stringResource(R.string.state_collected), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                 }
             }
         }
     }
+}
+
+/** A trip is today: say so when a stop's item is closed today or has closed already (0.5, opening hours). */
+@Composable
+private fun ClosedWarning(item: io.github.thisisartman.collectibles.data.Item) {
+    val line = openLine(item)?.takeIf { it.closed } ?: return
+    Text(line.text, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, maxLines = 1, overflow = TextOverflow.Ellipsis)
 }
 
 @Composable
