@@ -659,4 +659,21 @@
     <string name="photo_other_name">名前（任意）</string>
     <string name="photo_remove_title">この写真を削除しますか？</string>
     <string name="photo_missing">見つかりません</string>
+    <!-- Region packs (0.5) -->
+    <string name="regions_title">地域</string>
+    <string name="regions_sub">都道府県ごとのカード・スタンプとオフライン地図をダウンロード</string>
+    <string name="regions_intro">都道府県ごとにダウンロードします。集められるものと、必要ならオフライン地図。この端末で使用中: %1$s。</string>
+    <string name="regions_offline">ダウンロードサーバーに接続できません。接続を確認して、もう一度開いてください。</string>
+    <string name="regions_failed">ダウンロードが完了しませんでした。集めたものはそのままです。もう一度お試しください。</string>
+    <string name="regions_update_all">すべて更新 (%1$s)</string>
+    <string name="regions_extras">その他: %1$s</string>
+    <string name="regions_with_map">オフライン地図 (%1$s)</string>
+    <string name="regions_download">ダウンロード (%1$s)</string>
+    <string name="regions_on_phone">この端末にあり（地図あり）</string>
+    <string name="regions_on_phone_no_map">この端末にあり（地図なし）</string>
+    <string name="regions_add_map">地図を追加 (%1$s)</string>
+    <string name="regions_remove">削除</string>
+    <string name="regions_remove_title">%1$sを削除しますか？</string>
+    <string name="regions_remove_text">地図と、まだ集めていない・編集していない・印をつけていないものが削除されます。記録・写真・編集はそのまま残ります。</string>
+    <string name="regions_note">オフライン地図がない地域は、オンラインで地図を読み込みます。</string>
 </resources>

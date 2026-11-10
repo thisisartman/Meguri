@@ -118,6 +118,7 @@ class CatalogAndBackup @Inject constructor(
      * and updates by catalogue key, never deletes an item or a find. A phone that never loaded it is left alone.
      */
     suspend fun refreshBundledIfChanged(): ImportResult? = withContext(Dispatchers.IO) {
+        if (usesPacks) return@withContext null
         val text = bundledText()
         val sha = sha(text)
         val have = dao.allLines().map { it.id }.toSet()
@@ -136,6 +137,15 @@ class CatalogAndBackup @Inject constructor(
             bundledPrefs.edit().putString(KEY_BUNDLED_SHA, sha).apply()
             log.i("Catalog", "Bundled catalogue updated: ${it.added} added, ${it.updated} updated, ${it.lines} lines")
         }
+    }
+
+    /** Region packs are in use (0.5): the catalogue inside the app no longer refreshes over them. */
+    fun usePacks() = bundledPrefs.edit().putBoolean(KEY_USES_PACKS, true).apply()
+    val usesPacks: Boolean get() = bundledPrefs.getBoolean(KEY_USES_PACKS, false)
+
+    /** For removing a prefecture's pack: its untouched items of [type], then lines left empty. */
+    suspend fun removeUntouched(prefecture: String, type: ItemType): Int = lock.withLock {
+        db.withTransaction { dao.deleteUntouched(prefecture, type.name).also { dao.deleteEmptyLines() } }
     }
 
     private val bundledPrefs get() = context.getSharedPreferences("catalogue", Context.MODE_PRIVATE)
@@ -327,6 +337,7 @@ class CatalogAndBackup @Inject constructor(
 const val BUNDLED_CATALOGUE = "catalogue/trip-niigata.csv"
 private const val KEY_BUNDLED_SHA = "bundled_sha"
 private const val KEY_REGIONS = "regions"
+private const val KEY_USES_PACKS = "uses_packs"
 private const val KEY_BUNDLED_LINES = "bundled_lines"
 private const val KEY_COUNTS = "region_counts"
 private const val KEY_COUNTS_SHA = "region_counts_sha"

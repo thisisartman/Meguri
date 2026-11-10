@@ -281,8 +281,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
                     OnboardingSheet(
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
-                        loadCounts = { more.io.bundledPrefectures() },
-                        onLoad = { regions -> more.io.importBundled(regions) },
+                        // Region packs (0.5), with the catalogue inside the app as the fallback without a connection
+                        loadCounts = { more.regionCounts() },
+                        onLoad = { regions -> more.loadRegions(regions) },
                         // Already have some: on to the picker of what you have (#81 O3)
                         onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
                         onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },

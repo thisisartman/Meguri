@@ -85,8 +85,70 @@ class MoreViewModel @Inject constructor(
     private val db: CollectiblesDb,
     /** Runs long work for the life of the app, so leaving Settings does not cancel it (finding 32). */
     val work: SettingsWork,
+    /** Region packs (0.5): the catalogue and offline map per prefecture, downloaded. */
+    val packs: io.github.thisisartman.collectibles.data.RegionPacks,
 ) : ViewModel() {
     fun run(block: suspend () -> Unit) { work.launch(block) }
+
+    /** The pack index: the last one read, then refreshed from the server when Regions opens. */
+    val packIndex = kotlinx.coroutines.flow.MutableStateFlow(packs.cachedIndex())
+    /** True while the index is being read; false with no index means no connection. */
+    val packIndexLoading = kotlinx.coroutines.flow.MutableStateFlow(false)
+    /** The prefecture being downloaded and how far (0 to 1), or null. */
+    val packProgress = kotlinx.coroutines.flow.MutableStateFlow<Pair<String, Float>?>(null)
+    /** A failed download or removal, said once on the Regions page. */
+    val packError = kotlinx.coroutines.flow.MutableStateFlow<String?>(null)
+
+    fun refreshPackIndex() = run {
+        packIndexLoading.value = true
+        packs.fetchIndex()?.let { packIndex.value = it }
+        packIndexLoading.value = false
+    }
+
+    /** Downloads a prefecture: its main catalogue packs, its map when [withMap], and any [extras] (optional types). */
+    fun downloadPrefecture(prefecture: String, withMap: Boolean, extras: Set<ItemType> = emptySet()) = run {
+        val index = packIndex.value ?: return@run
+        val chosen = index.of(prefecture).filter { p ->
+            if (p.isMap) withMap else p.core || p.type in extras
+        }
+        packProgress.value = prefecture to 0f
+        packs.install(chosen) { done, total -> packProgress.value = prefecture to (if (total > 0) done.toFloat() / total else 1f) }
+            .onFailure { packError.value = prefecture }
+        packProgress.value = null
+    }
+
+    /** Downloads what changed for every prefecture on this phone. */
+    fun updatePacks() = run {
+        val index = packIndex.value ?: return@run
+        val changed = packs.updates(index)
+        if (changed.isEmpty()) return@run
+        packProgress.value = "" to 0f
+        packs.install(changed) { done, total -> packProgress.value = "" to (if (total > 0) done.toFloat() / total else 1f) }
+            .onFailure { packError.value = "" }
+        packProgress.value = null
+    }
+
+    fun removePrefecture(prefecture: String) = run {
+        val index = packIndex.value ?: return@run
+        packs.remove(prefecture, index)
+    }
+
+    /** For the onboarding's region list: counts from the pack index, or the catalogue inside the app without a connection. */
+    suspend fun regionCounts(): Map<String, Map<ItemType, Int>> {
+        val index = packs.fetchIndex()?.also { packIndex.value = it } ?: return io.bundledPrefectures()
+        return index.packs.filter { !it.isMap && it.core && it.type != null }
+            .groupBy { it.prefecture }.mapValues { (_, l) -> l.associate { it.type!! to it.items } }
+    }
+
+    /** The onboarding's Load: the chosen prefectures' main packs (maps are offered on Regions), else the catalogue inside the app. */
+    suspend fun loadRegions(regions: Set<String>) {
+        val index = packIndex.value ?: packs.fetchIndex()
+        if (index != null) {
+            val chosen = index.packs.filter { !it.isMap && it.core && it.prefecture in regions }
+            if (packs.install(chosen).isSuccess) return
+        }
+        io.importBundled(regions)
+    }
 
     /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */
     /** Prefecture -> how many items of each category are loaded (Catalogue pages). */
@@ -323,6 +385,7 @@ fun MoreScreen(
         S_DATA to stringResource(R.string.settings_data),
         S_LOOK to stringResource(R.string.settings_look),
         S_CATALOGUE to stringResource(R.string.settings_catalogue),
+        S_REGIONS to stringResource(R.string.regions_title),
         S_HELP to stringResource(R.string.settings_help),
         S_INSTALLED to stringResource(R.string.settings_installed),
         S_ABOUT to stringResource(R.string.more_about),
@@ -563,6 +626,8 @@ fun MoreScreen(
             S_CATALOGUE -> {
                 // Prefectures sit one tap in, so the page stays short as more are added (owner, 2026-11-09)
                 val prefCount = catalogue.size
+                // Region packs (0.5): download a prefecture's catalogue and offline map
+                MoreRow(stringResource(R.string.regions_title), stringResource(R.string.regions_sub)) { section = S_REGIONS }
                 MoreRow(stringResource(R.string.settings_installed), pluralStringResource(R.plurals.settings_installed_sub, prefCount, prefCount)) { section = S_INSTALLED }
                 // Card pictures (#53): onto this phone only, never in the app or backups
                 val ctx = androidx.compose.ui.platform.LocalContext.current
@@ -599,6 +664,7 @@ fun MoreScreen(
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+            S_REGIONS -> RegionsPage(vm)
             S_INSTALLED -> {
                 // One block per prefecture: what of each category is in the app
                 catalogue.forEach { (pref, byType) ->
@@ -661,7 +727,7 @@ fun MoreScreen(
 
 /** Inner pages go back to their section; sections go back to the list. */
 private fun parentOf(section: String?): String? = when (section) {
-    S_INSTALLED -> S_CATALOGUE
+    S_INSTALLED, S_REGIONS -> S_CATALOGUE
     S_ABOUT -> S_HELP
     S_ALERT_CATS -> S_ALERTS
     S_SOURCES, S_ART, S_LICENCES, S_PRIVACY -> S_ABOUT
@@ -694,6 +760,7 @@ private const val S_ALERTS = "alerts"
 private const val S_DATA = "data"
 private const val S_LOOK = "look"
 private const val S_CATALOGUE = "catalogue"
+private const val S_REGIONS = "regions"
 private const val S_HELP = "help"
 private const val S_INSTALLED = "installed"
 private const val S_ABOUT = "about"

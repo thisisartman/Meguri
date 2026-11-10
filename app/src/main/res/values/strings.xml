@@ -209,7 +209,7 @@
     <string name="kind_station">Station photo</string>
     <string name="kind_card">Card</string>
     <string name="kind_manhole">Manhole cover</string>
-    <string name="kind_place">Where you got it</string>
+    <string name="kind_place">Location</string>
     <string name="kind_goshuin">Goshuin</string>
     <string name="kind_shrine">Shrine or temple</string>
     <string name="added_on">Added %1$s</string>
@@ -677,4 +677,21 @@
     <string name="photo_other_name">Name (optional)</string>
     <string name="photo_remove_title">Remove this photo?</string>
     <string name="photo_missing">Not found</string>
+    <!-- Region packs (0.5) -->
+    <string name="regions_title">Regions</string>
+    <string name="regions_sub">Download a prefecture\'s cards, stamps and offline map</string>
+    <string name="regions_intro">Each prefecture comes as its own download: what you can collect there, and an offline map if you want one. On this phone: %1$s.</string>
+    <string name="regions_offline">Can\'t reach the download server. Check your connection and open this page again.</string>
+    <string name="regions_failed">A download didn\'t finish. Nothing you collected was touched; try again.</string>
+    <string name="regions_update_all">Update all (%1$s)</string>
+    <string name="regions_extras">Also: %1$s</string>
+    <string name="regions_with_map">Offline map (%1$s)</string>
+    <string name="regions_download">Download (%1$s)</string>
+    <string name="regions_on_phone">On this phone, with its map</string>
+    <string name="regions_on_phone_no_map">On this phone, without its map</string>
+    <string name="regions_add_map">Add map (%1$s)</string>
+    <string name="regions_remove">Remove</string>
+    <string name="regions_remove_title">Remove %1$s?</string>
+    <string name="regions_remove_text">The map and anything you haven\'t collected, edited or marked go. Your finds, photos and edits stay.</string>
+    <string name="regions_note">Without the offline map, the map loads online for that area.</string>
 </resources>

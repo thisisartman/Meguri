@@ -55,8 +55,12 @@ android {
             manifestPlaceholders["appLabel"] = "Meguri (dev)"
             // Also x86_64, so the map library runs natively on a laptop emulator instead of through ARM translation
             ndk { abiFilters += "x86_64" }
+            // Region packs served from the laptop over USB (adb reverse tcp:8765 tcp:8765); see tools/packs/README.md
+            buildConfigField("String", "PACKS_URL", "\"http://127.0.0.1:8765/\"")
         }
         release {
+            // Region packs (0.5): the public data repository's latest release (hosting pending the owner's yes)
+            buildConfigField("String", "PACKS_URL", "\"https://github.com/thisisartman/meguri-data/releases/latest/download/\"")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
@@ -147,26 +151,4 @@ listOf("debug" to "dev", "release" to "release").forEach { (type, label) ->
     }
 }
 
-// The offline map (#9, #65) is over GitHub's 100 MB file limit, so the repo keeps it in parts
-// (map-pack/region.pmtiles.part*) and every build joins them into assets/map/region.pmtiles.
-abstract class JoinMapPack : DefaultTask() {
-    @get:InputFiles abstract val parts: ConfigurableFileCollection
-    @get:OutputDirectory abstract val outputDir: DirectoryProperty
-
-    @TaskAction
-    fun join() {
-        val out = outputDir.get().file("map/region.pmtiles").asFile
-        out.parentFile.mkdirs()
-        out.outputStream().use { o -> parts.files.sortedBy { it.name }.forEach { p -> p.inputStream().use { it.copyTo(o) } } }
-    }
-}
-
-val joinMapPack = tasks.register<JoinMapPack>("joinMapPack") {
-    parts.from(rootProject.fileTree("map-pack") { include("region.pmtiles.part*") })
-}
-
-androidComponents {
-    onVariants { variant ->
-        variant.sources.assets?.addGeneratedSourceDirectory(joinMapPack, JoinMapPack::outputDir)
-    }
-}
+// The offline map is no longer inside the app (0.5): it comes as region packs (tools/packs, data/RegionPacks.kt).

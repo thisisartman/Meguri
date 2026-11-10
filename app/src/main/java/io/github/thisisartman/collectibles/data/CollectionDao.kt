@@ -101,6 +101,19 @@ interface CollectionDao {
     @Query("SELECT COUNT(*) FROM acquisition WHERE item_id = :itemId")
     suspend fun findCount(itemId: String): Int
 
+    /**
+     * Removing a prefecture's pack (0.5): its catalogue items of one type that you have not touched. Items with a find
+     * cannot go (the find's key forbids it), and anything you edited, marked as none here or gave a cover stays.
+     */
+    @Query("""DELETE FROM item WHERE prefecture = :prefecture AND type = :type AND origin = 'CSV_IMPORT'
+        AND edited_at IS NULL AND none_here_at IS NULL AND cover_photo_id IS NULL
+        AND id NOT IN (SELECT item_id FROM acquisition)""")
+    suspend fun deleteUntouched(prefecture: String, type: String): Int
+
+    /** Lines left with no stations after a removal. */
+    @Query("DELETE FROM line WHERE id NOT IN (SELECT line_id FROM line_station)")
+    suspend fun deleteEmptyLines(): Int
+
     /** The item's most recent find, where shared photos go (#80). */
     @Query("SELECT id FROM acquisition WHERE item_id = :itemId ORDER BY COALESCE(acquired_at, created_at) DESC LIMIT 1")
     suspend fun latestFindId(itemId: String): String?

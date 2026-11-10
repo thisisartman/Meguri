@@ -1,31 +1,54 @@
 package io.github.thisisartman.collectibles.ui
 
 import android.content.Context
+import io.github.thisisartman.collectibles.data.RegionPacks
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.File
 
 /**
- * The offline map pack (#9, #65): OpenStreetMap data for Niigata, Saitama and Tokyo prefectures from Protomaps
- * (build 2026-11-06, zoom 0 to 14), shipped in the app with its styles, Noto Sans glyphs and icons. Japanese names are drawn with
- * the phone's own fonts. Outside the pack's area the map uses online tiles.
+ * The offline map (#9, #65; region packs since 0.5): OpenStreetMap data from Protomaps (zoom 0 to 14), one file per
+ * prefecture you have downloaded, drawn together with the app's styles, Noto Sans glyphs and icons. Japanese names
+ * are drawn with the phone's own fonts. A phone that still has the map that used to come inside the app
+ * (Niigata, Saitama and Tokyo in one file) keeps using it until it downloads packs. Elsewhere the map uses online tiles.
  */
 object OfflineMap {
-    private const val ASSET = "map/region.pmtiles"
-    private const val COVERAGE = "map/coverage.json"
-    @Volatile private var rings: List<DoubleArray>? = null
+    private const val LEGACY = "map/region.pmtiles"
+    private const val LEGACY_COVERAGE = "map/coverage.json"
 
-    /** Inside Niigata, Saitama or Tokyo (the prefecture outlines the pack was cut along, simplified). */
-    fun covers(context: Context, lat: Double, lng: Double): Boolean = coverage(context).any { inside(it, lng, lat) }
+    private data class Source(val file: File, val rings: List<DoubleArray>)
+    @Volatile private var cached: Pair<Long, List<Source>>? = null
 
-    // Each ring is x0,y0,x1,y1,... (longitude, latitude), read once from the outline file
-    private fun coverage(context: Context): List<DoubleArray> = rings ?: synchronized(this) {
-        rings ?: runCatching {
-            val arr = org.json.JSONArray(context.assets.open(COVERAGE).bufferedReader().use { it.readText() })
-            List(arr.length()) { r ->
-                val ring = arr.getJSONArray(r)
-                DoubleArray(ring.length() * 2) { k -> ring.getJSONArray(k / 2).getDouble(k % 2) }
-            }
-        }.getOrDefault(emptyList()).also { rings = it }
+    /** Called after a pack is installed or removed, so the next map picks up the change. */
+    fun changed() { cached = null }
+
+    // The packs on this phone, else the old built-in map; read again when the installed packs change
+    private fun sources(context: Context): List<Source> {
+        val stamp = RegionPacks.installedStamp(context)
+        cached?.takeIf { it.first == stamp }?.let { return it.second }
+        val packs = RegionPacks.installedMaps(context).map { (f, rings) -> Source(f, rings) }
+        val list = packs.ifEmpty {
+            val legacy = File(context.filesDir, LEGACY)
+            if (legacy.exists()) listOf(Source(legacy, legacyRings(context))) else emptyList()
+        }
+        cached = stamp to list
+        return list
     }
+
+    private fun legacyRings(context: Context): List<DoubleArray> = runCatching {
+        val arr = JSONArray(context.assets.open(LEGACY_COVERAGE).bufferedReader().use { it.readText() })
+        List(arr.length()) { r ->
+            val ring = arr.getJSONArray(r)
+            DoubleArray(ring.length() * 2) { k -> ring.getJSONArray(k / 2).getDouble(k % 2) }
+        }
+    }.getOrDefault(emptyList())
+
+    /** Inside a prefecture whose map is on this phone. */
+    fun covers(context: Context, lat: Double, lng: Double): Boolean =
+        sources(context).any { s -> s.rings.any { inside(it, lng, lat) } }
+
+    /** Whether any offline map is on this phone. */
+    fun available(context: Context): Boolean = sources(context).isNotEmpty()
 
     /** Even-odd ray casting. */
     private fun inside(ring: DoubleArray, x: Double, y: Double): Boolean {
@@ -40,24 +63,31 @@ object OfflineMap {
         return c
     }
 
-    /** The pack as a file: MapLibre reads PMTiles from files, not from app assets. Copied once per app version. */
-    @Synchronized
-    fun file(context: Context): File {
-        val f = File(context.filesDir, ASSET)
-        val size = context.assets.openFd(ASSET).use { it.length }
-        if (!f.exists() || f.length() != size) {
-            f.parentFile?.mkdirs()
-            val tmp = File(f.path + ".tmp")
-            context.assets.open(ASSET).use { input -> tmp.outputStream().use { input.copyTo(it) } }
-            tmp.renameTo(f)
-        }
-        return f
-    }
-
-    /** The style for this theme and language, pointing at the pack on this phone. */
-    fun styleJson(context: Context, dark: Boolean, japanese: Boolean): String {
+    /**
+     * The style for this theme and language, drawing every map on this phone: the style's one map source and its
+     * layers are repeated for each file (neighbouring prefectures overlap a little at the border, and draw the same).
+     */
+    fun styleJson(context: Context, dark: Boolean, japanese: Boolean): String? {
+        val files = sources(context).map { it.file }
+        if (files.isEmpty()) return null
         val name = "map/style-${if (dark) "dark" else "light"}-${if (japanese) "ja" else "en"}.json"
-        val json = context.assets.open(name).bufferedReader().use { it.readText() }
-        return json.replace("pmtiles://__PACK__", "pmtiles://file://" + file(context).absolutePath)
+        val style = JSONObject(context.assets.open(name).bufferedReader().use { it.readText() })
+        val template = style.getJSONObject("sources").getJSONObject("protomaps")
+        val sources = JSONObject()
+        files.forEachIndexed { i, f ->
+            sources.put("pm$i", JSONObject(template.toString()).put("url", "pmtiles://file://" + f.absolutePath))
+        }
+        style.put("sources", sources)
+        val layers = style.getJSONArray("layers")
+        val out = JSONArray()
+        for (k in 0 until layers.length()) {
+            val layer = layers.getJSONObject(k)
+            if (layer.optString("source") != "protomaps") { out.put(layer); continue }
+            files.indices.forEach { i ->
+                out.put(JSONObject(layer.toString()).put("source", "pm$i").put("id", layer.getString("id") + if (i == 0) "" else "#$i"))
+            }
+        }
+        style.put("layers", out)
+        return style.toString()
     }
 }
