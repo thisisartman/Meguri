@@ -21,7 +21,7 @@ Status 2026-11-11: the fixes below are on the dev build; still to come in 0.5 ar
   - The Nagaoka mascot card is "Kawagutchi" (かわぐっち), not "Kawagucchi".
   - The log names each page with its arguments (it wrote "trip-report?day={day}").
 - Map: water is a plain grey a step from the land, no longer tinted gold; in light mode the land is a neutral light grey (it was beige from the page colour).
-- Planned, not in the app yet: backups to the phone folder, Nextcloud (through the folder picker), WebDAV and Google Drive; trips that Meguri holds, built from shared Google Maps lists (one list per day, tested with two Sado lists, which read in order and match cards at Sado's city halls), each leg opened in Google Maps.
+- Planned (your answers, 2026-11-11), not in the app yet: backups to the phone folder, Nextcloud (through the folder picker), WebDAV and Google Drive; trips that Meguri holds, built from shared Google Maps lists (one list per day, tested with two Sado lists, which read in order and match cards at Sado's city halls), each leg opened in Google Maps.
 
 ## 0.4.0 (2026-11-09, stable)
 Everything below since beta.9, plus these last changes:
