@@ -27,6 +27,8 @@ Status 2026-11-11: the fixes below are on the dev build; still to come in 0.5 ar
 - Card pictures: the source site's "画像準備中" (image coming soon) picture is no longer kept as a card's picture; ones already saved are removed.
 - A card's page shows its code once (it was in the title and again below it).
 - Regions: prefectures on your phone come first, and each count stays on one line.
+- Manhole cards, dam cards and the other kinds: prefectures you have started come first.
+- README rewritten as the repo's front page: what Meguri is, screenshots taken with real finds, features, permissions and privacy, install, build, credits.
 - The photo slot "Where you got it" is now "Location", so it fits on one line.
 - Planned (your answers, 2026-11-11), not in the app yet: backups to the phone folder, Nextcloud (through the folder picker), WebDAV and Google Drive; trips that Meguri holds, built from shared Google Maps lists (one list per day, tested with two Sado lists, which read in order and match cards at Sado's city halls), each leg opened in Google Maps.
 

@@ -58,7 +58,11 @@ class BookKindsTest {
     }
 
     @Test fun cardsGroupByPrefectureAndYourOwnIsOneGroup() {
+        // Niigata has a find, Tokyo none: started first
         assertEquals(listOf("p:新潟県", "p:東京都"), BookKinds.groups("MANHOLE_CARD", rows, lineOf).map { it.key })
+        // Only Tokyo started: it comes before Niigata, which would sort first by name
+        val tokyoOnly = listOf(row("n1", ItemType.MANHOLE_CARD), row("t1", ItemType.MANHOLE_CARD, pref = "東京都", got = true))
+        assertEquals(listOf("p:東京都", "p:新潟県"), BookKinds.groups("MANHOLE_CARD", tokyoOnly, lineOf).map { it.key })
         val own = BookKinds.groups("custom:lids", rows, lineOf).single()
         assertEquals(1 to 2, own.collected to own.total)
     }

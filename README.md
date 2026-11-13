@@ -1,61 +1,75 @@
 # Meguri
 
-An offline Android app for logging Japanese collectibles: manhole cards, goshuin, eki stamps and Ekitags. It shows what you have, what you still need, and where the nearest ones are.
+**A collecting app for Japan's manhole cards, station stamps, Ekitag, dam cards and goshuin.** It shows what is near you, what you have, and where to get the rest.
 
-The name is 巡り, going round a circuit, as in a pilgrimage or a stamp rally.
+The name is 巡り (meguri): going round a circuit, as on a pilgrimage or a stamp rally.
 
-## Why this exists
+<p>
+  <img src="docs/screenshots/01-nearby.webp" width="200" alt="Nearby: a map with the closest cards and stamps, and a sheet of round tiles">
+  <img src="docs/screenshots/03-my-book.webp" width="200" alt="My book: totals, a map of finds, and one ring per type of collectible">
+  <img src="docs/screenshots/05-card.webp" width="200" alt="A manhole card's page: its picture, hours with open now, where it is handed out">
+  <img src="docs/screenshots/06-station.webp" width="200" alt="A station's page: its stamp and its Ekitag together">
+</p>
 
-These collectibles are picked up on day trips, standing at a counter, a shrine or a station, often with weak signal and one hand free. Meguri is built for that moment.
+## Who it is for
 
-**One tap to log.** "Got it" records the time and position straight away. A photo is always optional, and a find never waits on GPS.
+People who collect these on day trips: standing at a city hall counter, a shrine or a ticket gate, often with weak signal and one hand free. Meguri is built for that moment. One tap logs a find, a photo is optional, and nothing waits on the network.
 
-**Everything stays on the phone.** There is no account or sync service, and the app does not have the internet permission. Photos stay in your gallery.
+## What it does
 
-## Features
+- **Nearby:** a map and a sheet of what is closest to you, with distances, filters by type, and "Directions".
+- **My book:** one ring per type (manhole cards, station stamps, Ekitag, goshuin, dam cards, roadside stations, your own collections). Each opens a page per prefecture or railway line, with the next one to get.
+- **Item pages:** the official picture, where it is handed out, opening hours with "Open now" or "Closed today" (national holidays and the "closed Monday, or Tuesday when Monday is a holiday" rule included), the phone number, and your photos.
+- **Photos:** the card, the manhole cover itself (cut out as a circle), the stamp, an Ekitag screenshot (turned into a tidy stamp tile), or anything else. Photos are kept inside the app.
+- **Alerts:** a notification when you pass near something you still need, even with the app closed. Quiet hours and a distance for each type.
+- **Share to Meguri:** share photos from your gallery; Meguri groups them by where they were taken and suggests what each one shows.
+- **Region downloads:** each prefecture is its own download: its catalogue (a few KB) and, if you want it, an offline map (36 to 43 MB).
+- **Trips:** plan a day by line or from a Google Maps link, and get a report of what you collected.
+- **Backup and restore:** to a folder you choose, including a weekly automatic backup, with or without photos.
+- English and Japanese, light and dark.
 
-- "Nearby": the closest things you still need, and your collections with progress
-- "My book": manhole cards by prefecture, eki stamps as a stamp book per railway line, and goshuin
-- Log a find with or without a photo, with Undo for a few seconds afterwards
-- Mark many items at once as "had before the app"
-- Search by name or card code, and add an item that isn't in the catalogue along with its find
-- Item pages with the hand-out place, address, hours, phone and a link to Maps
-- Load a catalogue from a CSV file ([format](docs/CSV_FORMAT.md)); loading again updates items and never removes a find
-- Back up all finds to a zip file
-- English or Japanese, chosen in the app
-- Material 3 with one colour per type, light and dark
+<p>
+  <img src="docs/screenshots/02-map.webp" width="200" alt="The map zoomed in: card pictures as pins, a place card with distance and directions">
+  <img src="docs/screenshots/04-manhole-cards.webp" width="200" alt="Manhole cards by prefecture, with progress and recent finds">
+  <img src="docs/screenshots/07-regions.webp" width="200" alt="Regions: download a prefecture's catalogue and offline map">
+</p>
 
-## Status
+## Coverage
 
-Version 0.0.1, pre-release, with 12 unit tests passing. The trip build has been tested on a POCO M2 Pro running Android 14, and the dev build also on a Galaxy S23.
+Catalogue data today: Niigata, Saitama and Tokyo (manhole cards, station stamps, dam cards, roadside stations), Niigata's Ekitag stations, and Gunma's stations on the Joetsu Line. More prefectures come as region downloads from [meguri-data](https://github.com/thisisartman/meguri-data).
 
-Not built yet: restoring a backup, Ekitags as their own type, alerts near an item, the map and structured opening hours. See [`docs/ROADMAP.md`](docs/ROADMAP.md).
+## Install
 
-Android only, sideloaded only. The catalogue in `tools/trip-catalog/` covers the Niigata area and uses station positions from OpenStreetMap (ODbL).
+Meguri is not on Google Play. Download the APK from this repository's releases and install it (Android 10 or newer). Updates install over the top and keep your data.
 
-- Spec: [`docs/PRD.md`](docs/PRD.md)
-- Build plan and milestones: [`docs/BUILD_PLAN.md`](docs/BUILD_PLAN.md)
-- Design: [`docs/DESIGN.md`](docs/DESIGN.md)
-- Current state: [`PROGRESS.md`](PROGRESS.md) · history: [`CHANGELOG.md`](CHANGELOG.md)
+## Permissions and privacy
 
-## Branches
+There is no account and no server of ours. Your finds, photos and backups stay on your phone and in the folders you choose.
 
-- `main`: tagged versions only (`v1`, `v2`, ...). Each version is a checklist walked on real phones.
-- `testing`: features that passed their phone check, verified together.
-- `experimental/<feature>/<mini>`: work in progress. Each lands in `testing` by pull request.
+| Permission | Why |
+|---|---|
+| Location (while in use, and all the time if you turn on alerts) | Distances, "Nearby", and alerts when you pass something you still need |
+| Notifications | Those alerts |
+| Photos (optional) | Adding photos from your gallery, and reading where a shared photo was taken |
+| Internet | Online map tiles where you have no offline map, region downloads, and card pictures if you ask for them |
 
-Every change starts as an issue and lands through a pull request.
+Card pictures belong to GKP and each city; they are downloaded to your phone only when you ask, and never go into backups.
 
-## Build
+## Build from source
 
-Open this folder in Android Studio, or from a terminal:
-
-```
+```sh
 ./gradlew assembleDebug testDebugUnitTest
 ```
 
-The debug build installs as a separate app (`.dev` suffix), so testing never touches real data.
+The debug build installs as a separate app ("Meguri (dev)") so testing never touches your real data. Requires JDK 17 and the Android SDK. Region packs are built with `tools/packs/` (see its README).
+
+## Credits
+
+- Map data © OpenStreetMap contributors (ODbL), tiles by [Protomaps](https://protomaps.com), drawn with [MapLibre](https://maplibre.org)
+- Station positions from OpenStreetMap; dam cards from the Ministry of Land, Infrastructure, Transport and Tourism; Ekitag stations from JR East's announcements
+- Manhole card pictures via [駅からマンホール](https://ekikaramanhole.whitebeach.org/ext/manholecard/)
+- Icons: Mapbox Maki and Temaki (CC0); font: M PLUS Rounded 1c (OFL)
 
 ## License
 
-MIT. See [`LICENSE`](LICENSE).
+MIT. See [LICENSE](LICENSE).

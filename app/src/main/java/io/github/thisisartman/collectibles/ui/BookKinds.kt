@@ -110,6 +110,8 @@ object BookKinds {
         }
         return of.groupBy { it.item.prefecture.orEmpty() }.toSortedMap(compareBy<String> { it.isEmpty() }.thenBy { it })
             .map { (pref, list) -> Group("p:$pref", null, pref.ifEmpty { null }, list, list.count { it.collected }, if (openEnded(type)) null else list.size) }
+            // Started ones first, like stamp lines (Saitama's 0/73 sat ahead of Niigata's 15/48, 2026-11-13)
+            .sortedBy { it.collected == 0 }
     }
 }
 
