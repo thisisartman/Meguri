@@ -10,7 +10,8 @@ for (const flavor of ['light','dark']) for (const lang of ['en','ja']) {
   // Protomaps' case expressions on text-font and its multi-language format drew no labels in MapLibre Android.
   layers.forEach(l=>{ if(l.type==='symbol' && l.layout && l.layout['text-field']){
     l.layout['text-font']=['NotoSans-Regular'];
-    l.layout['text-field']=['coalesce',['get',`name:${lang}`],['get','name']];
+    // Road signs show the road number: the name is Japanese, which the bundled font can't draw (blank signs, 2026-11-13)
+    l.layout['text-field']=l.id==='roads_shields'?['get','shield_text']:['coalesce',['get',`name:${lang}`],['get','name']];
   }});
   const style={version:8,glyphs:'asset://glyphs/{fontstack}/{range}.pbf',sprite:`asset://sprites/${flavor}`,
     sources:{protomaps:{type:'vector',url:'pmtiles://__PACK__',attribution:'© OpenStreetMap contributors · Protomaps'}},layers};
