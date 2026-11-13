@@ -70,7 +70,8 @@ fun RegionsPage(vm: MoreViewModel) {
             modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
         ) { Text(stringResource(R.string.regions_update_all, size(updates.sumOf { it.bytes }))) }
 
-        idx.prefectures.forEach { pref ->
+        // Prefectures on this phone first, so yours aren't at the bottom of the list
+        idx.prefectures.sortedBy { pref -> if (idx.of(pref).any { it.id in installed }) 0 else 1 }.forEach { pref ->
             val packs = idx.of(pref)
             val catalogue = packs.filter { !it.isMap }
             val map = packs.firstOrNull { it.isMap }
@@ -84,13 +85,13 @@ fun RegionsPage(vm: MoreViewModel) {
                     Text(prefectureName(pref, ja), style = MaterialTheme.typography.titleMedium)
                     Text(
                         catalogue.filter { it.core }.sortedBy { it.type?.ordinal }.joinToString(" · ") { p ->
-                            context.getString(p.type!!.pluralLabel()) + " " + p.items
+                            context.getString(p.type!!.pluralLabel()).replace(" ", "\u00A0") + "\u00A0" + p.items
                         },
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     catalogue.filter { !it.core }.takeIf { it.isNotEmpty() }?.let { extras ->
                         Text(
-                            stringResource(R.string.regions_extras, extras.joinToString(" · ") { p -> context.getString(p.type!!.pluralLabel()) + " " + p.items }),
+                            stringResource(R.string.regions_extras, extras.joinToString(" · ") { p -> context.getString(p.type!!.pluralLabel()).replace(" ", "\u00A0") + "\u00A0" + p.items }),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }

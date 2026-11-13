@@ -138,7 +138,7 @@ fun OnboardingSheet(
                 Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
                     Perm(R.drawable.ic_near_me, R.string.onb_perm_location, R.string.onb_perm_location_why)
                     if (Build.VERSION.SDK_INT >= 33) Perm(R.drawable.ic_notification, R.string.onb_perm_notify, R.string.onb_perm_notify_why)
-                    Perm(R.drawable.ic_near_me, R.string.onb_perm_background, R.string.onb_perm_background_why)
+                    Perm(R.drawable.ic_my_location, R.string.onb_perm_background, R.string.onb_perm_background_why)
                     Perm(R.drawable.ic_collect, R.string.onb_perm_photos, R.string.onb_perm_photos_why)
                 }
                 Spacer(Modifier.height(12.dp))
