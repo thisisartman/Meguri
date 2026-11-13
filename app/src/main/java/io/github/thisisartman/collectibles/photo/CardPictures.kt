@@ -30,8 +30,17 @@ object CardPictures {
     fun file(context: Context, code: String) = File(dir(context), "$code.jpg")
     fun uri(context: Context, code: String) = "file:" + file(context, code).absolutePath
 
-    /** Reads which pictures are on the phone; called once at start. */
+    /**
+     * The site's "画像準備中" (image coming soon) picture, sent for cards it has no picture of yet: the same 23,944 bytes
+     * every time (13 cards, 2026-11-13). It is not the card, so it is never kept.
+     */
+    private const val PLACEHOLDER_MD5 = "34fb7a385ad29a719ffef53af4270a8a"
+    fun isPlaceholder(bytes: ByteArray) = bytes.size == 23944 &&
+        java.security.MessageDigest.getInstance("MD5").digest(bytes).joinToString("") { "%02x".format(it) } == PLACEHOLDER_MD5
+
+    /** Reads which pictures are on the phone; called once at start. Placeholders saved before 0.5 are deleted. */
     fun load(context: Context) {
+        dir(context).listFiles()?.filter { it.length() == 23944L && isPlaceholder(it.readBytes()) }?.forEach { it.delete() }
         _have.value = dir(context).listFiles()?.filter { it.name.endsWith(".jpg") && it.length() > 0 }?.map { it.name.removeSuffix(".jpg") }?.toSet().orEmpty()
     }
 
@@ -49,7 +58,7 @@ object CardPictures {
                 }
                 val bytes = c.inputStream.use { it.readBytes() }
                 // Only a real JPEG is kept (the site answers a missing card with something else)
-                if (c.responseCode == 200 && bytes.size > 1000 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte()) {
+                if (c.responseCode == 200 && bytes.size > 1000 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xD8.toByte() && !isPlaceholder(bytes)) {
                     val tmp = File(dir(context), "$code.jpg.tmp")
                     tmp.writeBytes(bytes)
                     tmp.renameTo(file(context, code))

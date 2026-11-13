@@ -52,4 +52,25 @@ class EkitagArtTest {
 
     private fun assertEquals(expected: Int, actual: Int, tol: Int) =
         assertTrue("expected $expected ± $tol, was $actual", kotlin.math.abs(expected - actual) <= tol)
+
+    @Test fun aSavedStampImageIsTheStampItself() {
+        // Yahiko's and Yoshida's saved stamps (2026-11-13): white edge to edge, a red ring with white inside
+        val s = Shot(400, 400, white)
+        s.disc(200, 200, 190, red)
+        s.disc(200, 200, 175, white)
+        s.rect(150, 300, 250, 340, red)         // the station's name band
+        val f = EkitagArt.find(s.px, s.w, s.h)
+        assertNotNull(f)
+        assertTrue(f!!.w > 370 && f.h > 370)
+        assertTrue(f.inside[(f.h / 2) * f.w + f.w / 2])
+        assertTrue(!f.inside[0])
+        // A JPEG's off-white edge (242) reads as white too
+        val j = Shot(400, 400, rgb(244, 243, 242))
+        j.disc(200, 200, 190, red); j.disc(200, 200, 175, rgb(244, 243, 242))
+        assertTrue(EkitagArt.find(j.px, j.w, j.h)!!.w > 370)
+        // A transparent page reads the same as white
+        val t = Shot(400, 400, 0)
+        t.disc(200, 200, 190, red); t.disc(200, 200, 175, white)
+        assertTrue(EkitagArt.find(t.px, t.w, t.h)!!.w > 370)
+    }
 }

@@ -317,7 +317,8 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
     item.secondaryName(ja)?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     // English mode: prefecture in romaji; the town has no romaji in the catalogue and is already in the name, so it is left out
     val sub = listOfNotNull(
-        item.code,
+        // The code is already in the title or subtitle for a card; showing it again read as a mistake (2026-11-13)
+        item.code?.takeIf { c -> title.contains(c) != true && subtitle?.contains(c) != true },
         item.prefecture?.let { prefectureName(it, ja) },
         item.municipality?.takeIf { ja && it != item.nameJa },
     ).joinToString(sep())

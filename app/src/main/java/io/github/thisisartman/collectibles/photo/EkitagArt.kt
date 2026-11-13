@@ -32,6 +32,7 @@ object EkitagArt {
 
     /** [argb] row-major, [w] by [h]. Pure, for tests. */
     fun find(argb: IntArray, w: Int, h: Int): Found? {
+        plain(argb, w, h)?.let { return it }
         val white = BooleanArray(w * h) { i -> i / w >= (h * 0.04f).toInt() && isWhite(argb[i]) }
         best(white, w, h)?.let { return it }
         // No white outline: the largest compact shape unlike the page's own colour, above the details
@@ -42,6 +43,35 @@ object EkitagArt {
         }
         diff = dilate(dilate(erode(erode(diff, w, h), w, h), w, h), w, h)
         return best(diff, w, h)
+    }
+
+    /**
+     * A picture that is only the stamp (a saved stamp image, 2026-11-13: Yahiko's and Yoshida's came out as a corner and
+     * a blank blob): its border is plain white or transparent all round. The stamp is then its inked area, holes filled.
+     */
+    private fun plain(argb: IntArray, w: Int, h: Int): Found? {
+        // Near white, not pure: a saved JPEG's white edge reads 242 to 249 (Yahiko's, 2026-11-13)
+        fun blank(c: Int) = (c ushr 24) < 128 || ((c shr 16 and 0xFF) >= 230 && (c shr 8 and 0xFF) >= 230 && (c and 0xFF) >= 230)
+        val border = (0 until w).flatMap { listOf(it, (h - 1) * w + it) } + (0 until h).flatMap { listOf(it * w, it * w + w - 1) }
+        if (border.count { blank(argb[it]) } < border.size * 0.9f) return null
+        var ink = BooleanArray(w * h) { !blank(argb[it]) && distance(argb[it], rgb(255, 255, 255)) > 60 }
+        repeat(3) { ink = dilate(ink, w, h) }
+        var x0 = w; var y0 = h; var x1 = -1; var y1 = -1
+        for (i in 0 until w * h) if (ink[i]) { val x = i % w; val y = i / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y }
+        if (x1 < 0 || x1 - x0 < w * 0.3f || y1 - y0 < h * 0.3f) return null
+        val bw = x1 - x0 + 1; val bh = y1 - y0 + 1
+        val outside = BooleanArray(bw * bh); val queue = IntArray(bw * bh); var head = 0; var tail = 0
+        fun seed(x: Int, y: Int) {
+            val j = y * bw + x
+            if (!outside[j] && !ink[(y0 + y) * w + x0 + x]) { outside[j] = true; queue[tail++] = j }
+        }
+        for (x in 0 until bw) { seed(x, 0); seed(x, bh - 1) }
+        for (y in 0 until bh) { seed(0, y); seed(bw - 1, y) }
+        while (head < tail) {
+            val j = queue[head++]; val x = j % bw; val y = j / bw
+            if (x > 0) seed(x - 1, y); if (x < bw - 1) seed(x + 1, y); if (y > 0) seed(x, y - 1); if (y < bh - 1) seed(x, y + 1)
+        }
+        return Found(x0, y0, bw, bh, BooleanArray(bw * bh) { !outside[it] })
     }
 
     /** An opaque colour, without android.graphics.Color, so the finding stays testable on a laptop. */

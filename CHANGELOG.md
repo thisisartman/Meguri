@@ -23,6 +23,10 @@ Status 2026-11-11: the fixes below are on the dev build; still to come in 0.5 ar
 - Map: water is a plain grey a step from the land, no longer tinted gold; in light mode the land is a neutral light grey (it was beige from the page colour).
 - Region downloads: each prefecture is its own download in Settings, Catalogue, "Regions": what you can collect there (manhole cards, station stamps, Ekitag, dam cards, museum stamps; roadside stations and goshuin as extras) and, if you want it, its offline map (36 to 43 MB). "Update all" when something changed, "Remove" keeps your finds, photos and edits. The first-open region step downloads too. The offline map no longer comes inside the app, so the app is about 100 MB smaller; a phone that had it keeps it until it downloads maps.
 - Map: road number signs show their number again (they were blank pills on the offline map).
+- Ekitag pictures: a saved stamp image (white or clear all round) now becomes the whole stamp on its tile; Yoshida's came out as a blank shape and Yahiko's as a corner.
+- Card pictures: the source site's "画像準備中" (image coming soon) picture is no longer kept as a card's picture; ones already saved are removed.
+- A card's page shows its code once (it was in the title and again below it).
+- Regions: prefectures on your phone come first, and each count stays on one line.
 - The photo slot "Where you got it" is now "Location", so it fits on one line.
 - Planned (your answers, 2026-11-11), not in the app yet: backups to the phone folder, Nextcloud (through the folder picker), WebDAV and Google Drive; trips that Meguri holds, built from shared Google Maps lists (one list per day, tested with two Sado lists, which read in order and match cards at Sado's city halls), each leg opened in Google Maps.
 

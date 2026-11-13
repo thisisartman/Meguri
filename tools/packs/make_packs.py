@@ -94,7 +94,7 @@ def main(argv):
             "id": f"{code}/{slug}", "kind": "catalogue", "type": kind, "core": core,
             "code": code, "prefecture": p["ja"], "prefecture_en": p["en"],
             # A station on two lines is two rows but one thing to collect
-            "items": len({row[col["catalog_key"]] or row[col["code"]] or row[col["name_ja"]] for row in group}),
+            "items": len({row[col["catalog_key"]] or f"{kind}:{row[col['code']] or row[col['name_ja']]}" for row in group}),
             "file": name, "bytes": os.path.getsize(path), "sha256": sha256(path),
         })
 
