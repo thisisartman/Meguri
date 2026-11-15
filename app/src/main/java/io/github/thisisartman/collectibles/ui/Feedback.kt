@@ -51,8 +51,8 @@ import java.io.File
  * of being typed into a chat. Nothing goes through a server of ours.
  */
 object Feedback {
-    /** Where feedback goes: the owner's own mailbox (the one Betterbird reads on the laptop). */
-    const val TO = "omniversal7@gmail.com"
+    /** Where feedback goes: the owner's address, the one their GitHub uses (owner, 2026-11-15). */
+    const val TO = "omniversal07@gmail.com"
     /** Every feedback mail's subject starts with this, so the pull script finds them. */
     const val TAG = "[Meguri feedback]"
 

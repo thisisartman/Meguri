@@ -29,7 +29,7 @@ Status 2026-11-11: the fixes below are on the dev build; still to come in 0.5 ar
 - Regions: prefectures on your phone come first, and each count stays on one line.
 - Places: a new type for somewhere with more than one thing to collect (Hakkaisan: a stamp and a goshuin). Its page has a Stamp, a Goshuin and a Location photo, and it gets its own "Places" tile in My book. Add one from Add, Category, "Place".
 - Change the type of something you added yourself: the pencil on its page now has a "Type" row (a stamp added as a station stamp can become a Place; its photos stay).
-- Send feedback (Settings, Help and about): write a note, add screenshots, and send it by your mail app to Meguri's developer, with the app version, phone model and (if ticked) the app log. Only mail apps are offered.
+- Send feedback (Settings, Help and about): write a note, add screenshots, and send it by your mail app to Meguri's developer (omniversal07@gmail.com), with the app version, phone model and (if ticked) the app log. Only mail apps are offered.
 - Manhole cards, dam cards and the other kinds: prefectures you have started come first.
 - README rewritten as the repo's front page: what Meguri is, screenshots taken with real finds, features, permissions and privacy, install, build, credits.
 - The photo slot "Where you got it" is now "Location", so it fits on one line.
