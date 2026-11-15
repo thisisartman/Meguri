@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.5.0 (stable, built 2026-11-15; upgrade check in progress, not sent yet)
+## 0.5.0 (stable, built 2026-11-15; upgrade check with the owner's real S23 backup in progress, not sent yet)
 - Updating from 0.4.0 keeps everything: same database (no migration), the built-in map keeps working until each prefecture's map is downloaded, then the old 100 MB copy is removed; Regions marks prefectures already on the phone. What's new written for 0.5.0. The app is 28 MB (0.4.0 was 134 MB).
 
 ### Built for 0.5 (0.6 will be the first public test beta)
