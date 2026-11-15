@@ -707,4 +707,5 @@
     <string name="feedback_with_log">Include the app log (helps with bugs)</string>
     <string name="feedback_send">Send by email</string>
     <string name="feedback_no_mail_app">No mail app could open this. Install or set up a mail app and try again.</string>
+    <string name="regions_builtin">Its cards and stamps are already on this phone, from the earlier version. Downloading keeps your finds and adds updates and the map.</string>
 </resources>

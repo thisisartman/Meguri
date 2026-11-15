@@ -1,6 +1,9 @@
 # Changelog
 
-## Next: 0.5 (the remaining big features; 0.6 will be the first public test beta)
+## 0.5.0 (stable, being finished 2026-11-15; not sent yet)
+- Updating from 0.4.0 keeps everything: same database (no migration), the built-in map keeps working until each prefecture's map is downloaded, then the old 100 MB copy is removed; Regions marks prefectures already on the phone. What's new written for 0.5.0. The app is 28 MB (0.4.0 was 134 MB).
+
+### Built for 0.5 (0.6 will be the first public test beta)
 Status 2026-11-11: the fixes below are on the dev build; still to come in 0.5 are opening hours, region downloads (after the repo is made ready to go public), trip planning that works both ways with Google Maps, and backup to Google Drive or your own server. Moving data phone to phone is dropped: backup and restore covers it.
 - Scan: a code that isn't in Meguri (often one misread digit) now offers the closest cards ("Or is it ...?"), "Type code" and "Pick by hand". Pick by hand's "Near you" looks 50 km around you when the photo has no place.
 - First-open picker: Nearest really starts with the nearest place (the grid kept its old scroll position after re-sorting, hiding the top). Tapping a place puts the keyboard away; OK clears the search; Done stays above the keyboard; next to the stacked circles only the count shows. A map tap closes "N added to My book", and the sheet settles so the map shows.

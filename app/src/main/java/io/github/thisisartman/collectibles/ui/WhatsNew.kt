@@ -34,33 +34,32 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in 0.4.0", "0.4.0の新機能",
+            "New in 0.5.0", "0.5.0の新機能",
             listOf(
-                "Map: every pin is its picture, or its category icon; grey until collected. Crowded places show how many; tap to zoom in" to "地図：ピンは写真またはカテゴリーのアイコン。未取得はグレー。多い場所は数で表示、タップで拡大",
-                "Collection check: choose a category and a prefecture, then swipe right for each one you have, left to skip" to "コレクションチェック：カテゴリーと都道府県を選び、持っているものは右へ、まだのものは左へスワイプ",
-                "Scan a notebook page: Meguri finds each stamp, cleans it and reads the station; choose a date or leave it as had before Meguri" to "手帳のページをスキャン：スタンプを見つけて整え、駅名を読み取り。日付を選ぶか、Meguri以前のものとして保存",
-                "Scan a card: when the code can't be read, Retake photo or Type code" to "カードのスキャン：コードが読めないときは撮り直しか入力",
-                "Search: any part of a card code, either language, nearest first, in every search box" to "検索：カード番号の一部、どちらの言語でも、近い順。すべての検索で",
-                "Stations: a station's stamp and its Ekitag are one tile; the badge fills in when you have the Ekitag" to "駅：駅スタンプとエキタグを1つのタイルに。エキタグを持つとバッジが塗られます",
-                "Remove: an item you added, or a catalogue item from your collection (More options on its page)" to "削除：自分で追加したアイテム、またはコレクションから外す（アイテムの「その他のオプション」）",
-                "Photos: name an Other photo; Remove asks first" to "写真：「その他」の写真に名前を。削除の前に確認",
+                "Regions: each prefecture is its own download (Settings, Catalogue, Regions): its cards and stamps, and an offline map if you want one. The app itself is much smaller" to "地域：都道府県ごとにダウンロード（設定 › カタログ › 地域）。カード・スタンプと、必要ならオフライン地図。アプリ本体はかなり小さくなりました",
+                "Places: for a spot with several things to collect, like a mountain with a stamp and a goshuin. Add one with Add, Category, Place" to "スポット：スタンプと御朱印がある山など、いくつも集められる場所に。追加 › カテゴリー › スポット",
+                "Change type: the pencil on something you added has a Type row (a station stamp can become a Place; photos stay)" to "種類の変更：自分で追加したものの鉛筆ボタンに「種類」。駅スタンプをスポットに変えられます（写真はそのまま）",
+                "Opening hours: Open now, Opens at or Closed today, with holidays and the closed-Monday rule; Trip warns about closed stops" to "営業時間：営業中・何時から・本日休みを表示。祝日と月曜休みのルールにも対応。旅程では休みの場所をお知らせ",
+                "Send feedback: a note and screenshots by email (Settings, Help and about)" to "フィードバック：メモとスクリーンショットをメールで（設定 › ヘルプと情報）",
+                "One station page: a station's stamp and its Ekitag together, each with its own Collect" to "駅のページを1つに：駅スタンプとエキタグを一緒に。それぞれ「集めた」ボタン付き",
             ),
         ),
         Section(
-            "Settings", "設定",
+            "Better", "改善",
             listOf(
-                "Appearance: Phone, Light or Dark; Meguri or Wallpaper colours" to "表示：端末・ライト・ダーク、Meguriか壁紙の色",
-                "Alerts: Off, Travelling or Always; one distance slider, with custom distances for any category" to "通知：オフ・移動中・常に。距離のスライダー1つ、カテゴリーごとのカスタム距離も",
-                "Backup and data: weekly backup with or without photos, how many to keep, Photos kept in Meguri, your categories" to "バックアップとデータ：毎週のバックアップ（写真あり・なし、残す数）、Meguriに保存した写真、自分のカテゴリー",
-                "About: credits with links to every source and licence, and a Privacy page" to "情報：すべての出典とライセンスへのリンク、プライバシー",
+                "Scan: a misread card code offers the closest cards and Type code" to "スキャン：読み違えたカード番号には近いカードと入力を提案",
+                "Map: category icons when zoomed out, pictures up close, road numbers on the offline map, smoother groups" to "地図：縮小時はカテゴリーのアイコン、拡大で写真。オフライン地図に道路番号。グループの動きもなめらかに",
+                "Motion: pages and steps slide and fade instead of jumping" to "動き：ページや手順が急に切り替わらず、スライド・フェードします",
+                "Ekitag pictures: a saved stamp image becomes the whole stamp on its tile" to "エキタグの画像：保存したスタンプ画像がタイルいっぱいに表示されます",
+                "My book: started prefectures and lines first" to "マイブック：集め始めた都道府県・路線を先頭に",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "Dates look the same everywhere" to "日付の表示をアプリ全体でそろえました",
-                "Work started in Settings (backups, card pictures) keeps going when you leave" to "設定で始めた作業（バックアップ・カード画像）は画面を離れても続きます",
-                "Distances on Nearby update as you move" to "「近く」の距離は移動に合わせて更新",
+                "Card pictures: the site's \"image coming soon\" picture is no longer kept as a card" to "カード画像：サイトの「画像準備中」をカード画像として保存しません",
+                "A card's code shows once on its page" to "カードのページで番号が二重に表示されなくなりました",
+                "Your collection, photos and edits carry over unchanged" to "コレクション・写真・編集内容はそのまま引き継がれます",
             ),
         ),
     )

@@ -45,7 +45,9 @@ fun RegionsPage(vm: MoreViewModel) {
     val progress by vm.packProgress.collectAsState()
     val error by vm.packError.collectAsState()
     val installed by vm.packs.installed.collectAsState()
-    LaunchedEffect(Unit) { vm.refreshPackIndex() }
+    LaunchedEffect(Unit) { vm.refreshPackIndex(); vm.refresh() }
+    // Prefectures whose cards and stamps came with an earlier version of the app (before region downloads)
+    val builtIn by vm.catalogue.collectAsState()
     var confirmRemove by remember { mutableStateOf<String?>(null) }
     fun size(bytes: Long) = Formatter.formatShortFileSize(context, bytes)
 
@@ -101,6 +103,10 @@ fun RegionsPage(vm: MoreViewModel) {
                     }
                     when {
                         have.isEmpty() -> {
+                            if (builtIn.containsKey(pref)) Text(
+                                stringResource(R.string.regions_builtin), Modifier.padding(top = 6.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                            )
                             if (map != null) Row(verticalAlignment = Alignment.CenterVertically) {
                                 Checkbox(withMap, { withMap = it })
                                 Text(stringResource(R.string.regions_with_map, size(map.bytes)), style = MaterialTheme.typography.bodyMedium)

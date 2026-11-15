@@ -109,6 +109,7 @@ class RegionPacks @Inject constructor(
         }
         // A phone on packs no longer takes the catalogue that came inside the app
         catalogue.usePacks()
+        dropLegacyMap()
         Result.success(installedNow)
     }
 
@@ -124,6 +125,22 @@ class RegionPacks @Inject constructor(
         io.github.thisisartman.collectibles.ui.OfflineMap.changed()
         log.i("Packs", "Removed $prefecture: $removed items")
         removed
+    }
+
+    /**
+     * The map that came inside 0.4 and earlier (Niigata, Saitama and Tokyo in one ~100 MB file, copied to app storage)
+     * keeps working after the update. Once all three have their own map download it is no longer used, so it goes.
+     */
+    private fun dropLegacyMap() {
+        val legacy = File(context.filesDir, "map/region.pmtiles")
+        if (!legacy.exists()) return
+        if (LEGACY_MAP_CODES.all { "$it/map" in installed.value }) {
+            val mb = legacy.length() / 1_048_576
+            if (legacy.delete()) {
+                io.github.thisisartman.collectibles.ui.OfflineMap.changed()
+                log.i("Packs", "Removed the old built-in map ($mb MB): every prefecture it covered has its own map now")
+            }
+        }
     }
 
     /** Bytes the packs use on this phone. */
@@ -163,6 +180,9 @@ class RegionPacks @Inject constructor(
     }
 
     companion object {
+        /** Prefectures the old built-in map covered: Saitama, Tokyo, Niigata. */
+        val LEGACY_MAP_CODES = listOf("JP-11", "JP-13", "JP-15")
+
         /** Map files on this phone with their outlines (read without the app's graph, for the map). */
         fun installedMaps(context: Context): List<Pair<File, List<DoubleArray>>> {
             val dir = File(context.filesDir, "packs")

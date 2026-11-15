@@ -689,4 +689,5 @@
     <string name="feedback_with_log">アプリのログを添付（不具合の調査に役立ちます）</string>
     <string name="feedback_send">メールで送る</string>
     <string name="feedback_no_mail_app">メールアプリを開けませんでした。メールアプリを設定してからもう一度お試しください。</string>
+    <string name="regions_builtin">カード・スタンプは以前のバージョンからこの端末にあります。ダウンロードしても記録はそのままで、更新と地図が追加されます。</string>
 </resources>
