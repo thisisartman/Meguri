@@ -74,6 +74,8 @@ fun photoKinds(type: ItemType): List<String> = when (type) {
     ItemType.MANHOLE_CARD -> listOf(PhotoKind.STAMP, PhotoKind.MANHOLE, PhotoKind.PLACE)
     ItemType.GOSHUIN -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
     ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> listOf(PhotoKind.STAMP, PhotoKind.PLACE)
+    // A place of interest: whatever it hands out, a stamp and a goshuin, and the place itself
+    ItemType.PLACE -> listOf(PhotoKind.STAMP, PhotoKind.GOSHUIN, PhotoKind.PLACE)
 }
 
 @androidx.annotation.StringRes
@@ -84,14 +86,15 @@ fun kindLabel(type: ItemType, kind: String): Int = when (kind) {
         ItemType.GOSHUIN -> R.string.kind_goshuin
         ItemType.CUSTOM -> R.string.kind_item
         ItemType.DAM_CARD -> R.string.kind_card
-        ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> R.string.photo_kind_stamp
+        ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.PLACE -> R.string.photo_kind_stamp
     }
+    PhotoKind.GOSHUIN -> R.string.kind_goshuin
     PhotoKind.EKITAG -> R.string.kind_ekitag
     PhotoKind.MANHOLE -> R.string.kind_manhole
     PhotoKind.PLACE -> when (type) {
         ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.kind_station
         ItemType.GOSHUIN -> R.string.kind_shrine
-        ItemType.MANHOLE_CARD, ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION -> R.string.kind_place
+        ItemType.MANHOLE_CARD, ItemType.CUSTOM, ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.PLACE -> R.string.kind_place
     }
     // 0.3's "proof" was an Ekitag screenshot or a card photo
     PhotoKind.PROOF -> if (type == ItemType.MANHOLE_CARD) R.string.kind_card else R.string.kind_ekitag
@@ -362,7 +365,9 @@ fun kindIcon(type: ItemType, kind: String): Int = when (kind) {
         ItemType.MUSEUM_STAMP -> R.drawable.ic_type_museum
         ItemType.ROADSIDE_STATION -> R.drawable.ic_type_roadside
         ItemType.CUSTOM -> R.drawable.ic_add_photo
+        ItemType.PLACE -> R.drawable.ic_type_stamp
     }
+    PhotoKind.GOSHUIN -> R.drawable.ic_type_goshuin
     PhotoKind.EKITAG -> R.drawable.ic_type_ekitag
     PhotoKind.MANHOLE -> R.drawable.ic_type_manhole
     PhotoKind.PLACE -> when (type) {

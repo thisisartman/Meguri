@@ -40,7 +40,15 @@ import java.util.Locale
  * Edit an item's details (owner, 2026-11-08): its names, place, address, hours, notes and position. The position can
  * come from where you are, a shared Google Maps link, or a place search. Saved edits survive catalogue updates.
  */
-@OptIn(ExperimentalMaterial3Api::class)
+/** Types an item you added can be changed to. */
+private val RETYPE = listOf(
+    io.github.thisisartman.collectibles.data.ItemType.PLACE, io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP,
+    io.github.thisisartman.collectibles.data.ItemType.GOSHUIN, io.github.thisisartman.collectibles.data.ItemType.MUSEUM_STAMP,
+    io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD, io.github.thisisartman.collectibles.data.ItemType.DAM_CARD,
+    io.github.thisisartman.collectibles.data.ItemType.ROADSIDE_STATION,
+)
+
+@OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
     val ja = isJapanese()
@@ -57,6 +65,10 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
     var query by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf<List<PlaceHit>>(emptyList()) }
     var message by remember { mutableStateOf<String?>(null) }
+    // Things you added yourself can change type: a stamp added as a station stamp can become a Place, which also takes
+    // a goshuin (owner, 2026-11-15, Hakkaisan). Catalogue items keep theirs.
+    var type by remember { mutableStateOf(item.type) }
+    val canRetype = item.origin == io.github.thisisartman.collectibles.data.Origin.USER && item.type != io.github.thisisartman.collectibles.data.ItemType.CUSTOM
     val noLink = stringResource(R.string.edit_link_failed)
     val noHere = stringResource(R.string.edit_no_position)
     val nothing = stringResource(R.string.edit_search_none)
@@ -65,6 +77,15 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).navigationBarsPadding()) {
             Text(stringResource(R.string.edit_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(12.dp))
+            if (canRetype) {
+                Text(stringResource(R.string.edit_type), Modifier.padding(top = 4.dp), style = MaterialTheme.typography.titleSmall)
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    RETYPE.forEach { t ->
+                        androidx.compose.material3.FilterChip(selected = type == t, onClick = { type = t }, label = { Text(stringResource(t.label())) })
+                    }
+                }
+                Spacer(Modifier.height(4.dp))
+            }
             Field(stringResource(R.string.edit_name_ja), nameJa) { nameJa = it }
             Field(stringResource(R.string.edit_name_en), nameEn) { nameEn = it }
             Field(stringResource(R.string.edit_place), place) { place = it }
@@ -115,7 +136,7 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                         fun opt(s: String) = s.trim().ifEmpty { null }
                         vm.editItem(
                             item.copy(
-                                nameJa = nameJa.trim(), nameRomaji = opt(nameEn), placeName = opt(place), address = opt(address),
+                                type = type, nameJa = nameJa.trim(), nameRomaji = opt(nameEn), placeName = opt(place), address = opt(address),
                                 hoursText = opt(hours), notes = opt(notes), lat = lat, lng = lng,
                             ),
                         )

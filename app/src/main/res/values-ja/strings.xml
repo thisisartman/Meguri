@@ -441,6 +441,9 @@
     <string name="photo_view_close">閉じる</string>
     <string name="type_roadside">道の駅</string>
     <string name="type_roadside_plural">道の駅</string>
+    <string name="type_place">スポット</string>
+    <string name="edit_type">種類</string>
+    <string name="type_place_plural">スポット</string>
     <string name="cards_download">カードの画像</string>
     <string name="cards_download_sub">%2$d枚中%1$d枚がこの端末に。タップでカードのサイト（駅からマンホール）から残りを自分用にダウンロード。端末内だけに保存し、バックアップには含めません。画像の権利はGKPと各自治体にあります。</string>
     <string name="cards_progress">ダウンロード中 %1$d / %2$d…</string>
@@ -676,4 +679,14 @@
     <string name="regions_remove_title">%1$sを削除しますか？</string>
     <string name="regions_remove_text">地図と、まだ集めていない・編集していない・印をつけていないものが削除されます。記録・写真・編集はそのまま残ります。</string>
     <string name="regions_note">オフライン地図がない地域は、オンラインで地図を読み込みます。</string>
+    <!-- Send feedback (2026-11-15) -->
+    <string name="feedback_title">フィードバックを送る</string>
+    <string name="feedback_row_sub">メモとスクリーンショットをメールで</string>
+    <string name="feedback_intro">起きたことや要望を書いてください。メールアプリから、アプリのバージョンと端末名を添えて開発者に送ります。</string>
+    <string name="feedback_hint">起きたこと、変えてほしいこと</string>
+    <string name="feedback_add_screenshots">スクリーンショットを追加</string>
+    <string name="feedback_more_screenshots">さらに追加（%1$d枚、タップで削除）</string>
+    <string name="feedback_with_log">アプリのログを添付（不具合の調査に役立ちます）</string>
+    <string name="feedback_send">メールで送る</string>
+    <string name="feedback_no_mail_app">メールアプリを開けませんでした。メールアプリを設定してからもう一度お試しください。</string>
 </resources>

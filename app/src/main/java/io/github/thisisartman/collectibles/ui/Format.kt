@@ -92,6 +92,7 @@ fun ItemType.label(): Int = when (this) {
     ItemType.DAM_CARD -> R.string.type_dam
     ItemType.MUSEUM_STAMP -> R.string.type_museum
     ItemType.ROADSIDE_STATION -> R.string.type_roadside
+    ItemType.PLACE -> R.string.type_place
 }
 
 /** Short text inside a seal: the design code for manhole cards, else the start of the name. */
@@ -173,5 +174,6 @@ fun ItemType.pluralLabel(): Int = when (this) {
     ItemType.DAM_CARD -> R.string.type_dam_plural
     ItemType.MUSEUM_STAMP -> R.string.type_museum_plural
     ItemType.ROADSIDE_STATION -> R.string.type_roadside_plural
+    ItemType.PLACE -> R.string.type_place_plural
     else -> label()
 }

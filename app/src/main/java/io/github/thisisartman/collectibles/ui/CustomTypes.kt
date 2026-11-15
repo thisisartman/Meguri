@@ -65,7 +65,7 @@ enum class Category { CARD, STAMP, OTHER }
 fun ItemType.category(): Category = when (this) {
     ItemType.MANHOLE_CARD, ItemType.DAM_CARD -> Category.CARD
     ItemType.EKI_STAMP, ItemType.GOSHUIN, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.EKITAG -> Category.STAMP
-    ItemType.CUSTOM -> Category.OTHER
+    ItemType.CUSTOM, ItemType.PLACE -> Category.OTHER
 }
 
 fun CollectionType.category(): Category = when (icon) {

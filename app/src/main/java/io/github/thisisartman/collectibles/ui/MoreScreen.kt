@@ -398,6 +398,8 @@ fun MoreScreen(
         S_PHOTOS to stringResource(R.string.photos_kept),
     )
     var whatsNew by remember { mutableStateOf(false) }
+    var feedback by remember { mutableStateOf(false) }
+    if (feedback) FeedbackSheet(logFiles = { vm.log.files() }, onDismiss = { feedback = false })
     if (whatsNew) WhatsNewDialog(onDismiss = { whatsNew = false })
     LaunchedEffect(Unit) { vm.refresh() }
     val catalogue by vm.catalogue.collectAsState()
@@ -680,6 +682,8 @@ fun MoreScreen(
                 }
             }
             S_HELP -> {
+                // Feedback by mail to the owner, with screenshots (2026-11-15)
+                MoreRow(stringResource(R.string.feedback_title), stringResource(R.string.feedback_row_sub)) { feedback = true }
                 MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
                 MoreRow(stringResource(R.string.more_logs), stringResource(R.string.help_logs_sub), onLogs)
                 MoreRow(stringResource(R.string.more_about), stringResource(R.string.help_about_sub)) { section = S_ABOUT }

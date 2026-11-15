@@ -56,7 +56,9 @@ import kotlinx.coroutines.launch
 private data class KindOption(val label: String, val category: Category, val type: ItemType, val customId: String? = null)
 
 /** The kinds you can add by hand (Ekitags come from the station, so they are not offered). */
-private val BUILT_IN = listOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
+private val BUILT_IN = listOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION,
+    // A place with several things to collect, e.g. a mountain hut's stamp and its shrine's goshuin (owner, 2026-11-15)
+    ItemType.PLACE)
 
 /**
  * Add (owner, 2026-11-09): an empty form, like a new contact. A name, card or stamp, and its kind: pick one, or type

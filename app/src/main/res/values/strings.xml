@@ -446,6 +446,9 @@
     <string name="photo_view_close">Close</string>
     <string name="type_roadside">Roadside station</string>
     <string name="type_roadside_plural">Roadside stations</string>
+    <string name="type_place">Place</string>
+    <string name="edit_type">Type</string>
+    <string name="type_place_plural">Places</string>
     <string name="cards_download">Card pictures</string>
     <string name="cards_download_sub">%1$d of %2$d on this phone. Tap to download the rest from the card site (Eki kara Manhole), for your own use: they stay on this phone, not in backups. Pictures © GKP and each city.</string>
     <string name="cards_progress">Downloading %1$d of %2$d…</string>
@@ -694,4 +697,14 @@
     <string name="regions_remove_title">Remove %1$s?</string>
     <string name="regions_remove_text">The map and anything you haven\'t collected, edited or marked go. Your finds, photos and edits stay.</string>
     <string name="regions_note">Without the offline map, the map loads online for that area.</string>
+    <!-- Send feedback (2026-11-15) -->
+    <string name="feedback_title">Send feedback</string>
+    <string name="feedback_row_sub">A note and screenshots, by email</string>
+    <string name="feedback_intro">Write what happened or what you\'d like. It goes by your mail app to Meguri\'s developer, with the app version and phone model.</string>
+    <string name="feedback_hint">What happened, or what you\'d change</string>
+    <string name="feedback_add_screenshots">Add screenshots</string>
+    <string name="feedback_more_screenshots">Add more screenshots (%1$d added; tap one to remove it)</string>
+    <string name="feedback_with_log">Include the app log (helps with bugs)</string>
+    <string name="feedback_send">Send by email</string>
+    <string name="feedback_no_mail_app">No mail app could open this. Install or set up a mail app and try again.</string>
 </resources>
