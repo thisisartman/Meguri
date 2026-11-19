@@ -21,7 +21,8 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-      - uses: android-actions/setup-android@v3
+      # The runner already has the Android SDK; Gradle fetches platform 37 itself
+      # (android-actions/setup-android failed installing the old "tools" package)
       - uses: gradle/actions/setup-gradle@v4
       - name: Build the debug app and run the unit tests
         run: ./gradlew assembleDebug testDebugUnitTest --stacktrace
