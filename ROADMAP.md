@@ -2,11 +2,14 @@
 
 What's coming to Meguri, roughly in order. Each item has an issue where you can follow it or add your thoughts, and everything is on the [project board](https://github.com/users/thisisartman/projects/2). Plans change, so treat this as a direction rather than a promise.
 
-## Now: 0.6, the first public test version
+## Done: 0.6, the first public test version
 
-- **Backups to Google Drive and your own server.** Besides a folder on the phone, back up to Google Drive (through Android's own folder picker, with no Google sign-in in Meguri) or to your own WebDAV or Nextcloud server. ([#3](https://github.com/thisisartman/Meguri/issues/3))
-- **A smoother catalogue for everyone.** Issue forms for adding places and collectibles, reporting availability and correcting details, with a simple confirmation step before changes go into the region data. ([#2](https://github.com/thisisartman/Meguri/issues/2))
-- **Small fixes from 0.5.0.** Places you add sit under the right prefecture, and maps redraw properly after a map download. ([#8](https://github.com/thisisartman/Meguri/issues/8))
+[Released 2026-11-20](https://github.com/thisisartman/Meguri/releases/tag/v0.6.0): backups to Google Drive (one file) and your own WebDAV server, reports from an item's page, and fixes from 0.5.0.
+
+## Now
+
+- **Check backups to Google Drive on more phones.** ([#3](https://github.com/thisisartman/Meguri/issues/3))
+- **Turn confirmed reports into data updates.** ([#2](https://github.com/thisisartman/Meguri/issues/2))
 
 ## Next
 
