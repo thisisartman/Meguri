@@ -67,17 +67,7 @@ Right now the catalogue covers **Niigata, Saitama and Tokyo** (manhole cards, st
 Meguri isn't on Google Play. You install it straight from this page:
 
 1. On your phone, open the [latest release](https://github.com/thisisartman/Meguri/releases/latest) and download `Meguri-<version>.apk`.
-2. Open the downloaded file. The first time, Android will stop you and say it isn't allowed to install apps from this source. Tap **Settings**.
-3. Turn on **Allow from this source**, then go back and tap **Install**.
-
-<p>
-  <img src="docs/install/1-not-allowed.webp" width="180" alt="Android says it isn't allowed to install unknown apps from this source, with Cancel and Settings">
-  <img src="docs/install/2-allow-from-this-source.webp" width="180" alt="Install unknown apps: the Allow from this source switch">
-  <img src="docs/install/3-install.webp" width="180" alt="Meguri: Do you want to install this app? Cancel or Install">
-  <img src="docs/install/4-installed.webp" width="180" alt="App installed, with Done and Open">
-</p>
-
-These pictures are from plain Android; on a Samsung, Pixel or other phone the screens look a little different but say the same thing.
+2. Open the downloaded file and follow Android's prompts to allow the install.
 
 **Which phones:** Android 10 or newer, on a 64-bit ARM processor (`arm64-v8a`). That's almost every Android phone from the last several years; very old 32-bit phones and Intel-based devices can't run it.
 
