@@ -118,6 +118,15 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     // Not during the onboarding (#81): a phone with no catalogue yet has nothing "new" to read
     val loadedRows by vm.rowsOrNull.collectAsStateWithLifecycle()
     val hasCatalogue = loadedRows?.any { it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }
+    // Items you added get their prefecture from their position, so they sit under it in My book (0.5.0 bug: Hakkaisan
+    // under "No prefecture"). Runs on every change to the list; only items still missing one are written.
+    LaunchedEffect(loadedRows) {
+        val rows = loadedRows ?: return@LaunchedEffect
+        val found = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            io.github.thisisartman.collectibles.data.Prefectures.missing(rows.map { it.item }, PrefectureAsset.all(appContext))
+        }
+        if (found.isNotEmpty()) vm.fillPrefectures(found)
+    }
     var whatsNew by rememberSaveable { mutableStateOf(false) }
     LaunchedEffect(hasCatalogue) { if (hasCatalogue == true && WhatsNew.shouldShow(appContext)) whatsNew = true }
     if (whatsNew) WhatsNewDialog(onDismiss = { WhatsNew.markSeen(appContext); whatsNew = false })

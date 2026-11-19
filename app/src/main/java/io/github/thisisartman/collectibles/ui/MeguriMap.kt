@@ -85,8 +85,10 @@ fun MeguriMap(
     // The app's theme, not only the phone's: Light or Dark can be chosen in Appearance
     val dark = LocalAppDark.current
     val japanese = isJapanese()
-    // Offline inside the trip area, online elsewhere; decided once, from where you are or the first pin
-    val offline = remember {
+    // Offline inside the trip area, online elsewhere; decided from where you are or the first pin, again when the
+    // maps on this phone change
+    val mapsVersion by OfflineMap.version.collectAsState()
+    val offline = remember(mapsVersion) {
         val c = here ?: pins.firstOrNull()?.let { it.lat to it.lng }
         OfflineMap.available(context) && (c == null || OfflineMap.covers(context, c.first, c.second))
     }
@@ -143,7 +145,7 @@ fun MeguriMap(
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); mapView.onStop(); mapView.onDestroy() }
     }
-    LaunchedEffect(mapView, dark, japanese) {
+    LaunchedEffect(mapView, dark, japanese, mapsVersion) {
         val offlineStyle = if (offline) {
             runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { OfflineMap.styleJson(context, dark, japanese) } }.getOrNull()
         } else null

@@ -19,8 +19,14 @@ object OfflineMap {
     private data class Source(val file: File, val rings: List<DoubleArray>)
     @Volatile private var cached: Pair<Long, List<Source>>? = null
 
-    /** Called after a pack is installed or removed, so the next map picks up the change. */
-    fun changed() { cached = null }
+    /**
+     * Goes up each time the maps on this phone change. Maps already on screen watch it and redraw from the new files:
+     * a download finishing while My book was open left its map on the old built-in file, which is then deleted (0.5.0).
+     */
+    val version = kotlinx.coroutines.flow.MutableStateFlow(0)
+
+    /** Called after a pack is installed or removed, so maps pick up the change. */
+    fun changed() { cached = null; version.value++ }
 
     // The packs on this phone, else the old built-in map; read again when the installed packs change
     private fun sources(context: Context): List<Source> {

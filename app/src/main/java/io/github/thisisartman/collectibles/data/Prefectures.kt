@@ -39,6 +39,17 @@ object Prefectures {
     fun at(all: List<Prefecture>, lat: Double, lng: Double): Prefecture? = all.firstOrNull { it.contains(lat, lng) }
 
     /**
+     * Items you added yourself that have a position but no prefecture, with the prefecture their position is in
+     * (Japanese name, as the catalogue stores it). Adding an item never set one, so a Place sat under "No prefecture"
+     * (owner's Hakkaisan, 0.5.0). Catalogue rows are left to the catalogue.
+     */
+    fun missing(items: List<Item>, all: List<Prefecture>): List<Pair<String, String>> =
+        items.asSequence()
+            .filter { it.origin == Origin.USER && it.prefecture.isNullOrBlank() && it.lat != null && it.lng != null }
+            .mapNotNull { i -> at(all, i.lat!!, i.lng!!)?.let { i.id to it.ja } }
+            .toList()
+
+    /**
      * The region list: the prefecture you are in first (when it has a catalogue), then the rest in [POPULAR] order,
      * then any others, A to Z. Only prefectures in [available] (by Japanese name) are listed.
      */

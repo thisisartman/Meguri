@@ -370,6 +370,10 @@ class MainViewModel @Inject constructor(
     }
 
     /** Saves your edits to an item's details; catalogue updates leave it as you made it (owner, 2026-11-08). */
+    fun fillPrefectures(found: List<Pair<String, String>>) {
+        viewModelScope.launch { repo.fillPrefectures(found) }
+    }
+
     fun editItem(item: io.github.thisisartman.collectibles.data.Item) {
         viewModelScope.launch { repo.editItem(item) }
     }

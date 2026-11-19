@@ -20,6 +20,21 @@ class PrefecturesTest {
         assertNull(Prefectures.at(all, 20.0, 120.0))
     }
 
+    /** 0.5.0: the owner's Hakkaisan Place, added by hand, had no prefecture and sat under "No prefecture". */
+    @Test fun itemsYouAddedGetTheirPrefectureFromTheirPosition() {
+        fun item(id: String, origin: Origin, pref: String?, lat: Double?, lng: Double?) =
+            Item(id = id, type = ItemType.PLACE, nameJa = id, origin = origin, prefecture = pref, lat = lat, lng = lng, createdAt = 1, updatedAt = 1)
+        val items = listOf(
+            item("hakkaisan", Origin.USER, null, 37.07, 138.9),   // inside Niigata's square
+            item("blank", Origin.USER, " ", 35.7, 142.7),         // blank counts as missing; Tokyo's square
+            item("set", Origin.USER, "群馬県", 37.8, 139.0),       // already has one: left alone
+            item("nowhere", Origin.USER, null, 20.0, 120.0),      // outside every outline
+            item("noPosition", Origin.USER, null, null, null),
+            item("catalogue", Origin.CSV_IMPORT, null, 37.8, 139.0), // catalogue rows are the catalogue's business
+        )
+        assertEquals(listOf("hakkaisan" to "新潟県", "blank" to "東京都"), Prefectures.missing(items, all))
+    }
+
     @Test fun yourPrefectureFirstThenPopularOrder() {
         val (mine, rest) = Prefectures.ordered(all, setOf("新潟県", "東京都", "埼玉県"), 37.8007 to 139.118)
         assertEquals("新潟県", mine?.ja)
