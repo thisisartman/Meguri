@@ -3,6 +3,7 @@
 ## Next
 - Repository set up like other open-source apps: README with icon, badges, a download link, the signing certificate to check an APK, and a Japanese summary; CONTRIBUTING, PRIVACY and SECURITY; issue forms (bug, feature, catalogue correction), a pull request template, Dependabot and a build check on every pull request; store text and screenshots in `fastlane/metadata/android` (English and Japanese).
 - Privacy page: region downloads (GitHub, meguri-data) are now listed with the other online services.
+- PRIVACY.md checked against the app: feedback includes the app log unless unticked, and every permission is listed (background location service, start at boot, photo location, network state).
 
 ## 0.5.0 (stable, 2026-11-15, sent to the owner on Telegram 19:25; upgrade from beta.9 rehearsed with the owner's real backup)
 - Updating from 0.4.0 keeps everything: same database (no migration), the built-in map keeps working until each prefecture's map is downloaded, then the old 100 MB copy is removed; Regions marks prefectures already on the phone. What's new written for 0.5.0. The app is 28 MB (0.4.0 was 134 MB).
