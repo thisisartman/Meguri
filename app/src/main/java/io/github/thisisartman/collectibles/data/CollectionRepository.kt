@@ -144,6 +144,17 @@ class CollectionRepository @Inject constructor(
         return itemId
     }
 
+    /** Gives items you added their prefecture from their position ([Prefectures.missing]); only where still empty. */
+    suspend fun fillPrefectures(found: List<Pair<String, String>>) {
+        if (found.isEmpty()) return
+        db.withTransaction {
+            found.forEach { (id, pref) ->
+                dao.item(id)?.takeIf { it.prefecture.isNullOrBlank() }?.let { dao.upsertItem(it.copy(prefecture = pref, updatedAt = now())) }
+            }
+        }
+        log.i("Log", "Prefecture filled from position for ${found.size} item(s)")
+    }
+
     // Your own collections (#64) and the details of a collection: how many (duplicates) and what you paid
     fun collectionTypes(): kotlinx.coroutines.flow.Flow<List<CollectionType>> = dao.observeCollectionTypes()
 
