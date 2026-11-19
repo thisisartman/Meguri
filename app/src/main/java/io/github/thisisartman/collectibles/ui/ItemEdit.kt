@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
@@ -74,7 +75,10 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
     val nothing = stringResource(R.string.edit_search_none)
 
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).navigationBarsPadding()) {
+        // Cancel and Save stay on screen (owner's rule, 2026-11-20: important actions never scroll away): the form
+        // scrolls, the buttons sit under it, above the keyboard and the navigation bar
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding()) {
+        Column(Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
             Text(stringResource(R.string.edit_title), style = MaterialTheme.typography.headlineSmall)
             Spacer(Modifier.height(12.dp))
             if (canRetype) {
@@ -127,8 +131,9 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.edit_kept_note), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+            Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.cancel)) }
                 Button(
                     enabled = nameJa.isNotBlank(),
@@ -145,7 +150,6 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                     modifier = Modifier.weight(1f).heightIn(min = 48.dp),
                 ) { Text(stringResource(R.string.edit_save)) }
             }
-            Text(stringResource(R.string.edit_kept_note), Modifier.padding(vertical = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

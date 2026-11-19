@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
@@ -113,7 +114,10 @@ fun FeedbackSheet(logFiles: () -> List<File>, onDismiss: () -> Unit) {
         picked.forEach { if (it !in pictures) pictures += it }
     }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).navigationBarsPadding()) {
+        // Send stays on screen (owner's rule, 2026-11-20: important actions never scroll away): the form scrolls,
+        // the button sits under it, above the keyboard and the navigation bar
+        Column(Modifier.fillMaxWidth().navigationBarsPadding().imePadding()) {
+        Column(Modifier.weight(1f, fill = false).fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
             Text(stringResource(R.string.feedback_title), style = MaterialTheme.typography.headlineSmall)
             Text(
                 stringResource(R.string.feedback_intro), Modifier.padding(top = 4.dp, bottom = 10.dp),
@@ -138,12 +142,13 @@ fun FeedbackSheet(logFiles: () -> List<File>, onDismiss: () -> Unit) {
                 Text(stringResource(R.string.feedback_with_log), style = MaterialTheme.typography.bodyMedium)
             }
             if (failed) Text(stringResource(R.string.feedback_no_mail_app), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
             Button(
                 enabled = text.isNotBlank() || pictures.isNotEmpty(),
                 onClick = {
                     if (Feedback.send(context, text, pictures, withLog, logFiles())) onDismiss() else failed = true
                 },
-                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp).heightIn(min = 52.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp).heightIn(min = 52.dp),
             ) { Text(stringResource(R.string.feedback_send)) }
         }
     }
