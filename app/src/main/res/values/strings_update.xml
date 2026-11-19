@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Check for updates (#131) -->
+<resources>
+    <string name="update_check">Check for updates</string>
+    <string name="update_check_sub">Once a day, from GitHub</string>
+    <string name="update_available">Update available: %1$s</string>
+    <string name="update_button">Update</string>
+    <string name="privacy_updates">Check for updates, when the switch is on: once a day, the latest version number</string>
+</resources>

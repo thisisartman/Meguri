@@ -162,8 +162,29 @@ fun PrivacyPage() {
         // Region downloads come from the meguri-data releases (was missing from this list, found 2026-11-20)
         Credit("GitHub", R.string.privacy_regions, "Privacy", "https://github.com/thisisartman/meguri-data", "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"),
         Credit("GitHub", R.string.privacy_reports, "Privacy", "https://github.com/thisisartman/Meguri/issues", "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"),
+        // Check for updates (#131), only with its switch on in Help and about
+        Credit("GitHub", R.string.privacy_updates, "Privacy", "https://github.com/thisisartman/Meguri/releases", "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"),
         Credit("Eki kara Manhole", R.string.privacy_cards, "Site", "https://ekikaramanhole.whitebeach.org/", "https://ekikaramanhole.whitebeach.org/"),
         Credit("Google Maps", R.string.privacy_directions, "Privacy", "https://www.google.com/maps", "https://policies.google.com/privacy"),
         Credit("Google Play services", R.string.privacy_play, "Privacy", "https://developers.google.com/ml-kit", "https://policies.google.com/privacy"),
     ).forEach { CreditRow(it) }
+}
+
+/** "Update available: v0.7.0" with Update, which opens the release page (#131). Nothing when there is no newer release. */
+@Composable
+fun UpdateNote() {
+    val release = io.github.thisisartman.collectibles.data.UpdateCheck.available.value ?: return
+    val context = LocalContext.current
+    androidx.compose.material3.Surface(
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+        shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer,
+    ) {
+        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                stringResource(R.string.update_available, release.tag), Modifier.weight(1f),
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
+            )
+            TextButton(onClick = { openLink(context, release.url) }) { Text(stringResource(R.string.update_button)) }
+        }
+    }
 }
