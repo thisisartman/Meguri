@@ -23,4 +23,4 @@ body:
     id: media
     attributes:
       label: Screenshots or log
-      placeholder: Optional. Log: Settings › Help and about › Logs › Export
+      placeholder: "Optional. Log: Settings › Help and about › Logs › Export"
