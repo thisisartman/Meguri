@@ -1,0 +1,18 @@
+<p>Meguri (巡り: going round a circuit, as on a pilgrimage or a stamp rally) is a collecting app for Japan's manhole cards, station stamps, Ekitag, dam cards, roadside station stamps and goshuin. It shows what is near you, what you have, and where to get the rest.</p>
+
+<p>It is made for the moment at the counter, the shrine or the ticket gate: one tap logs a find, a photo is optional, and nothing waits on the network.</p>
+
+<p><b>Features</b></p>
+<ul>
+<li>Nearby: a map and a sheet of what is closest, with distances, a filter by category, and directions</li>
+<li>My book: a ring per category, then each prefecture or railway line, with the next one to get</li>
+<li>Item pages: the official picture, where it is handed out, opening hours with "Open now" or "Closed today" (Japanese holidays included), and your photos</li>
+<li>Scan a manhole card: Meguri reads its code and finds the card</li>
+<li>Alerts when you pass something you still need, even with the app closed</li>
+<li>Region downloads: each prefecture's catalogue and, if you want it, its offline map</li>
+<li>Trips by railway line or from a Google Maps link, with a report of the day</li>
+<li>Backup and restore, including a weekly automatic backup</li>
+<li>English and Japanese, light and dark</li>
+</ul>
+
+<p><b>Privacy:</b> no account, no server, no tracking. Your finds and photos stay on your phone and in the backups you save.</p>

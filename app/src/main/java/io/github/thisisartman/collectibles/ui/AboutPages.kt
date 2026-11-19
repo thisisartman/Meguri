@@ -159,6 +159,8 @@ fun PrivacyPage() {
     listOf(
         Credit("OpenFreeMap", R.string.privacy_tiles, "Privacy", "https://openfreemap.org", "https://openfreemap.org/privacy/"),
         Credit("Nominatim", R.string.privacy_places, "Policy", "https://nominatim.org", "https://osmfoundation.org/wiki/Privacy_Policy"),
+        // Region downloads come from the meguri-data releases (was missing from this list, found 2026-11-20)
+        Credit("GitHub", R.string.privacy_regions, "Privacy", "https://github.com/thisisartman/meguri-data", "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"),
         Credit("Eki kara Manhole", R.string.privacy_cards, "Site", "https://ekikaramanhole.whitebeach.org/", "https://ekikaramanhole.whitebeach.org/"),
         Credit("Google Maps", R.string.privacy_directions, "Privacy", "https://www.google.com/maps", "https://policies.google.com/privacy"),
         Credit("Google Play services", R.string.privacy_play, "Privacy", "https://developers.google.com/ml-kit", "https://policies.google.com/privacy"),

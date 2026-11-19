@@ -1,0 +1,7 @@
+Region downloads: each prefecture's catalogue and offline map, one download each.
+Opening hours say whether a place is open now, with Japanese holidays.
+Places: one page for a spot with a stamp and a goshuin.
+A station's stamp and its Ekitag share one page.
+Scanning a card offers the closest codes when one digit is misread.
+Send feedback with screenshots from Help and about.
+Smoother motion, category icons on a zoomed-out map, and many fixes.

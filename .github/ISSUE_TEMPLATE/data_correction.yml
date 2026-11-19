@@ -1,0 +1,36 @@
+name: Catalogue correction
+description: A card, stamp, station or place is wrong, missing or has moved
+labels: ["data"]
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Which item
+      description: Its name as shown in Meguri, and its code if it has one.
+      placeholder: Nagaoka · Albirex BB (15-202-C001)
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What is wrong
+      options:
+        - Wrong place or position
+        - Wrong opening hours
+        - Wrong name or picture
+        - No longer handed out
+        - Missing from Meguri
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: What it should be
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: An official page or notice that shows the right information, or the date you saw it in person.
