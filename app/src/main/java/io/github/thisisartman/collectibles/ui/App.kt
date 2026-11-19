@@ -176,6 +176,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
         }
     }
     LaunchedEffect(Unit) { CameraCapture.cleanEmptyRows(resolver) }
+    // Check for updates (#131): does nothing unless its switch is on and a day has passed since the last ask
+    LaunchedEffect(Unit) { io.github.thisisartman.collectibles.data.UpdateCheck.checkIfDue(appContext) }
     // Ask for location at start only once there is a catalogue: before that the onboarding asks, after saying why (#81).
     // At most once per run, and not after a no (finding 42)
     LaunchedEffect(hasCatalogue) {
