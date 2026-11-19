@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="report_availability">配布状況を報告</string>
+    <string name="report_correction">修正を提案</string>
+    <string name="report_add">ここに追加</string>
+    <string name="privacy_reports">詳細ページからの報告は、その項目を入力済みのGitHubのフォームを開きます。そこで送信するまで何も送られません</string>
+</resources>
