@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="where_title">保存先</string>
+    <string name="where_row">保存先</string>
+    <string name="where_folder">フォルダ</string>
+    <string name="where_folder_sub">この端末の中</string>
+    <string name="where_file">1つのファイル</string>
+    <string name="where_file_sub">Googleドライブなどのクラウドアプリ。毎週上書きします。</string>
+    <string name="where_server">サーバー</string>
+    <string name="where_server_sub">NextcloudやWebDAV</string>
+    <string name="where_file_note">1つだけ保存し、毎週上書きします。</string>
+    <string name="server_title">サーバー</string>
+    <string name="server_address">アドレス</string>
+    <string name="server_address_hint">https://cloud.example.com/remote.php/dav/files/you/Meguri</string>
+    <string name="server_user">ユーザー名</string>
+    <string name="server_password">パスワード</string>
+    <string name="server_note">2段階認証を使っている場合は、アプリパスワードを使ってください。</string>
+    <string name="server_connect">接続</string>
+    <string name="server_remove">削除</string>
+    <string name="server_err_https">https:// のアドレスを使ってください。</string>
+    <string name="server_err_address">アドレスを確認してください。</string>
+    <string name="server_err_login">ユーザー名かパスワードが違います。</string>
+    <string name="server_err_folder">フォルダが見つかりません。アドレスを確認してください。</string>
+    <string name="server_err_offline">サーバーに接続できません。</string>
+    <string name="server_err_other">サーバーに断られました（%1$d）。</string>
+    <string name="trust_title">このサーバーを信頼しますか？</string>
+    <string name="trust_body">この証明書は端末が知っている発行元に署名されていません（自宅のサーバーではよくあることです）。フィンガープリントがご自分のサーバーのものと一致する場合だけ信頼してください。</string>
+    <string name="trust_ok">信頼する</string>
+    <string name="auto_failed_login">前回のバックアップに失敗：ユーザー名かパスワードが違います。</string>
+    <string name="auto_failed_certificate">前回のバックアップに失敗：サーバーの証明書が変わりました。</string>
+    <string name="auto_failed_offline">サーバーに接続できません。あとでもう一度試します。</string>
+    <string name="restore_server">サーバーから復元</string>
+    <string name="restore_server_sub">サーバーにある最新のバックアップ</string>
+    <string name="restore_server_none">サーバーにはまだバックアップがありません。</string>
+</resources>

@@ -113,6 +113,7 @@ dependencies {
 
     implementation(libs.androidx.work.runtime)
     implementation(libs.maplibre.android)
+    implementation(libs.okhttp)
     implementation(libs.androidx.documentfile)
     // Geofencing only (PRD FR-12); everything else uses Android's own LocationManager
     implementation(libs.play.services.location)
@@ -126,6 +127,8 @@ dependencies {
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.okhttp.tls)
     // The real org.json for JVM unit tests (Android's copy is only a stub there)
     testImplementation("org.json:json:20240303")
     // room-testing needs serialization 1.8; the test APK has to match the app, which got 1.7.3 through navigation
