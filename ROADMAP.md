@@ -13,6 +13,7 @@ What's coming to Meguri, roughly in order. Each item has an issue where you can 
 
 ## Next
 
+- **Check for updates (0.7).** An optional switch: Meguri tells you when a new version is out and opens its page. Off by default. ([#131](https://github.com/thisisartman/Meguri/issues/131))
 - **Suggest places from the app.** Add a new place or collectible, or report that something is sold out or has new hours, straight from its page in Meguri. Other collectors can confirm it, and confirmed changes arrive with the next "Update all". ([#1](https://github.com/thisisartman/Meguri/issues/1))
 - **More of Japan, prefecture by prefecture.** The catalogue grows in waves: first finishing Niigata, Saitama, Tokyo and Gunma, then the rest of JR East's area (Kanagawa, Chiba, Ibaraki, Tochigi, Nagano), then Tohoku, then the rest of Japan in the order people ask for it. Within each prefecture, nationwide lists (manhole cards, dam cards, roadside stations) go in all at once, station stamps line by line, and goshuin and other local collectibles area by area and city by city, with collectors' help. The full plan is in [Growing the catalogue](docs/CATALOGUE_PLAN.md). ([#5](https://github.com/thisisartman/Meguri/issues/5))
 - **Categories and types.** Separating *where* you collect (stations, shrines and temples, mountains, dams, roadside stations) from *what* you collect (stamps, goshuin, cards, tags), so a station with both a stamp and an Ekitag, or a shrine with a goshuin and a stamp, reads naturally. ([#4](https://github.com/thisisartman/Meguri/issues/4))

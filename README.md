@@ -12,6 +12,8 @@ Manhole cards, station stamps, Ekitag, goshuin, dam cards, roadside station stam
 [![Licence: MIT](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 ![Android 10+](https://img.shields.io/badge/Android-10%2B-3DDC84)
 
+[<img src="docs/images/badge_obtainium.png" alt="Get it on Obtainium" height="48">](https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%257B%2522id%2522%253A%2522io.github.thisisartman.collectibles%2522%252C%2522url%2522%253A%2522https%253A%252F%252Fgithub.com%252Fthisisartman%252FMeguri%2522%252C%2522author%2522%253A%2522thisisartman%2522%252C%2522name%2522%253A%2522Meguri%2522%257D)
+
 **[Download the latest APK](https://github.com/thisisartman/Meguri/releases/latest)** · [How to use it](docs/APP_GUIDE.md) · [Roadmap](ROADMAP.md) · [日本語](#日本語)
 
 </div>
@@ -58,7 +60,13 @@ Right now the catalogue covers **Niigata, Saitama and Tokyo** (manhole cards, st
 
 ## Getting the app
 
-Meguri isn't on Google Play. You install it straight from this page:
+Meguri isn't on Google Play.
+
+**With Obtainium (recommended):** [Obtainium](https://obtainium.imranr.dev) installs Meguri from this page and tells you when there's an update.
+
+[<img src="docs/images/badge_obtainium.png" alt="Get it on Obtainium" height="48">](https://apps.obtainium.imranr.dev/redirect?r=obtainium%3A%2F%2Fapp%2F%257B%2522id%2522%253A%2522io.github.thisisartman.collectibles%2522%252C%2522url%2522%253A%2522https%253A%252F%252Fgithub.com%252Fthisisartman%252FMeguri%2522%252C%2522author%2522%253A%2522thisisartman%2522%252C%2522name%2522%253A%2522Meguri%2522%257D)
+
+**By hand:**
 
 1. On your phone, open the [latest release](https://github.com/thisisartman/Meguri/releases/latest) and download `Meguri-<version>.apk`.
 2. Open the downloaded file and follow Android's prompts to allow the install.
