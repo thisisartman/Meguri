@@ -35,21 +35,15 @@ Meguri is made for exactly that. Everything is on your phone, logging a find tak
 
 ## What you can do
 
-- **See what's around you.** Nearby shows a map and a list of the closest things you can collect, with distances, a category filter and directions.
-- **Watch your collection grow.** My book has a progress ring for each category (manhole cards, station stamps, Ekitag, goshuin, dam cards, roadside stations, and any collections you add yourself). Open one to see each prefecture or railway line, and what to get next.
-- **Know before you go.** Every item has its official picture, where it's handed out, the phone number, and its opening hours. Meguri tells you if it's open now or closed today, and it knows about national holidays and the "closed Mondays, or Tuesday if Monday is a holiday" rule.
-- **Keep your photos with your finds.** Snap the card, the manhole cover itself (Meguri cuts it out as a circle), the stamp, or an Ekitag screenshot (turned into a neat stamp tile). Photos are kept safely inside the app.
-- **Get a nudge when you pass by.** Meguri can let you know when you're near something you don't have yet, even with the app closed. You choose the distance for each category and set quiet hours.
-- **Sort your camera roll.** Share photos to Meguri from your gallery, and it groups them by where they were taken and suggests what each one shows.
-- **Plan a day out.** Plan a trip along a railway line or from a Google Maps link, then get a report of everything you collected.
-- **Never lose your collection.** Back up to a folder of your choice, with or without photos, and let Meguri do it automatically every week.
-- Meguri speaks English and Japanese, and comes in light and dark.
-
-<p>
-  <img src="docs/screenshots/02-map.webp" width="200" alt="The map zoomed in: card pictures as pins, and a place card with distance and directions">
-  <img src="docs/screenshots/04-manhole-cards.webp" width="200" alt="Manhole cards by prefecture, with progress and recent finds">
-  <img src="docs/screenshots/07-regions.webp" width="200" alt="Regions: download a prefecture's catalogue and offline map">
-</p>
+- **Nearby:** what's closest, on a map and in a list, with directions.
+- **My book:** a progress ring for each category, by prefecture or railway line.
+- **Item pages:** picture, where to get it, phone, and opening hours, including "Open now" and holidays.
+- **Photos:** of the card, the cover, the stamp or an Ekitag, kept inside the app.
+- **Alerts:** a nudge when you pass something you don't have yet.
+- **Share to Meguri:** photos from your gallery, matched to what they show.
+- **Trips:** plan a day by railway line or Google Maps link, then get a report.
+- **Backups:** to a folder you choose, weekly if you like.
+- English and Japanese, light and dark.
 
 ## Where it works
 
@@ -121,15 +115,13 @@ Information like this can't come from one person, though. Opening hours change, 
 
 ## Helping out
 
-The most useful thing you can do is help the catalogue grow and stay correct. Each of these is an issue form:
+Help the catalogue grow and stay right:
 
-- **[Add a place or a collectible](https://github.com/thisisartman/Meguri/issues/new?template=new_place.yml):** a new spot, or something new at a place Meguri already knows.
-- **[Report availability](https://github.com/thisisartman/Meguri/issues/new?template=availability.yml):** sold out, back in stock, new hours, no longer handed out.
-- **[Correct something](https://github.com/thisisartman/Meguri/issues/new?template=data_correction.yml):** a wrong position, name or picture.
+- [Add something](https://github.com/thisisartman/Meguri/issues/new?template=new_place.yml): a new place or collectible
+- [Availability](https://github.com/thisisartman/Meguri/issues/new?template=availability.yml): sold out, back, new hours, moved, gone
+- [Correction](https://github.com/thisisartman/Meguri/issues/new?template=data_correction.yml): wrong location, name or details
 
-When someone else has seen the same thing, a 👍 or a comment on the issue confirms it. Confirmed changes go into the next region data update, which everyone gets through "Update all". [CONTRIBUTING.md](CONTRIBUTING.md) explains how it works, and the [roadmap](ROADMAP.md) shows what's planned, including a way to suggest places straight from the app.
-
-Bug reports, ideas and code are welcome too. If you find a security problem, please report it privately as described in [SECURITY.md](SECURITY.md) rather than opening an issue.
+Seen it too? A 👍 confirms it, and confirmed changes ship in the next data update. More in [CONTRIBUTING.md](CONTRIBUTING.md), plans in the [roadmap](ROADMAP.md). Security problems go privately through [SECURITY.md](SECURITY.md).
 
 ## Thanks
 

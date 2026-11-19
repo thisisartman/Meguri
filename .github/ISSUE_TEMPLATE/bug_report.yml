@@ -1,62 +1,26 @@
-name: Bug report
-description: Something in Meguri doesn't work as it should
+name: Bug
+description: Something doesn't work
 labels: ["bug"]
 body:
-  - type: checkboxes
-    id: checks
-    attributes:
-      label: Before you start
-      options:
-        - label: I can reproduce this with the latest release
-          required: true
-        - label: I searched the existing issues, open and closed, and this one is new
-          required: true
-        - label: This issue is about one bug only
-          required: true
-  - type: input
-    id: version
-    attributes:
-      label: Meguri version
-      description: Settings › Help and about › About
-      placeholder: 0.5.0 (13)
-    validations:
-      required: true
-  - type: input
-    id: device
-    attributes:
-      label: Phone and Android version
-      placeholder: Samsung Galaxy S23, Android 15
-    validations:
-      required: true
   - type: textarea
-    id: steps
+    id: what
     attributes:
-      label: Steps to reproduce
+      label: What happened
       placeholder: |
         1. Open Nearby
         2. Tap ...
-        3. ...
+        Expected ..., but ...
     validations:
       required: true
-  - type: textarea
-    id: expected
+  - type: input
+    id: version
     attributes:
-      label: What you expected
-    validations:
-      required: true
-  - type: textarea
-    id: actual
-    attributes:
-      label: What happened instead
+      label: Meguri version and phone
+      placeholder: 0.5.0, Galaxy S23, Android 15
     validations:
       required: true
   - type: textarea
     id: media
     attributes:
-      label: Screenshots or a screen recording
-      description: Check them for personal details (notifications, addresses) before attaching.
-  - type: textarea
-    id: logs
-    attributes:
-      label: Logs
-      description: Settings › Help and about › Logs › Export logs, then attach the file.
+      label: Screenshots or log
+      placeholder: Optional. Log: Settings › Help and about › Logs › Export

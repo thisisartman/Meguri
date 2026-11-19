@@ -1,11 +1,11 @@
 blank_issues_enabled: false
 contact_links:
-  - name: How to use Meguri
+  - name: App guide
     url: https://github.com/thisisartman/Meguri/blob/testing/docs/APP_GUIDE.md
-    about: The guide to every page and feature, with screenshots.
-  - name: See what's planned
+    about: How to use Meguri
+  - name: Roadmap
     url: https://github.com/thisisartman/Meguri/blob/testing/ROADMAP.md
-    about: The roadmap, with an issue for each item.
-  - name: Report a security problem
+    about: What's planned
+  - name: Security problem
     url: https://github.com/thisisartman/Meguri/security/advisories/new
-    about: Please report security problems privately, not as an issue.
+    about: Report it privately

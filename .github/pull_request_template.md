@@ -1,12 +1,7 @@
-## What this changes
+**What:** <!-- One line. Closes #123 -->
 
-<!-- One or two sentences. Link the issue it closes: Closes #123 -->
+**Tested:**
+- [ ] `./gradlew assembleDebug testDebugUnitTest`
+- [ ] On a phone or emulator
 
-## How it was tested
-
-- [ ] `./gradlew assembleDebug testDebugUnitTest` passes
-- [ ] Tried on a phone or emulator (which, and what you tapped)
-
-## Screenshots
-
-<!-- Before and after, for anything you can see in the app. -->
+<!-- Before and after screenshots for anything visible -->
