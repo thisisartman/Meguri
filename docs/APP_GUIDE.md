@@ -12,7 +12,7 @@ Line numbers follow the working copy as checked on 2026-11-09: commit `c5e5a75` 
 - Where a text has a singular and a plural form, both are given ("%d photo" / "%d photos"), or the guide writes "(s)" to stand for both.
 - Quoted examples such as "86 Station stamps · 48 Manhole cards" show how filled-in text looks; they are not fixed strings.
 - Source references have the form `path:line`. A path that does not start with `app/` is relative to `app/src/main/java/io/github/thisisartman/collectibles/`. For example `ui/App.kt:205` means `app/src/main/java/io/github/thisisartman/collectibles/ui/App.kt`, line 205.
-- Pictures were taken from the 0.5 development build on a phone in light theme; the moving pictures are from 0.4.0 in dark theme, with the owner's own collection; the moving pictures show taps that were cancelled or undone, so nothing in the collection changed.
+- Pictures were taken from the 0.5 development build on a phone in light theme; the moving pictures are from 0.4.0 in dark theme, with a real collection; they show taps that were cancelled or undone, so nothing in the collection changed.
 - "Not confirmed from code" marks something the code does not settle, or that would need a test on a phone.
 - A dash shown as a value (no date) is the string `no_date`.
 
