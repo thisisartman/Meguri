@@ -1,7 +1,7 @@
 name: Report availability
 description: Something is sold out, back again, has new hours, or isn't handed out any more
 title: "[Availability] "
-labels: ["data", "availability", "needs confirmation"]
+labels: ["catalogue", "availability", "needs confirmation"]
 body:
   - type: input
     id: item

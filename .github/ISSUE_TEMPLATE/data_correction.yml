@@ -1,7 +1,7 @@
 name: Correct something
 description: A card, stamp, station or place in Meguri has the wrong details
 title: "[Correction] "
-labels: ["data", "correction", "needs confirmation"]
+labels: ["catalogue", "correction", "needs confirmation"]
 body:
   - type: markdown
     attributes:

@@ -39,6 +39,16 @@ You can follow every report on the [project board](https://github.com/users/this
 
 The catalogue and the offline maps are built by the scripts in `tools/`, and [docs/CSV_FORMAT.md](docs/CSV_FORMAT.md) describes the format.
 
+## Labels
+
+Issues are sorted with a few labels, so you can find what you're interested in:
+
+- **What it is:** `bug`, `enhancement` (a new feature or an improvement), `catalogue` (places, cards, stamps and their details), `documentation`
+- **Catalogue reports:** `new place`, `availability`, `correction`, and their state, `needs confirmation` or `confirmed`
+- **Where in the app:** `area: nearby`, `area: map`, `area: my book`, `area: trip`, `area: scan`, `area: alerts`, `area: photos`, `area: backup`, `area: settings`, `area: catalogue data`, `area: repo`
+- **Planning:** `roadmap` for planned work, and a milestone for the version it's aimed at
+- **Want to help?** Look for `help wanted` and `good first issue`
+
 ## Translations
 
 Meguri is in English and Japanese (`app/src/main/res/values` and `values-ja`). If something in the Japanese reads oddly, a pull request or an issue is very welcome.

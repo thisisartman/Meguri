@@ -1,7 +1,7 @@
 name: Add a place or a collectible
 description: A new spot, or something new to collect at a place Meguri already knows
 title: "[Add] "
-labels: ["data", "new place", "needs confirmation"]
+labels: ["catalogue", "new place", "needs confirmation"]
 body:
   - type: markdown
     attributes:
