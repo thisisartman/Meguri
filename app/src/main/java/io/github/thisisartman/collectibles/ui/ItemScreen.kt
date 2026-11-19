@@ -110,12 +110,30 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
                 }
                 // Remove (owner, 2026-11-09): an item you added goes entirely; a catalogue item leaves your collection
                 val own = r?.item?.origin == io.github.thisisartman.collectibles.data.Origin.USER
-                if (r != null && (own || r.collected)) Box {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                if (r != null) Box {
                     IconButton(onClick = { more = true }) {
                         Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_more_vert), contentDescription = stringResource(R.string.more_options))
                     }
                     androidx.compose.material3.DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
-                        androidx.compose.material3.DropdownMenuItem(
+                        // Catalogue reports (0.6, #1): the form on GitHub opens with this item filled in
+                        listOf(
+                            io.github.thisisartman.collectibles.data.CatalogueReport.Kind.AVAILABILITY to R.string.report_availability,
+                            io.github.thisisartman.collectibles.data.CatalogueReport.Kind.CORRECTION to R.string.report_correction,
+                            io.github.thisisartman.collectibles.data.CatalogueReport.Kind.ADD to R.string.report_add,
+                        ).forEach { (kind, label) ->
+                            androidx.compose.material3.DropdownMenuItem(
+                                text = { Text(stringResource(label)) },
+                                onClick = {
+                                    more = false
+                                    vm.log.i("Report", "Opened the ${kind.name.lowercase()} form")
+                                    runCatching {
+                                        context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(io.github.thisisartman.collectibles.data.CatalogueReport.url(kind, r.item))))
+                                    }
+                                },
+                            )
+                        }
+                        if (own || r.collected) androidx.compose.material3.DropdownMenuItem(
                             text = { Text(stringResource(if (own) R.string.item_remove else R.string.item_remove_collection)) },
                             onClick = { more = false; confirmItem = true },
                         )
