@@ -21,7 +21,7 @@ Like any server, these see your IP address when Meguri connects.
 
 ## Feedback
 
-"Send feedback" (Settings › Help and about) opens your own mail app with a message to the developer. You see everything before it is sent: your note, the screenshots you picked, the app version and phone model, and the app's log only if you tick it. Nothing is sent unless you press Send in your mail app.
+"Send feedback" (Settings › Help and about) opens your own mail app with a message to the developer. You see everything before it is sent: your note, the screenshots you picked, the app version, Android version and phone model, and the app's log (untick "Include the app log" to leave it out). Nothing is sent unless you press Send in your mail app.
 
 ## Permissions
 
@@ -29,8 +29,9 @@ Like any server, these see your IP address when Meguri connects.
 |---|---|
 | Location (while in use; all the time only if you turn on alerts) | Distances, Nearby, and alerts when you pass something you still need |
 | Notifications | Those alerts |
-| Photos (optional) | Adding photos from your gallery, and reading where a shared photo was taken |
-| Internet | The services above |
+| Run in the background (location service) and start at boot | Keeping alerts working with the app closed and after the phone restarts, only while alerts are on |
+| Photos and photo location (optional) | Adding photos from your gallery, and reading where a photo was taken |
+| Internet and network state | The services above (network state is how the map library sees whether you are online) |
 
 ## Backups
 
