@@ -2,18 +2,22 @@
 
 All notable changes to Meguri are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.6.0] - 2026-11-20
+
+The first public test version.
 
 ### Added
-- Project pages for contributors: a README with download link and the signing certificate to check an APK, a Japanese summary, contributing, privacy and security guides, issue forms (bug, feature, catalogue correction) and store text with screenshots in English and Japanese.
+- Weekly backup asks where: a folder, one file (Google Drive and other cloud apps, replaced each week), or your own server (Nextcloud or any WebDAV, HTTPS).
+- Restore from your server.
+- Report availability, a correction or something new from an item's ⋮ menu.
 
 ### Changed
-- Privacy page lists region downloads with the other online services, and names every permission the app uses.
-- Send feedback and Edit: Send, Cancel and Save stay on screen above the keyboard; the form scrolls under them.
+- Send, Cancel and Save stay on screen above the keyboard.
+- The Privacy page lists every online service and permission.
 
 ### Fixed
-- Something you added (a Place, a stamp) now goes under its prefecture in My book, found from its position, instead of "No prefecture". Items added earlier are sorted the next time the app opens.
-- A map already on screen when a map download finished (such as My book's small map) now redraws from the new map files.
+- Places you add go under their prefecture in My book.
+- Maps redraw after a map download.
 
 ## [0.5.0] - 2026-11-15
 
@@ -163,4 +167,5 @@ All notable changes to Meguri are listed here. The format follows [Keep a Change
 - Large text: distances, titles and labels stay visible.
 - Removing a "had before the app" mark asks first.
 
+[0.6.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.6.0
 [0.5.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.5.0

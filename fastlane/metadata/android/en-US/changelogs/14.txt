@@ -1,0 +1,3 @@
+Back up to Google Drive (one file, replaced weekly) or your own Nextcloud or WebDAV server, and restore from it.
+Report availability, a correction or something new from an item's page.
+Fixes: places you add go under their prefecture, maps redraw after a download, Send and Save stay above the keyboard.

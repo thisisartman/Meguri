@@ -34,32 +34,19 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in 0.5.0", "0.5.0の新機能",
+            "New in 0.6.0", "0.6.0の新機能",
             listOf(
-                "Regions: each prefecture is its own download (Settings, Catalogue, Regions): its cards and stamps, and an offline map if you want one. The app itself is much smaller" to "地域：都道府県ごとにダウンロード（設定 › カタログ › 地域）。カード・スタンプと、必要ならオフライン地図。アプリ本体はかなり小さくなりました",
-                "Places: for a spot with several things to collect, like a mountain with a stamp and a goshuin. Add one with Add, Category, Place" to "スポット：スタンプと御朱印がある山など、いくつも集められる場所に。追加 › カテゴリー › スポット",
-                "Change type: the pencil on something you added has a Type row (a station stamp can become a Place; photos stay)" to "種類の変更：自分で追加したものの鉛筆ボタンに「種類」。駅スタンプをスポットに変えられます（写真はそのまま）",
-                "Opening hours: Open now, Opens at or Closed today, with holidays and the closed-Monday rule; Trip warns about closed stops" to "営業時間：営業中・何時から・本日休みを表示。祝日と月曜休みのルールにも対応。旅程では休みの場所をお知らせ",
-                "Send feedback: a note and screenshots by email (Settings, Help and about)" to "フィードバック：メモとスクリーンショットをメールで（設定 › ヘルプと情報）",
-                "One station page: a station's stamp and its Ekitag together, each with its own Collect" to "駅のページを1つに：駅スタンプとエキタグを一緒に。それぞれ「集めた」ボタン付き",
-            ),
-        ),
-        Section(
-            "Better", "改善",
-            listOf(
-                "Scan: a misread card code offers the closest cards and Type code" to "スキャン：読み違えたカード番号には近いカードと入力を提案",
-                "Map: category icons when zoomed out, pictures up close, road numbers on the offline map, smoother groups" to "地図：縮小時はカテゴリーのアイコン、拡大で写真。オフライン地図に道路番号。グループの動きもなめらかに",
-                "Motion: pages and steps slide and fade instead of jumping" to "動き：ページや手順が急に切り替わらず、スライド・フェードします",
-                "Ekitag pictures: a saved stamp image becomes the whole stamp on its tile" to "エキタグの画像：保存したスタンプ画像がタイルいっぱいに表示されます",
-                "My book: started prefectures and lines first" to "マイブック：集め始めた都道府県・路線を先頭に",
+                "Backups to Google Drive: Weekly backup, Where, One file. Replaced each week" to "Googleドライブにバックアップ：毎週のバックアップ › 保存先 › 1つのファイル。毎週上書き",
+                "Backups to your own server: Nextcloud or any WebDAV, and restore from it" to "自分のサーバーにバックアップ：NextcloudやWebDAV。そこから復元も",
+                "Report from an item's page: availability, a correction, or something new (the ⋮ menu)" to "詳細ページから報告：配布状況、修正、新しいもの（⋮メニュー）",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "Card pictures: the site's \"image coming soon\" picture is no longer kept as a card" to "カード画像：サイトの「画像準備中」をカード画像として保存しません",
-                "A card's code shows once on its page" to "カードのページで番号が二重に表示されなくなりました",
-                "Your collection, photos and edits carry over unchanged" to "コレクション・写真・編集内容はそのまま引き継がれます",
+                "Places you add go under their prefecture" to "追加したスポットが都道府県の下に入ります",
+                "Maps redraw after a map download" to "地図のダウンロード後に地図が描き直されます",
+                "Send and Save stay on screen above the keyboard" to "送信・保存ボタンがキーボードの上に表示されたままに",
             ),
         ),
     )
