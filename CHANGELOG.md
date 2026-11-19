@@ -1,5 +1,8 @@
 # Changelog
 
+## Next
+- Send feedback and Edit: Send, Cancel and Save stay on screen above the keyboard; the form scrolls under them.
+
 ## 0.5.0 (stable, 2026-11-15, sent to the owner on Telegram 19:25; upgrade from beta.9 rehearsed with the owner's real backup)
 - Updating from 0.4.0 keeps everything: same database (no migration), the built-in map keeps working until each prefecture's map is downloaded, then the old 100 MB copy is removed; Regions marks prefectures already on the phone. What's new written for 0.5.0. The app is 28 MB (0.4.0 was 134 MB).
 
