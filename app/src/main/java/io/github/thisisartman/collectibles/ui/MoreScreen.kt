@@ -345,6 +345,46 @@ fun MoreScreen(
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) { vm.auto.enable(uri); autoTick++ }
     }
+    // One file, replaced each week: how Google Drive works through Android's own picker (0.6)
+    val pickFile = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) { vm.auto.enableFile(uri); autoTick++ }
+    }
+    var askWhere by remember { mutableStateOf(false) }
+    var editServer by remember { mutableStateOf(false) }
+    if (askWhere) WhereDialog(
+        onPick = { w ->
+            askWhere = false
+            when (w) {
+                AutoBackup.Where.FOLDER -> pickFolder.launch(STARTING_FOLDER)
+                AutoBackup.Where.FILE -> pickFile.launch(if (BuildConfig.DEBUG) "meguri-dev-backup.zip" else "meguri-backup.zip")
+                AutoBackup.Where.SERVER -> editServer = true
+            }
+        },
+        onDismiss = { askWhere = false },
+    )
+    if (editServer) ServerDialog(
+        saved = remember { vm.auto.server.login },
+        onSaved = { login -> vm.auto.server.save(login); vm.auto.enableServer(); editServer = false; autoTick++ },
+        onRemove = if (vm.auto.server.address != null) ({
+            if (vm.auto.where == AutoBackup.Where.SERVER) vm.auto.disable()
+            vm.auto.server.forget(); editServer = false; autoTick++
+        }) else null,
+        onDismiss = { editServer = false },
+    )
+    val noServerBackups = stringResource(R.string.restore_server_none)
+    fun restoreFromServer() {
+        vm.run {
+            runCatching {
+                val newest = vm.auto.serverBackups().firstOrNull()
+                if (newest == null) { vm.work.say(noServerBackups); return@run }
+                val uri = vm.auto.downloadFromServer(newest.name)
+                PendingRestore(vm.restore.inspect(uri), vm.restore.currentCounts())
+            }.onSuccess { pendingRestore = it }.onFailure {
+                vm.log.w("Restore", "Server restore refused: ${it.javaClass.simpleName}")
+                vm.work.say(if (it is BackupError) notBackup else restoreFailed)
+            }
+        }
+    }
 
     // The worker runs in the background: redraw the status line when it finishes.
     DisposableEffect(Unit) {
@@ -370,11 +410,16 @@ fun MoreScreen(
     // file pickers above stay here, so each section's rows work exactly as before.
     var section by rememberSaveable { mutableStateOf<String?>(null) }
     androidx.activity.compose.BackHandler(enabled = section != null) { section = parentOf(section) }
-    val autoOn = remember(autoTick) { vm.auto.folder != null }
+    val autoWhere = remember(autoTick) { vm.auto.where }
+    val autoOn = autoWhere != null
     val autoLast = remember(autoTick) { vm.auto.lastSuccessMs }
     val autoFailed = remember(autoTick) { vm.auto.lastFailed }
+    val autoProblem = remember(autoTick) { vm.auto.lastProblem }
     val autoSub = when {
         !autoOn -> stringResource(R.string.more_auto_sub_off)
+        autoFailed && autoProblem == "login" -> stringResource(R.string.auto_failed_login)
+        autoFailed && autoProblem == "certificate" -> stringResource(R.string.auto_failed_certificate)
+        autoFailed && autoProblem == "offline" -> stringResource(R.string.auto_failed_offline)
         autoFailed -> stringResource(R.string.more_auto_sub_failed)
         else -> autoLast?.let { stringResource(R.string.more_auto_sub_last, dateTimeText(it)) }
             ?: stringResource(R.string.more_auto_sub_on)
@@ -552,10 +597,13 @@ fun MoreScreen(
                 // Its own choice each time, not the weekly backup's "Include photos" (finding 31)
                 MoreRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub)) { askBackup = true }
                 SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
-                    if (on) pickFolder.launch(STARTING_FOLDER) else { vm.auto.disable(); autoTick++ }
+                    if (on) askWhere = true else { vm.auto.disable(); autoTick++ }
                 }
                 MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
+                }
+                if (remember(autoTick) { vm.auto.server.address } != null) {
+                    MoreRow(stringResource(R.string.restore_server), stringResource(R.string.restore_server_sub)) { restoreFromServer() }
                 }
                 if (relinkPending) {
                     MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
@@ -579,23 +627,39 @@ fun MoreScreen(
             }
             S_WEEKLY -> {
                 ToggleRow(stringResource(R.string.more_auto), stringResource(R.string.weekly_explain), autoOn) { on ->
-                    if (on) pickFolder.launch(STARTING_FOLDER) else { vm.auto.disable(); autoTick++ }
+                    if (on) askWhere = true else { vm.auto.disable(); autoTick++ }
                 }
                 if (autoOn) {
-                    val folderName = remember(autoTick) {
-                        vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
+                    val whereName = remember(autoTick) {
+                        when (vm.auto.where) {
+                            AutoBackup.Where.FOLDER -> vm.auto.folder?.let { androidx.documentfile.provider.DocumentFile.fromTreeUri(context, it)?.name }
+                            AutoBackup.Where.FILE -> vm.auto.file?.let { androidx.documentfile.provider.DocumentFile.fromSingleUri(context, it)?.name }
+                            AutoBackup.Where.SERVER -> vm.auto.server.address?.let { android.net.Uri.parse(it).host }
+                            null -> null
+                        }
                     }
-                    MoreRow(stringResource(R.string.weekly_folder), folderName ?: "?") { pickFolder.launch(STARTING_FOLDER) }
+                    val whereLabel = when (autoWhere) {
+                        AutoBackup.Where.FILE -> R.string.where_file
+                        AutoBackup.Where.SERVER -> R.string.where_server
+                        else -> R.string.where_folder
+                    }
+                    MoreRow(stringResource(R.string.where_row), stringResource(whereLabel) + " · " + (whereName ?: "?")) {
+                        askWhere = true
+                    }
                     var photos by remember { mutableStateOf(vm.auto.includePhotos) }
                     ToggleRow(stringResource(R.string.weekly_photos), stringResource(R.string.weekly_photos_sub), photos) {
                         photos = it; vm.auto.includePhotos = it; autoTick++
                     }
-                    SectionTitle(stringResource(R.string.weekly_keep))
-                    var keep by remember { mutableStateOf(vm.auto.keep) }
-                    Choice(AutoBackup.KEEP_CHOICES.map { stringResource(R.string.weekly_keep_n, it) }, AutoBackup.KEEP_CHOICES.indexOf(keep)) {
-                        keep = AutoBackup.KEEP_CHOICES[it]; vm.auto.keep = keep
+                    if (autoWhere == AutoBackup.Where.FILE) {
+                        Note(stringResource(R.string.where_file_note))
+                    } else {
+                        SectionTitle(stringResource(R.string.weekly_keep))
+                        var keep by remember { mutableStateOf(vm.auto.keep) }
+                        Choice(AutoBackup.KEEP_CHOICES.map { stringResource(R.string.weekly_keep_n, it) }, AutoBackup.KEEP_CHOICES.indexOf(keep)) {
+                            keep = AutoBackup.KEEP_CHOICES[it]; vm.auto.keep = keep
+                        }
+                        Note(stringResource(R.string.weekly_keep_sub))
                     }
-                    Note(stringResource(R.string.weekly_keep_sub))
                     val startedText = stringResource(R.string.weekly_started)
                     MoreRow(stringResource(R.string.more_auto_now), autoSub) {
                         vm.auto.runNow()

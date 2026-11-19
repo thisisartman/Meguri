@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Backup places (0.6): folder, one file (Google Drive), server (WebDAV) -->
+<resources>
+    <string name="where_title">Where?</string>
+    <string name="where_row">Where</string>
+    <string name="where_folder">Folder</string>
+    <string name="where_folder_sub">On this phone</string>
+    <string name="where_file">One file</string>
+    <string name="where_file_sub">Google Drive and other cloud apps. Replaced each week.</string>
+    <string name="where_server">Server</string>
+    <string name="where_server_sub">Nextcloud or any WebDAV</string>
+    <string name="where_file_note">One copy, replaced each week.</string>
+    <string name="server_title">Server</string>
+    <string name="server_address">Address</string>
+    <string name="server_address_hint">https://cloud.example.com/remote.php/dav/files/you/Meguri</string>
+    <string name="server_user">User name</string>
+    <string name="server_password">Password</string>
+    <string name="server_note">Use an app password if your account has two-step sign-in.</string>
+    <string name="server_connect">Connect</string>
+    <string name="server_remove">Remove</string>
+    <string name="server_err_https">Use an https:// address.</string>
+    <string name="server_err_address">Check the address.</string>
+    <string name="server_err_login">Wrong user name or password.</string>
+    <string name="server_err_folder">Folder not found. Check the address.</string>
+    <string name="server_err_offline">Couldn\'t reach the server.</string>
+    <string name="server_err_other">The server said no (%1$d).</string>
+    <string name="trust_title">Trust this server?</string>
+    <string name="trust_body">Its certificate isn\'t signed by anyone your phone knows, which is normal for a home server. Only trust it if this fingerprint matches your server\'s.</string>
+    <string name="trust_ok">Trust</string>
+    <string name="auto_failed_login">Last backup failed: wrong user name or password.</string>
+    <string name="auto_failed_certificate">Last backup failed: the server\'s certificate changed.</string>
+    <string name="auto_failed_offline">Couldn\'t reach the server. Trying again later.</string>
+    <string name="restore_server">Restore from server</string>
+    <string name="restore_server_sub">The newest backup on your server</string>
+    <string name="restore_server_none">No backups on the server yet.</string>
+</resources>
