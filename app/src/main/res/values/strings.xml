@@ -110,10 +110,10 @@
     <string name="more_relink">Find my photos again</string>
     <string name="more_relink_sub">Needs access to all photos, to match them to your finds.</string>
     <string name="more_auto">Weekly backup</string>
-    <string name="more_auto_sub_off">Off. Turn it on to choose a folder.</string>
+    <string name="more_auto_sub_off">Off</string>
     <string name="more_auto_sub_on">On. The first backup is on its way.</string>
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
-    <string name="more_auto_sub_failed">The last backup failed. Tap to pick the folder again.</string>
+    <string name="more_auto_sub_failed">The last backup failed. Tap to choose where again.</string>
     <string name="more_auto_now">Back up now</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
@@ -565,7 +565,7 @@
         <item quantity="one">%1$d photo can no longer be found.</item>
         <item quantity="other">%1$d photos can no longer be found.</item>
     </plurals>
-    <string name="weekly_explain">Once a week Meguri saves a backup to a folder you choose, and keeps the last few.</string>
+    <string name="weekly_explain">Once a week Meguri saves a backup where you choose.</string>
     <string name="weekly_folder">Folder</string>
     <string name="weekly_photos">Include photos</string>
     <string name="weekly_photos_sub">Bigger files, and the photos come back on a new phone</string>

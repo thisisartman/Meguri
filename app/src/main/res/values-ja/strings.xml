@@ -110,10 +110,10 @@
     <string name="more_relink">写真をもう一度探す</string>
     <string name="more_relink_sub">記録と写真を照合するため、すべての写真へのアクセスが必要です。</string>
     <string name="more_auto">毎週のバックアップ</string>
-    <string name="more_auto_sub_off">オフ。オンにするとフォルダーを選べます。</string>
+    <string name="more_auto_sub_off">オフ</string>
     <string name="more_auto_sub_on">オン。最初のバックアップを準備中です。</string>
     <string name="more_auto_sub_last">オン。前回のバックアップ：%1$s</string>
-    <string name="more_auto_sub_failed">前回のバックアップに失敗しました。タップしてフォルダを選び直してください。</string>
+    <string name="more_auto_sub_failed">前回のバックアップに失敗しました。タップして保存先を選び直してください。</string>
     <string name="more_auto_now">今すぐバックアップ</string>
     <string name="more_import">カタログを読み込む（CSV）</string>
     <string name="more_import_sub">項目と路線を追加・更新します。記録は削除されません。</string>
@@ -553,7 +553,7 @@
     <plurals name="photos_missing">
         <item quantity="other">%1$d枚の写真が見つかりません。</item>
     </plurals>
-    <string name="weekly_explain">週に一度、選んだフォルダーにバックアップを保存し、最新のいくつかを残します。</string>
+    <string name="weekly_explain">週に一度、選んだ保存先にバックアップを保存します。</string>
     <string name="weekly_folder">フォルダー</string>
     <string name="weekly_photos">写真を含める</string>
     <string name="weekly_photos_sub">ファイルは大きくなりますが、新しいスマホで写真も戻ります</string>
