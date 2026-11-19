@@ -1,0 +1,39 @@
+name: Report availability
+description: Something is sold out, back again, has new hours, or isn't handed out any more
+title: "[Availability] "
+labels: ["data", "availability", "needs confirmation"]
+body:
+  - type: input
+    id: item
+    attributes:
+      label: Which item?
+      description: Its name as shown in Meguri, and its code if it has one.
+      placeholder: Nagaoka · Kawagutchi (15-202-C001)
+    validations:
+      required: true
+  - type: dropdown
+    id: status
+    attributes:
+      label: What changed?
+      options:
+        - Out of stock for now
+        - Back in stock
+        - New opening hours or closed days
+        - Moved to a different counter or building
+        - No longer handed out
+        - A new edition or design
+        - Something else
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: What it is now, for example the new hours or where it moved to.
+  - type: input
+    id: seen
+    attributes:
+      label: When did you see this?
+      description: The date you were there, or a link to an official notice.
+    validations:
+      required: true

@@ -3,6 +3,9 @@ contact_links:
   - name: How to use Meguri
     url: https://github.com/thisisartman/Meguri/blob/testing/docs/APP_GUIDE.md
     about: The guide to every page and feature, with screenshots.
+  - name: See what's planned
+    url: https://github.com/thisisartman/Meguri/blob/testing/ROADMAP.md
+    about: The roadmap, with an issue for each item.
   - name: Report a security problem
     url: https://github.com/thisisartman/Meguri/security/advisories/new
     about: Please report security problems privately, not as an issue.

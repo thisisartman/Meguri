@@ -15,7 +15,7 @@ Meguri only connects to the internet when you use a feature that needs it, and o
 | [GitHub](https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement) | Opening Regions or downloading one | The list of regions and the files you choose, from [meguri-data](https://github.com/thisisartman/meguri-data) |
 | [Eki kara Manhole](https://ekikaramanhole.whitebeach.org/) | Downloading card pictures | The codes of the cards |
 | [Google Maps](https://policies.google.com/privacy) | Getting directions, or pasting a Google Maps link into Trip | The place you open (a pasted link is opened once to see where it leads) |
-| [Google Play services](https://policies.google.com/privacy) | Your position for alerts, and the card scanner | This is handled on your phone by Play services |
+| [Google Play services](https://policies.google.com/privacy) | Your position, and the card scanner | Handled on your phone by Play services. Whether Google's location service is used to improve your position depends on your phone's own location settings, not on Meguri |
 
 As with any website, these services can see your IP address when Meguri connects to them.
 

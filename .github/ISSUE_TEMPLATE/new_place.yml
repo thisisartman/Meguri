@@ -1,0 +1,70 @@
+name: Add a place or a collectible
+description: A new spot, or something new to collect at a place Meguri already knows
+title: "[Add] "
+labels: ["data", "new place", "needs confirmation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping the catalogue grow! Once someone else confirms it (a 👍 or a comment saying they've seen it too), it goes into the next region data update.
+  - type: dropdown
+    id: what
+    attributes:
+      label: What are you adding?
+      options:
+        - A new place with something to collect
+        - Something new at a place already in Meguri
+    validations:
+      required: true
+  - type: dropdown
+    id: type
+    attributes:
+      label: What can you collect there?
+      multiple: true
+      options:
+        - Manhole card
+        - Station stamp
+        - Ekitag
+        - Goshuin
+        - Dam card
+        - Roadside station stamp
+        - Museum stamp
+        - Something else (say what below)
+    validations:
+      required: true
+  - type: input
+    id: place
+    attributes:
+      label: Place name
+      description: As it's written there, in Japanese if you can, and in English if you know it.
+      placeholder: 八海山ロープウェー (Hakkaisan Ropeway)
+    validations:
+      required: true
+  - type: input
+    id: where
+    attributes:
+      label: Where is it?
+      description: An address, a Google Maps or OpenStreetMap link, or the prefecture and town.
+      placeholder: https://maps.app.goo.gl/...  or  Minamiuonuma, Niigata
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Details
+      description: Where exactly it's handed out (counter, ticket gate, shop), opening hours, price, closed days, anything that helps the next person find it.
+      placeholder: |
+        Stamp at the ticket office, 9:00–17:00, closed Wednesdays.
+        Goshuin at the shrine office, 500 yen.
+  - type: input
+    id: seen
+    attributes:
+      label: When did you see it, or where did you read about it?
+      description: The date you were there, or a link to an official page or announcement.
+    validations:
+      required: true
+  - type: textarea
+    id: photo
+    attributes:
+      label: Photo (optional)
+      description: A photo of the stamp, card or sign helps a lot. Please leave out people's faces and anything personal.

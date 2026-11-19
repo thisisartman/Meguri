@@ -1,36 +1,40 @@
-name: Catalogue correction
-description: A card, stamp, station or place is wrong, missing or has moved
-labels: ["data"]
+name: Correct something
+description: A card, stamp, station or place in Meguri has the wrong details
+title: "[Correction] "
+labels: ["data", "correction", "needs confirmation"]
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Something missing from Meguri? Use **Add a place or a collectible** instead. Sold out, new hours or no longer handed out? Use **Report availability**.
   - type: input
     id: item
     attributes:
-      label: Which item
+      label: Which item?
       description: Its name as shown in Meguri, and its code if it has one.
-      placeholder: Nagaoka · Albirex BB (15-202-C001)
+      placeholder: Nagaoka · Kawagutchi (15-202-C001)
     validations:
       required: true
   - type: dropdown
-    id: kind
+    id: problem
     attributes:
-      label: What is wrong
+      label: What's wrong?
       options:
-        - Wrong place or position
-        - Wrong opening hours
-        - Wrong name or picture
-        - No longer handed out
-        - Missing from Meguri
+        - It's in the wrong place on the map
+        - The name is wrong
+        - The picture is wrong
+        - The address or phone number is wrong
         - Something else
     validations:
       required: true
   - type: textarea
     id: details
     attributes:
-      label: What it should be
+      label: What should it be?
     validations:
       required: true
   - type: input
     id: source
     attributes:
-      label: Source
-      description: An official page or notice that shows the right information, or the date you saw it in person.
+      label: How do you know?
+      description: A link to an official page or notice, or the date you saw it in person.
