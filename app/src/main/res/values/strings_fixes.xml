@@ -8,9 +8,6 @@
     <string name="cards_remove_title">Remove card pictures?</string>
     <string name="cards_remove_text">The card pictures on this phone are removed. You can download them again later.</string>
     <string name="backup_now_sub">Saves a file with your finds, with or without photos</string>
-    <string name="backup_ask_text">Include your photos? The file is larger with them.</string>
-    <string name="backup_with_photos">With photos</string>
-    <string name="backup_without_photos">Without photos</string>
     <string name="nb_date">Date</string>
     <string name="nb_no_date">No date</string>
     <string name="nb_date_clear">Clear date</string>

@@ -43,19 +43,9 @@ fun MenuButton(nav: NavHostController, modifier: Modifier = Modifier) {
                 onClick = { open = false; nav.navigate("trip") },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.check_title)) },
-                leadingIcon = { Icon(Icons.Filled.Check, contentDescription = null) },
-                onClick = { open = false; nav.navigate("check") },
-            )
-            DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_settings)) },
                 leadingIcon = { Icon(Icons.Filled.Settings, contentDescription = null) },
                 onClick = { open = false; nav.openMore() },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.more_logs)) },
-                leadingIcon = { Icon(Icons.Filled.Build, contentDescription = null) },
-                onClick = { open = false; nav.navigate("logs") },
             )
         }
     }

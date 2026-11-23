@@ -114,7 +114,7 @@
     <string name="more_auto_sub_on">On. The first backup is on its way.</string>
     <string name="more_auto_sub_last">On. Last backup %1$s.</string>
     <string name="more_auto_sub_failed">The last backup failed. Tap to choose where again.</string>
-    <string name="more_auto_now">Back up now</string>
+    <string name="more_auto_now">Run the weekly backup now</string>
     <string name="more_import">Load catalogue (CSV)</string>
     <string name="more_import_sub">Adds or updates items and railway lines. Your finds are never removed.</string>
     <string name="more_import_done">Catalogue loaded: %1$d new, %2$d updated, %3$d railway lines</string>
@@ -708,4 +708,12 @@
     <string name="feedback_send">Send by email</string>
     <string name="feedback_no_mail_app">No mail app could open this. Install or set up a mail app and try again.</string>
     <string name="regions_builtin">Its cards and stamps are already on this phone, from the earlier version. Downloading keeps your finds and adds updates and the map.</string>
+    <string name="map_credits_title">Map data</string>
+    <string name="item_picture_open">Display picture, open</string>
+    <plurals name="no_stamp_count"><item quantity="one">%d has no stamp</item><item quantity="other">%d have no stamp</item></plurals>
+    <string name="filter_empty_have">Nothing collected here yet</string>
+    <string name="filter_empty_to_get">Everything here is collected</string>
+    <string name="backup_include_photos">Include photos</string>
+    <string name="backup_include_photos_sub">The file is larger with them</string>
+    <string name="backup_save">Save</string>
 </resources>

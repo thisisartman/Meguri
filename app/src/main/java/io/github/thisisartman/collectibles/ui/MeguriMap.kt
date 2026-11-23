@@ -1,6 +1,10 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.fillMaxSize
 import android.graphics.Color as AColor
 import android.os.Bundle
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -159,12 +163,9 @@ fun MeguriMap(
             m.uiSettings.apply {
                 isScrollGesturesEnabled = interactive; isZoomGesturesEnabled = interactive
                 isRotateGesturesEnabled = false; isTiltGesturesEnabled = false
-                isAttributionEnabled = true; isLogoEnabled = false
-                // The map's credit button sat bottom-left under the Nearby sheet (2026-11-07 review): put it top left,
-                // just under the search bar, where it can be seen and tapped
-                val d = context.resources.displayMetrics.density
-                attributionGravity = android.view.Gravity.TOP or android.view.Gravity.START
-                setAttributionMargins((16 * d).toInt(), (128 * d).toInt(), 0, 0)
+                // The library's credit button was 21 dp and its dialog was titled "MapLibre Android" (#152): the map
+                // draws its own 48 dp button instead, top left under the search bar, opening "Map data"
+                isAttributionEnabled = false; isLogoEnabled = false
             }
             val builder = offlineStyle?.let { Style.Builder().fromJson(it) } ?: Style.Builder().fromUri(if (dark) STYLE_DARK else STYLE_LIGHT)
             m.setStyle(builder) { s ->
@@ -468,7 +469,10 @@ fun MeguriMap(
         val h = here ?: return@LaunchedEffect
         m.animateCamera(CameraUpdateFactory.newLatLngZoom(LatLng(h.first, h.second), 15.0), 600)
     }
-    AndroidView(factory = { mapView }, modifier = modifier)
+    androidx.compose.foundation.layout.Box(modifier) {
+        AndroidView(factory = { mapView }, modifier = Modifier.fillMaxSize())
+        if (interactive && !inCard) MapCreditsButton(Modifier.align(androidx.compose.ui.Alignment.TopStart).padding(start = 4.dp, top = 116.dp))
+    }
 }
 
 /** Cameras kept while the app runs, by map name, so going to another page and back does not move the map. */
@@ -527,4 +531,40 @@ private fun flatten(s: Style, land: Int, water: Int, roads: Pair<Int, Int>? = nu
                 l.setProperties(PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
         }
     }
+}
+
+/** The map's credits (#152): OpenStreetMap's data and the tiles, one tap away on every full map, at 48 dp. */
+@Composable
+private fun MapCreditsButton(modifier: Modifier) {
+    var open by remember { mutableStateOf(false) }
+    val context = LocalContext.current
+    androidx.compose.material3.IconButton(onClick = { open = true }, modifier = modifier) {
+        androidx.compose.material3.Icon(
+            androidx.compose.material.icons.Icons.Outlined.Info,
+            contentDescription = androidx.compose.ui.res.stringResource(io.github.thisisartman.collectibles.R.string.map_credits_title),
+            tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+    if (open) androidx.compose.material3.AlertDialog(
+        onDismissRequest = { open = false },
+        title = { androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(io.github.thisisartman.collectibles.R.string.map_credits_title)) },
+        text = {
+            androidx.compose.foundation.layout.Column {
+                listOf(
+                    "© OpenStreetMap contributors" to "https://www.openstreetmap.org/copyright",
+                    "OpenFreeMap" to "https://openfreemap.org",
+                    "Protomaps" to "https://protomaps.com",
+                ).forEach { (name, url) ->
+                    androidx.compose.material3.TextButton(onClick = { openLink(context, url) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                        androidx.compose.material3.Text(name)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = { open = false }) {
+                androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(android.R.string.ok))
+            }
+        },
+    )
 }

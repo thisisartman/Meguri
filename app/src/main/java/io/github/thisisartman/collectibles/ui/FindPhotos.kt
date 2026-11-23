@@ -115,7 +115,11 @@ private val LocalSlot = androidx.compose.runtime.compositionLocalOf { 96.dp }
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null, shownUri: String? = null) {
+fun ItemPhotos(
+    type: ItemType, photos: List<Photo>, actions: FindPhotoActions, coverId: String? = null, shownUri: String? = null,
+    // A station without an Ekitag has no Ekitag screenshot slot (#153), unless one was added before
+    hasEkitag: Boolean = true,
+) {
     var adding by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Photo?>(null) }
     var fullscreen by remember { mutableStateOf<String?>(null) }
@@ -124,8 +128,8 @@ fun ItemPhotos(type: ItemType, photos: List<Photo>, actions: FindPhotoActions, c
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) actions.pickPhoto(uri, pendingKind)
     }
-    val kinds = photoKinds(type)
     val sorted = photos.sortedBy { it.createdAt }
+    val kinds = photoKinds(type).filter { k -> k != PhotoKind.EKITAG || hasEkitag || sorted.any { sameKind(it.role, k, type) } }
     // One square per kind (the first photo of that kind, or empty), then the rest of the photos, then "Other"
     val slots: List<Pair<String, Photo?>> = kinds.map { k -> k to sorted.firstOrNull { sameKind(it.role, k, type) } }
     val shown = slots.mapNotNull { it.second }.map { it.id }.toSet()

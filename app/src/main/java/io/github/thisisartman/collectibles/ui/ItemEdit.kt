@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.draw.clip
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -98,8 +100,19 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
             Field(stringResource(R.string.edit_notes), notes, single = false) { notes = it }
 
             Text(stringResource(R.string.edit_position), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleSmall)
-            Text(
-                if (lat != null && lng != null) String.format(Locale.US, "%.5f, %.5f", lat, lng) else stringResource(R.string.edit_position_none),
+            val la = lat; val ln = lng
+            if (la != null && ln != null) {
+                // Where the pin is, as a small map (#154: it was "37.95116, 139.12404"); redrawn when it moves
+                androidx.compose.runtime.key(la, ln) {
+                    MeguriMap(
+                        listOf(MapPin(item.id, la, ln, item.type, collected = false)), null,
+                        Modifier.fillMaxWidth().height(140.dp).padding(top = 6.dp)
+                            .clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)),
+                        interactive = false, inCard = true,
+                    )
+                }
+            } else Text(
+                stringResource(R.string.edit_position_none),
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
@@ -110,7 +123,8 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
             ) { Text(stringResource(R.string.edit_use_here)) }
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 OutlinedTextField(link, { link = it }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.edit_link)) })
-                TextButton(
+                Spacer(Modifier.width(8.dp))
+                androidx.compose.material3.FilledTonalButton(
                     enabled = link.isNotBlank(),
                     onClick = { scope.launch { vm.positionFromLink(link, ja)?.let { lat = it.first; lng = it.second; message = null } ?: run { message = noLink } } },
                     modifier = Modifier.heightIn(min = 48.dp),
@@ -118,7 +132,8 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
             }
             Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
                 OutlinedTextField(query, { query = it }, Modifier.weight(1f), singleLine = true, label = { Text(stringResource(R.string.edit_search)) })
-                TextButton(
+                Spacer(Modifier.width(8.dp))
+                androidx.compose.material3.FilledTonalButton(
                     enabled = query.isNotBlank(),
                     onClick = { scope.launch { hits = runCatching { vm.lookUpPlace(query, ja) }.getOrDefault(emptyList()); message = if (hits.isEmpty()) nothing else null } },
                     modifier = Modifier.heightIn(min = 48.dp),
