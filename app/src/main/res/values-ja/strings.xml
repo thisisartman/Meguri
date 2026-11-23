@@ -447,6 +447,10 @@
     <string name="cards_download">カードの画像</string>
     <string name="cards_download_sub">%2$d枚中%1$d枚がこの端末に。タップでカードのサイト（駅からマンホール）から残りを自分用にダウンロード。端末内だけに保存し、バックアップには含めません。画像の権利はGKPと各自治体にあります。</string>
     <string name="cards_progress">ダウンロード中 %1$d / %2$d…</string>
+    <string name="cards_done_ok">カードの画像：%1$d枚ダウンロードしました。</string>
+    <plurals name="cards_not_on_site">
+        <item quantity="other">%d枚はカードのサイトにまだ画像がありません。1週間後にもう一度確認します。</item>
+    </plurals>
     <string name="cards_done">カードの画像：%1$d枚ダウンロード。%2$d枚はダウンロードできませんでした。「カードの画像」をタップしてもう一度</string>
     <string name="cards_remove">カードの画像を削除</string>
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>

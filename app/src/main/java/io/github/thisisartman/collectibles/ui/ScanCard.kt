@@ -129,13 +129,18 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     val tips = remember { context.getSharedPreferences("tips", Context.MODE_PRIVATE) }
     var failed by remember { mutableStateOf(false) }
     var notReady by remember { mutableStateOf(false) }
-    // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background)
+    // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background). Off the
+    // main thread and after the first screen has settled: creating the reader loads ML Kit's classes, which held the
+    // main thread long enough at start for an "isn't responding" dialog on a slow device (#166)
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        runCatching {
-            val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
-            com.google.android.gms.common.moduleinstall.ModuleInstall.getClient(context).installModules(
-                com.google.android.gms.common.moduleinstall.ModuleInstallRequest.newBuilder().addApi(recognizer).build(),
-            )
+        kotlinx.coroutines.delay(5_000)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching {
+                val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+                com.google.android.gms.common.moduleinstall.ModuleInstall.getClient(context).installModules(
+                    com.google.android.gms.common.moduleinstall.ModuleInstallRequest.newBuilder().addApi(recognizer).build(),
+                )
+            }
         }
     }
     if (notReady) AlertDialog(
@@ -149,7 +154,9 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         scope.launch {
             val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
             val known = cards.mapNotNull { it.item.code }.toSet()
-            val reader = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            val reader = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            }
             // The scanner straightens the card but does not know which way is up: it came back upside down on the S23
             // (owner, 2026-11-09). Read it as it comes, then turned 180, 90 and 270 degrees; the turn that reads the
             // card code is the upright one, and the photo is saved that way up
@@ -273,7 +280,13 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             .build()
         GmsDocumentScanning.getClient(options).getStartScanIntent(activity)
             .addOnSuccessListener { launcher.launch(IntentSenderRequest.Builder(it).build()) }
-            .addOnFailureListener { failed = true }
+            // With Play services on the phone, a scanner that won't start is still downloading its module: say so,
+            // rather than that the phone lacks Play services (#139)
+            .addOnFailureListener {
+                val play = com.google.android.gms.common.GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) ==
+                    com.google.android.gms.common.ConnectionResult.SUCCESS
+                if (play) notReady = true else failed = true
+            }
     }
 
     if (reading) AlertDialog(

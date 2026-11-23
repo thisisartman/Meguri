@@ -157,7 +157,9 @@ private fun CardPicturesOffer(cards: List<ItemRow>, more: MoreViewModel = androi
     val codes = remember(cards) { cards.mapNotNull { it.item.code }.toSet() }
     val have by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsStateWithLifecycle()
     val progress by more.cardProgress.collectAsStateWithLifecycle()
-    val missing = codes.count { it !in have }
+    val none by io.github.thisisartman.collectibles.photo.CardPictures.none.collectAsStateWithLifecycle()
+    // Cards the site has no picture of yet aren't offered again for a week (#160)
+    val missing = remember(codes, have, none) { io.github.thisisartman.collectibles.photo.CardPictures.toFetch(codes).size }
     if (codes.isEmpty() || missing == 0) return
     val context = androidx.compose.ui.platform.LocalContext.current
     Surface(

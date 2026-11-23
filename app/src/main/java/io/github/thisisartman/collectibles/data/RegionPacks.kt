@@ -149,7 +149,7 @@ class RegionPacks @Inject constructor(
     private fun get(url: String): java.io.InputStream {
         val c = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 15_000; readTimeout = 30_000; instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "Meguri/${BuildConfig.VERSION_NAME} (Android)")
+            setRequestProperty("User-Agent", UserAgent.value)
         }
         check(c.responseCode == 200) { "HTTP ${c.responseCode} for $url" }
         return c.inputStream
