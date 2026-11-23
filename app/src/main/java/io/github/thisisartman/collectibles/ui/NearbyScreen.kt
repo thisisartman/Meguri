@@ -281,6 +281,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 }
                 if (noCatalogue || loadingRegions) {
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
+                    val partialText = stringResource(R.string.onb_load_partial)
                     OnboardingSheet(
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         // Region packs (0.5), with the catalogue inside the app as the fallback without a connection
@@ -290,7 +291,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         // Already have some: on to the picker of what you have (#81 O3). A load that did not finish
                         // says so and points to Regions, which shows what is missing (#134)
                         onFinished = { already, loaded ->
-                            if (!loaded) more.work.say(ctxOnb.getString(R.string.onb_load_partial))
+                            if (!loaded) more.work.say(partialText)
                             onboarding.step = if (already) OnboardingStep.HAVE else OnboardingStep.START
                         },
                         onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },
