@@ -65,7 +65,7 @@ private const val MORE = "more"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
 fun NavHostController.openMap(section: MapSection = MapSection.ALL, kind: String? = null) =
-    navigate("map/${section.name}" + (kind?.let { "?kind=" + android.net.Uri.encode(it) } ?: ""))
+    navigate("map/${section.name}" + (kind?.let { "?category=" + android.net.Uri.encode(it) } ?: ""))
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
 fun NavHostController.openTab(route: String) = navigate(route) {
     popUpTo(NEARBY) { saveState = true }
@@ -320,15 +320,15 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
                         Page { LineScreen(vm, id, nav, onBack = { nav.popBackStack() }) }
                     }
-                    composable("map/{section}?kind={kind}", listOf(navArgument("section") { type = NavType.StringType }, navArgument("kind") { type = NavType.StringType; nullable = true; defaultValue = null })) {
+                    composable("map/{section}?category={category}", listOf(navArgument("section") { type = NavType.StringType }, navArgument("category") { type = NavType.StringType; nullable = true; defaultValue = null })) {
                         val section = runCatching { MapSection.valueOf(it.arguments?.getString("section").orEmpty()) }.getOrDefault(MapSection.ALL)
-                        MapScreen(vm, nav, section, kind = it.arguments?.getString("kind"))
+                        MapScreen(vm, nav, section, kind = it.arguments?.getString("category"))
                     }
-                    composable("kind/{key}", listOf(navArgument("key") { type = NavType.StringType })) {
+                    composable("category/{key}", listOf(navArgument("key") { type = NavType.StringType })) {
                         Page { KindScreen(vm, it.arguments?.getString("key").orEmpty(), nav, onBack = { nav.popBackStack() }) }
                     }
-                    composable("group/{kind}/{group}", listOf(navArgument("kind") { type = NavType.StringType }, navArgument("group") { type = NavType.StringType })) {
-                        Page { GroupScreen(vm, it.arguments?.getString("kind").orEmpty(), it.arguments?.getString("group").orEmpty(), nav, onBack = { nav.popBackStack() }) }
+                    composable("group/{category}/{group}", listOf(navArgument("category") { type = NavType.StringType }, navArgument("group") { type = NavType.StringType })) {
+                        Page { GroupScreen(vm, it.arguments?.getString("category").orEmpty(), it.arguments?.getString("group").orEmpty(), nav, onBack = { nav.popBackStack() }) }
                     }
                     composable("share") {
                         Page {

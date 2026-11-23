@@ -450,8 +450,9 @@ fun MoreScreen(
     val catalogue by vm.catalogue.collectAsState()
     val customNames by vm.customNames.collectAsState()
     val findCount by vm.findCount.collectAsState()
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
+    Column(Modifier.fillMaxSize()) {
+        // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page. The bar stays
+        // on screen while the page scrolls under it, so Back is always in reach (#141)
         Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             androidx.compose.material3.IconButton(onClick = { if (section != null) section = parentOf(section) else onBack() }) {
                 androidx.compose.material3.Icon(
@@ -462,6 +463,7 @@ fun MoreScreen(
             Text(section?.let { titles[it] } ?: stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
         }
 
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
         when (section) {
             null -> {
                 // Each line says what is set now, so nothing needs opening just to check. Order (owner, 2026-11-09):
@@ -622,7 +624,7 @@ fun MoreScreen(
                 LaunchedEffect(Unit) { vm.loadPhotos(context) }
                 MoreRow(
                     stringResource(R.string.photos_kept),
-                    photoSummary?.let { stringResource(R.string.photos_kept_sub, it.kept, android.text.format.Formatter.formatShortFileSize(context, it.bytes)) },
+                    photoSummary?.let { androidx.compose.ui.res.pluralStringResource(R.plurals.photos_kept_sub, it.kept, it.kept, android.text.format.Formatter.formatShortFileSize(context, it.bytes)) },
                 ) { section = S_PHOTOS }
             }
             S_WEEKLY -> {
@@ -707,10 +709,13 @@ fun MoreScreen(
                     stringResource(R.string.cards_download),
                     progress?.takeIf { it.second > 0 }?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
                         ?: if (allHere) stringResource(R.string.cards_all, have.size)
+                        // No cards to fetch pictures for: say what to do first, not "0 of 0, tap to download" (#142)
+                        else if (total == 0) stringResource(R.string.cards_none)
                         else stringResource(R.string.cards_download_sub, have.size, total ?: 0),
                 ) {
                     // Every picture already here: say so, rather than "0 downloaded, 0 not found" (finding 40)
-                    if (allHere && progress == null) scope.launch { snackbar.showSnackbar(allHereText) } else vm.downloadCards(ctx)
+                    if (total == 0) Unit
+                    else if (allHere && progress == null) scope.launch { snackbar.showSnackbar(allHereText) } else vm.downloadCards(ctx)
                 }
                 var confirmRemove by remember { mutableStateOf(false) }
                 if (have.isNotEmpty() && progress == null) MoreRow(stringResource(R.string.cards_remove), null) { confirmRemove = true }
@@ -789,6 +794,7 @@ fun MoreScreen(
             S_ART -> CreditList(null, ART)
             S_LICENCES -> CreditList(stringResource(R.string.about_licences_intro), LIBRARIES)
             S_PRIVACY -> PrivacyPage()
+        }
         }
     }
 }

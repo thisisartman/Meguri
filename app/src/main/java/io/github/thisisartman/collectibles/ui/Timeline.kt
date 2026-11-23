@@ -54,7 +54,7 @@ fun TimelineScreen(vm: MainViewModel, nav: NavHostController, onBack: () -> Unit
         finds.mapNotNull { f -> val at = f.find.acquiredAt ?: return@mapNotNull null; byId[f.find.itemId]?.let { Triple(at, f.find, it) } }
             .groupBy { TripReport.dayStart(it.first) }.toSortedMap(compareByDescending { it })
     }
-    val time = remember { SimpleDateFormat("HH:mm", Locale.US) }
+    val time = remember { Dates.timeFormat() }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),

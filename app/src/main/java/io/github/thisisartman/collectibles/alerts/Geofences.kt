@@ -106,7 +106,7 @@ class Geofences @Inject constructor(
         runCatching { client.addGeofences(request, pendingIntent).await() }
             .onSuccess {
                 settings.geofenceError = 0
-                log.i("Geofence", "Registered ${fences.size} fences, a distance per kind")
+                log.i("Geofence", "Registered ${fences.size} fences, a distance per category")
                 log.d("Geofence", "Fences: ${chosen.size} items" + (if (fences.size > chosen.size) " and the refresh area" else "") + (here?.let { " around %.3f, %.3f".format(java.util.Locale.US, it.lat, it.lng) } ?: ", no position"))
             }
             .onFailure {

@@ -113,7 +113,7 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     var linkOpen by remember { mutableStateOf(false) }
     var tick by remember { mutableIntStateOf(0) }
     val tripOn = remember(tick) { alerts.settings.tripOn }
-    val until = remember(tick) { SimpleDateFormat("HH:mm", Locale.US).format(Date(alerts.settings.tripUntilMs)) }
+    val until = remember(tick) { Dates.time(alerts.settings.tripUntilMs) }
     val scope = rememberCoroutineScope()
     val byId = remember(rows) { rows.associateBy { it.item.id } }
     val lineName = remember(lines, ja) { lines.associate { it.id to (if (ja) it.nameJa else it.nameRomaji ?: it.nameJa) } }
