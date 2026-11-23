@@ -145,16 +145,19 @@ fun MeguriMap(
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); mapView.onStop(); mapView.onDestroy() }
     }
+    // The listeners added below, so a change of theme, language or maps replaces them instead of adding more (#173)
+    val listeners = remember { MapListeners() }
     LaunchedEffect(mapView, dark, japanese, mapsVersion) {
         val offlineStyle = if (offline) {
             runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { OfflineMap.styleJson(context, dark, japanese) } }.getOrNull()
         } else null
         mapView.getMapAsync { m ->
             map = m
-            m.addOnCameraMoveListener { emitAnchor(m) }
+            listeners.removeFrom(m)
+            listeners.move = MapLibreMap.OnCameraMoveListener { emitAnchor(m) }.also(m::addOnCameraMoveListener)
             memoryKey?.let { key ->
                 CameraMemory.saved[key]?.let { m.cameraPosition = it }
-                m.addOnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }
+                listeners.idle = MapLibreMap.OnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }.also(m::addOnCameraIdleListener)
             }
             m.uiSettings.apply {
                 isScrollGesturesEnabled = interactive; isZoomGesturesEnabled = interactive
@@ -261,7 +264,7 @@ fun MeguriMap(
             // A 48 dp square around the finger, not a single point (owner, 2026-11-07: pins were hard to hit);
             // when several pins fall inside, the one nearest the finger wins
             val slop = 28f * context.resources.displayMetrics.density
-            m.addOnMapClickListener { point ->
+            listeners.click = MapLibreMap.OnMapClickListener { point ->
                 val p = m.projection.toScreenLocation(point)
                 val box = android.graphics.RectF(p.x - slop, p.y - slop, p.x + slop, p.y + slop)
                 val dpx = context.resources.displayMetrics.density
@@ -287,7 +290,7 @@ fun MeguriMap(
                     else -> tapPin(hit.getStringProperty("id"))
                 }
                 true
-            }
+            }.also(m::addOnMapClickListener)
         }
     }
     LaunchedEffect(map, anchor) { map?.let { emitAnchor(it) } }
@@ -526,5 +529,16 @@ private fun flatten(s: Style, land: Int, water: Int, roads: Pair<Int, Int>? = nu
             hide.containsMatchIn(id) && (l is org.maplibre.android.style.layers.FillLayer || l is org.maplibre.android.style.layers.FillExtrusionLayer || l is org.maplibre.android.style.layers.LineLayer) ->
                 l.setProperties(PropertyFactory.visibility(org.maplibre.android.style.layers.Property.NONE))
         }
+    }
+}
+
+/** The map listeners [MeguriMap] adds, kept so each style change removes the last set before adding its own (#173). */
+private class MapListeners {
+    var move: MapLibreMap.OnCameraMoveListener? = null
+    var idle: MapLibreMap.OnCameraIdleListener? = null
+    var click: MapLibreMap.OnMapClickListener? = null
+    fun removeFrom(m: MapLibreMap) {
+        move?.let(m::removeOnCameraMoveListener); idle?.let(m::removeOnCameraIdleListener); click?.let(m::removeOnMapClickListener)
+        move = null; idle = null; click = null
     }
 }

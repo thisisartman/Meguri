@@ -78,6 +78,11 @@ class WebDavTest {
         assertTrue(req.getHeader("Authorization")!!.startsWith("Basic "))
     }
 
+    @Test fun listingWithADoctypeIsRefused() {
+        val evil = "<?xml version=\"1.0\"?><!DOCTYPE d [<!ENTITY x SYSTEM \"file:///etc/hosts\">]>" + LISTING.substringAfter("?>")
+        try { WebDav.parseListing(evil, "/dav/files/me/Meguri/"); fail("a DOCTYPE was accepted") } catch (e: java.io.IOException) { }
+    }
+
     @Test fun listingSkipsTheFolderAndSubfolders() {
         val files = WebDav.parseListing(LISTING, "/dav/files/me/Meguri/")
         assertEquals(listOf("meguri-auto-20261120-101500.zip"), files.map { it.name })

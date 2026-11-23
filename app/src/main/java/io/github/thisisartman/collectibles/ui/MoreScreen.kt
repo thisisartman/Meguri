@@ -378,7 +378,8 @@ fun MoreScreen(
                 val newest = vm.auto.serverBackups().firstOrNull()
                 if (newest == null) { vm.work.say(noServerBackups); return@run }
                 val uri = vm.auto.downloadFromServer(newest.name)
-                PendingRestore(vm.restore.inspect(uri), vm.restore.currentCounts())
+                val info = try { vm.restore.inspect(uri) } finally { vm.auto.clearServerDownload() }
+                PendingRestore(info, vm.restore.currentCounts())
             }.onSuccess { pendingRestore = it }.onFailure {
                 vm.log.w("Restore", "Server restore refused: ${it.javaClass.simpleName}")
                 vm.work.say(if (it is BackupError) notBackup else restoreFailed)
