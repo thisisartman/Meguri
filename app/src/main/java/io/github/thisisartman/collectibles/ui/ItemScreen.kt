@@ -98,8 +98,8 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
             // Your own kinds by their own name ("Aquarium stamp"), not "My collection"
             title = {
                 val custom = r?.item?.customTypeId?.let { LocalCustomTypes.current[it]?.name }
-                // A station page with its Ekitag is the station, not only its stamp
-                val isStation = r != null && stationPair(all, r.item.id)?.second != null
+                // Every station page is titled "Station", with or without an Ekitag (#143)
+                val isStation = r != null && (r.item.type == ItemType.EKI_STAMP || stationPair(all, r.item.id)?.second != null)
                 Text(if (isStation) stringResource(R.string.station_title) else custom ?: r?.item?.type?.let { stringResource(it.label()) } ?: "")
             },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
@@ -282,11 +282,9 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
                 }
                 PhotoKindMenu(item.type, menu, onDismiss = { menu = false }, onPick = { menuKind = it })
             }
-            // On a station page the bottom button is the stamp's; the Ekitag has its own in its section
-            val collectLabel = stringResource(
-                if (ekitag != null) (if (r.collected) R.string.station_collect_stamp_again else R.string.station_collect_stamp)
-                else if (r.collected) R.string.got_it_again else R.string.got_it,
-            )
+            // On a station page the bottom button is the stamp's; the Ekitag has its own in its section.
+            // One verb everywhere (#143): Collect, then Collect again
+            val collectLabel = stringResource(if (r.collected) R.string.got_it_again else R.string.got_it)
             val collectContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
                 Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
@@ -332,7 +330,9 @@ private fun NameText(item: Item, ja: Boolean, lineNames: List<String> = emptyLis
     val (title, subtitle) = item.cardTitle(ja)
     Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
     subtitle?.let { Text(it, style = MaterialTheme.typography.titleMedium) }
-    item.secondaryName(ja)?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+    // A card's Japanese name without the code that is already under the title (#149)
+    item.secondaryName(ja)?.let { n -> item.code?.substringAfterLast('-')?.takeIf { item.type == ItemType.MANHOLE_CARD }?.let { n.removeSuffix(" $it").trim() } ?: n }
+        ?.let { Text(it, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
     // English mode: prefecture in romaji; the town has no romaji in the catalogue and is already in the name, so it is left out
     val sub = listOfNotNull(
         // The code is already in the title or subtitle for a card; showing it again read as a mistake (2026-11-13)
@@ -367,12 +367,11 @@ private fun hasFacts(context: android.content.Context, item: Item): Boolean =
 @Composable
 private fun Facts(item: Item) {
     val context = LocalContext.current
-    val (placeLabel, hoursLabel) = when (item.type) {
-        ItemType.MANHOLE_CARD -> R.string.item_handed_out_at to R.string.item_hours
-        ItemType.GOSHUIN -> R.string.item_office to R.string.item_office_hours
-        ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station to R.string.item_stamp_location
-        ItemType.CUSTOM, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.PLACE -> R.string.item_place to R.string.item_hours
-        ItemType.DAM_CARD -> R.string.item_handed_out_at to R.string.item_hours
+    val placeLabel = placeLabel(item.type)
+    val hoursLabel = when (item.type) {
+        ItemType.GOSHUIN -> R.string.item_office_hours
+        ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_stamp_location
+        else -> R.string.item_hours
     }
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp),
@@ -396,6 +395,14 @@ private fun Facts(item: Item) {
             }
         }
     }
+}
+
+/** The name of the place an item is handed out at, the same on its page and in Edit (#144). */
+fun placeLabel(type: ItemType): Int = when (type) {
+    ItemType.MANHOLE_CARD, ItemType.DAM_CARD -> R.string.item_handed_out_at
+    ItemType.GOSHUIN -> R.string.item_office
+    ItemType.EKI_STAMP, ItemType.EKITAG -> R.string.item_station
+    ItemType.CUSTOM, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION, ItemType.PLACE -> R.string.item_place
 }
 
 @Composable

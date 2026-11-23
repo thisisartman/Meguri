@@ -118,7 +118,6 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
                     // Timeline (M6): every find by day
                     androidx.compose.material3.ListItem(
                         headlineContent = { Text(stringResource(R.string.timeline_title)) },
-                        supportingContent = { Text(stringResource(R.string.timeline_sub)) },
                         leadingContent = { Icon(androidx.compose.ui.res.painterResource(R.drawable.ic_history), contentDescription = null) },
                         modifier = Modifier.padding(top = 8.dp).clickable { nav.navigate("timeline") },
                     )

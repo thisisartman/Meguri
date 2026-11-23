@@ -18,7 +18,5 @@
     <string name="check_cards_missing">カードの画像がまだこの端末にないため、カードはアイコンで表示されます。</string>
     <string name="check_cards_download">%1$d枚をダウンロード</string>
     <string name="station_title">駅</string>
-    <string name="station_collect_stamp">スタンプを集める</string>
-    <string name="station_collect_stamp_again">スタンプをもう一度</string>
     <string name="privacy_regions">地域ダウンロード（「地域」を開いたときやダウンロードしたとき）：地域の一覧と選んだファイル</string>
 </resources>

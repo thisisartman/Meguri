@@ -130,13 +130,11 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
             category == null -> Column {
                 CardPicturesOffer(categories.firstOrNull { it.type == ItemType.MANHOLE_CARD }?.rows.orEmpty())
                 ChoiceList(
-                    stringResource(R.string.check_pick_category),
                     categories.map { c -> Triple(c.key, c.name, c.rows) },
                     lead = { key -> categories.first { it.key == key }.rows.first().item.let { ItemTypeIcon(it, 24.dp) } },
                 ) { categoryKey = it }
             }
             pref == null -> ChoiceList(
-                stringResource(R.string.check_pick_prefecture),
                 category.rows.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().map { (p, l) -> Triple(p, prefectureLabel(p, ja), l) },
             ) { prefecture = it }
             else -> Deck(vm, category.rows.filter { it.item.prefecture.orEmpty() == pref }, category.key + "|" + pref, history) { prefecture = null }
@@ -180,9 +178,8 @@ private fun CardPicturesOffer(cards: List<ItemRow>, more: MoreViewModel = androi
 
 /** A list of choices, each with how many you have of it and an arrow. */
 @Composable
-private fun ChoiceList(intro: String, choices: List<Triple<String, String, List<ItemRow>>>, lead: (@Composable (String) -> Unit)? = null, onPick: (String) -> Unit) {
+private fun ChoiceList(choices: List<Triple<String, String, List<ItemRow>>>, lead: (@Composable (String) -> Unit)? = null, onPick: (String) -> Unit) {
     Column(Modifier.verticalScroll(rememberScrollState())) {
-        Text(intro, Modifier.padding(horizontal = 16.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         choices.forEach { (key, name, list) ->
             val have = list.count { it.collected }
             Row(
@@ -193,7 +190,7 @@ private fun ChoiceList(intro: String, choices: List<Triple<String, String, List<
                 Column(Modifier.weight(1f)) {
                     Text(name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
                     Text(
-                        pluralStringResource(R.plurals.check_left, list.size - have, list.size - have) + " · " + stringResource(R.string.count, have, list.size),
+                        stringResource(R.string.count, have, list.size),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }

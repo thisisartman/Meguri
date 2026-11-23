@@ -27,6 +27,8 @@ object TileName {
             if (japanese) name else name.removeSuffix(" Station").removeSuffix(" station")
         ItemType.ROADSIDE_STATION ->
             if (japanese) name.removePrefix("道の駅").trim() else name.removePrefix("Michi-no-Eki").removePrefix("Michi-no-eki").trim()
+        // "Niigata-ken (Ryuiki Gesuido) A001" was cut before its code (#146): the part in brackets goes
+        ItemType.MANHOLE_CARD -> name.replace(Regex("\\s*[(（][^)）]*[)）]\\s*"), " ").trim()
         else -> name
     }.ifBlank { name }
 }
@@ -55,7 +57,12 @@ object CardName {
             val i = nameRomaji.indexOf(" · ")
             if (i > 0) nameRomaji.substring(0, i) to nameRomaji.substring(i + 3).trim() else nameRomaji to null
         }
-        if (design.isNullOrBlank()) return place to code?.takeIf { it !in place }
+        val short = code?.substringAfterLast('-')
+        // "新潟市 B001" splits as place and "B001", which is the code, not a design
+        if (design.isNullOrBlank() || design == short) {
+            if (short != null && place.endsWith(" $short")) return place.removeSuffix(" $short").trim() to code
+            return place to code?.takeIf { it !in place }
+        }
         return design to listOfNotNull(place, code).joinToString(" · ")
     }
 }
@@ -175,5 +182,6 @@ fun ItemType.pluralLabel(): Int = when (this) {
     ItemType.MUSEUM_STAMP -> R.string.type_museum_plural
     ItemType.ROADSIDE_STATION -> R.string.type_roadside_plural
     ItemType.PLACE -> R.string.type_place_plural
+    ItemType.EKITAG -> R.string.type_ekitag_plural
     else -> label()
 }

@@ -86,17 +86,11 @@ fun RegionsPage(vm: MoreViewModel) {
                 Column(Modifier.padding(14.dp)) {
                     Text(prefectureName(pref, ja), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        catalogue.filter { it.core }.sortedBy { it.type?.ordinal }.joinToString(" · ") { p ->
+                        (catalogue.filter { it.core }.sortedBy { it.type?.ordinal } + catalogue.filter { !it.core }).joinToString(" · ") { p ->
                             context.getString(p.type!!.pluralLabel()).replace(" ", "\u00A0") + "\u00A0" + p.items
                         },
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
-                    catalogue.filter { !it.core }.takeIf { it.isNotEmpty() }?.let { extras ->
-                        Text(
-                            stringResource(R.string.regions_extras, extras.joinToString(" · ") { p -> context.getString(p.type!!.pluralLabel()).replace(" ", "\u00A0") + "\u00A0" + p.items }),
-                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
                     if (busy) {
                         LinearProgressIndicator(progress = { fraction ?: 1f }, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
                         return@Column

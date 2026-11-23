@@ -49,3 +49,12 @@ fun dateText(ms: Long): String = Dates.day(ms, LocalConfiguration.current.locale
 
 @Composable
 fun dateTimeText(ms: Long): String = Dates.dayTime(ms, LocalConfiguration.current.locales[0])
+
+/** A day without its year when it is this year ("Nov 21", "11月21日"), for the Trip report's day chips (#147). */
+@Composable
+fun shortDateText(ms: Long): String {
+    val locale = LocalConfiguration.current.locales[0]
+    val year = { t: Long -> Calendar.getInstance().apply { timeInMillis = t }.get(Calendar.YEAR) }
+    val skeleton = if (year(ms) == year(System.currentTimeMillis())) "MMMd" else "yMMMd"
+    return java.text.SimpleDateFormat(android.text.format.DateFormat.getBestDateTimePattern(locale, skeleton), locale).format(Date(ms))
+}

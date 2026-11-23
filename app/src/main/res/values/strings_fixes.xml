@@ -19,7 +19,5 @@
     <string name="check_cards_missing">Card pictures aren\'t on this phone yet, so cards show as icons.</string>
     <string name="check_cards_download">Download %1$d</string>
     <string name="station_title">Station</string>
-    <string name="station_collect_stamp">Collect stamp</string>
-    <string name="station_collect_stamp_again">Stamp again</string>
     <string name="privacy_regions">Region downloads, when you open Regions or download one: the list of regions and the files you choose</string>
 </resources>

@@ -92,7 +92,7 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
             }
             Field(stringResource(R.string.edit_name_ja), nameJa) { nameJa = it }
             Field(stringResource(R.string.edit_name_en), nameEn) { nameEn = it }
-            Field(stringResource(R.string.edit_place), place) { place = it }
+            Field(stringResource(placeLabel(type)), place) { place = it }
             Field(stringResource(R.string.edit_address), address) { address = it }
             Field(stringResource(R.string.edit_hours), hours, single = false) { hours = it }
             Field(stringResource(R.string.edit_notes), notes, single = false) { notes = it }
@@ -130,8 +130,6 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                     h.address?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
-
-            Text(stringResource(R.string.edit_kept_note), Modifier.padding(top = 12.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
             Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.cancel)) }
