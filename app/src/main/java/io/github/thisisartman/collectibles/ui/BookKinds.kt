@@ -164,7 +164,8 @@ fun ProgressRing(collected: Int, total: Int?, color: Color, size: Dp, modifier: 
 fun KindTiles(kinds: List<BookKinds.Kind>, nav: NavHostController) {
     val ja = isJapanese()
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        kinds.chunked(3).forEach { row ->
+        val perRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 2 else 3
+        kinds.chunked(perRow).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { k ->
                     Surface(
@@ -184,7 +185,7 @@ fun KindTiles(kinds: List<BookKinds.Kind>, nav: NavHostController) {
                         }
                     }
                 }
-                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                repeat(perRow - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }

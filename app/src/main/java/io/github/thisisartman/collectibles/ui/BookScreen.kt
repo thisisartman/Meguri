@@ -90,7 +90,11 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Only catalogue items still to get can be marked; things added by hand already have their find
             // 48 dp tall like every other control (it measured 32 dp in the 2026-11-06 Poco review)
             if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { if (marking) { marking = false; selected = emptySet() } else nav.navigate("check") }, modifier = Modifier.weight(1f, fill = false).heightIn(min = 48.dp)) {
-                Text(stringResource(action), textAlign = TextAlign.End)
+                if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f && !marking) {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Filled.Check, contentDescription = stringResource(action),
+                    )
+                } else Text(stringResource(action), textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             // The same top-right menu as Nearby: Settings and Logs
             if (!marking) MenuButton(nav)
