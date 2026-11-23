@@ -160,11 +160,14 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // The scanner straightens the card but does not know which way is up: it came back upside down on the S23
             // (owner, 2026-11-09). Read it as it comes, then turned 180, 90 and 270 degrees; the turn that reads the
             // card code is the upright one, and the photo is saved that way up
-            val page0 = runCatching {
-                android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, _, _ ->
-                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
-                }
-            }.getOrNull()
+            // Decoded off the main thread: a full-page scan is several megapixels (#167)
+            val page0 = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching {
+                    android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, _, _ ->
+                        d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                    }
+                }.getOrNull()
+            }
             var code: String? = null
             var turn = 0
             var failure: Throwable? = null
@@ -217,9 +220,12 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // A card that was read: upright, then trimmed to the top card by its blue frame (owner, 2026-11-09: the
             // scanner took in the cards under it or the box's edge). No clean frame: the upright page as it was
             val src = page1
-            val trimmed = if (code != null && src != null) cardCopy(context, src, turn) else null
+            // The copies are cut, turned and written to disk off the main thread (#167)
+            val trimmed = if (code != null && src != null) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { cardCopy(context, src, turn) } else null
             vm.log.d("Scan", "Card code ${code ?: "not read"}, turn $turn°, card-only read ${src !== page0}, trim ${trimmed?.second ?: "not tried"}" + (failure?.let { ", reader failed: $it" } ?: ""))
-            val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) uprightCopy(context, src, turn) ?: page.imageUri else page.imageUri
+            val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { uprightCopy(context, src, turn) } ?: page.imageUri
+            } else page.imageUri
             // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
             if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
                 val dir = java.io.File(context.getExternalFilesDir(null), "scan-debug").apply { mkdirs() }
