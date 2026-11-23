@@ -16,6 +16,7 @@ import io.github.thisisartman.collectibles.data.PlaceLookup
 import io.github.thisisartman.collectibles.data.RailGraph
 import io.github.thisisartman.collectibles.data.SavedTrip
 import io.github.thisisartman.collectibles.data.TripStore
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import io.github.thisisartman.collectibles.location.Fix
 import io.github.thisisartman.collectibles.location.LocationSource
@@ -97,15 +98,15 @@ class MainViewModel @Inject constructor(
                 .map { Ranked(it, distanceM(fix.lat, fix.lng, it.item.lat!!, it.item.lng!!)) }
                 .sortedBy { it.meters }
         }
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val summaries: StateFlow<List<CollectionSummary>> = combine(rows, lines, lineStations) { r, l, ls ->
         summarise(r, l, ls)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val aroundHere: StateFlow<AroundHere> = combine(summaries, nearest, here) { s, n, h ->
         splitAroundHere(s, n, located = h.fix != null)
-    }.stateIn(viewModelScope, SharingStarted.Eagerly, AroundHere(emptyList(), emptyList(), false))
+    }.flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, AroundHere(emptyList(), emptyList(), false))
 
     fun itemRow(id: String) = repo.itemRow(id)
     fun finds(itemId: String) = repo.finds(itemId)
@@ -269,7 +270,7 @@ class MainViewModel @Inject constructor(
     val trip: StateFlow<SavedTrip?> = trips.trip
 
     val railGraph: StateFlow<RailGraph> = lineStations.map { RailGraph.from(it) }
-        .stateIn(viewModelScope, SharingStarted.Eagerly, RailGraph(emptyMap()))
+        .flowOn(kotlinx.coroutines.Dispatchers.Default).stateIn(viewModelScope, SharingStarted.Eagerly, RailGraph(emptyMap()))
 
     // Trip report (#61): the days with dated finds, and one day's finds
     val findTimes: StateFlow<List<Long>> = repo.findTimes().stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
