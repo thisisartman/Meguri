@@ -375,6 +375,17 @@ fun MeguriMap(
         map?.addOnCameraMoveStartedListener { reason -> if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) userMoved = true }
     }
     val hasPins = pins.isNotEmpty()
+    // When the onboarding lets go of the map, place it afresh: what it remembered then was the onboarding's view of
+    // Japan or the world, and Nearby stayed on it after the first region loaded (#136, seen on a fresh 0.7.0 install)
+    var wasHeld by remember { mutableStateOf(holdOnJapan) }
+    LaunchedEffect(holdOnJapan) {
+        if (holdOnJapan) { wasHeld = true; return@LaunchedEffect }
+        if (!wasHeld) return@LaunchedEffect
+        wasHeld = false
+        memoryKey?.let { CameraMemory.saved.remove(it); CameraMemory.placedAt.remove(it) }
+        placed = false; placedAt = null; framedWithoutPins = false; userMoved = false
+    }
+
     LaunchedEffect(style, hasHere, holdOnJapan, hasPins) {
         if (!startOnJapan || holdOnJapan || style == null || !hasHere) return@LaunchedEffect
         if (placed && !(framedWithoutPins && hasPins && !userMoved)) return@LaunchedEffect
