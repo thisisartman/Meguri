@@ -108,8 +108,10 @@ class MoreViewModel @Inject constructor(
     /** Downloads a prefecture: its main catalogue packs, its map when [withMap], and any [extras] (optional types). */
     fun downloadPrefecture(prefecture: String, withMap: Boolean, extras: Set<ItemType> = emptySet()) = run {
         val index = packIndex.value ?: return@run
+        val installed = packs.installed.value
+        // A pack already on the phone at the same version is not fetched again ("Download the rest", #134)
         val chosen = index.of(prefecture).filter { p ->
-            if (p.isMap) withMap else p.core || p.type in extras
+            (if (p.isMap) withMap else p.core || p.type in extras) && installed[p.id] != p.sha256
         }
         packProgress.value = prefecture to 0f
         packs.install(chosen) { done, total -> packProgress.value = prefecture to (if (total > 0) done.toFloat() / total else 1f) }
@@ -140,14 +142,25 @@ class MoreViewModel @Inject constructor(
             .groupBy { it.prefecture }.mapValues { (_, l) -> l.associate { it.type!! to it.items } }
     }
 
-    /** The onboarding's Load: the chosen prefectures' main packs (maps are offered on Regions), else the catalogue inside the app. */
-    suspend fun loadRegions(regions: Set<String>) {
-        val index = packIndex.value ?: packs.fetchIndex()
-        if (index != null) {
-            val chosen = index.packs.filter { !it.isMap && it.core && it.prefecture in regions }
-            if (packs.install(chosen).isSuccess) return
+    /**
+     * The onboarding's Load: the chosen prefectures' main packs (maps are offered on Regions), or the catalogue inside
+     * the app when the pack server can't be reached. Returns false when a pack did not install.
+     *
+     * It runs in the app-wide work scope, not the caller's: the onboarding sheet leaves the screen as soon as the first
+     * pack fills the catalogue, and its own scope used to cancel every pack after that one (#134).
+     */
+    suspend fun loadRegions(regions: Set<String>): Boolean {
+        val done = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        work.launch {
+            val ok = runCatching {
+                val index = packIndex.value ?: packs.fetchIndex()
+                if (index == null) { io.importBundled(regions); true }
+                else packs.install(index.packs.filter { !it.isMap && it.core && it.prefecture in regions }).isSuccess
+            }.getOrDefault(false)
+            if (!ok) runCatching { log.w("Packs", "First-run load incomplete for $regions") }
+            done.complete(ok)
         }
-        io.importBundled(regions)
+        return done.await()
     }
 
     /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */

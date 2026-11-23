@@ -358,6 +358,7 @@
     <string name="onb_regions_all">Select all of Japan</string>
     <string name="onb_regions_more">More prefectures are coming.</string>
     <string name="onb_loading">Loading…</string>
+    <string name="onb_load_partial">Part of your region didn\'t download. Open Settings, Catalogue, Regions to get the rest.</string>
     <plurals name="onb_load">
         <item quantity="one">Load %d region</item>
         <item quantity="other">Load %d regions</item>
@@ -692,6 +693,12 @@
     <string name="regions_download">Download (%1$s)</string>
     <string name="regions_on_phone">On this phone, with its map</string>
     <string name="regions_on_phone_no_map">On this phone, without its map</string>
+    <string name="regions_on_phone_plain">On this phone</string>
+    <plurals name="regions_partial">
+        <item quantity="one">Part of it is on this phone: %d download is missing</item>
+        <item quantity="other">Part of it is on this phone: %d downloads are missing</item>
+    </plurals>
+    <string name="regions_download_rest">Download the rest (%1$s)</string>
     <string name="regions_add_map">Add map (%1$s)</string>
     <string name="regions_remove">Remove</string>
     <string name="regions_remove_title">Remove %1$s?</string>

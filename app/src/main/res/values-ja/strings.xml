@@ -357,6 +357,7 @@
     <string name="onb_regions_all">日本全国を選ぶ</string>
     <string name="onb_regions_more">ほかの都道府県も順次追加します。</string>
     <string name="onb_loading">読み込み中…</string>
+    <string name="onb_load_partial">地域の一部がダウンロードできませんでした。設定 › カタログ › 地域 から残りを取得できます。</string>
     <plurals name="onb_load">
         <item quantity="other">%d地域を読み込む</item>
     </plurals>
@@ -674,6 +675,11 @@
     <string name="regions_download">ダウンロード (%1$s)</string>
     <string name="regions_on_phone">この端末にあり（地図あり）</string>
     <string name="regions_on_phone_no_map">この端末にあり（地図なし）</string>
+    <string name="regions_on_phone_plain">この端末にあり</string>
+    <plurals name="regions_partial">
+        <item quantity="other">一部のみこの端末にあり：%d件が未取得</item>
+    </plurals>
+    <string name="regions_download_rest">残りをダウンロード (%1$s)</string>
     <string name="regions_add_map">地図を追加 (%1$s)</string>
     <string name="regions_remove">削除</string>
     <string name="regions_remove_title">%1$sを削除しますか？</string>

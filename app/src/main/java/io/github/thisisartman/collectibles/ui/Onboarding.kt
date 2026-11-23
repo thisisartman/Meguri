@@ -101,8 +101,9 @@ fun OnboardingSheet(
     prefectures: List<Prefecture>,
     here: Pair<Double, Double>?,
     loadCounts: suspend () -> Map<String, Map<ItemType, Int>>,
-    onLoad: suspend (Set<String>) -> Unit,
-    onFinished: (already: Boolean) -> Unit,
+    /** Loads the chosen regions; false when part of them did not install. */
+    onLoad: suspend (Set<String>) -> Boolean,
+    onFinished: (already: Boolean, loaded: Boolean) -> Unit,
     onLoadFile: () -> Unit,
     onPermissionsAnswered: () -> Unit = {},
     modifier: Modifier = Modifier,
@@ -188,7 +189,10 @@ fun OnboardingSheet(
                     enabled = state.chosen.isNotEmpty(),
                     onClick = {
                         state.step = OnboardingStep.LOADING
-                        scope.launch { runCatching { onLoad(state.chosen) }; onFinished(state.already) }
+                        scope.launch {
+                            val loaded = runCatching { onLoad(state.chosen) }.getOrDefault(false)
+                            onFinished(state.already, loaded)
+                        }
                     },
                     modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp),
                 ) { Text(androidx.compose.ui.res.pluralStringResource(R.plurals.onb_load, state.chosen.size, state.chosen.size)) }

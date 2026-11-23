@@ -120,8 +120,26 @@ fun RegionsPage(vm: MoreViewModel) {
                             }
                         }
                         else -> {
-                            Text(
-                                stringResource(if (map != null && map.id !in installed) R.string.regions_on_phone_no_map else R.string.regions_on_phone),
+                            // On the phone only when every main pack is in: a load that stopped part way is not
+                            // complete, and says what is missing (#134)
+                            val missing = catalogue.filter { it.core && it.id !in installed }
+                            if (missing.isNotEmpty()) {
+                                Text(
+                                    androidx.compose.ui.res.pluralStringResource(R.plurals.regions_partial, missing.size, missing.size),
+                                    Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.error,
+                                )
+                                Button(
+                                    onClick = { vm.packError.value = null; vm.downloadPrefecture(pref, withMap = false) }, enabled = progress == null,
+                                    modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(top = 4.dp),
+                                ) { Text(stringResource(R.string.regions_download_rest, size(missing.sumOf { it.bytes }))) }
+                            } else Text(
+                                // A prefecture without a map pack is simply on the phone (#162: Gunma said "with its map")
+                                stringResource(when {
+                                    map == null -> R.string.regions_on_phone_plain
+                                    map.id !in installed -> R.string.regions_on_phone_no_map
+                                    else -> R.string.regions_on_phone
+                                }),
                                 Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodyMedium,
                             )
                             Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
