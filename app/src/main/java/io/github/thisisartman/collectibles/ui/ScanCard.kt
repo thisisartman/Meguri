@@ -238,7 +238,9 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
             // on the card you pick from the nearest ones
             // A card whose code wasn't read is still a card (blue frame), not a cover: then it goes to Pick by hand
-            val isCard = code == null && page0 != null && runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            val isCard = code == null && page0 != null && kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            }
             // A notebook page (mostly plain paper), before the cover check: station stamps are round too (owner, 2026-11-09)
             if (code == null && !isCard) {
                 val small = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { decodePage(context, page.imageUri, 480) }
@@ -254,13 +256,16 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 }
                 small?.recycle()
             }
-            val cover = match == null && code == null && !isCard && runCatching {
-                val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
-                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
-                    val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
-                }
-                io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
-            }.getOrDefault(false)
+            // The cover check decodes the page again: off the main thread too (#167)
+            val cover = match == null && code == null && !isCard && kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching {
+                    val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
+                        d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                        val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
+                    }
+                    io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
+                }.getOrDefault(false)
+            }
             val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
             if (page1 !== page0) page1?.recycle()
             page0?.recycle()
