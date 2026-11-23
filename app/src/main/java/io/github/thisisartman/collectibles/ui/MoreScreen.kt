@@ -143,19 +143,22 @@ class MoreViewModel @Inject constructor(
     }
 
     /**
-     * The onboarding's Load: the chosen prefectures' main packs (maps are offered on Regions), or the catalogue inside
+     * The onboarding's Load: the chosen prefectures' main packs and, when ticked, their offline maps (#135), or the catalogue inside
      * the app when the pack server can't be reached. Returns false when a pack did not install.
      *
      * It runs in the app-wide work scope, not the caller's: the onboarding sheet leaves the screen as soon as the first
      * pack fills the catalogue, and its own scope used to cancel every pack after that one (#134).
      */
-    suspend fun loadRegions(regions: Set<String>): Boolean {
+    /** Size of the offline maps of [regions], from the list of downloads; null until it is in. */
+    fun mapBytes(regions: Set<String>): Long? = packIndex.value?.packs?.filter { it.isMap && it.prefecture in regions }?.sumOf { it.bytes }
+
+    suspend fun loadRegions(regions: Set<String>, withMap: Boolean = false): Boolean {
         val done = kotlinx.coroutines.CompletableDeferred<Boolean>()
         work.launch {
             val ok = runCatching {
                 val index = packIndex.value ?: packs.fetchIndex()
                 if (index == null) { io.importBundled(regions); true }
-                else packs.install(index.packs.filter { !it.isMap && it.core && it.prefecture in regions }).isSuccess
+                else packs.install(index.packs.filter { (if (it.isMap) withMap else it.core) && it.prefecture in regions }).isSuccess
             }.getOrDefault(false)
             if (!ok) runCatching { log.w("Packs", "First-run load incomplete for $regions") }
             done.complete(ok)

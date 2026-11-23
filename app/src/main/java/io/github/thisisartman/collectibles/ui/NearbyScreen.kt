@@ -285,7 +285,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         // Region packs (0.5), with the catalogue inside the app as the fallback without a connection
                         loadCounts = { more.regionCounts() },
-                        onLoad = { regions -> more.loadRegions(regions) },
+                        onLoad = { regions, withMap -> more.loadRegions(regions, withMap) },
+                        mapBytes = { regions -> more.mapBytes(regions) },
                         // Already have some: on to the picker of what you have (#81 O3). A load that did not finish
                         // says so and points to Regions, which shows what is missing (#134)
                         onFinished = { already, loaded ->

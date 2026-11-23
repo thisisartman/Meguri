@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -59,6 +60,8 @@ class OnboardingState {
     var step by mutableStateOf(OnboardingStep.START)
     var already by mutableStateOf(false)
     var chosen by mutableStateOf<Set<String>>(emptySet())
+    /** The offline map with each region, ticked to start with as in Regions (#135). */
+    var withMap by mutableStateOf(true)
     /** Items ticked in the picker, in the order added (the stacked circles above Done). */
     var added by mutableStateOf<List<String>>(emptyList())
 
@@ -102,7 +105,9 @@ fun OnboardingSheet(
     here: Pair<Double, Double>?,
     loadCounts: suspend () -> Map<String, Map<ItemType, Int>>,
     /** Loads the chosen regions; false when part of them did not install. */
-    onLoad: suspend (Set<String>) -> Boolean,
+    onLoad: suspend (Set<String>, Boolean) -> Boolean,
+    /** Size of the offline maps of these regions, or null when the list of downloads isn't in (#135). */
+    mapBytes: (Set<String>) -> Long? = { null },
     onFinished: (already: Boolean, loaded: Boolean) -> Unit,
     onLoadFile: () -> Unit,
     onPermissionsAnswered: () -> Unit = {},
@@ -184,13 +189,24 @@ fun OnboardingSheet(
                     ) { Text(stringResource(R.string.onb_regions_all)) }
                     Text(stringResource(R.string.onb_regions_more), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                // The offline map, offered as Regions offers it (#135)
+                val maps = mapBytes(state.chosen)
+                if (maps != null && maps > 0) Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                        .toggleable(value = state.withMap, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = { state.withMap = it }),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(checked = state.withMap, onCheckedChange = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.regions_with_map, android.text.format.Formatter.formatShortFileSize(androidx.compose.ui.platform.LocalContext.current, maps)))
+                }
                 Spacer(Modifier.height(8.dp))
                 Button(
                     enabled = state.chosen.isNotEmpty(),
                     onClick = {
                         state.step = OnboardingStep.LOADING
                         scope.launch {
-                            val loaded = runCatching { onLoad(state.chosen) }.getOrDefault(false)
+                            val loaded = runCatching { onLoad(state.chosen, state.withMap && (maps ?: 0) > 0) }.getOrDefault(false)
                             onFinished(state.already, loaded)
                         }
                     },
