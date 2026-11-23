@@ -119,6 +119,8 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
     val kindFmt = stringResource(R.string.trip_report_kind)
     val moreFmt = stringResource(R.string.trip_report_more)
     val footer = stringResource(R.string.trip_report_footer)
+    // Every type's label, read here rather than from the context later (lint: LocalContextGetResourceValueCall)
+    val typeLabels = ItemType.entries.associateWith { stringResource(it.label()) }
     val typeNames = mapOf(
         ItemType.MANHOLE_CARD to stringResource(R.string.type_manhole), ItemType.EKI_STAMP to stringResource(R.string.type_eki),
         ItemType.EKITAG to stringResource(R.string.type_ekitag), ItemType.GOSHUIN to stringResource(R.string.type_goshuin),
@@ -143,7 +145,7 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
                 },
                 lines = shown.map { r ->
                     ReportLine(
-                        r.item.displayName(ja), r.collection ?: typeNames[r.item.type] ?: context.getString(r.item.type.label()),
+                        r.item.displayName(ja), r.collection ?: typeNames[r.item.type] ?: typeLabels.getValue(r.item.type),
                         r.find.acquiredAt?.takeIf { TripReport.hasTime(r.find) }?.let { time.format(Date(it)) }.orEmpty(), colorFor(r),
                     )
                 },
