@@ -127,6 +127,7 @@ fun kindTitle(kind: BookKinds.Kind): String = when (kind.type) {
 private fun kindPlural(type: ItemType): Int = when (type) {
     ItemType.MANHOLE_CARD -> R.string.type_manhole_plural
     ItemType.EKI_STAMP -> R.string.type_eki_plural
+    ItemType.EKITAG -> R.string.type_ekitag_plural
     ItemType.DAM_CARD -> R.string.type_dam_plural
     ItemType.MUSEUM_STAMP -> R.string.type_museum_plural
     ItemType.ROADSIDE_STATION -> R.string.type_roadside_plural
