@@ -48,6 +48,21 @@ interface CollectionDao {
     )
     suspend fun uncollectedPlaces(): List<Item>
 
+    /** Ekitag still to get that have a place: they alert like station stamps, at stations you get off at (#138). */
+    @Query(
+        """
+        SELECT * FROM item i
+        WHERE i.lat IS NOT NULL AND i.lng IS NOT NULL AND i.type = 'EKITAG'
+          AND NOT EXISTS (SELECT 1 FROM acquisition a WHERE a.item_id = i.id)
+          AND i.none_here_at IS NULL
+        """,
+    )
+    suspend fun uncollectedEkitag(): List<Item>
+
+    /** The types with at least one item on the phone. */
+    @Query("SELECT DISTINCT type FROM item")
+    suspend fun typesPresent(): List<ItemType>
+
     @Query("SELECT * FROM item WHERE catalog_key = :key")
     suspend fun itemByCatalogKey(key: String): Item?
 
