@@ -1,6 +1,7 @@
 package io.github.thisisartman.collectibles.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
@@ -59,6 +60,30 @@ class PhotoBundleTest {
         // The card and 三田 are already on the phone; only 彌彦神社 is new
         assertEquals(1, plan.newItems)
         assertEquals(2, plan.toItems)
+    }
+
+    @Test fun aRowWithNoDateIsFoundNowNeverBeforeMeguri() {
+        val tokyo = ZoneId.of("Asia/Tokyo")
+        val rows = PhotoBundle.parse(
+            header +
+                "a.jpg,B,stamp,own,EKI_STAMP,,三田駅,,,yes,\n" +
+                "b.jpg,B,goshuin,own,GOSHUIN,,彌彦神社,,2026-11-07,no,\n",
+        ).rows
+        val now = 1_790_000_000_000L
+        // The before_app column is ignored: no date means the moment the file is added
+        assertEquals(now, PhotoBundle.findDate(rows[0], now, tokyo))
+        assertEquals(PhotoBundle.dayMs(LocalDate.of(2026, 11, 7), tokyo), PhotoBundle.findDate(rows[1], now, tokyo))
+    }
+
+    @Test fun onlyStampPhotosAreCutToTheStamp() {
+        assertTrue(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.STAMP))
+        assertTrue(PhotoBundle.cropsStamp(ItemType.MUSEUM_STAMP, PhotoKind.STAMP))
+        assertTrue(PhotoBundle.cropsStamp(ItemType.ROADSIDE_STATION, PhotoKind.STAMP))
+        // A goshuin stays whole; a card's photo and an Ekitag screenshot have their own crops; a place photo is whole
+        assertFalse(PhotoBundle.cropsStamp(ItemType.GOSHUIN, PhotoKind.STAMP))
+        assertFalse(PhotoBundle.cropsStamp(ItemType.MANHOLE_CARD, PhotoKind.STAMP))
+        assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.EKITAG))
+        assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.PLACE))
     }
 
     @Test fun aDayIsKeptAtNoon() {

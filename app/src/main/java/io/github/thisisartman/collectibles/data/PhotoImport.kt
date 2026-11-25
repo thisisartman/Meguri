@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.thisisartman.collectibles.debug.FileLog
+import io.github.thisisartman.collectibles.photo.StampCrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -31,7 +32,7 @@ sealed class PhotoFileError(message: String) : Exception(message) {
 /**
  * Adds a photo file's photos to what is on the phone (#188); never replaces or removes anything. Each photo goes
  * through the same save as a notebook stamp or a gallery pick, so cards get their cover cut out and Ekitag
- * screenshots their stamp picture. A photo already on its item (same name and size) is skipped, so adding the same
+ * screenshots their stamp picture; a stamp photo is first cut to its stamp ([StampCrop]), a goshuin stays whole. A photo already on its item (same name and size) is skipped, so adding the same
  * file twice changes nothing.
  */
 @Singleton
@@ -74,23 +75,30 @@ class PhotoImport @Inject constructor(
         try {
             val safety = backup.lock.withLock { restore.saveSafetyCopy("meguri-pre-photos") }
             val keys = info.rows.mapNotNull { (it.target as? PhotoBundle.Target.Catalogue)?.key }.distinct()
-            val byKey = keys.chunked(500).flatMap { dao.itemsByCatalogKeys(it) }.associate { it.catalogKey to it.id }
+            val byKey = keys.chunked(500).flatMap { dao.itemsByCatalogKeys(it) }.associate { it.catalogKey to (it.id to it.type) }
             val own = dao.ownItems().associate { (it.type to it.nameJa) to it.id }.toMutableMap()
-            var added = 0; var newItems = 0; var already = 0; var failed = 0
+            // Something not collected yet is found on the row's day, or now, as the file is added (owner, 2026-11-26:
+            // "just assign it the date it was added"; never "had before Meguri")
+            val now = System.currentTimeMillis()
+            var added = 0; var newItems = 0; var already = 0; var failed = 0; var cropped = 0
             for (row in info.rows) {
-                val itemId = when (val t = row.target) {
+                val (itemId, type) = when (val t = row.target) {
                     is PhotoBundle.Target.Catalogue -> byKey[t.key] ?: continue // region not on this phone: in the plan's "missing"
-                    is PhotoBundle.Target.Own -> own.getOrPut(t.type to t.name) { newItems++; repo.addItem(t.type, t.name, null) }
+                    is PhotoBundle.Target.Own -> own.getOrPut(t.type to t.name) { newItems++; repo.addItem(t.type, t.name, null) } to t.type
                 }
                 val file = File(info.dir, PhotoBundle.PHOTOS + row.photo)
+                // The name and size are the file's own, cut or not, so adding the same file again still finds it
                 if (dao.photosOfItem(itemId).any { it.displayName == row.photo && it.sizeBytes == file.length() }) { already++; continue }
+                // A stamp photo is cut to its stamp, as from a notebook page; with no stamp found it stays whole
+                val cut = File(info.dir, "cut-" + row.photo).takeIf { PhotoBundle.cropsStamp(type, row.kind) && StampCrop.crop(file, it) }
+                if (cut != null) cropped++
                 val ok = repo.addOldPhoto(
-                    itemId, Uri.fromFile(file), row.date?.let { PhotoBundle.dayMs(it) }, row.kind,
+                    itemId, Uri.fromFile(cut ?: file), PhotoBundle.findDate(row, now), row.kind,
                     name = row.photo, size = file.length(), tag = "PhotoFile",
                 )
                 if (ok) added++ else failed++
             }
-            log.i("PhotoFile", "Added $added photos, $newItems new items, $already already there, $failed failed; safety copy $safety")
+            log.i("PhotoFile", "Added $added photos ($cropped cut to the stamp), $newItems new items, $already already there, $failed failed; safety copy $safety")
             PhotoFileResult(added, newItems, already, failed, safety)
         } finally {
             discard(info)

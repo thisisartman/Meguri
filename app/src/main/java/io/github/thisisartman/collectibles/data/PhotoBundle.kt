@@ -5,7 +5,8 @@ import java.time.LocalDate
 /**
  * A photo file (#188): a zip holding [MANIFEST], a list of photos and where each belongs, and the photos under
  * `photos/`. Adding one never replaces anything: each photo goes onto its item, and an item you don't have yet gets
- * a find on the date given, or "had before Meguri". Pure, for tests; [PhotoImport] does the phone's side.
+ * a find on the date given, or else dated when the file is added (owner, 2026-11-26: "just assign it the date it
+ * was added"). Stamp photos are cut to the stamp ([cropsStamp]). Pure, for tests; [PhotoImport] does the phone's side.
  *
  * The list's columns: `photo` (file name under `photos/`), `kind` (a [PhotoKind]), `match` (`catalogue`: an item
  * every phone has, found by `key`; `own`: your own item, found again by `type` and `name`; `extra`: one more photo
@@ -78,6 +79,18 @@ object PhotoBundle {
         val newItems = targets.count { it is Target.Own && (it.type to it.name) !in ownOnPhone }
         return Plan(toItems = targets.size - newItems, newItems = newItems, photos = usable.size, missing = missing)
     }
+
+    /** When an item new to your collection was found: the row's day, or [now], the moment the file is added. */
+    fun findDate(row: Row, now: Long, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long =
+        row.date?.let { dayMs(it, zone) } ?: now
+
+    /**
+     * Whether the photo is cut to the stamp on it, as a notebook page is: a stamp photo of a station, roadside
+     * station, museum or place. A goshuin stays whole (no page crop for it yet); cards and Ekitag screenshots
+     * have their own crops when saved.
+     */
+    fun cropsStamp(type: ItemType, kind: String): Boolean =
+        kind == PhotoKind.STAMP && type in setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP, ItemType.PLACE)
 
     /** A date given is a day, kept at noon so it reads the same in any time zone the phone is set to. */
     fun dayMs(date: LocalDate, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long =
