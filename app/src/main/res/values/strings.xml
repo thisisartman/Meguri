@@ -717,4 +717,33 @@
     <string name="backup_include_photos">Include photos</string>
     <string name="backup_include_photos_sub">The file is larger with them</string>
     <string name="backup_save">Save</string>
+    <!-- Nearby: Places and Collectibles (#192) -->
+    <string name="nearby_view_places">Places</string>
+    <string name="nearby_view_collectibles">Collectibles</string>
+    <string name="nearby_view_count">%1$s · %2$d</string>
+    <string name="nearby_help">Help</string>
+    <string name="nearby_help_places">everywhere near you to collect something, a station, a city office, a shrine. The ring shows what you have there.</string>
+    <string name="nearby_help_collectibles">the stamps and cards themselves, split into Stamps and Cards.</string>
+    <string name="nearby_help_again">Tap ? any time to see this again.</string>
+    <string name="nearby_help_got_it">Got it</string>
+    <string name="nearby_group_kind">Group by kind</string>
+    <string name="place_kind_stations">Stations</string>
+    <string name="place_kind_cities">Cities and towns</string>
+    <string name="place_kind_shrines">Shrines and temples</string>
+    <string name="place_kind_roadside">Roadside stations</string>
+    <string name="place_kind_dams">Dams</string>
+    <string name="place_kind_other">Other</string>
+    <string name="place_kind_city">City or town</string>
+    <string name="place_kind_shrine">Shrine or temple</string>
+    <string name="place_kind_dam">Dam</string>
+    <string name="place_kind_place">Place</string>
+    <string name="place_kind_heading">%1$s · %2$d</string>
+    <string name="place_of">%1$d of %2$d</string>
+    <string name="place_to_get">to get</string>
+    <string name="place_open_thing">Open %1$s</string>
+    <string name="place_no_photos">No photos here yet.</string>
+    <string name="ring_a11y">%1$d of %2$d collected</string>
+    <string name="look_nearby">Nearby</string>
+    <string name="look_switch_names">Show names on the switch</string>
+    <string name="look_switch_names_sub">Places and Collectibles with how many, in place of two icons</string>
 </resources>
