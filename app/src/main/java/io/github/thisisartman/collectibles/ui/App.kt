@@ -64,6 +64,8 @@ private const val BOOK = "book"
 private const val MORE = "more"
 
 fun NavHostController.openItem(id: String) = navigate("item/$id")
+/** A place on Nearby's Places view (#192), by any thing at it. */
+fun NavHostController.openPlace(id: String) = navigate("place/$id")
 fun NavHostController.openMap(section: MapSection = MapSection.ALL, kind: String? = null) =
     navigate("map/${section.name}" + (kind?.let { "?category=" + android.net.Uri.encode(it) } ?: ""))
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
@@ -317,6 +319,9 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     }
                     composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }, onOpenItem = { id -> nav.openItem(id) }) }
+                    }
+                    composable("place/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
+                        Page { PlaceScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }, onOpenItem = { id -> nav.openItem(id) }) }
                     }
                     composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }
