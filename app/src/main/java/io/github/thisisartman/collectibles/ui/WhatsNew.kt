@@ -36,7 +36,7 @@ object WhatsNew {
         Section(
             "New in 0.6.0", "0.6.0の新機能",
             listOf(
-                "Backups to Google Drive: Weekly backup, Where, One file. Replaced each week" to "Googleドライブにバックアップ：毎週のバックアップ › 保存先 › 1つのファイル。毎週上書き",
+                "Backups to Google Drive, replaced each week" to "Googleドライブにバックアップ（毎週上書き）",
                 "Backups to your own server: Nextcloud or any WebDAV, and restore from it" to "自分のサーバーにバックアップ：NextcloudやWebDAV。そこから復元も",
                 "Report from an item's page: availability, a correction, or something new (the ⋮ menu)" to "詳細ページから報告：配布状況、修正、新しいもの（⋮メニュー）",
             ),

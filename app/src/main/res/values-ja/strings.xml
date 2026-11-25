@@ -20,10 +20,11 @@
     <string name="type_eki">駅スタンプ</string>
     <string name="type_eki_plural">駅スタンプ</string>
     <string name="type_ekitag">エキタグ</string>
+    <string name="type_ekitag_plural">エキタグ</string>
 
     <string name="a11y_got_it">%1$sを集める</string>
     <string name="a11y_photo">%1$sの写真を撮る</string>
-    <string name="a11y_remove_find">%1$sの取得を削除</string>
+    <string name="a11y_remove_find">%1$sの記録を削除</string>
     <string name="state_collected">取得済み</string>
     <string name="state_to_get">未取得</string>
     <string name="got_it">集める</string>
@@ -48,7 +49,7 @@
     <string name="book_marked">%1$d件を登録</string>
     <string name="cancel">キャンセル</string>
 
-    <string name="item_your_record">取得</string>
+    <string name="item_your_record">記録</string>
     <string name="item_where">入手場所</string>
     <string name="item_handed_out_at">配布場所</string>
     <string name="item_hours">配布時間</string>
@@ -76,13 +77,12 @@
     <string name="item_call">電話</string>
     <string name="item_on_lines">%1$s</string>
     <string name="item_remove_find">削除</string>
-    <string name="item_remove_find_title">この取得を削除しますか？</string>
-    <string name="item_remove_find_text">%1$sの取得を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
-    <string name="line_nearest">最寄りの未取得：%2$s・%1$s</string>
+    <string name="item_remove_find_title">この記録を削除しますか？</string>
+    <string name="item_remove_find_text">%1$sの記録を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
+    <string name="line_nearest">次：%1$s・%2$s</string>
 
-    <string name="new_needs_name">名前を入力すると保存できます。</string>
     <string name="new_title">新しい項目</string>
-    <string name="new_save">保存して記録</string>
+    <string name="new_save">集める</string>
 
     <string name="more_title">設定</string>
     <string name="more_language">言語</string>
@@ -188,7 +188,7 @@
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">スタンプ</string>
-    <string name="photo_kind_other">その他の写真</string>
+    <string name="photo_kind_other">その他</string>
     <string name="photo_add_title">写真を追加</string>
     <string name="photo_take">写真を撮る</string>
     <string name="photo_pick">ギャラリーから選ぶ</string>
@@ -205,7 +205,7 @@
     <string name="item_photos">写真</string>
     <string name="photo_add_kind">追加：%1$s</string>
     <string name="kind_station_stamp">駅スタンプ</string>
-    <string name="kind_ekitag">エキタグの画面</string>
+    <string name="kind_ekitag">エキタグ</string>
     <string name="kind_station">駅の写真</string>
     <string name="kind_card">カード</string>
     <string name="kind_manhole">マンホール</string>
@@ -220,9 +220,8 @@
     <string name="kind_item">アイテム</string>
     <string name="item_place">場所</string>
     <string name="new_where">場所</string>
-    <string name="new_where_position">場所を探さない場合は現在地を使います。</string>
     <string name="new_use_position">現在地を使う</string>
-    <string name="new_find_place">OpenStreetMapで場所を探す</string>
+    <string name="new_find_place">場所を検索</string>
     <string name="new_finding_place">検索中…</string>
     <string name="new_no_place">見つかりませんでした。日本語の名前で試してください。見つからない場合は現在地を使います。</string>
     <string name="osm_credit">場所 © OpenStreetMap contributors</string>
@@ -235,7 +234,7 @@
     <string name="collection_new">新しいカテゴリー</string>
     <string name="more_my_collections">カテゴリー</string>
     <string name="quantity_times">×%1$d</string>
-    <string name="find_edit_title">この取得</string>
+    <string name="find_edit_title">この記録</string>
     <string name="find_quantity">数</string>
     <string name="find_cost">支払った金額</string>
     <string name="a11y_less">1つ減らす</string>
@@ -257,15 +256,15 @@
     <string name="trip_pick_station">駅を選ぶ</string>
     <string name="trip_station_search">駅名</string>
     <string name="trip_swap">出発と到着を入れ替え</string>
-    <string name="trip_link">Googleマップのリンクを貼る</string>
-    <string name="trip_link_hint">Googleマップの経路リンク（共有、またはアドレスバー）</string>
-    <string name="trip_link_read">読み込む</string>
+    <string name="trip_link">Googleマップのリンク</string>
+    <string name="trip_link_hint">経路のリンク</string>
+    <string name="trip_link_read">読み取る</string>
     <string name="trip_link_not">Googleマップの経路リンクではありません。</string>
     <string name="trip_link_offline">短いリンクは一度だけインターネットが必要です。オンラインで再度試すか、アドレスバーの長いリンクを貼ってください。</string>
     <string name="trip_link_missing">リンクの出発地か到着地に、アプリの路線の駅が見つかりません。</string>
     <string name="trip_link_far">アプリの路線で一番近い駅は%1$sです（リンクの場所から%2$s）。</string>
     <string name="trip_link_mode">リンクは%1$sの経路です。アプリは2つの駅の間の電車を計画します。</string>
-    <string name="trip_empty">出発駅と到着駅を選んでください。路線、通過するすべての駅、その2 km以内にあるものを表示します。</string>
+    <string name="trip_empty">路線から2 km以内の集められるものを表示します。</string>
     <string name="trip_no_route">アプリの路線では、この2駅はつながっていません。</string>
     <string name="trip_shinkansen">新幹線</string>
     <string name="trip_local">在来線</string>
@@ -291,13 +290,12 @@
     <string name="trip_get_off_next">次に降りる駅：%1$s・%2$s</string>
     <string name="trip_clear">計画を消す</string>
     <string name="trip_report">トリップレポート</string>
-    <string name="trip_report_collected">%1$d件 集めた</string>
     <string name="trip_report_none">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
     <string name="trip_report_share_image">画像を共有</string>
     <string name="trip_report_share_csv">CSVを共有</string>
     <string name="trip_report_more">ほか%1$d件</string>
     <string name="trip_report_kind">%1$s ×%2$d</string>
-    <string name="trip_report_day">%1$s・%2$d</string>
+    <string name="trip_report_day">%1$s・%2$s</string>
     <string name="trip_report_footer">Meguri</string>
     <string name="type_dam_plural">ダムカード</string>
     <string name="type_museum_plural">博物館スタンプ</string>
@@ -316,15 +314,11 @@
     <string name="settings_catalogue_sub">地域・カードの画像・CSVで追加</string>
     <string name="settings_catalogue_note">都道府県ごとに「地域」からダウンロードします。集められるものと、必要ならオフライン地図です。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
-    <string name="settings_help_sub">新機能・ログ・バージョン %1$s</string>
-    <string name="settings_collections_sub">自分で追加したカテゴリーと、新しい追加</string>
+    <string name="settings_help_sub">バージョン %1$s</string>
+    <string name="settings_collections_sub">まだありません</string>
     <string name="photo_kind_label">種類</string>
-    <string name="sort_tip_near">近い順</string>
-    <string name="sort_tip_near_text">：各項目までの距離</string>
-    <string name="sort_tip_az">名前順</string>
-    <string name="sort_tip_az_text">：名前のアルファベット・五十音順</string>
     <string name="profile_today">今日</string>
-    <string name="profile_open_map">地図を開く</string>
+    <string name="profile_open_map">集めた場所</string>
     <string name="profile_collections">コレクション</string>
     <string name="map_title_collected">集めた場所</string>
     <plurals name="profile_finds">
@@ -383,7 +377,6 @@
     <string name="edit_title">詳細を編集</string>
     <string name="edit_name_ja">名前（日本語）</string>
     <string name="edit_name_en">名前（英語）</string>
-    <string name="edit_place">入手場所</string>
     <string name="edit_address">住所</string>
     <string name="edit_hours">時間</string>
     <string name="edit_notes">メモ</string>
@@ -398,7 +391,6 @@
     <string name="edit_link_failed">このリンクからは場所を読み取れません（短縮リンクは一度ネット接続が必要です）。</string>
     <string name="edit_no_position">まだ現在地がありません。</string>
     <string name="edit_search_none">見つかりませんでした。</string>
-    <string name="edit_kept_note">カタログを更新しても、編集した内容はそのまま残ります。</string>
     <!-- Share to Meguri (#80) -->
     <plurals name="share_title"><item quantity="other">%d 枚の写真を追加</item></plurals>
     <string name="share_grouped">撮った場所ごとにまとめました</string>
@@ -424,13 +416,12 @@
     <string name="kind_your_own">自分のコレクション</string>
     <plurals name="kind_lines"><item quantity="other">%d 路線</item></plurals>
     <plurals name="kind_prefectures"><item quantity="other">%d 都道府県</item></plurals>
-    <string name="kind_next">次: %s</string>
+    <string name="kind_next">次：%s</string>
     <string name="timeline_title">タイムライン</string>
-    <string name="timeline_sub">集めたものを日ごとに</string>
     <string name="timeline_empty">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
     <string name="filter_to_get">未取得</string>
     <string name="filter_have">取得済み</string>
-    <string name="photo_hint_setting">新しい写真を提案</string>
+    <string name="photo_hint_setting">写真の提案</string>
     <string name="photo_hint_setting_sub">カメラで未取得のものの近くで撮った写真を、Meguriが追加するよう提案します。写真へのアクセスが必要です。</string>
     <string name="photo_hint_title">%1$sの近くの写真</string>
     <string name="photo_hint_text">%1$s・撮影場所から%2$s</string>
@@ -503,7 +494,7 @@
     <string name="add_new_kind">新しいカテゴリー：%1$s</string>
     <string name="add_new_kind_pick">新しい種類のカード・スタンプ・その他を選んでください。</string>
     <string name="add_new_kind_note">独立したカテゴリーとして、マイブックに加わります。</string>
-    <string name="add_save_photo">保存＋写真</string>
+    <string name="add_save_photo">写真</string>
     <string name="scan_reading">カードを読み取り中…</string>
     <string name="scan_unavailable">この端末ではスキャナーを使えません（Google Play開発者サービスが必要）。アイテムのページから写真を追加してください。</string>
     <string name="scan_no_match">どのカードですか？</string>
@@ -518,10 +509,9 @@
     <string name="scan_cover_title">マンホールのふた</string>
     <string name="scan_cover">どのカードのふたですか？近いもの：</string>
     <string name="look_theme">テーマ</string>
-    <string name="look_theme_phone">端末</string>
+    <string name="look_theme_phone">システム</string>
     <string name="look_theme_light">ライト</string>
     <string name="look_theme_dark">ダーク</string>
-    <string name="look_theme_sub">「端末」はスマホのダークモードに従います。地図も切り替わります。</string>
     <string name="look_colours">色</string>
     <string name="look_colours_meguri">Meguri</string>
     <string name="look_colours_wallpaper">壁紙</string>
@@ -538,7 +528,7 @@
     <string name="alerts_mode_trip">移動中</string>
     <string name="alerts_mode_always">常に</string>
     <string name="alerts_mode_sub">移動中：深夜0時まで、または旅の間。常に：Meguriを閉じていても。</string>
-    <string name="alerts_how_close">近接通知の設定</string>
+    <string name="alerts_how_close">距離</string>
     <string name="alerts_every">すべてのカテゴリー</string>
     <string name="alerts_categories">通知カテゴリー</string>
     <string name="alerts_categories_sub">%2$d中%1$d</string>
@@ -572,7 +562,7 @@
     <plurals name="cat_remove_blocked">
         <item quantity="other">%1$d件のアイテムがあります。カテゴリーを削除するには、各アイテムを開き、その他のオプションから削除してください。</item>
     </plurals>
-    <string name="cat_empty">自分で追加したカテゴリーがここに表示されます。下のボタンか、＋の「追加」から作れます。</string>
+    <string name="cat_empty">まだカテゴリーがありません。</string>
     <string name="alerts_target_own">カスタムの距離です。ほかのカテゴリーはデフォルトを使います。</string>
     <string name="alerts_target_same">デフォルトを使っています。スライダーを動かすとカスタムの距離になります。</string>
     <string name="alerts_use_main">デフォルトに戻す</string>
@@ -644,16 +634,13 @@
     <string name="privacy_directions">経路はGoogleマップで場所を開きます。旅に貼ったGoogleマップのリンクは、行き先を調べるために一度開きます</string>
     <string name="privacy_play">通知のための現在地とカードスキャンは、スマホのGoogle Playサービスを使います</string>
     <string name="a11y_plus">スキャン、検索、追加</string>
-    <string name="tip_got_it">わかりました</string>
-    <string name="photo_cover_auto">いまはこの写真が表示画像です（選んでいないときは最新の写真）。</string>
+    <string name="photo_cover_auto">選ぶまでは最新の写真を表示します。</string>
     <string name="photo_cover_keep">表示画像として固定</string>
-    <string name="check_pick_category">カテゴリー、都道府県の順に選び、持っているものは右へ、まだのものは左へスワイプします。</string>
-    <string name="check_pick_prefecture">都道府県を選んでください。</string>
     <string name="check_no_prefecture">都道府県なし</string>
     <plurals name="check_left">
         <item quantity="other">残り%1$d</item>
     </plurals>
-    <string name="check_have">持っている</string>
+    <string name="check_have">集める</string>
     <string name="check_not_yet">まだ</string>
     <string name="check_all_had">すべて持っています</string>
     <string name="check_done">チェック完了</string>
@@ -673,11 +660,10 @@
     <!-- Region packs (0.5) -->
     <string name="regions_title">地域</string>
     <string name="regions_sub">都道府県ごとのカード・スタンプとオフライン地図をダウンロード</string>
-    <string name="regions_intro">都道府県ごとにダウンロードします。集められるものと、必要ならオフライン地図。この端末で使用中: %1$s。</string>
+    <string name="regions_intro">この端末で使用中：%1$s。</string>
     <string name="regions_offline">ダウンロードサーバーに接続できません。接続を確認して、もう一度開いてください。</string>
     <string name="regions_failed">ダウンロードが完了しませんでした。集めたものはそのままです。もう一度お試しください。</string>
     <string name="regions_update_all">すべて更新 (%1$s)</string>
-    <string name="regions_extras">その他: %1$s</string>
     <string name="regions_with_map">オフライン地図 (%1$s)</string>
     <string name="regions_download">ダウンロード (%1$s)</string>
     <string name="regions_on_phone">この端末にあり（地図あり）</string>
@@ -695,7 +681,7 @@
     <!-- Send feedback (2026-11-15) -->
     <string name="feedback_title">フィードバックを送る</string>
     <string name="feedback_row_sub">メモとスクリーンショットをメールで</string>
-    <string name="feedback_intro">起きたことや要望を書いてください。メールアプリから、アプリのバージョンと端末名を添えて開発者に送ります。</string>
+    <string name="feedback_intro">メールアプリから、アプリのバージョンと端末名を添えて送ります。</string>
     <string name="feedback_hint">起きたこと、変えてほしいこと</string>
     <string name="feedback_add_screenshots">スクリーンショットを追加</string>
     <string name="feedback_more_screenshots">さらに追加（%1$d枚、タップで削除）</string>

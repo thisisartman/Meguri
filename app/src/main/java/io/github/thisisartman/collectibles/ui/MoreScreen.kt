@@ -453,7 +453,7 @@ fun MoreScreen(
             ?: stringResource(R.string.more_auto_sub_on)
     }
     val titles = mapOf(
-        S_COLLECTIONS to stringResource(R.string.more_my_collections),
+        S_COLLECTIONS to stringResource(R.string.cat_yours),
         S_ALERTS to stringResource(R.string.settings_alerts),
         S_DATA to stringResource(R.string.settings_data),
         S_LOOK to stringResource(R.string.settings_look),
@@ -604,7 +604,6 @@ fun MoreScreen(
                     listOf(R.string.look_theme_phone, R.string.look_theme_light, R.string.look_theme_dark).map { stringResource(it) },
                     AppLook.Theme.entries.indexOf(theme),
                 ) { AppLook.setTheme(context, AppLook.Theme.entries[it]) }
-                Note(stringResource(R.string.look_theme_sub))
                 if (AppLook.available()) {
                     SectionTitle(stringResource(R.string.look_colours))
                     var device by remember { mutableStateOf(AppLook.deviceColours(context)) }

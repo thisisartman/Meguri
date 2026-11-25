@@ -221,7 +221,7 @@ fun NewItemScreen(
                     TextButton(onClick = { place = null }) { Text(stringResource(R.string.new_use_position)) }
                 }
             } else {
-                Text(stringResource(if (forNotebook) R.string.nb_new_where else R.string.new_where_position), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (forNotebook) Text(stringResource(R.string.nb_new_where), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val runSearch = {
                     val q = placeQuery.ifBlank { name }
                     if (q.isNotBlank() && !searching) {
@@ -267,12 +267,9 @@ fun NewItemScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                 )
             }
-            if (name.isBlank()) {
-                Text(stringResource(R.string.new_needs_name), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
             Spacer(Modifier.heightIn(min = 8.dp))
         }
-        // Saving collects it today, here; "Save and add photo" opens the camera straight after
+        // Collect saves it as collected today, here; Photo does the same and opens the camera straight after
         Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             if (!forNotebook) InkOutlinedButton(onClick = { save(true) }, enabled = ok, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
                 Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))

@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
@@ -75,12 +76,16 @@ private data class ReportSpec(
     val subtitle: String?,
     val countText: String,
     val kinds: List<Pair<String, Int>>, // label, colour
-    val lines: List<Triple<String, String, Int>>, // name, time, colour
+    val lines: List<ReportLine>,
     val more: String?,
     val photos: List<String>,
     val bg: Int, val fg: Int, val muted: Int, val accent: Int,
     val footer: String,
+    val sep: String,
 )
+
+/** One find on the image: its name and type, so a station's stamp and its Ekitag read apart (#147). */
+private data class ReportLine(val name: String, val type: String, val time: String, val color: Int)
 
 /**
  * Trip report (#61): pick a day with finds; share it as a story image (portrait 9:16, owner 2026-11-06) or as a CSV
@@ -108,10 +113,14 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
     // Everything the image needs, resolved here so the drawing code needs no Compose
     val scheme = MaterialTheme.colorScheme
     val types = LocalTypeColors.current
-    val countText = stringResource(R.string.trip_report_collected, rows.sumOf { it.find.quantity })
+    val found = rows.sumOf { it.find.quantity }
+    val countText = pluralStringResource(R.plurals.finds, found, found)
+    val sepText = sep()
     val kindFmt = stringResource(R.string.trip_report_kind)
     val moreFmt = stringResource(R.string.trip_report_more)
     val footer = stringResource(R.string.trip_report_footer)
+    // Every type's label, read here rather than from the context later (lint: LocalContextGetResourceValueCall)
+    val typeLabels = ItemType.entries.associateWith { stringResource(it.label()) }
     val typeNames = mapOf(
         ItemType.MANHOLE_CARD to stringResource(R.string.type_manhole), ItemType.EKI_STAMP to stringResource(R.string.type_eki),
         ItemType.EKITAG to stringResource(R.string.type_ekitag), ItemType.GOSHUIN to stringResource(R.string.type_goshuin),
@@ -134,11 +143,16 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
                     val sample = rows.first { (it.collection ?: it.item.type.name) == k }
                     kindFmt.format(sample.collection ?: typeNames[sample.item.type] ?: k, n) to colorFor(sample)
                 },
-                lines = shown.map { r -> Triple(r.item.displayName(ja), r.find.acquiredAt?.takeIf { TripReport.hasTime(r.find) }?.let { time.format(Date(it)) }.orEmpty(), colorFor(r)) },
+                lines = shown.map { r ->
+                    ReportLine(
+                        r.item.displayName(ja), r.collection ?: typeNames[r.item.type] ?: typeLabels.getValue(r.item.type),
+                        r.find.acquiredAt?.takeIf { TripReport.hasTime(r.find) }?.let { time.format(Date(it)) }.orEmpty(), colorFor(r),
+                    )
+                },
                 more = (rows.size - shown.size).takeIf { it > 0 }?.let { moreFmt.format(it) },
                 photos = finds.flatMap { f -> f.photos.filter { !it.missing }.map { it.contentUri } }.take(6),
                 bg = scheme.surface.toArgb(), fg = scheme.onSurface.toArgb(), muted = scheme.onSurfaceVariant.toArgb(), accent = scheme.primary.toArgb(),
-                footer = footer,
+                footer = footer, sep = sepText,
             )
         }
     }
@@ -157,7 +171,7 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
         }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             items(days, key = { it.first }) { (d, n) ->
-                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, dateText(d), n)) },
+                FilterChip(selected = d == chosen, onClick = { day = d }, label = { Text(stringResource(R.string.trip_report_day, shortDateText(d), pluralStringResource(R.plurals.timeline_count, n, n))) },
                     modifier = Modifier.heightIn(min = 48.dp))
             }
         }
@@ -256,12 +270,14 @@ private fun render(context: Context, s: ReportSpec): Bitmap {
     val nameP = paint(42f, s.fg)
     val timeP = paint(36f, s.muted)
     val bottom = H - 200f
-    for ((name, time, color) in s.lines) {
+    for ((name, type, time, color) in s.lines) {
         if (y + 70f > bottom) break
         y += 70f
         c.drawCircle(pad + 12f, y - 14f, 12f, Paint(Paint.ANTI_ALIAS_FLAG).apply { this.color = color })
         val tw = timeP.measureText(time)
-        c.drawText(fit(name, nameP, W - 2 * pad - 60f - tw - 30f), pad + 44f, y, nameP)
+        // The name gives way to the type, so a long name is cut and "· Ekitag" stays
+        val suffix = s.sep + type
+        c.drawText(fit(name, nameP, W - 2 * pad - 60f - tw - 30f - nameP.measureText(suffix)) + suffix, pad + 44f, y, nameP)
         c.drawText(time, W - pad - tw, y, timeP)
     }
     s.more?.let { y += 64f; if (y < bottom + 40f) c.drawText(it, pad + 44f, y, paint(38f, s.muted)) }

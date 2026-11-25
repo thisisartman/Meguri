@@ -131,9 +131,6 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var byName by rememberSaveable { mutableStateOf(false) }
     var tileStep by rememberSaveable { mutableIntStateOf(1) }
     var sortOpen by remember { mutableStateOf(false) }
-    // One-time tips (owner, 2026-11-07): shown once, closed with an X, never again
-    val tips = remember { ctx.getSharedPreferences("tips", android.content.Context.MODE_PRIVATE) }
-    var sortTip by remember { mutableStateOf(false) }
     var sizeOpen by rememberSaveable { mutableStateOf(false) }
     val sizeLabel = stringResource(R.string.nearby_tile_size)
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
@@ -347,7 +344,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         )
                     }
                     Box {
-                        IconButton(onClick = { sortOpen = true; sortTip = !tips.getBoolean(TIP_SORT, false) }, modifier = Modifier.size(48.dp)) {
+                        IconButton(onClick = { sortOpen = true }, modifier = Modifier.size(48.dp)) {
                             // The button shows the order in use: nearest, or A over Z
                             Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
                         }
@@ -359,26 +356,6 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     leadingIcon = { Icon(painterResource(if (az) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = null) },
                                     trailingIcon = { if (byName == az) Icon(Icons.Filled.Check, contentDescription = null) },
                                 )
-                            }
-                            // What the orders mean, in the menu itself until "Got it" (it used to stay on the page and
-                            // looked like part of Tile size; sweep 2026-11-09)
-                            if (sortTip) {
-                                HorizontalDivider()
-                                Text(
-                                    androidx.compose.ui.text.buildAnnotatedString {
-                                        val bold = androidx.compose.ui.text.SpanStyle(fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-                                        withStyle(bold) { append(stringResource(R.string.sort_tip_near)) }
-                                        append(stringResource(R.string.sort_tip_near_text))
-                                        append("\n")
-                                        withStyle(bold) { append(stringResource(R.string.sort_tip_az)) }
-                                        append(stringResource(R.string.sort_tip_az_text))
-                                    },
-                                    Modifier.padding(horizontal = 12.dp, vertical = 8.dp).widthIn(max = 260.dp),
-                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                )
-                                TextButton(onClick = { sortTip = false; tips.edit().putBoolean(TIP_SORT, true).apply() }, modifier = Modifier.padding(start = 4.dp)) {
-                                    Text(stringResource(R.string.tip_got_it))
-                                }
                             }
                         }
                     }
@@ -541,18 +518,26 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(boldMatch(r.item.displayName(ja), query), style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                        Text(
-                                            listOfNotNull(
-                                                // A card named by its design ("Kaen doki") shows its code, so a code search shows why it matched
-                                                r.item.code?.takeIf { c -> r.item.type == ItemType.MANHOLE_CARD && !r.item.displayName(ja).contains(c.takeLast(4)) },
-                                                r.item.nameJa.takeIf { !ja && it != r.item.displayName(ja) },
-                                                kindName(r.item),
-                                                r.item.prefecture?.let { prefectureName(it, ja) },
-                                                stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
-                                            ).joinToString(sep()),
-                                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                            maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                        )
+                                        // The card code first and the status pinned at the end, so a long line cuts the
+                                        // Japanese name and the prefecture, never these (#146)
+                                        Row {
+                                            Text(
+                                                listOfNotNull(
+                                                    r.item.code?.takeIf { r.item.type == ItemType.MANHOLE_CARD },
+                                                    kindName(r.item),
+                                                    r.item.nameJa.takeIf { !ja && it != r.item.displayName(ja) },
+                                                    r.item.prefecture?.let { prefectureName(it, ja) },
+                                                ).joinToString(sep()),
+                                                Modifier.weight(1f, fill = false),
+                                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1, overflow = TextOverflow.Ellipsis,
+                                            )
+                                            Text(
+                                                sep() + stringResource(if (r.findCount > 0) R.string.map_collected else R.string.map_not_collected),
+                                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                                maxLines = 1,
+                                            )
+                                        }
                                     }
                                     distanceText(distTo(r))?.let { d ->
                                         Spacer(Modifier.width(8.dp))
@@ -636,7 +621,6 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
 }
 
 private val TILE_SIZES = listOf(48.dp, 64.dp, 84.dp)
-private const val TIP_SORT = "sort"
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable

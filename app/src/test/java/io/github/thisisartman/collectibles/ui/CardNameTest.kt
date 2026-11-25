@@ -14,8 +14,13 @@ class CardNameTest {
         CardName.split("燕市 合併20周年", "Tsubame · 20 years as one city", "燕市", "15-213-E001", japanese = true),
     )
 
-    @Test fun aCardWithNoDesignNameKeepsItsNameWithTheCodeUnder() = assertEquals(
-        "Niigata-shi B001" to "15-100-B001",
+    @Test fun japaneseCardWithNoDesignNameShowsItsCodeOnce() = assertEquals(
+        "新潟市" to "15-100-B001",
+        CardName.split("新潟市 B001", "Niigata-shi B001", "新潟市", "15-100-B001", japanese = true),
+    )
+
+    @Test fun aCardWithNoDesignNameShowsItsCodeOnceUnderTheName() = assertEquals(
+        "Niigata-shi" to "15-100-B001",
         CardName.split("新潟市 B001", "Niigata-shi B001", "新潟市", "15-100-B001", japanese = false),
     )
 

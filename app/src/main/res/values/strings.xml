@@ -20,11 +20,12 @@
     <string name="type_eki">Station stamp</string>
     <string name="type_eki_plural">Station stamps</string>
     <string name="type_ekitag">Ekitag</string>
+    <string name="type_ekitag_plural">Ekitags</string>
 
     <string name="got_it">Collect</string>
     <string name="a11y_got_it">Collect %1$s</string>
     <string name="a11y_photo">Photo of %1$s</string>
-    <string name="a11y_remove_find">Remove the collection from %1$s</string>
+    <string name="a11y_remove_find">Remove the find from %1$s</string>
     <string name="state_collected">Collected</string>
     <string name="state_to_get">Not collected</string>
     <string name="got_it_again">Collect again</string>
@@ -48,7 +49,7 @@
     <string name="book_marked">Marked %1$d</string>
     <string name="cancel">Cancel</string>
 
-    <string name="item_your_record">Collected</string>
+    <string name="item_your_record">Finds</string>
     <string name="item_where">Where to get it</string>
     <string name="item_handed_out_at">Handed out at</string>
     <string name="item_hours">Hours</string>
@@ -67,8 +68,8 @@
     <string name="back">Back</string>
     <string name="nearby_finding">Finding your position…</string>
     <string name="book_mark_choose">Choose the ones you have</string>
-    <string name="item_finding_position">finding position…</string>
-    <string name="item_position_saved">location saved</string>
+    <string name="item_finding_position">Finding location…</string>
+    <string name="item_position_saved">Location saved</string>
     <string name="item_find_map">Map</string>
     <string name="nearby_next">Next: %1$s · %2$s</string>
     <string name="item_directions">Directions · %1$s</string>
@@ -76,13 +77,12 @@
     <string name="item_call">Call</string>
     <string name="item_on_lines">On %1$s</string>
     <string name="item_remove_find">Remove</string>
-    <string name="item_remove_find_title">Remove this collection?</string>
-    <string name="item_remove_find_text">This removes the collection from %1$s. If it is the only one, the item goes back to Not collected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
-    <string name="line_nearest">Nearest not collected: %2$s · %1$s</string>
+    <string name="item_remove_find_title">Remove this find?</string>
+    <string name="item_remove_find_text">This removes the find from %1$s. If it is the only one, the item goes back to Not collected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
+    <string name="line_nearest">Next: %1$s · %2$s</string>
 
-    <string name="new_needs_name">Type a name to save.</string>
     <string name="new_title">New item</string>
-    <string name="new_save">Save and log</string>
+    <string name="new_save">Collect</string>
 
     <string name="more_title">Settings</string>
     <string name="more_language">Language</string>
@@ -188,7 +188,7 @@
 
     <!-- Several photos per find (#54, Legion) -->
     <string name="photo_kind_stamp">Stamp</string>
-    <string name="photo_kind_other">Other photo</string>
+    <string name="photo_kind_other">Other</string>
     <string name="photo_add_title">Add a photo</string>
     <string name="photo_take">Take a photo</string>
     <string name="photo_pick">Choose from the gallery</string>
@@ -205,7 +205,7 @@
     <string name="item_photos">Photos</string>
     <string name="photo_add_kind">Add: %1$s</string>
     <string name="kind_station_stamp">Station stamp</string>
-    <string name="kind_ekitag">Ekitag screenshot</string>
+    <string name="kind_ekitag">Ekitag</string>
     <string name="kind_station">Station photo</string>
     <string name="kind_card">Card</string>
     <string name="kind_manhole">Manhole cover</string>
@@ -220,9 +220,8 @@
     <string name="kind_item">The item</string>
     <string name="item_place">Where</string>
     <string name="new_where">Where</string>
-    <string name="new_where_position">Your position now, unless you find the place.</string>
     <string name="new_use_position">Use my position</string>
-    <string name="new_find_place">Find the place on OpenStreetMap</string>
+    <string name="new_find_place">Search for the place</string>
     <string name="new_finding_place">Finding…</string>
     <string name="new_no_place">No place found. OpenStreetMap often knows only the Japanese name: try that. Otherwise your position is used.</string>
     <string name="osm_credit">Places © OpenStreetMap contributors</string>
@@ -235,7 +234,7 @@
     <string name="collection_new">New category</string>
     <string name="more_my_collections">Categories</string>
     <string name="quantity_times">×%1$d</string>
-    <string name="find_edit_title">This collection</string>
+    <string name="find_edit_title">This find</string>
     <string name="find_quantity">How many</string>
     <string name="find_cost">What you paid</string>
     <string name="a11y_less">One fewer</string>
@@ -257,15 +256,15 @@
     <string name="trip_pick_station">Choose a station</string>
     <string name="trip_station_search">Station name</string>
     <string name="trip_swap">Swap start and end</string>
-    <string name="trip_link">Paste a Google Maps link</string>
-    <string name="trip_link_hint">A directions link from Google Maps: Share, or the address bar</string>
-    <string name="trip_link_read">Read link</string>
+    <string name="trip_link">Google Maps link</string>
+    <string name="trip_link_hint">Directions link</string>
+    <string name="trip_link_read">Read</string>
     <string name="trip_link_not">That is not a Google Maps directions link.</string>
     <string name="trip_link_offline">A short link needs the internet once. Try again online, or paste the long link from the address bar.</string>
     <string name="trip_link_missing">The link has no start or end that matches a station on the lines in the app.</string>
     <string name="trip_link_far">%1$s is the nearest station on the lines in the app, %2$s from the place in the link.</string>
     <string name="trip_link_mode">The link is for %1$s; the app plans the train between the two stations.</string>
-    <string name="trip_empty">Choose where you start and where you end. The app finds the line, every station it passes, and what is within 2 km of them.</string>
+    <string name="trip_empty">Shows what to collect within 2 km of the line.</string>
     <string name="trip_no_route">These two stations are not joined by the lines in the app.</string>
     <string name="trip_shinkansen">Shinkansen</string>
     <string name="trip_local">Local lines</string>
@@ -291,13 +290,12 @@
     <string name="trip_get_off_next">Get off next: %1$s, %2$s</string>
     <string name="trip_clear">Clear the plan</string>
     <string name="trip_report">Trip report</string>
-    <string name="trip_report_collected">%1$d collected</string>
     <string name="trip_report_none">Nothing collected on a known day yet. Each find you log keeps its day; things you had before the app have none.</string>
     <string name="trip_report_share_image">Share image</string>
     <string name="trip_report_share_csv">Share CSV</string>
     <string name="trip_report_more">+%1$d more</string>
     <string name="trip_report_kind">%1$s ×%2$d</string>
-    <string name="trip_report_day">%1$s · %2$d</string>
+    <string name="trip_report_day">%1$s · %2$s</string>
     <string name="trip_report_footer">Meguri</string>
     <string name="type_dam_plural">Dam cards</string>
     <string name="type_museum_plural">Museum stamps</string>
@@ -316,15 +314,11 @@
     <string name="settings_catalogue_sub">Regions · card pictures · load a CSV for more</string>
     <string name="settings_catalogue_note">Each prefecture is its own download, under Regions: what you can collect there, and an offline map if you want one. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
-    <string name="settings_help_sub">What\'s new · logs · version %1$s</string>
-    <string name="settings_collections_sub">Categories you added yourself, and adding one</string>
+    <string name="settings_help_sub">Version %1$s</string>
+    <string name="settings_collections_sub">None yet</string>
     <string name="photo_kind_label">Type</string>
-    <string name="sort_tip_near">Nearest</string>
-    <string name="sort_tip_near_text">: how far each item is from you</string>
-    <string name="sort_tip_az">A to Z</string>
-    <string name="sort_tip_az_text">: names in alphabetical order</string>
     <string name="profile_today">today</string>
-    <string name="profile_open_map">Open map</string>
+    <string name="profile_open_map">Where you collected</string>
     <string name="profile_collections">Collections</string>
     <string name="map_title_collected">Where you collected</string>
     <plurals name="profile_finds">
@@ -388,7 +382,6 @@
     <string name="edit_title">Edit details</string>
     <string name="edit_name_ja">Name in Japanese</string>
     <string name="edit_name_en">Name in English</string>
-    <string name="edit_place">Where to get it</string>
     <string name="edit_address">Address</string>
     <string name="edit_hours">Hours</string>
     <string name="edit_notes">Notes</string>
@@ -398,12 +391,11 @@
     <string name="edit_link">Google Maps link</string>
     <string name="edit_read">Read</string>
     <string name="edit_search">Search for the place</string>
-    <string name="edit_find">Find</string>
+    <string name="edit_find">Search</string>
     <string name="edit_save">Save</string>
     <string name="edit_link_failed">That link has no place Meguri can read (a short link needs the network once).</string>
     <string name="edit_no_position">No position yet.</string>
     <string name="edit_search_none">Nothing found.</string>
-    <string name="edit_kept_note">Your changes stay when the catalogue is updated.</string>
     <!-- Share to Meguri (#80) -->
     <plurals name="share_title"><item quantity="one">Add %d photo</item><item quantity="other">Add %d photos</item></plurals>
     <string name="share_grouped">Grouped by where they were taken</string>
@@ -431,11 +423,10 @@
     <plurals name="kind_prefectures"><item quantity="one">%d prefecture</item><item quantity="other">%d prefectures</item></plurals>
     <string name="kind_next">Next: %s</string>
     <string name="timeline_title">Timeline</string>
-    <string name="timeline_sub">Everything you collected, by day</string>
     <string name="timeline_empty">Nothing with a day yet. Each find you log keeps its day; things you had before the app have none.</string>
     <string name="filter_to_get">Not collected</string>
     <string name="filter_have">Collected</string>
-    <string name="photo_hint_setting">Suggest new photos</string>
+    <string name="photo_hint_setting">Photo suggestions</string>
     <string name="photo_hint_setting_sub">When you take a photo with the camera near something you have not collected, Meguri offers to add it. Needs access to your photos.</string>
     <string name="photo_hint_title">Photo near %1$s</string>
     <string name="photo_hint_text">%1$s · %2$s from where it was taken</string>
@@ -512,7 +503,7 @@
     <string name="add_new_kind">New category: %1$s</string>
     <string name="add_new_kind_pick">Choose card, stamp or other for the new category.</string>
     <string name="add_new_kind_note">It becomes a category of its own, with its own place in My book.</string>
-    <string name="add_save_photo">Save + photo</string>
+    <string name="add_save_photo">Photo</string>
     <string name="scan_reading">Reading the card…</string>
     <string name="scan_unavailable">The scanner isn\'t available on this phone (it needs Google Play services). Add the photo from the item page instead.</string>
     <string name="scan_no_match">Which card is this?</string>
@@ -527,10 +518,9 @@
     <string name="scan_cover_title">A manhole cover</string>
     <string name="scan_cover">Which card is this cover for? The nearest ones:</string>
     <string name="look_theme">Theme</string>
-    <string name="look_theme_phone">Phone</string>
+    <string name="look_theme_phone">System</string>
     <string name="look_theme_light">Light</string>
     <string name="look_theme_dark">Dark</string>
-    <string name="look_theme_sub">Phone follows your phone\'s dark mode. The map changes with it.</string>
     <string name="look_colours">Colours</string>
     <string name="look_colours_meguri">Meguri</string>
     <string name="look_colours_wallpaper">Wallpaper</string>
@@ -548,7 +538,7 @@
     <string name="alerts_mode_trip">Travelling</string>
     <string name="alerts_mode_always">Always</string>
     <string name="alerts_mode_sub">Travelling: until midnight, or during a trip. Always: also when Meguri is closed.</string>
-    <string name="alerts_how_close">Proximity alert settings</string>
+    <string name="alerts_how_close">Distance</string>
     <string name="alerts_every">All categories</string>
     <string name="alerts_categories">Alert categories</string>
     <string name="alerts_categories_sub">%1$d of %2$d</string>
@@ -586,7 +576,7 @@
         <item quantity="one">It has %1$d item. To remove the category, remove the item first: open it, then More options, Remove item.</item>
         <item quantity="other">It has %1$d items. To remove the category, remove them first: open each, then More options, Remove item.</item>
     </plurals>
-    <string name="cat_empty">Categories you add yourself show here. Add one below, or from + then Add.</string>
+    <string name="cat_empty">No categories yet.</string>
     <string name="alerts_target_own">Custom distance. The other categories use the default.</string>
     <string name="alerts_target_same">Uses the default. Move the slider to set a custom distance.</string>
     <string name="alerts_use_main">Revert to default</string>
@@ -662,17 +652,14 @@
     <string name="privacy_directions">Directions open Google Maps with the place. A Google Maps link pasted into Trip is opened once to see where it leads</string>
     <string name="privacy_play">Position for alerts and the card scanner run through Google Play services on this phone</string>
     <string name="a11y_plus">Scan, search or add</string>
-    <string name="tip_got_it">Got it</string>
-    <string name="photo_cover_auto">This is the display picture for now: with none chosen, the newest photo is shown.</string>
+    <string name="photo_cover_auto">The newest photo is shown until you choose one.</string>
     <string name="photo_cover_keep">Keep as display picture</string>
-    <string name="check_pick_category">Choose a category, then a prefecture. Then swipe right for each one you have, left to skip.</string>
-    <string name="check_pick_prefecture">Choose a prefecture.</string>
     <string name="check_no_prefecture">No prefecture</string>
     <plurals name="check_left">
         <item quantity="one">%1$d to check</item>
         <item quantity="other">%1$d to check</item>
     </plurals>
-    <string name="check_have">Have it</string>
+    <string name="check_have">Collect</string>
     <string name="check_not_yet">Not yet</string>
     <string name="check_all_had">You have them all</string>
     <string name="check_done">All checked</string>
@@ -692,11 +679,10 @@
     <!-- Region packs (0.5) -->
     <string name="regions_title">Regions</string>
     <string name="regions_sub">Download a prefecture\'s cards, stamps and offline map</string>
-    <string name="regions_intro">Each prefecture comes as its own download: what you can collect there, and an offline map if you want one. On this phone: %1$s.</string>
+    <string name="regions_intro">On this phone: %1$s.</string>
     <string name="regions_offline">Can\'t reach the download server. Check your connection and open this page again.</string>
     <string name="regions_failed">A download didn\'t finish. Nothing you collected was touched; try again.</string>
     <string name="regions_update_all">Update all (%1$s)</string>
-    <string name="regions_extras">Also: %1$s</string>
     <string name="regions_with_map">Offline map (%1$s)</string>
     <string name="regions_download">Download (%1$s)</string>
     <string name="regions_on_phone">On this phone, with its map</string>
@@ -715,7 +701,7 @@
     <!-- Send feedback (2026-11-15) -->
     <string name="feedback_title">Send feedback</string>
     <string name="feedback_row_sub">A note and screenshots, by email</string>
-    <string name="feedback_intro">Write what happened or what you\'d like. It goes by your mail app to Meguri\'s developer, with the app version and phone model.</string>
+    <string name="feedback_intro">Sent from your mail app with the app version and phone model.</string>
     <string name="feedback_hint">What happened, or what you\'d change</string>
     <string name="feedback_add_screenshots">Add screenshots</string>
     <string name="feedback_more_screenshots">Add more screenshots (%1$d added; tap one to remove it)</string>
