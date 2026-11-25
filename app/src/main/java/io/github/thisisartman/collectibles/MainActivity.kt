@@ -29,6 +29,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
+        io.github.thisisartman.collectibles.ui.Dates.readClock(this)
         io.github.thisisartman.collectibles.alerts.TripModeService.resumeIfOn(this, alertSettings)
     }
 

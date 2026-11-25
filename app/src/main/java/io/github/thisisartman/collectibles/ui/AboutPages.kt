@@ -40,7 +40,7 @@ import io.github.thisisartman.collectibles.R
  * Organic Maps; owner 2026-11-09): a header with icon, name and version, then credits, privacy and developer
  * sections. Every credit links to its project and to its licence.
  */
-data class Credit(val name: String, @StringRes val use: Int, val licence: String, val url: String, val licenceUrl: String)
+data class Credit(val name: String, @StringRes val use: Int, val licence: String?, val url: String?, val licenceUrl: String?)
 
 private const val APACHE = "https://www.apache.org/licenses/LICENSE-2.0"
 private const val OFL = "https://openfontlicense.org"
@@ -53,9 +53,9 @@ val SOURCES = listOf(
     Credit("Protomaps", R.string.credit_protomaps, "BSD-3-Clause", "https://protomaps.com", "https://github.com/protomaps/basemaps/blob/main/LICENSE.md"),
     Credit("Nominatim", R.string.credit_nominatim, "ODbL", "https://nominatim.org", "https://operations.osmfoundation.org/policies/nominatim/"),
     Credit("Eki kara Manhole", R.string.credit_ekikara, "© GKP", "https://ekikaramanhole.whitebeach.org/", "https://www.gk-p.jp/mhcard/"),
-    Credit("国土交通省 (MLIT)", R.string.credit_mlit_dams, "PDL 1.0", "https://www.mlit.go.jp/river/kankyo/campaign/shunnkan/damcard.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
+    Credit("国土交通省 (MLIT): dam cards", R.string.credit_mlit_dams, "PDL 1.0", "https://www.mlit.go.jp/river/kankyo/campaign/shunnkan/damcard.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
     // Roadside stations: MLIT's list.xlsx (as of R8.9.4), positions from OpenStreetMap (build_michi.py, 2026-11-08)
-    Credit("国土交通省 (MLIT)", R.string.credit_mlit_michi, "PDL 1.0", "https://www.mlit.go.jp/road/Michi-no-Eki/list.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
+    Credit("国土交通省 (MLIT): roadside stations", R.string.credit_mlit_michi, "PDL 1.0", "https://www.mlit.go.jp/road/Michi-no-Eki/list.html", "https://www.digital.go.jp/resources/open_data/public_data_license_v1.0"),
     // A few dam positions came from Wikidata (loadgeo.py: wikidata_st_dams.json, wikidata_gongendo.json)
     Credit("Wikidata", R.string.credit_wikidata, "CC0 1.0", "https://www.wikidata.org", CC0),
     Credit("国土地理院 (GSI)", R.string.credit_gsi, "Terms", "https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html", "https://www.gsi.go.jp/LAW/2930-index.html"),
@@ -117,15 +117,15 @@ fun AboutHeader() {
 fun CreditRow(c: Credit) {
     val context = LocalContext.current
     Row(
-        Modifier.fillMaxWidth().clickable { openLink(context, c.url) }.heightIn(min = 64.dp).padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+        Modifier.fillMaxWidth().then(if (c.url != null) Modifier.clickable { openLink(context, c.url) } else Modifier).heightIn(min = 64.dp).padding(start = 16.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             Text(c.name, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.primary)
             Text(stringResource(c.use), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(c.url.removePrefix("https://").removeSuffix("/"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (c.url != null) Text(c.url.removePrefix("https://").removeSuffix("/"), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        TextButton(onClick = { openLink(context, c.licenceUrl) }) { Text(c.licence, maxLines = 1) }
+        if (c.licence != null && c.licenceUrl != null) TextButton(onClick = { openLink(context, c.licenceUrl) }) { Text(c.licence, maxLines = 1) }
     }
     HorizontalDivider(Modifier.padding(horizontal = 16.dp), color = MaterialTheme.colorScheme.outlineVariant)
 }
@@ -164,6 +164,9 @@ fun PrivacyPage() {
         Credit("GitHub", R.string.privacy_reports, "Privacy", "https://github.com/thisisartman/Meguri/issues", "https://docs.github.com/site-policy/privacy-policies/github-general-privacy-statement"),
         Credit("Eki kara Manhole", R.string.privacy_cards, "Site", "https://ekikaramanhole.whitebeach.org/", "https://ekikaramanhole.whitebeach.org/"),
         Credit("Google Maps", R.string.privacy_directions, "Privacy", "https://www.google.com/maps", "https://policies.google.com/privacy"),
+        // Backup places added in 0.6.0 (#137)
+        Credit("Google Drive", R.string.privacy_drive, "Privacy", "https://drive.google.com", "https://policies.google.com/privacy"),
+        Credit("WebDAV", R.string.privacy_webdav, null, null, null),
         Credit("Google Play services", R.string.privacy_play, "Privacy", "https://developers.google.com/ml-kit", "https://policies.google.com/privacy"),
     ).forEach { CreditRow(it) }
 }

@@ -115,7 +115,7 @@ object BookKinds {
     }
 }
 
-fun NavHostController.openKind(key: String) = navigate("kind/${Uri.encode(key)}")
+fun NavHostController.openKind(key: String) = navigate("category/${Uri.encode(key)}")
 fun NavHostController.openGroup(kind: String, group: String) = navigate("group/${Uri.encode(kind)}/${Uri.encode(group)}")
 
 @Composable

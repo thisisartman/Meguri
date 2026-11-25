@@ -27,6 +27,7 @@ class CollectiblesApp : Application() {
     override fun onCreate() {
         super.onCreate()
         CrashLogger.install(log)
+        io.github.thisisartman.collectibles.ui.Dates.readClock(this)
         AppLanguage.ensureDefault(this)
         log.i(
             "App",

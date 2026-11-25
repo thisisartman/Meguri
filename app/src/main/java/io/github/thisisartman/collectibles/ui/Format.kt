@@ -148,9 +148,9 @@ fun formatDate(ms: Long, japanese: Boolean): String =
     SimpleDateFormat(if (japanese) "yyyy/MM/dd" else "yyyy-MM-dd", Locale.US).format(Date(ms))
 
 fun formatDateTime(ms: Long, japanese: Boolean): String =
-    SimpleDateFormat(if (japanese) "yyyy/MM/dd HH:mm" else "yyyy-MM-dd HH:mm", Locale.US).format(Date(ms))
+    SimpleDateFormat(if (japanese) "yyyy/MM/dd" else "yyyy-MM-dd", Locale.US).format(Date(ms)) + " " + Dates.time(ms)
 
-fun formatTime(ms: Long): String = SimpleDateFormat("HH:mm", Locale.US).format(Date(ms))
+fun formatTime(ms: Long): String = Dates.time(ms)
 
 /** Closer than this, a distance reads "here": GPS is not more exact than that. */
 const val HERE_M = 25.0
