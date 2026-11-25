@@ -602,6 +602,7 @@ private fun MapCreditsButton(modifier: Modifier) {
             }
         },
     )
+}
 
 /** A road's number up to the first ";" ("8;17" shows 8), for road number labels (#150). */
 private val FIRST_REF: Expression = Expression.raw(
