@@ -209,8 +209,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         val app = ctxOnb.applicationContext
         more.run { more.work.say(catalogueMessage(app, runCatching { more.io.importCatalog(uri) })) }
     }
-    // The picker and closing sheet carry on after the catalogue has loaded (#81 O3)
-    val inOnboarding = noCatalogue || onboarding.afterLoad
+    // The picker and closing sheet carry on after the catalogue has loaded (#81 O3). The loading step stays too: the
+    // first pack fills the catalogue long before the last one is in (#134)
+    val loadingRegions = onboarding.step == OnboardingStep.LOADING
+    val inOnboarding = noCatalogue || onboarding.afterLoad || loadingRegions
     // Onboarding: the sheet sits at its content's height (measured), up to the step's cap, and snaps there
     val onbMax = onboardingPeek(onboarding)
     var onbContentPx by remember(onboarding.step) { mutableIntStateOf(0) }
@@ -277,15 +279,21 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     }
                     return@Column
                 }
-                if (noCatalogue) {
+                if (noCatalogue || loadingRegions) {
                     // #81: the onboarding replaces the welcome card (#58), in this sheet, over the map of Japan
+                    val partialText = stringResource(R.string.onb_load_partial)
                     OnboardingSheet(
                         onboarding, prefectures, here.fix?.let { it.lat to it.lng },
                         // Region packs (0.5), with the catalogue inside the app as the fallback without a connection
                         loadCounts = { more.regionCounts() },
-                        onLoad = { regions -> more.loadRegions(regions) },
-                        // Already have some: on to the picker of what you have (#81 O3)
-                        onFinished = { already -> if (already) onboarding.step = OnboardingStep.HAVE },
+                        onLoad = { regions, withMap -> more.loadRegions(regions, withMap) },
+                        mapBytes = { regions -> more.mapBytes(regions) },
+                        // Already have some: on to the picker of what you have (#81 O3). A load that did not finish
+                        // says so and points to Regions, which shows what is missing (#134)
+                        onFinished = { already, loaded ->
+                            if (!loaded) more.work.say(partialText)
+                            onboarding.step = if (already) OnboardingStep.HAVE else OnboardingStep.START
+                        },
                         onLoadFile = { openCatalog.launch(CATALOGUE_TYPES) },
                         // The onboarding has asked: the app does not ask again as the catalogue loads, nor at later
                         // starts after a no (finding 42)

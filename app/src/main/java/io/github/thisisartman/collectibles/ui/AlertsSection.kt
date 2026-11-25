@@ -143,7 +143,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     val playOk = remember(tick) { vm.geofences.playServicesOk() }
     val notificationsOk = remember(tick) { vm.notifier.canPost() }
     val geoError = remember(tick) { s.geofenceError }
-    val until = remember(tick) { SimpleDateFormat("HH:mm", Locale.US).format(Date(s.tripUntilMs)) }
+    val until = remember(tick) { Dates.time(s.tripUntilMs) }
 
     // Design C (owner, 2026-11-09): one mode, one distance, categories one tap in
     val mode = when { geoOn -> 2; tripOn -> 1; else -> 0 }
@@ -231,7 +231,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     )
 
     val quiet = remember(tick) { s.quietOn }
-    SwitchRow(stringResource(R.string.quiet_title), stringResource(R.string.quiet_sub), quiet, onChange = { s.quietOn = it; tick++ })
+    SwitchRow(stringResource(R.string.quiet_title), if (quiet) stringResource(R.string.quiet_sub) else null, quiet, onChange = { s.quietOn = it; tick++ })
 
     MoreLink(
         stringResource(R.string.setup_title),

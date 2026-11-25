@@ -201,7 +201,8 @@ class CollectionRepository @Inject constructor(
         val findIds = dao.allFinds().filter { it.itemId == itemId }.map { it.id }.toSet()
         val photos = dao.allPhotos().filter { it.acquisitionId in findIds }
         db.withTransaction {
-            if (alsoItem) dao.setCover(itemId, null, now())
+            // Cleared whether the item goes or stays: its photos are all gone either way (#168)
+            dao.setCover(itemId, null, now())
             photos.forEach { dao.deletePhoto(it.id) }
             findIds.forEach { dao.deleteFind(it) }
             if (alsoItem) dao.deleteItem(itemId)
@@ -211,7 +212,7 @@ class CollectionRepository @Inject constructor(
     }
 
     suspend fun removeFinds(findIds: Collection<String>) {
-        db.withTransaction { findIds.forEach { dao.deleteFind(it) } }
+        db.withTransaction { findIds.forEach { dao.deleteFind(it) }; dao.clearMissingCovers() }
         log.i("Log", "Removed ${findIds.size} finds")
     }
 
@@ -357,7 +358,7 @@ class CollectionRepository @Inject constructor(
 
     suspend fun removePhoto(photoId: String) {
         val p = dao.allPhotos().firstOrNull { it.id == photoId }
-        dao.deletePhoto(photoId)
+        db.withTransaction { dao.deletePhoto(photoId); dao.clearMissingCovers() }
         p?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri) }
         log.i("Photo", "Removed photo $photoId from its find, with Meguri's copy (a camera original stays in the gallery)")
     }

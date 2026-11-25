@@ -313,8 +313,8 @@
     <string name="settings_data">バックアップとデータ</string>
     <string name="settings_look">表示</string>
     <string name="settings_catalogue">カタログ</string>
-    <string name="settings_catalogue_sub">新潟・埼玉・東京・群馬を内蔵・カードの画像・CSVで追加</string>
-    <string name="settings_catalogue_note">新潟・埼玉・東京のカタログ（マンホールカード、駅スタンプ、エキタグ、ダムカード、道の駅）、上越線の群馬県内の駅スタンプ、オフライン地図が入っています。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
+    <string name="settings_catalogue_sub">地域・カードの画像・CSVで追加</string>
+    <string name="settings_catalogue_note">都道府県ごとに「地域」からダウンロードします。集められるものと、必要ならオフライン地図です。CSVを読み込むと項目を追加・更新します。記録は削除されません。</string>
     <string name="settings_help">ヘルプと情報</string>
     <string name="settings_help_sub">新機能・ログ・バージョン %1$s</string>
     <string name="settings_collections_sub">自分で追加したカテゴリーと、新しい追加</string>
@@ -357,6 +357,7 @@
     <string name="onb_regions_all">日本全国を選ぶ</string>
     <string name="onb_regions_more">ほかの都道府県も順次追加します。</string>
     <string name="onb_loading">読み込み中…</string>
+    <string name="onb_load_partial">地域の一部がダウンロードできませんでした。設定 › カタログ › 地域 から残りを取得できます。</string>
     <plurals name="onb_load">
         <item quantity="other">%d地域を読み込む</item>
     </plurals>
@@ -445,8 +446,13 @@
     <string name="edit_type">種類</string>
     <string name="type_place_plural">スポット</string>
     <string name="cards_download">カードの画像</string>
+    <string name="cards_none">カタログにマンホールカードがまだありません。先に「地域」からダウンロードしてください。</string>
     <string name="cards_download_sub">%2$d枚中%1$d枚がこの端末に。タップでカードのサイト（駅からマンホール）から残りを自分用にダウンロード。端末内だけに保存し、バックアップには含めません。画像の権利はGKPと各自治体にあります。</string>
     <string name="cards_progress">ダウンロード中 %1$d / %2$d…</string>
+    <string name="cards_done_ok">カードの画像：%1$d枚ダウンロードしました。</string>
+    <plurals name="cards_not_on_site">
+        <item quantity="other">%d枚はカードのサイトにまだ画像がありません。1週間後にもう一度確認します。</item>
+    </plurals>
     <string name="cards_done">カードの画像：%1$d枚ダウンロード。%2$d枚はダウンロードできませんでした。「カードの画像」をタップしてもう一度</string>
     <string name="cards_remove">カードの画像を削除</string>
     <string name="cards_all">%1$d枚すべてこの端末に（自分用、バックアップには含めません）。画像の権利はGKPと各自治体、出典：駅からマンホール。</string>
@@ -541,7 +547,7 @@
     <string name="backup_section">バックアップ</string>
     <string name="photos_section">写真</string>
     <string name="photos_kept">Meguriに保存した写真</string>
-    <string name="photos_kept_sub">%1$d枚 · %2$s</string>
+    <plurals name="photos_kept_sub"><item quantity="other">%1$d枚 · %2$s</item></plurals>
     <string name="photos_kept_note">Meguriは追加した写真のコピーを持つので、ギャラリーから消しても残ります。写真付きバックアップで新しいスマホへ移せます。%1$d枚、%2$s。</string>
     <string name="photos_none">まだ写真がありません。記録に追加した写真がここに表示されます。</string>
     <plurals name="photos_count">
@@ -627,7 +633,9 @@
     <string name="credit_maplibre">地図</string>
     <string name="credit_play_location">現在地と通知</string>
     <string name="credit_mlkit">カードのスキャンと日本語の読み取り（スマホ内）</string>
-    <string name="privacy_intro">Meguriにはアカウントもサーバーもありません。記録、写真、設定はこのスマホと、保存したバックアップの中だけに残ります。あなたについての情報は集めません。</string>
+    <string name="privacy_drive">Google ドライブの1つのファイルへのバックアップ（選んだとき）：バックアップファイルを、選んだファイルへ送ります</string>
+    <string name="privacy_webdav">自分のサーバー（WebDAV）へのバックアップ（設定したとき）：バックアップファイルを、そのサーバーにだけ送ります</string>
+    <string name="privacy_intro">Meguriにはアカウントも専用のサーバーもありません。記録、写真、設定はこのスマホと、保存したバックアップの中だけに残ります。あなたについての情報は集めません。</string>
     <string name="privacy_online">オンラインサービス</string>
     <string name="privacy_online_sub">Meguriがこれらのサービスに接続するのは、書かれている機能を使ったときだけです。名前をタップするとサービスが、ボタンでプライバシーポリシーが開きます。</string>
     <string name="privacy_tiles">オフライン地図の外の地図タイル：見ている範囲</string>
@@ -674,6 +682,11 @@
     <string name="regions_download">ダウンロード (%1$s)</string>
     <string name="regions_on_phone">この端末にあり（地図あり）</string>
     <string name="regions_on_phone_no_map">この端末にあり（地図なし）</string>
+    <string name="regions_on_phone_plain">この端末にあり</string>
+    <plurals name="regions_partial">
+        <item quantity="other">一部のみこの端末にあり：%d件が未取得</item>
+    </plurals>
+    <string name="regions_download_rest">残りをダウンロード (%1$s)</string>
     <string name="regions_add_map">地図を追加 (%1$s)</string>
     <string name="regions_remove">削除</string>
     <string name="regions_remove_title">%1$sを削除しますか？</string>

@@ -148,6 +148,14 @@ interface CollectionDao {
     @Query("DELETE FROM photo WHERE id = :id")
     suspend fun deletePhoto(id: String)
 
+    /**
+     * Display pictures whose photo is gone (removed, or its find removed) are cleared, so the next photo can become the
+     * display picture and the item can go with its region (#168). The column has no foreign key, so this runs after
+     * every removal.
+     */
+    @Query("UPDATE item SET cover_photo_id = NULL WHERE cover_photo_id IS NOT NULL AND cover_photo_id NOT IN (SELECT id FROM photo)")
+    suspend fun clearMissingCovers(): Int
+
     // Lines (eki-stamp book)
     @Query("SELECT * FROM line ORDER BY name_ja")
     fun observeLines(): Flow<List<Line>>

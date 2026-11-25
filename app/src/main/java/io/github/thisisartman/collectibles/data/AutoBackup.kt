@@ -230,10 +230,15 @@ class AutoBackup @Inject constructor(
     /** Downloads one backup from the server into the app's own storage, to check and restore like any file. */
     suspend fun downloadFromServer(name: String): Uri = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val dav = server.login!!.client()
-        val target = File(context.cacheDir, "server-restore.zip")
+        val target = serverDownload()
         dav.download(name, target)
         Uri.fromFile(target)
     }
+
+    private fun serverDownload() = File(context.cacheDir, "server-restore.zip")
+
+    /** Deletes the downloaded server backup: checking it copies what a restore needs, so it isn't kept (#170). */
+    fun clearServerDownload() { runCatching { serverDownload().delete() } }
 
     private suspend fun runToFolder(now: Long): Outcome {
         val t0 = System.currentTimeMillis()
