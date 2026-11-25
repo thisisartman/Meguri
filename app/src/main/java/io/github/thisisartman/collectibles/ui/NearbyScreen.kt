@@ -46,8 +46,6 @@ import androidx.compose.foundation.border
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.IconToggleButton
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Slider
 import androidx.compose.ui.res.painterResource
 import androidx.compose.material.icons.filled.Close
@@ -347,7 +345,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     }
                 }
                 // The category pill on the left, as on Alerts (owner, 2026-11-09: it replaced a scrolling row of chips);
-                // sort and size are icons pinned on the right (owner: icons over words). The switch and the view's
+                // sort (with Tile size in its menu) and ? are icons pinned on the right (owner: icons over words). The switch and the view's
                 // name sit on the left now (#192), the pill under Stamps / Cards
                 Row(Modifier.fillMaxWidth().padding(end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(Modifier.weight(1f).padding(start = 12.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -395,22 +393,24 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     modifier = Modifier.semantics { toggleableState = androidx.compose.ui.state.ToggleableState(grouped); role = androidx.compose.ui.semantics.Role.Switch },
                                 )
                             }
+                            // Tile size lives in this menu (owner, 2026-11-26: a separate icon on the row confused);
+                            // it shows or hides the size slider under the bar. Both views
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            DropdownMenuItem(
+                                text = { Text(sizeLabel) },
+                                onClick = { sizeOpen = !sizeOpen; sortOpen = false },
+                                leadingIcon = { Icon(Icons.Outlined.PhotoSizeSelectLarge, contentDescription = null) },
+                                trailingIcon = { androidx.compose.material3.Switch(checked = sizeOpen, onCheckedChange = null) },
+                                modifier = Modifier.semantics { toggleableState = androidx.compose.ui.state.ToggleableState(sizeOpen); role = androidx.compose.ui.semantics.Role.Switch },
+                            )
                         }
-                    }
-                    // Tile size: its own icon now, since the grid icon is the Collectibles switch (#192)
-                    IconToggleButton(checked = sizeOpen, onCheckedChange = { sizeOpen = it }, modifier = Modifier.size(48.dp)) {
-                        Icon(
-                            Icons.Outlined.PhotoSizeSelectLarge,
-                            contentDescription = stringResource(R.string.nearby_tile_size),
-                            tint = if (sizeOpen) MaterialTheme.colorScheme.primary else LocalContentColor.current,
-                        )
                     }
                     // ? shows the help bubble again (#192)
                     if (!searching) IconButton(onClick = { helpOpen = true }, modifier = Modifier.size(48.dp)) {
                         Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.nearby_help))
                     }
                 }
-                // While searching, the tabs give way to the number found, on the row with sort and size (above)
+                // While searching, the tabs give way to the number found, on the row with sort and ? (above)
                 if (!searching && view == NearbyView.COLLECTIBLES) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
                     // Your own kinds sit under Stamps or Cards; a third tab, Other, only for kinds that are neither
                     val tabs = listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { r -> MapSection.MINE.has(r.item, custom) } })
@@ -443,7 +443,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         )
                     }
                 }
-                // The size icon expands into a slider: small circle on the left, large on the right
+                // Tile size in the sort menu shows a slider: small circle on the left, large on the right
                 AnimatedVisibility(visible = sizeOpen) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                         Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })

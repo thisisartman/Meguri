@@ -45,7 +45,7 @@ What you collect is a "category". The app has seven built-in categories, and you
 | Internal name | Singular label | Plural label | Card or stamp | Icon | Colour, light theme | Colour, dark theme |
 |---|---|---|---|---|---|---|
 | `MANHOLE_CARD` | "Manhole card" | "Manhole cards" | Card | `ic_type_manhole` | #3A5BA8 | #6A87D2 |
-| `EKI_STAMP` | "Station stamp" | "Station stamps" | Stamp | `ic_type_station` | #00806A | #2EA88B |
+| `EKI_STAMP` | "Station stamp" | "Station stamps" | Stamp | `ic_type_station` | #C62845 | #F25C6E |
 | `EKITAG` | "Ekitag" | "Ekitag" | Stamp | `ic_type_ekitag` | #00806A | #2EA88B |
 | `GOSHUIN` | "Goshuin" | "Goshuin" | Stamp | shrine, temple or goshuin icon (below) | #B83A1E | #E2603F |
 | `DAM_CARD` | "Dam card" | "Dam cards" | Card | `ic_type_dam` | #5A6470 | #9AA6B2 |

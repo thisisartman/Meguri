@@ -34,6 +34,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
@@ -48,7 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
@@ -63,12 +63,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.PhotoKind
 
 /**
  * The place page (#192, owner approved round 3, 2026-11-26), opened from a Places tile with more than one thing:
  * the place's ring, name, kind, line and distance at the top; a row of round tiles, one per thing; a tap on one
  * opens its card just under the row (picture, name, where it is handed out, Directions and Collect), a second tap
- * closes it. The photos of everything at the place below. Each thing's own page is one tap from its card.
+ * closes it. The card adds photos too, and each thing's photos sit below under its name with the item page's
+ * viewer (cover, kind, remove), so nothing day to day needs the thing's own page, still one tap from its card.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -89,14 +91,70 @@ fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (
         )
         if (place == null) return@Column
         val ids = place.things.map { it.item.id }
-        val photos by remember(ids) {
-            kotlinx.coroutines.flow.combine(ids.map { vm.finds(it) }) { all ->
-                all.flatMap { finds -> finds.flatMap { it.photos } }.filter { !it.missing }.sortedByDescending { it.createdAt }
+        // Each thing's finds, by its id: its photos, and the latest find that a new photo goes on
+        val findsById by remember(ids) {
+            kotlinx.coroutines.flow.combine(ids.map { vm.finds(it) }) { all -> ids.zip(all.toList()).toMap() }
+        }.collectAsStateWithLifecycle(emptyMap())
+        // A station's stamp and its Ekitag share one set of photos, as on the station page
+        val sections = remember(place.things, rows) { photoSections(place.things, rows) }
+        val photo = LocalPhoto.current
+        val context = LocalContext.current
+        val ekitagLabel = stringResource(R.string.type_ekitag)
+        // The item page's photo actions (ItemScreen), per section: a photo goes on the latest find, and with none
+        // yet, adding a photo collects the thing first. On a station an Ekitag screenshot goes on the Ekitag
+        fun actionsFor(s: PhotoSection): FindPhotoActions {
+            val target = findsById[s.main.item.id]?.firstOrNull()?.find?.id
+            val tagTarget = s.ekitag?.let { findsById[it.item.id]?.firstOrNull()?.find?.id }
+            fun owner(kind: String): Pair<ItemRow, String?> =
+                if (s.ekitag != null && kind == PhotoKind.EKITAG) s.ekitag to tagTarget else s.main to target
+            fun named(who: ItemRow) = who.item.displayName(ja).let { if (who.item.type == ItemType.EKITAG) "$it · $ekitagLabel" else it }
+            return FindPhotoActions(
+                takePhoto = { kind ->
+                    val (who, t) = owner(kind)
+                    if (t != null) { vm.nextPhotoKind(t, kind); photo.capture(t) }
+                    else vm.gotIt(who, named(who)) { id -> vm.nextPhotoKind(id, kind); photo.capture(id) }
+                },
+                pickPhoto = { uri, kind ->
+                    val (who, t) = owner(kind)
+                    if (t != null) vm.addGalleryPhoto(context, t, uri, kind)
+                    else vm.gotIt(who, named(who)) { id -> vm.addGalleryPhoto(context, id, uri, kind) }
+                },
+                setKind = vm::setPhotoKind,
+                remove = vm::removePhoto,
+                setCover = { id -> vm.setCover(s.main.item.id, id) },
+            )
+        }
+        fun sectionOf(thingId: String?) = sections.firstOrNull { it.main.item.id == thingId || it.ekitag?.item?.id == thingId }
+        // The card's Add photo: the kinds for the thing, then camera or gallery (the item page's bottom bar). Held
+        // here, not in the card, so the gallery's answer still arrives if the card closes meanwhile
+        var addFor by rememberSaveable { mutableStateOf<String?>(null) }
+        var kindMenu by remember { mutableStateOf(false) }
+        var menuKind by rememberSaveable { mutableStateOf<String?>(null) }
+        var picking by remember { mutableStateOf(false) }
+        val pick = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia()) { uri ->
+            val k = menuKind
+            val s = sectionOf(addFor)
+            if (uri != null && k != null && s != null) actionsFor(s).pickPhoto(uri, k)
+            menuKind = null
+        }
+        sectionOf(addFor)?.let { s ->
+            PhotoKindMenu(s.main.item.type, kindMenu, onDismiss = { kindMenu = false }, onPick = { menuKind = it })
+            menuKind?.let { k ->
+                if (!picking) PhotoSourceDialog(
+                    title = stringResource(R.string.photo_add_kind, stringResource(kindLabel(s.main.item.type, k))),
+                    onCamera = { menuKind = null; actionsFor(s).takePhoto(k) },
+                    onGallery = { picking = true; pick.launch(androidx.activity.result.PickVisualMediaRequest(androidx.activity.result.contract.ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    onDismiss = { menuKind = null },
+                )
             }
-        }.collectAsStateWithLifecycle(emptyList())
+        }
+        LaunchedEffect(menuKind) { if (menuKind == null) picking = false }
         val meters = here.fix?.let { Places.nearestM(place, it.lat, it.lng) }
         val lineNames = lines.filter { l -> stations.any { it.lineId == l.id && it.itemId == place.anchor.item.id } }
             .map { if (ja) it.nameJa else it.nameRomaji ?: it.nameJa }
+        // Each photo section's heading: the thing's kind, or Station for a stamp with its Ekitag
+        val stationLabel = stringResource(R.string.station_title)
+        val labels = sections.map { s -> if (s.ekitag != null) stationLabel else kindName(s.main.item) }
         LazyColumn(Modifier.weight(1f).fillMaxWidth()) {
             item {
                 Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -117,9 +175,31 @@ fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (
                     }
                 }
             }
-            item { ThingsAndCard(place.things, open, onToggle = { t -> open = if (open == t) null else t }, vm, onOpenItem) }
+            item {
+                ThingsAndCard(
+                    place.things, open, onToggle = { t -> open = if (open == t) null else t }, vm, onOpenItem,
+                    onAddPhoto = { t -> addFor = t; kindMenu = true },
+                )
+            }
             item { SectionTitle(stringResource(R.string.item_photos)) }
-            item { PlacePhotos(photos.map { it.contentUri }) }
+            // Each thing's photos under its name, as on its own page: tap a photo to see it, change its kind, make
+            // it the cover or remove it; tap a dotted square to add one (owner, 2026-11-26: no second page needed)
+            sections.forEachIndexed { i, s ->
+                item(key = "photos-" + s.main.item.id) {
+                    val label = labels[i].let { l -> if (labels.count { it == l } > 1) l + sep() + s.main.item.displayName(ja) else l }
+                    Text(
+                        label, Modifier.padding(start = 16.dp, end = 16.dp, top = if (i == 0) 0.dp else 12.dp, bottom = 6.dp),
+                        style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    val photos = findsById[s.main.item.id].orEmpty().flatMap { it.photos } +
+                        s.ekitag?.let { e -> findsById[e.item.id].orEmpty().flatMap { it.photos } }.orEmpty()
+                    ItemPhotos(
+                        s.main.item.type, photos, actionsFor(s), coverId = s.main.item.coverPhotoId, shownUri = s.main.photoUri,
+                        // A station without an Ekitag here has no Ekitag screenshot square, as on the station page
+                        hasEkitag = s.main.item.type != ItemType.EKI_STAMP || s.ekitag != null,
+                    )
+                }
+            }
             item { Spacer(Modifier.height(16.dp)) }
         }
     }
@@ -127,7 +207,7 @@ fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (
 
 /** The row of round tiles, one per thing, and the open thing's card just under it with a caret at its tile. */
 @Composable
-private fun ThingsAndCard(things: List<ItemRow>, open: String?, onToggle: (String) -> Unit, vm: MainViewModel, onOpenItem: (String) -> Unit) {
+private fun ThingsAndCard(things: List<ItemRow>, open: String?, onToggle: (String) -> Unit, vm: MainViewModel, onOpenItem: (String) -> Unit, onAddPhoto: (String) -> Unit) {
     val centres = remember { mutableStateMapOf<String, Float>() }
     var cardLeft by remember { mutableFloatStateOf(0f) }
     Column {
@@ -166,15 +246,15 @@ private fun ThingsAndCard(things: List<ItemRow>, open: String?, onToggle: (Strin
             Canvas(Modifier.padding(start = x.coerceAtLeast(12.dp)).size(18.dp, 9.dp)) {
                 drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, caret)
             }
-            ThingCard(t, vm, onOpenItem)
+            ThingCard(t, vm, onOpenItem, onAddPhoto = { onAddPhoto(t.item.id) })
         }
     }
 }
 
-/** One thing's card on the place page: its picture, name, state, where it is handed out, Directions and Collect. */
+/** One thing's card on the place page: its picture, name, state, where it is handed out, Directions, Add photo and Collect. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Unit) {
+private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Unit, onAddPhoto: () -> Unit) {
     val ja = isJapanese()
     val context = LocalContext.current
     val confirm = rememberConfirm()
@@ -209,6 +289,12 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Uni
                             Text(stringResource(R.string.item_directions_plain))
                         }
                     }
+                    // Add photo here, so the place page needs no second page (owner, 2026-11-26)
+                    InkOutlinedButton(onClick = onAddPhoto, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        Text(stringResource(R.string.place_add_photo), maxLines = 1)
+                    }
                     // One verb everywhere (#143): Collect, then Collect again; an Ekitag is named with its kind
                     val label = stringResource(if (t.collected) R.string.got_it_again else R.string.got_it)
                     val collect = { confirm(); vm.gotIt(t, if (item.type == ItemType.EKITAG) "$name · $ekitagLabel" else name) }
@@ -225,22 +311,18 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Uni
     }
 }
 
-/** The photos of everything at the place, newest first; a tap shows one full screen. */
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun PlacePhotos(uris: List<String>) {
-    if (uris.isEmpty()) {
-        Text(stringResource(R.string.place_no_photos), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        return
-    }
-    var full by remember { mutableStateOf<String?>(null) }
-    full?.let { FullscreenPhoto(it, onClose = { full = null }) }
-    // Three to a row, fitted to the screen
-    val side = ((LocalConfiguration.current.screenWidthDp.coerceAtMost(640) - 32 - 16) / 3).dp
-    val openLabel = stringResource(R.string.item_picture_open)
-    FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        uris.forEach { u ->
-            Box(Modifier.clickable(onClickLabel = openLabel) { full = u }) { PhotoThumb(u, side) }
+/** One set of photos on the place page: a thing, or a station's stamp with its Ekitag (as on the station page). */
+private class PhotoSection(val main: ItemRow, val ekitag: ItemRow?)
+
+/** The place's things as photo sections: a station's Ekitag folds into its stamp when both are at the place. */
+private fun photoSections(things: List<ItemRow>, rows: List<ItemRow>): List<PhotoSection> {
+    val ids = things.map { it.item.id }.toSet()
+    return things.mapNotNull { t ->
+        val pair = stationPair(rows, t.item.id)
+        when {
+            t.item.type == ItemType.EKITAG && pair != null && pair.first.item.id in ids -> null
+            t.item.type == ItemType.EKI_STAMP -> PhotoSection(t, pair?.second?.takeIf { it.item.id in ids })
+            else -> PhotoSection(t, null)
         }
     }
 }

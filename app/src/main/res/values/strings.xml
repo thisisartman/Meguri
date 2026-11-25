@@ -741,7 +741,7 @@
     <string name="place_of">%1$d of %2$d</string>
     <string name="place_to_get">to get</string>
     <string name="place_open_thing">Open %1$s</string>
-    <string name="place_no_photos">No photos here yet.</string>
+    <string name="place_add_photo">Add photo</string>
     <string name="ring_a11y">%1$d of %2$d collected</string>
     <string name="look_nearby">Nearby</string>
     <string name="look_switch_names">Show names on the switch</string>

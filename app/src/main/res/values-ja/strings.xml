@@ -721,7 +721,7 @@
     <string name="place_of">%2$d件中%1$d件</string>
     <string name="place_to_get">未取得</string>
     <string name="place_open_thing">%1$sを開く</string>
-    <string name="place_no_photos">ここの写真はまだありません。</string>
+    <string name="place_add_photo">写真を追加</string>
     <string name="ring_a11y">%2$d件中%1$d件取得済み</string>
     <string name="look_nearby">近く</string>
     <string name="look_switch_names">切り替えに名前を表示</string>
