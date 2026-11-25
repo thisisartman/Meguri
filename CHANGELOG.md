@@ -2,6 +2,32 @@
 
 All notable changes to Meguri are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-11-25
+
+### Added
+- New regions to download in Settings › Catalogue › Regions: Ibaraki, Kyoto, Osaka and Aichi (they also work in 0.6.0).
+- Ekitags can alert, under the station rule: only at stations you get off at in today's trip. Categories with nothing on your phone are left out of the alert list.
+- Check for updates in Help and about, off unless you switch it on: once a day Meguri asks GitHub for the latest release and says when a newer one is out. Nothing is downloaded or installed.
+- The first-open region step offers the offline map, ticked as in Regions.
+- Backups carry every column in their readable CSV files, and a categories.csv.
+
+### Changed
+- One word for each thing: Collect and Collect again everywhere, and "find" for what you collected.
+- Times follow your phone's 12 or 24-hour setting on every screen.
+- Back up now is one dialog with an Include photos switch.
+- Settings keeps its bar with Back on screen while the page scrolls.
+- Map credits open from a 48 dp button as "Map data".
+- Shorter explanations where the controls already say it.
+
+### Fixed
+- The first region you load came in only in part; now every pack loads, and Regions says when part of a prefecture is missing, with "Download the rest".
+- Maps opened on the whole world when you were far from your finds; they now frame your finds.
+- Card pictures the card site doesn't have yet no longer count as failures every time.
+- A display picture whose photo was removed is cleared, and the item can go with its region.
+- Station totals say how many have no stamp, and line pages count like My book.
+- Road numbers shared by two routes show one number ("8" not "8;17").
+- Less work on the main thread at start, when scanning and in the log.
+
 ## [0.6.0] - 2026-11-20
 
 The first public test version.

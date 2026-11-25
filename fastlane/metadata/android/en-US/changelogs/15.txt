@@ -1,0 +1,2 @@
+Ibaraki is ready to download (Settings, Catalogue, Regions). Ekitags can alert at stations you get off at. Optional check for updates.
+Fixes: the first region loads in full with its map, maps open on your finds, times follow your 12 or 24-hour setting, clearer words and counts.

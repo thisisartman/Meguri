@@ -34,19 +34,20 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in 0.6.0", "0.6.0の新機能",
+            "New in 0.7.0", "0.7.0の新機能",
             listOf(
-                "Backups to Google Drive, replaced each week" to "Googleドライブにバックアップ（毎週上書き）",
-                "Backups to your own server: Nextcloud or any WebDAV, and restore from it" to "自分のサーバーにバックアップ：NextcloudやWebDAV。そこから復元も",
-                "Report from an item's page: availability, a correction, or something new (the ⋮ menu)" to "詳細ページから報告：配布状況、修正、新しいもの（⋮メニュー）",
+                "Ibaraki: download it in Settings, Catalogue, Regions" to "茨城県：設定 › カタログ › 地域からダウンロード",
+                "Ekitags can alert, at stations you get off at" to "エキタグも通知：降りる駅で",
+                "Check for updates, off unless you switch it on (Help and about)" to "アップデートの確認（オンにしたときだけ、ヘルプと情報）",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "Places you add go under their prefecture" to "追加したスポットが都道府県の下に入ります",
-                "Maps redraw after a map download" to "地図のダウンロード後に地図が描き直されます",
-                "Send and Save stay on screen above the keyboard" to "送信・保存ボタンがキーボードの上に表示されたままに",
+                "The first region you load comes in whole, with its offline map" to "最初に読み込む地域がすべて、オフライン地図と一緒に入ります",
+                "Maps open on your finds, not the whole world" to "地図は世界全体ではなく、記録の場所から開きます",
+                "Times follow your phone's 12 or 24-hour setting" to "時刻はスマホの12時間・24時間の設定に合わせます",
+                "Clearer words and counts on many screens" to "多くの画面で言葉と数をわかりやすく",
             ),
         ),
     )
