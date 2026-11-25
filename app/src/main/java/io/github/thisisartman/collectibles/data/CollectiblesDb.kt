@@ -26,7 +26,7 @@ abstract class CollectiblesDb : RoomDatabase() {
 
     companion object {
         const val NAME = "collectibles.db"
-        const val VERSION = 4
+        const val VERSION = 5
 
         /**
          * v1 to v2 (2026-11-07), additions only, so every v1 row and every v1 backup stays as it is:
@@ -58,8 +58,23 @@ abstract class CollectiblesDb : RoomDatabase() {
             }
         }
 
+        /**
+         * v4 to v5 (2026-11-26, #194): no more "had before Meguri". Every undated find gets the day it was added (its
+         * created_at; the moment of the migration if that is missing), and its before_app flag is cleared. Rows only,
+         * no schema change: the column stays, so older backups still read, and they come through here too.
+         */
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL(
+                    "UPDATE `acquisition` SET `acquired_at` = COALESCE(NULLIF(`created_at`, 0), ?), `before_app` = 0 " +
+                        "WHERE `before_app` = 1 OR `acquired_at` IS NULL",
+                    arrayOf<Any>(System.currentTimeMillis()),
+                )
+            }
+        }
+
         /** Used by the app and by restore, so an older backup migrates the same way the app does. */
-        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
     }
 }
 

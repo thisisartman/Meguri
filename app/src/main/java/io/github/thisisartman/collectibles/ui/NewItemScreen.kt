@@ -69,8 +69,8 @@ private val BUILT_IN = listOf(ItemType.MANHOLE_CARD, ItemType.DAM_CARD, ItemType
 @Composable
 fun NewItemScreen(
     vm: MainViewModel, onBack: () -> Unit, onSaved: (itemId: String, findId: String, withPhoto: Boolean) -> Unit,
-    // From a notebook page (finding 33): only the item is made here; saving the page gives it its find, had before
-    // Meguri or on the page's date, so no photo, cost or position from the phone (the page is photographed at home)
+    // From a notebook page (finding 33): only the item is made here; saving the page gives it its find, on the
+    // page's date or today, so no photo, cost or position from the phone (the page is photographed at home)
     forNotebook: Boolean = false,
 ) {
     val customTypes by vm.collectionTypes.collectAsStateWithLifecycle()

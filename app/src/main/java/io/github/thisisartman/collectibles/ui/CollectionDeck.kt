@@ -71,7 +71,7 @@ import kotlinx.coroutines.launch
 
 /**
  * Collection check as a card deck (owner, 2026-11-09): pick a category, then a prefecture, then go through what you
- * don't have yet one at a time, like a dating app. Swipe right (or "Have it") and it is saved as had before Meguri;
+ * don't have yet one at a time, like a dating app. Swipe right (or "Have it") and it is collected today (#194);
  * swipe left (or "Not yet") for the next one. Undo takes back the last swipe.
  */
 private data class CheckCategory(val key: String, val name: String, val type: ItemType, val rows: List<ItemRow>)
@@ -94,6 +94,8 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
     }
     var categoryKey by rememberSaveable { mutableStateOf<String?>(null) }
     val history = remember { androidx.compose.runtime.mutableStateListOf<Pair<String, Boolean>>() }
+    // The finds each "Have it" made, by item, so Undo takes back exactly those
+    val made = remember { androidx.compose.runtime.mutableStateMapOf<String, List<String>>() }
     var prefecture by rememberSaveable { mutableStateOf<String?>(null) }
     val category = categories.firstOrNull { it.key == categoryKey }
     val back = {
@@ -137,7 +139,7 @@ fun CollectionCheckFlow(vm: MainViewModel, onBack: () -> Unit) {
             pref == null -> ChoiceList(
                 category.rows.groupBy { it.item.prefecture.orEmpty() }.toSortedMap().map { (p, l) -> Triple(p, prefectureLabel(p, ja), l) },
             ) { prefecture = it }
-            else -> Deck(vm, category.rows.filter { it.item.prefecture.orEmpty() == pref }, category.key + "|" + pref, history) { prefecture = null }
+            else -> Deck(vm, category.rows.filter { it.item.prefecture.orEmpty() == pref }, category.key + "|" + pref, history, made) { prefecture = null }
         }
         }
     }
@@ -205,7 +207,7 @@ private fun ChoiceList(choices: List<Triple<String, String, List<ItemRow>>>, lea
 
 /** The deck: what you don't have yet, one at a time. */
 @Composable
-private fun Deck(vm: MainViewModel, rows: List<ItemRow>, key: String, history: MutableList<Pair<String, Boolean>>, onFinished: () -> Unit) {
+private fun Deck(vm: MainViewModel, rows: List<ItemRow>, key: String, history: MutableList<Pair<String, Boolean>>, made: MutableMap<String, List<String>>, onFinished: () -> Unit) {
     val ja = isJapanese()
     // The pile is fixed when you open it, so saving one doesn't reshuffle the rest
     val pile = remember(key) { rows.filter { !it.collected }.sortedBy { it.item.code ?: it.item.nameJa }.map { it.item.id } }
@@ -221,7 +223,7 @@ private fun Deck(vm: MainViewModel, rows: List<ItemRow>, key: String, history: M
             val id = pile.getOrNull(index) ?: return
             scope.launch {
                 offset.animateTo(if (have) widthPx * 1.2f else -widthPx * 1.2f, tween(220))
-                if (have) { vm.markBeforeApp(setOf(id)) { }; haptic() }
+                if (have) { vm.markOn(setOf(id), System.currentTimeMillis()) { made[id] = it }; haptic() }
                 history += id to have
                 index++
                 offset.snapTo(0f)
@@ -229,7 +231,7 @@ private fun Deck(vm: MainViewModel, rows: List<ItemRow>, key: String, history: M
         }
         fun undo() {
             val last = history.removeLastOrNull() ?: return
-            if (last.second) vm.unmarkBeforeApp(last.first)
+            if (last.second) made.remove(last.first)?.let { vm.removeFinds(it) }
             // Back to that card when it is in this pile; one from another prefecture just comes off
             val at = pile.indexOf(last.first)
             if (at in 0 until index) index = at

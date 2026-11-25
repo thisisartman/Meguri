@@ -75,7 +75,7 @@ object NotebookSession {
     /** The stamp whose "Not in Meguri? Add it" is open. */
     internal var adding: StampWork? = null
 
-    /** The day the stamps were collected (local noon), or null: had before Meguri ("Notebook 4: date optional"). */
+    /** The day the stamps were collected (local noon), or null: today, the day they are added (#194). */
     var dateMs by mutableStateOf<Long?>(null)
 
     fun start(page: Uri, found: List<StampFind.Box>) {
@@ -115,8 +115,8 @@ private fun isStampTarget(r: io.github.thisisartman.collectibles.data.ItemRow, c
 /**
  * Each stamp found, matched to a station by the name printed on it (owner's bands: 75% and up is chosen, 60 to 75%
  * is offered as "This seems to be ...", below that the person picks by typing). Cleaned by default, "Show original"
- * to switch. Saved as "had before Meguri" (no date), or on the day given under "Date", never at the photo's time and
- * place.
+ * to switch. Saved on the day given under "Date", today unless another day is picked (#194), never at the photo's
+ * time and place.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -181,7 +181,7 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
         androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             items(list.size) { i -> StampRow(list[i], i + 1, targets, rows, vm, ja) { NotebookSession.adding = list[i]; onAddNew() } }
         }
-        // Date, optional ("Notebook 4"): none means had before Meguri; a day saves the stamps on that day
+        // Date: today unless another day is picked; a day saves the stamps on that day
         NotebookDateRow()
         val ready = list.count { !it.skipped && it.chosen != null }
         Button(
@@ -201,7 +201,7 @@ fun NotebookMatchScreen(vm: MainViewModel, onBack: () -> Unit, onAddNew: () -> U
     }
 }
 
-/** "Date": "No date" until one is picked; the picker offers no day after today. */
+/** "Date": "Today" until another day is picked; the picker offers no day after today. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NotebookDateRow() {
@@ -212,7 +212,7 @@ private fun NotebookDateRow() {
         androidx.compose.material3.InputChip(
             selected = date != null,
             onClick = { picking = true },
-            label = { Text(if (date != null) dateText(date) else stringResource(R.string.nb_no_date)) },
+            label = { Text(if (date != null) dateText(date) else stringResource(R.string.nb_today)) },
             leadingIcon = { Icon(Icons.Filled.DateRange, contentDescription = null, modifier = Modifier.size(18.dp)) },
             trailingIcon = if (date == null) null else {
                 {
