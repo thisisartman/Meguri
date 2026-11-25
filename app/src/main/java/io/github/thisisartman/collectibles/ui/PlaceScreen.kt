@@ -23,8 +23,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
@@ -32,8 +35,10 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -53,6 +58,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -61,28 +67,37 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.thisisartman.collectibles.R
+import io.github.thisisartman.collectibles.data.CatalogueReport
+import io.github.thisisartman.collectibles.data.FindWithPhotos
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
+import io.github.thisisartman.collectibles.data.Origin
 import io.github.thisisartman.collectibles.data.PhotoKind
 
 /**
- * The place page (#192, owner approved round 3, 2026-11-26), opened from a Places tile with more than one thing:
- * the place's ring, name, kind, line and distance at the top; a row of round tiles, one per thing; a tap on one
- * opens its card just under the row (picture, name, where it is handed out, Directions and Collect), a second tap
- * closes it. The card adds photos too, and each thing's photos sit below under its name with the item page's
- * viewer (cover, kind, remove), so nothing day to day needs the thing's own page, still one tap from its card.
+ * The place page (#192, owner approved round 3, 2026-11-26), the one page for every thing (owner, 2026-11-26: one
+ * page per place, no inner pages; it replaced the item and station pages): the place's ring, name, kind, line and
+ * distance at the top; a row of round tiles, one per thing; a tap on one opens its card just under the row, a
+ * second tap closes it. The card holds all the item page had: its names, state, None here, where to get it,
+ * Directions, Add photo, Collect, its finds, and Edit, reports and Remove in its ⋮ menu. Each thing's photos sit
+ * below under its name with the photo viewer (cover, kind, remove). [openArg] is the thing whose card opens first.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (String) -> Unit) {
+fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> Unit) {
     val ja = isJapanese()
     val rows by vm.rows.collectAsStateWithLifecycle()
     val here by vm.here.collectAsStateWithLifecycle()
     val lines by vm.lines.collectAsStateWithLifecycle()
     val stations by vm.lineStations.collectAsStateWithLifecycle()
-    // Grouped as on Nearby, from the same list, so the page shows the same place and the same count
-    val place = remember(rows, id) { Places.group(rows).firstOrNull { p -> p.things.any { it.item.id == id } } }
-    var open by rememberSaveable { mutableStateOf<String?>(null) }
+    // Switching cards is state on this page, not a new page, so Back goes straight to where the page was opened from
+    var open by rememberSaveable { mutableStateOf(openArg) }
+    // The place's things as last seen: removing the thing the page was opened for still finds the place by the rest
+    var known by remember { mutableStateOf(listOf<String>()) }
+    // Grouped as on Nearby, from the same list, so the page shows the same place and the same count; by the open
+    // thing first, so the page follows it when its position is edited
+    val place = remember(rows, id, open, known) { Places.placeOf(rows, listOfNotNull(open, id) + known) }
+    LaunchedEffect(place) { place?.let { p -> known = p.things.map { it.item.id } } }
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
@@ -177,8 +192,10 @@ fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (
             }
             item {
                 ThingsAndCard(
-                    place.things, open, onToggle = { t -> open = if (open == t) null else t }, vm, onOpenItem,
+                    place.things, open, onToggle = { t -> open = if (open == t) null else t }, vm, findsById,
                     onAddPhoto = { t -> addFor = t; kindMenu = true },
+                    // Your own thing removed: the page closes when it was the only one, else its card does
+                    onRemoved = { t -> if (place.things.size == 1) onBack() else if (open == t) open = null },
                 )
             }
             item { SectionTitle(stringResource(R.string.item_photos)) }
@@ -207,7 +224,10 @@ fun PlaceScreen(vm: MainViewModel, id: String, onBack: () -> Unit, onOpenItem: (
 
 /** The row of round tiles, one per thing, and the open thing's card just under it with a caret at its tile. */
 @Composable
-private fun ThingsAndCard(things: List<ItemRow>, open: String?, onToggle: (String) -> Unit, vm: MainViewModel, onOpenItem: (String) -> Unit, onAddPhoto: (String) -> Unit) {
+private fun ThingsAndCard(
+    things: List<ItemRow>, open: String?, onToggle: (String) -> Unit, vm: MainViewModel, findsById: Map<String, List<FindWithPhotos>>,
+    onAddPhoto: (String) -> Unit, onRemoved: (String) -> Unit,
+) {
     val centres = remember { mutableStateMapOf<String, Float>() }
     var cardLeft by remember { mutableFloatStateOf(0f) }
     Column {
@@ -246,47 +266,84 @@ private fun ThingsAndCard(things: List<ItemRow>, open: String?, onToggle: (Strin
             Canvas(Modifier.padding(start = x.coerceAtLeast(12.dp)).size(18.dp, 9.dp)) {
                 drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, caret)
             }
-            ThingCard(t, vm, onOpenItem, onAddPhoto = { onAddPhoto(t.item.id) })
+            ThingCard(t, vm, findsById[t.item.id].orEmpty(), onAddPhoto = { onAddPhoto(t.item.id) }, onRemoved = { onRemoved(t.item.id) })
         }
     }
 }
 
-/** One thing's card on the place page: its picture, name, state, where it is handed out, Directions, Add photo and Collect. */
+/**
+ * One thing's card on the place page, all the old item page had (owner, 2026-11-26: no inner pages): its picture
+ * (tap for full screen), name lines and state; None here; where to get it (hours, place, phone, notes); Directions,
+ * Add photo and Collect; its finds (tap one for how many and what you paid, Map, remove). Edit, the catalogue reports
+ * and Remove are in the card's ⋮ menu.
+ */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Unit, onAddPhoto: () -> Unit) {
+private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>, onAddPhoto: () -> Unit, onRemoved: () -> Unit) {
     val ja = isJapanese()
     val context = LocalContext.current
     val confirm = rememberConfirm()
+    val tick = rememberTick()
     val item = t.item
     val name = item.displayName(ja)
     val ekitagLabel = stringResource(R.string.type_ekitag)
+    val own = item.origin == Origin.USER
+    var editing by rememberSaveable(item.id) { mutableStateOf(false) }
+    var confirmRemove by remember(item.id) { mutableStateOf(false) }
+    if (editing) ItemEditSheet(item, vm, onDismiss = { editing = false })
+    if (confirmRemove) {
+        AlertDialog(
+            onDismissRequest = { confirmRemove = false },
+            title = { Text(stringResource(if (own) R.string.item_remove_title else R.string.item_remove_collection_title)) },
+            text = { Text(stringResource(if (own) R.string.item_remove_text else R.string.item_remove_collection_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmRemove = false
+                    vm.removeItem(item.id, alsoItem = own) { if (own) onRemoved() }
+                }) { Text(stringResource(R.string.remove), color = MaterialTheme.colorScheme.error) }
+            },
+            dismissButton = { TextButton(onClick = { confirmRemove = false }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 2.dp) {
-        Row(Modifier.padding(12.dp)) {
-            // Your photo, else the card's own picture, else its type mark (as on its own page)
-            Mark(t, 84.dp)
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                // The name opens the thing's own page: its finds, photos and details
-                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable { onOpenItem(item.id) }, verticalAlignment = Alignment.CenterVertically) {
-                    Text(item.cardTitle(ja).first, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
-                    Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = stringResource(R.string.place_open_thing, name))
-                }
-                Text(
-                    kindName(item) + sep() + stringResource(if (t.collected) R.string.state_collected else if (t.noneHere) noneHereLabel(item.type) else R.string.state_to_get),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        Column(Modifier.padding(start = 12.dp, end = 4.dp, top = 12.dp, bottom = 8.dp)) {
+            Row {
+                // Your photo, else the card's own picture, else its type mark; a picture opens full screen
+                var big by remember { mutableStateOf(false) }
+                val cards by io.github.thisisartman.collectibles.photo.CardPictures.have.collectAsState()
+                val picture = t.photoUri ?: item.code?.takeIf { it in cards && item.type == ItemType.MANHOLE_CARD }
+                    ?.let { io.github.thisisartman.collectibles.photo.CardPictures.uri(context, it) }
+                val openPicture = stringResource(R.string.item_picture_open)
+                Mark(
+                    t, 84.dp,
+                    if (picture != null) Modifier.clickable(onClickLabel = openPicture) { big = true }
+                        .semantics { contentDescription = openPicture } else Modifier,
                 )
-                val where = listOfNotNull(item.placeName?.takeIf { it.isNotBlank() && it != item.nameJa }, item.hoursText?.takeIf { it.isNotBlank() }).joinToString("\n")
-                if (where.isNotEmpty()) {
-                    Text(stringResource(placeLabel(item.type)), Modifier.padding(top = 6.dp), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(where, style = MaterialTheme.typography.bodySmall)
+                if (big && picture != null) FullscreenPhoto(picture, onClose = { big = false })
+                Spacer(Modifier.width(12.dp))
+                Column(Modifier.weight(1f).padding(top = 4.dp)) {
+                    Text(item.cardTitle(ja).first, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
+                    ThingNameLines(item, ja)
+                    Text(
+                        kindName(item) + sep() + stringResource(if (t.collected) R.string.state_collected else if (t.noneHere) noneHereLabel(item.type) else R.string.state_to_get),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (t.collected) LocalTypeColors.current.of(item.type) else MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
                 }
+                ThingMenu(t, onEdit = { editing = true }, onRemove = { confirmRemove = true }, vm)
+            }
+            Column(Modifier.padding(end = 8.dp)) {
+                // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
+                if (!t.collected) NoneHereRow(item, t.noneHere, onSet = { tick(); vm.setNoneHere(item.id, it) })
+                if (hasFacts(context, item)) Facts(item, Modifier.fillMaxWidth().padding(top = 8.dp))
                 FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (item.lat != null && item.lng != null) {
-                        FilledTonalButton(onClick = { openDirections(context, item, vm.distanceTo(t)) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                    // Standing at the place (a goshuin added where it was logged, say), directions help nobody
+                    val meters = vm.distanceTo(t)
+                    if (item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)) {
+                        FilledTonalButton(onClick = { openDirections(context, item, meters) }, modifier = Modifier.heightIn(min = 48.dp)) {
                             Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(6.dp))
-                            Text(stringResource(R.string.item_directions_plain))
+                            Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain), maxLines = 1)
                         }
                     }
                     // Add photo here, so the place page needs no second page (owner, 2026-11-26)
@@ -303,10 +360,65 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, onOpenItem: (String) -> Uni
                         Spacer(Modifier.width(6.dp))
                         Text(label, maxLines = 1)
                     }
-                    if (t.collected) InkOutlinedButton(onClick = collect, content = content)
+                    if (t.collected) InkOutlinedButton(onClick = collect, modifier = Modifier.heightIn(min = 48.dp), content = content)
                     else Button(onClick = collect, modifier = Modifier.heightIn(min = 48.dp), content = content)
                 }
             }
+            // Each time you collected it, newest first: tap one for how many and what you paid; Map; remove
+            if (finds.isNotEmpty()) {
+                Text(
+                    stringResource(R.string.item_your_record), Modifier.padding(top = 12.dp, bottom = 2.dp),
+                    style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                // Cost only where something is paid: goshuin, and your own collections that note it (owner, 2026-11-07)
+                val custom = item.customTypeId?.let { LocalCustomTypes.current[it] }
+                val hasCost = item.type == ItemType.GOSHUIN || (item.type == ItemType.CUSTOM && custom?.hasCost == true)
+                finds.forEach { f ->
+                    androidx.compose.runtime.key(f.find.id) {
+                        CollectionRow(
+                            f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                            hasCost = hasCost, onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** The card's ⋮ menu: Edit, the three catalogue reports, and Remove (your own thing) or Remove from collection. */
+@Composable
+private fun ThingMenu(t: ItemRow, onEdit: () -> Unit, onRemove: () -> Unit, vm: MainViewModel) {
+    val context = LocalContext.current
+    val own = t.item.origin == Origin.USER
+    var more by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { more = true }) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more_options))
+        }
+        DropdownMenu(expanded = more, onDismissRequest = { more = false }) {
+            // Edit its name, place or position (owner, 2026-11-08)
+            DropdownMenuItem(text = { Text(stringResource(R.string.edit_title)) }, onClick = { more = false; onEdit() })
+            // Catalogue reports (0.6, #1): the form on GitHub opens with this thing filled in
+            listOf(
+                CatalogueReport.Kind.AVAILABILITY to R.string.report_availability,
+                CatalogueReport.Kind.CORRECTION to R.string.report_correction,
+                CatalogueReport.Kind.ADD to R.string.report_add,
+            ).forEach { (kind, label) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(label)) },
+                    onClick = {
+                        more = false
+                        vm.log.i("Report", "Opened the ${kind.name.lowercase()} form")
+                        runCatching { context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(CatalogueReport.url(kind, t.item)))) }
+                    },
+                )
+            }
+            // Remove (owner, 2026-11-09): a thing you added goes entirely; a catalogue thing leaves your collection
+            if (own || t.collected) DropdownMenuItem(
+                text = { Text(stringResource(if (own) R.string.item_remove else R.string.item_remove_collection)) },
+                onClick = { more = false; onRemove() },
+            )
         }
     }
 }

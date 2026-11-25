@@ -29,7 +29,6 @@
     <string name="state_collected">Collected</string>
     <string name="state_to_get">Not collected</string>
     <string name="got_it_again">Collect again</string>
-    <string name="photo">Photo</string>
     <string name="undo">Undo</string>
     <string name="logged">Collected %1$s · %2$s</string>
     <string name="last">Last: %1$s</string>
@@ -50,7 +49,6 @@
     <string name="cancel">Cancel</string>
 
     <string name="item_your_record">Finds</string>
-    <string name="item_where">Where to get it</string>
     <string name="item_handed_out_at">Handed out at</string>
     <string name="item_hours">Hours</string>
     <string name="open_until">Open now · until %1$s</string>
@@ -75,7 +73,6 @@
     <string name="item_directions">Directions · %1$s</string>
     <string name="item_directions_plain">Directions</string>
     <string name="item_call">Call</string>
-    <string name="item_on_lines">On %1$s</string>
     <string name="item_remove_find">Remove</string>
     <string name="item_remove_find_title">Remove this find?</string>
     <string name="item_remove_find_text">This removes the find from %1$s. If it is the only one, the item goes back to Not collected. Its photos leave Meguri; ones you took with the camera stay in your gallery.</string>
@@ -740,7 +737,6 @@
     <string name="place_kind_heading">%1$s · %2$d</string>
     <string name="place_of">%1$d of %2$d</string>
     <string name="place_to_get">to get</string>
-    <string name="place_open_thing">Open %1$s</string>
     <string name="place_add_photo">Add photo</string>
     <string name="ring_a11y">%1$d of %2$d collected</string>
     <string name="look_nearby">Nearby</string>

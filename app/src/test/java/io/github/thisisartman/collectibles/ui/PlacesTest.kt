@@ -124,4 +124,39 @@ class PlacesTest {
         assertEquals(0.0, Places.nearestM(p, uLat, uLng)!!, 0.5)
         assertEquals(50.0, Places.nearestM(p, uLat + 100 * m, uLng)!!, 0.5)
     }
+
+    // One page per place, no inner pages (owner, 2026-11-26): every thing opens the page of the place it is at
+
+    @Test fun anyThingAtAStationFindsTheStationsPlace() {
+        val rows = urasa + row("card-70", ItemType.MANHOLE_CARD, uLat - 70 * m, uLng)
+        for (id in listOf("urasa-stamp", "urasa-tag", "card-50")) {
+            assertEquals(listOf("urasa-stamp", "urasa-tag", "card-50"), Places.placeOf(rows, id)!!.things.map { it.item.id })
+        }
+    }
+
+    @Test fun aLoneThingIsAPlaceOfOneEvenWithNoPositionOrYourOwn() {
+        val own = row("mine", ItemType.CUSTOM, null, null).let { it.copy(item = it.item.copy(origin = Origin.USER)) }
+        val far = row("card-70", ItemType.MANHOLE_CARD, uLat - 70 * m, uLng)
+        val rows = urasa + own + far
+        assertEquals(listOf("mine"), Places.placeOf(rows, "mine")!!.things.map { it.item.id })
+        assertEquals(listOf("card-70"), Places.placeOf(rows, "card-70")!!.things.map { it.item.id })
+    }
+
+    @Test fun anEkitagWithoutItsStampIsItsOwnPlace() {
+        assertEquals(listOf("urasa-tag"), Places.placeOf(listOf(urasa[1]), "urasa-tag")!!.things.map { it.item.id })
+    }
+
+    @Test fun anUnknownIdHasNoPlaceAndTheNextIdIsTried() {
+        assertEquals(null, Places.placeOf(urasa, "gone"))
+        assertEquals("urasa-stamp", Places.placeOf(urasa, listOf("gone", "card-50"))!!.id)
+    }
+
+    @Test fun aPlacesTileOpensTheFirstThingStillToGet() {
+        val p = Places.group(urasa).single()
+        assertEquals("urasa-tag", Places.toOpen(p))
+        val done = Places.group(urasa.map { it.copy(findCount = 1) }).single()
+        assertEquals("urasa-stamp", Places.toOpen(done))
+        val none = Places.group(listOf(urasa[0], row("urasa-tag", ItemType.EKITAG, uLat, uLng, noneHere = true))).single()
+        assertEquals("urasa-stamp", Places.toOpen(none))
+    }
 }

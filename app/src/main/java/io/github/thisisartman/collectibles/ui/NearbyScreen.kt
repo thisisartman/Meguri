@@ -500,8 +500,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                         PlaceTile(
                                             p, tile, Places.name(p, ja),
                                             if (p.noneHere) stringResource(noneHereLabel(p.anchor.item.type)) else distanceText(placeDist(p)),
-                                            // A place of one thing is that thing's own page; more, the place page
-                                            onOpen = { tick(); if (p.things.size == 1) nav.openItem(p.id) else nav.openPlace(p.id) },
+                                            // One page per place, with the first thing still to get open (owner, 2026-11-26)
+                                            onOpen = { tick(); nav.openPlace(p.id, open = Places.toOpen(p)) },
                                         )
                                     }
                                 }

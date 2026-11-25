@@ -29,7 +29,6 @@
     <string name="state_to_get">未取得</string>
     <string name="got_it">集める</string>
     <string name="got_it_again">もう一度集める</string>
-    <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを集めた・%2$s</string>
     <string name="last">最新：%1$s</string>
@@ -50,7 +49,6 @@
     <string name="cancel">キャンセル</string>
 
     <string name="item_your_record">記録</string>
-    <string name="item_where">入手場所</string>
     <string name="item_handed_out_at">配布場所</string>
     <string name="item_hours">配布時間</string>
     <string name="open_until">営業中・%1$sまで</string>
@@ -75,7 +73,6 @@
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>
-    <string name="item_on_lines">%1$s</string>
     <string name="item_remove_find">削除</string>
     <string name="item_remove_find_title">この記録を削除しますか？</string>
     <string name="item_remove_find_text">%1$sの記録を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
@@ -720,7 +717,6 @@
     <string name="place_kind_heading">%1$s・%2$d</string>
     <string name="place_of">%2$d件中%1$d件</string>
     <string name="place_to_get">未取得</string>
-    <string name="place_open_thing">%1$sを開く</string>
     <string name="place_add_photo">写真を追加</string>
     <string name="ring_a11y">%2$d件中%1$d件取得済み</string>
     <string name="look_nearby">近く</string>

@@ -65,6 +65,21 @@ object Places {
         return things.map { l -> Place(l.sortedBy { rank(it.item.type) }) }
     }
 
+    /**
+     * The place a thing is at, by [group] over all [rows] (owner, 2026-11-26: one page per place, no inner pages).
+     * Every thing is at some place, a lone one at a place of its own, so this is null only for an id not in [rows].
+     * Tries each id in turn, so a page can still find its place after the thing it was opened for is removed.
+     */
+    fun placeOf(rows: List<ItemRow>, ids: List<String>): Place? {
+        val places = group(rows)
+        return ids.firstNotNullOfOrNull { id -> places.firstOrNull { p -> p.things.any { it.item.id == id } } }
+    }
+
+    fun placeOf(rows: List<ItemRow>, id: String): Place? = placeOf(rows, listOf(id))
+
+    /** The thing whose card a Places tile opens: the first still to get, else the place's first thing. */
+    fun toOpen(p: Place): String = (p.things.firstOrNull { !it.collected && !it.noneHere } ?: p.anchor).item.id
+
     // A station's stamp first, its Ekitag next, then the rest in the order they joined (a stable sort keeps it)
     private fun rank(t: ItemType) = when (t) { ItemType.EKI_STAMP -> 0; ItemType.EKITAG -> 1; else -> 2 }
 
