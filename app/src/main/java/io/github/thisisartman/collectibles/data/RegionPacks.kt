@@ -48,6 +48,12 @@ class RegionPacks @Inject constructor(
     private val log: FileLog,
 ) {
     private val dir get() = File(context.filesDir, "packs").apply { mkdirs() }
+
+    init {
+        // A download stopped part way leaves a ".part" file: 0.6.0's first-run load did, and Regions counted it in
+        // "On this phone" (seen on the 0.6.0 to 0.7.0 upgrade, 2026-11-24). Nothing is downloading yet at start
+        runCatching { File(context.filesDir, "packs").listFiles()?.filter { it.name.endsWith(".part") }?.forEach { it.delete() } }
+    }
     private val prefs get() = context.getSharedPreferences("packs", Context.MODE_PRIVATE)
 
     private val _installed = MutableStateFlow(readInstalled())
@@ -144,12 +150,12 @@ class RegionPacks @Inject constructor(
     }
 
     /** Bytes the packs use on this phone. */
-    fun bytesOnPhone(): Long = dir.listFiles()?.sumOf { it.length() } ?: 0L
+    fun bytesOnPhone(): Long = dir.listFiles()?.filterNot { it.name.endsWith(".part") }?.sumOf { it.length() } ?: 0L
 
     private fun get(url: String): java.io.InputStream {
         val c = (URL(url).openConnection() as HttpURLConnection).apply {
             connectTimeout = 15_000; readTimeout = 30_000; instanceFollowRedirects = true
-            setRequestProperty("User-Agent", "Meguri/${BuildConfig.VERSION_NAME} (Android)")
+            setRequestProperty("User-Agent", UserAgent.value)
         }
         check(c.responseCode == 200) { "HTTP ${c.responseCode} for $url" }
         return c.inputStream

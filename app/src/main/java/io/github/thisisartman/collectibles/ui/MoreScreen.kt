@@ -108,8 +108,10 @@ class MoreViewModel @Inject constructor(
     /** Downloads a prefecture: its main catalogue packs, its map when [withMap], and any [extras] (optional types). */
     fun downloadPrefecture(prefecture: String, withMap: Boolean, extras: Set<ItemType> = emptySet()) = run {
         val index = packIndex.value ?: return@run
+        val installed = packs.installed.value
+        // A pack already on the phone at the same version is not fetched again ("Download the rest", #134)
         val chosen = index.of(prefecture).filter { p ->
-            if (p.isMap) withMap else p.core || p.type in extras
+            (if (p.isMap) withMap else p.core || p.type in extras) && installed[p.id] != p.sha256
         }
         packProgress.value = prefecture to 0f
         packs.install(chosen) { done, total -> packProgress.value = prefecture to (if (total > 0) done.toFloat() / total else 1f) }
@@ -140,14 +142,28 @@ class MoreViewModel @Inject constructor(
             .groupBy { it.prefecture }.mapValues { (_, l) -> l.associate { it.type!! to it.items } }
     }
 
-    /** The onboarding's Load: the chosen prefectures' main packs (maps are offered on Regions), else the catalogue inside the app. */
-    suspend fun loadRegions(regions: Set<String>) {
-        val index = packIndex.value ?: packs.fetchIndex()
-        if (index != null) {
-            val chosen = index.packs.filter { !it.isMap && it.core && it.prefecture in regions }
-            if (packs.install(chosen).isSuccess) return
+    /**
+     * The onboarding's Load: the chosen prefectures' main packs and, when ticked, their offline maps (#135), or the catalogue inside
+     * the app when the pack server can't be reached. Returns false when a pack did not install.
+     *
+     * It runs in the app-wide work scope, not the caller's: the onboarding sheet leaves the screen as soon as the first
+     * pack fills the catalogue, and its own scope used to cancel every pack after that one (#134).
+     */
+    /** Size of the offline maps of [regions], from the list of downloads; null until it is in. */
+    fun mapBytes(regions: Set<String>): Long? = packIndex.value?.packs?.filter { it.isMap && it.prefecture in regions }?.sumOf { it.bytes }
+
+    suspend fun loadRegions(regions: Set<String>, withMap: Boolean = false): Boolean {
+        val done = kotlinx.coroutines.CompletableDeferred<Boolean>()
+        work.launch {
+            val ok = runCatching {
+                val index = packIndex.value ?: packs.fetchIndex()
+                if (index == null) { io.importBundled(regions); true }
+                else packs.install(index.packs.filter { (if (it.isMap) withMap else it.core) && it.prefecture in regions }).isSuccess
+            }.getOrDefault(false)
+            if (!ok) runCatching { log.w("Packs", "First-run load incomplete for $regions") }
+            done.complete(ok)
         }
-        io.importBundled(regions)
+        return done.await()
     }
 
     /** Card codes of the manhole cards loaded on this phone (for #53's picture download). */
@@ -231,9 +247,13 @@ class MoreViewModel @Inject constructor(
 
     fun downloadCards(context: android.content.Context) {
         val app = context.applicationContext
-        work.downloadCards({ progress -> CardPictures.download(app, cardCodes(), progress) }) { ok, failed ->
-            log.i("Cards", "Card pictures: $ok downloaded, $failed failed")
-            work.say(app.getString(SettingsWork.cardsDoneMessage(ok, failed), ok, failed))
+        work.downloadCards({ progress -> CardPictures.download(app, cardCodes(), progress) }) { r ->
+            log.i("Cards", "Card pictures: ${r.downloaded} downloaded, ${r.notOnSite} not on the site yet, ${r.failed} failed")
+            val text = app.getString(SettingsWork.cardsDoneMessage(r), r.downloaded, r.failed)
+            work.say(
+                if (r.notOnSite == 0) text
+                else text + " " + app.resources.getQuantityString(R.plurals.cards_not_on_site, r.notOnSite, r.notOnSite),
+            )
         }
     }
 }
@@ -385,7 +405,8 @@ fun MoreScreen(
                 val newest = vm.auto.serverBackups().firstOrNull()
                 if (newest == null) { vm.work.say(noServerBackups); return@run }
                 val uri = vm.auto.downloadFromServer(newest.name)
-                PendingRestore(vm.restore.inspect(uri), vm.restore.currentCounts())
+                val info = try { vm.restore.inspect(uri) } finally { vm.auto.clearServerDownload() }
+                PendingRestore(info, vm.restore.currentCounts())
             }.onSuccess { pendingRestore = it }.onFailure {
                 vm.log.w("Restore", "Server restore refused: ${it.javaClass.simpleName}")
                 vm.work.say(if (it is BackupError) notBackup else restoreFailed)
@@ -457,8 +478,9 @@ fun MoreScreen(
     val catalogue by vm.catalogue.collectAsState()
     val customNames by vm.customNames.collectAsState()
     val findCount by vm.findCount.collectAsState()
-    Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
-        // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page
+    Column(Modifier.fillMaxSize()) {
+        // A page of its own, opened from the top-right menu, so it gets a back arrow like the item page. The bar stays
+        // on screen while the page scrolls under it, so Back is always in reach (#141)
         Row(Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
             androidx.compose.material3.IconButton(onClick = { if (section != null) section = parentOf(section) else onBack() }) {
                 androidx.compose.material3.Icon(
@@ -469,6 +491,7 @@ fun MoreScreen(
             Text(section?.let { titles[it] } ?: stringResource(R.string.more_title), style = MaterialTheme.typography.headlineMedium, modifier = Modifier.padding(start = 4.dp))
         }
 
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
         when (section) {
             null -> {
                 // Each line says what is set now, so nothing needs opening just to check. Order (owner, 2026-11-09):
@@ -629,7 +652,7 @@ fun MoreScreen(
                 LaunchedEffect(Unit) { vm.loadPhotos(context) }
                 MoreRow(
                     stringResource(R.string.photos_kept),
-                    photoSummary?.let { stringResource(R.string.photos_kept_sub, it.kept, android.text.format.Formatter.formatShortFileSize(context, it.bytes)) },
+                    photoSummary?.let { androidx.compose.ui.res.pluralStringResource(R.plurals.photos_kept_sub, it.kept, it.kept, android.text.format.Formatter.formatShortFileSize(context, it.bytes)) },
                 ) { section = S_PHOTOS }
             }
             S_WEEKLY -> {
@@ -706,18 +729,25 @@ fun MoreScreen(
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val progress by vm.cardProgress.collectAsState()
                 val have by CardPictures.have.collectAsState()
-                var total by remember { mutableStateOf<Int?>(null) }
-                LaunchedEffect(Unit) { total = vm.cardCodes().size }
-                val allHere = total != null && total!! > 0 && have.size >= total!!
+                val none by CardPictures.none.collectAsState()
+                var codes by remember { mutableStateOf<List<String>?>(null) }
+                LaunchedEffect(Unit) { codes = vm.cardCodes() }
+                val total = codes?.size
+                // Nothing left to fetch: every card is here, or the site has no picture of it yet (#160)
+                val left = remember(codes, have, none) { codes?.let { CardPictures.toFetch(it).size } }
+                val allHere = total != null && total > 0 && left == 0
                 val allHereText = stringResource(R.string.cards_all_here)
                 MoreRow(
                     stringResource(R.string.cards_download),
                     progress?.takeIf { it.second > 0 }?.let { (d, t) -> stringResource(R.string.cards_progress, d, t) }
                         ?: if (allHere) stringResource(R.string.cards_all, have.size)
+                        // No cards to fetch pictures for: say what to do first, not "0 of 0, tap to download" (#142)
+                        else if (total == 0) stringResource(R.string.cards_none)
                         else stringResource(R.string.cards_download_sub, have.size, total ?: 0),
                 ) {
                     // Every picture already here: say so, rather than "0 downloaded, 0 not found" (finding 40)
-                    if (allHere && progress == null) scope.launch { snackbar.showSnackbar(allHereText) } else vm.downloadCards(ctx)
+                    if (total == 0) Unit
+                    else if (allHere && progress == null) scope.launch { snackbar.showSnackbar(allHereText) } else vm.downloadCards(ctx)
                 }
                 var confirmRemove by remember { mutableStateOf(false) }
                 if (have.isNotEmpty() && progress == null) MoreRow(stringResource(R.string.cards_remove), null) { confirmRemove = true }
@@ -796,6 +826,7 @@ fun MoreScreen(
             S_ART -> CreditList(null, ART)
             S_LICENCES -> CreditList(stringResource(R.string.about_licences_intro), LIBRARIES)
             S_PRIVACY -> PrivacyPage()
+        }
         }
     }
 }

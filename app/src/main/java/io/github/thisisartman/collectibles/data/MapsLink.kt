@@ -121,7 +121,7 @@ object MapsLink {
                 if (!isShort(u)) return@runCatching u
                 val c = (URL(u).openConnection() as HttpURLConnection).apply {
                     instanceFollowRedirects = false; connectTimeout = 8_000; readTimeout = 8_000
-                    setRequestProperty("User-Agent", "Meguri/0.3 (personal collecting app for Android)")
+                    setRequestProperty("User-Agent", UserAgent.value)
                 }
                 val loc = c.getHeaderField("Location")
                 c.disconnect()

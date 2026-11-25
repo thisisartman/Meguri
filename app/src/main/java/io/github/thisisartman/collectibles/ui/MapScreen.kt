@@ -112,6 +112,7 @@ fun MapScreen(vm: MainViewModel, nav: NavHostController, section: MapSection, ki
             pins, here.fix?.let { it.lat to it.lng }, Modifier.fillMaxSize(),
             onPinTap = { tick(); picked = it }, onMapTap = { picked = null },
             anchor = row?.item?.lat?.let { lat -> row.item.lng?.let { lat to it } }, onAnchorScreen = { pinAt = it },
+            fitAllPins = section == MapSection.COLLECTED || section == MapSection.MINE,
         )
         Surface(
             Modifier.statusBarsPadding().padding(12.dp),

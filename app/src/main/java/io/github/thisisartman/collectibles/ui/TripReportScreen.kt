@@ -122,7 +122,7 @@ fun TripReportScreen(vm: MainViewModel, startDay: Long? = null, onBack: () -> Un
     fun colorFor(r: ReportRow): Int = (r.item.customTypeId?.let { customTypes[it] }?.takeIf { r.item.type == ItemType.CUSTOM }?.let { androidx.compose.ui.graphics.Color(it.color) } ?: types.of(r.item.type)).toArgb()
     val spec = remember(rows, chosen, ja, scheme) {
         if (chosen == null || rows.isEmpty()) null else {
-            val time = SimpleDateFormat("HH:mm", Locale.US)
+            val time = Dates.timeFormat()
             val shown = rows.take(MAX_LINES)
             // Today's planned route names the trip; another day is just its date
             val routeLine = trip?.takeIf { TripReport.dayStart(it.untilMs) == chosen }?.let { t ->

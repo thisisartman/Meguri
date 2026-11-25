@@ -55,9 +55,9 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() {
             val saved = prefs.getStringSet(KEY_TYPES, null) ?: return DEFAULT_TYPES
             val kinds = saved.mapNotNull { runCatching { ItemType.valueOf(it) }.getOrNull() }.toSet()
-            return if (MARK_V2 in saved) kinds else kinds + NEW_IN_V2
+            return kinds + (if (MARK_V2 in saved) emptySet() else NEW_IN_V2) + (if (MARK_V3 in saved) emptySet() else NEW_IN_V3)
         }
-        set(v) = prefs.edit().putStringSet(KEY_TYPES, v.map { it.name }.toSet() + MARK_V2).apply()
+        set(v) = prefs.edit().putStringSet(KEY_TYPES, v.map { it.name }.toSet() + MARK_V2 + MARK_V3).apply()
 
     var quietOn: Boolean
         get() = prefs.getBoolean(KEY_QUIET, true)
@@ -120,8 +120,11 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         }
         private const val KEY_RADIUS_PREFIX = "radius_"
         val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
-        val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2
+        /** Ekitag alert from 0.7 (#138), once for sets saved before it, like [NEW_IN_V2]. */
+        val NEW_IN_V3 = setOf(ItemType.EKITAG)
+        val DEFAULT_TYPES = setOf(ItemType.MANHOLE_CARD, ItemType.GOSHUIN, ItemType.EKI_STAMP) + NEW_IN_V2 + NEW_IN_V3
         private const val MARK_V2 = "_kinds_v2"
+        private const val MARK_V3 = "_kinds_v3"
         const val QUIET_FROM = 22
         const val QUIET_TO = 7
         const val COOLDOWN_MS = 12 * 60 * 60_000L

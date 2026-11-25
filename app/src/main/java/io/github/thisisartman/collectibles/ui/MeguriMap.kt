@@ -67,6 +67,8 @@ fun MeguriMap(
     // When set, the camera is remembered under this name: coming back to the page puts the map where it was
     // instead of re-framing it (owner, 2026-11-07: the transition back to Nearby)
     memoryKey: String? = null,
+    // Frame every pin and leave your position out of it: "Where you collected" shows your finds (#136)
+    fitAllPins: Boolean = false,
     // A planned trip's line, station to station (#46); the camera fits it when the map first opens
     route: List<Pair<Double, Double>> = emptyList(),
     // A place whose screen position is reported as the camera moves, so a pin card can stay on its pin (#76)
@@ -149,16 +151,19 @@ fun MeguriMap(
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer); mapView.onStop(); mapView.onDestroy() }
     }
+    // The listeners added below, so a change of theme, language or maps replaces them instead of adding more (#173)
+    val listeners = remember { MapListeners() }
     LaunchedEffect(mapView, dark, japanese, mapsVersion) {
         val offlineStyle = if (offline) {
             runCatching { kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { OfflineMap.styleJson(context, dark, japanese) } }.getOrNull()
         } else null
         mapView.getMapAsync { m ->
             map = m
-            m.addOnCameraMoveListener { emitAnchor(m) }
+            listeners.removeFrom(m)
+            listeners.move = MapLibreMap.OnCameraMoveListener { emitAnchor(m) }.also(m::addOnCameraMoveListener)
             memoryKey?.let { key ->
                 CameraMemory.saved[key]?.let { m.cameraPosition = it }
-                m.addOnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }
+                listeners.idle = MapLibreMap.OnCameraIdleListener { CameraMemory.saved[key] = m.cameraPosition }.also(m::addOnCameraIdleListener)
             }
             m.uiSettings.apply {
                 isScrollGesturesEnabled = interactive; isZoomGesturesEnabled = interactive
@@ -180,6 +185,8 @@ fun MeguriMap(
                 s.layers.filterIsInstance<org.maplibre.android.style.layers.SymbolLayer>().forEach { layer ->
                     val tf = layer.textField.expression?.toString() ?: layer.textField.value?.toString() ?: return@forEach
                     if ("name" in tf && "ref" !in tf) layer.setProperties(PropertyFactory.textField(oneName))
+                    // Road numbers: OpenStreetMap writes "8;17" where two routes share a road; show the first (#150)
+                    else if ("ref" in tf && "name" !in tf) runCatching { layer.setProperties(PropertyFactory.textField(FIRST_REF)) }
                 }
                 // Under the pins, larger and soft, so a pin where you stand stays visible
                 s.addSource(GeoJsonSource(SRC_HERE))
@@ -262,7 +269,7 @@ fun MeguriMap(
             // A 48 dp square around the finger, not a single point (owner, 2026-11-07: pins were hard to hit);
             // when several pins fall inside, the one nearest the finger wins
             val slop = 28f * context.resources.displayMetrics.density
-            m.addOnMapClickListener { point ->
+            listeners.click = MapLibreMap.OnMapClickListener { point ->
                 val p = m.projection.toScreenLocation(point)
                 val box = android.graphics.RectF(p.x - slop, p.y - slop, p.x + slop, p.y + slop)
                 val dpx = context.resources.displayMetrics.density
@@ -288,7 +295,7 @@ fun MeguriMap(
                     else -> tapPin(hit.getStringProperty("id"))
                 }
                 true
-            }
+            }.also(m::addOnMapClickListener)
         }
     }
     LaunchedEffect(map, anchor) { map?.let { emitAnchor(it) } }
@@ -372,6 +379,17 @@ fun MeguriMap(
         map?.addOnCameraMoveStartedListener { reason -> if (reason == MapLibreMap.OnCameraMoveStartedListener.REASON_API_GESTURE) userMoved = true }
     }
     val hasPins = pins.isNotEmpty()
+    // When the onboarding lets go of the map, place it afresh: what it remembered then was the onboarding's view of
+    // Japan or the world, and Nearby stayed on it after the first region loaded (#136, seen on a fresh 0.7.0 install)
+    var wasHeld by remember { mutableStateOf(holdOnJapan) }
+    LaunchedEffect(holdOnJapan) {
+        if (holdOnJapan) { wasHeld = true; return@LaunchedEffect }
+        if (!wasHeld) return@LaunchedEffect
+        wasHeld = false
+        memoryKey?.let { CameraMemory.saved.remove(it); CameraMemory.placedAt.remove(it) }
+        placed = false; placedAt = null; framedWithoutPins = false; userMoved = false
+    }
+
     LaunchedEffect(style, hasHere, holdOnJapan, hasPins) {
         if (!startOnJapan || holdOnJapan || style == null || !hasHere) return@LaunchedEffect
         if (placed && !(framedWithoutPins && hasPins && !userMoved)) return@LaunchedEffect
@@ -381,7 +399,7 @@ fun MeguriMap(
         val h = here ?: return@LaunchedEffect
         placed = true
         placedAt = h
-        val focus = pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second)
+        val focus = framing(pins, h, fitAllPins)
         framedWithoutPins = focus.size < 2
         // Before the pins have loaded there is only you to frame; a bounds of one point throws. The sheet covers the
         // lower part, so the frame sits above it (Poco 2026-11-08: opened at street level with nothing in view)
@@ -418,8 +436,7 @@ fun MeguriMap(
         if ((!placed || movedFar) && (here != null || pins.isNotEmpty()) && !(startOnJapan && !placed)) {
             placed = true
             placedAt = here
-            val focus = (here?.let { h -> pins.sortedBy { dist2(it, h) }.take(8).map { LatLng(it.lat, it.lng) } + LatLng(h.first, h.second) }
-                ?: pins.map { LatLng(it.lat, it.lng) })
+            val focus = framing(pins, here, fitAllPins)
             if (focus.size >= 2) {
                 m.moveCamera(CameraUpdateFactory.newLatLngBounds(LatLngBounds.Builder().includes(focus).build(), 80))
             } else {
@@ -482,6 +499,24 @@ private object CameraMemory {
 }
 
 private fun dist2(p: MapPin, h: Pair<Double, Double>) = (p.lat - h.first).let { it * it } + (p.lng - h.second).let { it * it }
+
+/** About 110 km, as a squared distance in degrees: farther than this, your position is left out of the first frame. */
+private const val FAR_DEG2 = 1.0
+
+/**
+ * What the camera frames first: you and your nearest pins; or every pin when the map shows your finds, when your
+ * position isn't known, or when the nearest pin is far away. Framing you with pins in another country showed the
+ * whole world (#136).
+ */
+internal fun framing(pins: List<MapPin>, here: Pair<Double, Double>?, all: Boolean): List<LatLng> {
+    val every = pins.map { LatLng(it.lat, it.lng) }
+    if (here == null) return every
+    val me = LatLng(here.first, here.second)
+    if (pins.isEmpty()) return listOf(me)
+    if (all) return every
+    val near = pins.sortedBy { dist2(it, here) }.take(8)
+    return if (dist2(near.first(), here) > FAR_DEG2) every else near.map { LatLng(it.lat, it.lng) } + me
+}
 
 private fun colorHex(c: Color) = String.format("#%06X", c.toArgb() and 0xFFFFFF)
 
@@ -567,4 +602,20 @@ private fun MapCreditsButton(modifier: Modifier) {
             }
         },
     )
+
+/** A road's number up to the first ";" ("8;17" shows 8), for road number labels (#150). */
+private val FIRST_REF: Expression = Expression.raw(
+    """["let", "r", ["to-string", ["get", "ref"]], ["case", [">=", ["index-of", ";", ["var", "r"]], 0], """ +
+        """["slice", ["var", "r"], 0, ["index-of", ";", ["var", "r"]]], ["var", "r"]]]""",
+)
+
+/** The map listeners [MeguriMap] adds, kept so each style change removes the last set before adding its own (#173). */
+private class MapListeners {
+    var move: MapLibreMap.OnCameraMoveListener? = null
+    var idle: MapLibreMap.OnCameraIdleListener? = null
+    var click: MapLibreMap.OnMapClickListener? = null
+    fun removeFrom(m: MapLibreMap) {
+        move?.let(m::removeOnCameraMoveListener); idle?.let(m::removeOnCameraIdleListener); click?.let(m::removeOnMapClickListener)
+        move = null; idle = null; click = null
+    }
 }

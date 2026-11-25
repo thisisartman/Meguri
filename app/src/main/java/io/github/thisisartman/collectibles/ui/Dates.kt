@@ -15,9 +15,25 @@ import java.util.TimeZone
  * "9 Nov 2026" / "9 Nov 2026, 14:06" in English, "2026/11/09" / "2026/11/09 14:06" in Japanese.
  */
 object Dates {
+    /**
+     * The phone's 12/24-hour setting, read when the app starts and each time it comes back (#145: Timeline said 20:23
+     * and the item page 8:23 PM for the same find). Every time on screen goes through [timePattern].
+     */
+    @Volatile var use24 = true
+    fun readClock(context: Context) { use24 = android.text.format.DateFormat.is24HourFormat(context) }
+
+    /** "14:06", or "2:06 PM" / "午後2:06" when the phone is set to 12-hour time. */
+    fun timePattern(locale: Locale = Locale.getDefault()): String = when {
+        use24 -> "HH:mm"
+        locale.language == "ja" -> "ah:mm"
+        else -> "h:mm a"
+    }
+    fun timeFormat(locale: Locale = Locale.getDefault()) = java.text.SimpleDateFormat(timePattern(locale), locale)
+    fun time(ms: Long, locale: Locale = Locale.getDefault()): String = timeFormat(locale).format(Date(ms))
+
     fun day(ms: Long, locale: Locale): String = DateFormat.getDateInstance(DateFormat.MEDIUM, locale).format(Date(ms))
     fun dayTime(ms: Long, locale: Locale): String =
-        DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT, locale).format(Date(ms))
+        day(ms, locale) + (if (locale.language == "ja") " " else ", ") + time(ms, locale)
     fun day(context: Context, ms: Long): String = day(ms, context.resources.configuration.locales[0])
     fun dayTime(context: Context, ms: Long): String = dayTime(ms, context.resources.configuration.locales[0])
 

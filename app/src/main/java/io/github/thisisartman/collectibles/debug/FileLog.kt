@@ -30,10 +30,23 @@ class FileLog(
         dir.mkdirs()
     }
 
+    /** One writer thread, so lines keep their order and a tap never waits for the disk (#167). */
+    private val writer = java.util.concurrent.Executors.newSingleThreadExecutor { r -> Thread(r, "FileLog").apply { isDaemon = true } }
+    private val fileLock = Any()
+
+    /** Waits until every line asked for so far is on disk. */
+    fun flush() {
+        runCatching { writer.submit {}.get(2, java.util.concurrent.TimeUnit.SECONDS) }
+    }
+
+    private fun write(line: String) = synchronized(fileLock) {
+        current.appendText(line)
+        if (current.length() > maxBytes) rotate()
+    }
+
     /** Whether detailed (DEBUG) lines are written now. */
     val isDetailed: Boolean get() = detailed()
 
-    @Synchronized
     fun log(level: Level, tag: String, message: String, error: Throwable? = null) {
         if (level == Level.DEBUG && !detailed()) return
         val line = buildString {
@@ -42,8 +55,8 @@ class FileLog(
             append('\n')
             if (error != null) append(stackTrace(error))
         }
-        current.appendText(line)
-        if (current.length() > maxBytes) rotate()
+        // A crash line is written before the process ends, after the lines already waiting
+        if (level == Level.FATAL) { flush(); write(line) } else writer.execute { runCatching { write(line) } }
     }
 
     /**
@@ -53,19 +66,22 @@ class FileLog(
     fun d(tag: String, message: String) {
         runCatching { log(Level.DEBUG, tag, message) }
     }
-    fun i(tag: String, message: String) = log(Level.INFO, tag, message)
-    fun w(tag: String, message: String, error: Throwable? = null) = log(Level.WARN, tag, message, error)
-    fun e(tag: String, message: String, error: Throwable? = null) = log(Level.ERROR, tag, message, error)
+    // The other levels never throw either: an info line runs right after a find is saved, and a full disk or a
+    // removed log folder must not turn a saved find into a crash (#169)
+    fun i(tag: String, message: String) { runCatching { log(Level.INFO, tag, message) } }
+    fun w(tag: String, message: String, error: Throwable? = null) { runCatching { log(Level.WARN, tag, message, error) } }
+    fun e(tag: String, message: String, error: Throwable? = null) { runCatching { log(Level.ERROR, tag, message, error) } }
 
     /** All kept files, oldest first, joined into one text. */
-    @Synchronized
-    fun readAll(): String = files().joinToString("") { it.readText() }
+    fun readAll(): String { flush(); return synchronized(fileLock) { keptFiles().joinToString("") { it.readText() } } }
 
     /** The last [count] lines across all kept files. */
     fun tail(count: Int): List<String> = readAll().lineSequence().filter { it.isNotEmpty() }.toList().takeLast(count)
 
-    /** Kept files, oldest first. */
-    fun files(): List<File> =
+    /** Kept files, oldest first, once every line asked for so far is in them. */
+    fun files(): List<File> { flush(); return keptFiles() }
+
+    private fun keptFiles(): List<File> =
         ((keep - 1) downTo 1).map { File(dir, "app.$it.log") }.filter { it.exists() } +
             listOfNotNull(current.takeIf { it.exists() })
 

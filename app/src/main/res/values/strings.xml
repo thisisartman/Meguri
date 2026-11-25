@@ -313,8 +313,8 @@
     <string name="settings_data">Backup and data</string>
     <string name="settings_look">Appearance</string>
     <string name="settings_catalogue">Catalogue</string>
-    <string name="settings_catalogue_sub">Niigata, Saitama, Tokyo and Gunma built in · card pictures · load a CSV for more</string>
-    <string name="settings_catalogue_note">The app comes with the catalogue of Niigata, Saitama and Tokyo (manhole cards, station stamps, Ekitag, dam cards and roadside stations), the station stamps of Gunma on the Joetsu Line, and an offline map. Load a CSV to add or update items; your finds are never removed.</string>
+    <string name="settings_catalogue_sub">Regions · card pictures · load a CSV for more</string>
+    <string name="settings_catalogue_note">Each prefecture is its own download, under Regions: what you can collect there, and an offline map if you want one. Load a CSV to add or update items; your finds are never removed.</string>
     <string name="settings_help">Help and about</string>
     <string name="settings_help_sub">What\'s new · logs · version %1$s</string>
     <string name="settings_collections_sub">Categories you added yourself, and adding one</string>
@@ -358,6 +358,7 @@
     <string name="onb_regions_all">Select all of Japan</string>
     <string name="onb_regions_more">More prefectures are coming.</string>
     <string name="onb_loading">Loading…</string>
+    <string name="onb_load_partial">Part of your region didn\'t download. Open Settings, Catalogue, Regions to get the rest.</string>
     <plurals name="onb_load">
         <item quantity="one">Load %d region</item>
         <item quantity="other">Load %d regions</item>
@@ -450,8 +451,14 @@
     <string name="edit_type">Type</string>
     <string name="type_place_plural">Places</string>
     <string name="cards_download">Card pictures</string>
+    <string name="cards_none">No manhole cards in your catalogue yet. Download a region under Regions first.</string>
     <string name="cards_download_sub">%1$d of %2$d on this phone. Tap to download the rest from the card site (Eki kara Manhole), for your own use: they stay on this phone, not in backups. Pictures © GKP and each city.</string>
     <string name="cards_progress">Downloading %1$d of %2$d…</string>
+    <string name="cards_done_ok">Card pictures: %1$d downloaded.</string>
+    <plurals name="cards_not_on_site">
+        <item quantity="one">%d card has no picture on the card site yet; Meguri looks again in a week.</item>
+        <item quantity="other">%d cards have no picture on the card site yet; Meguri looks again in a week.</item>
+    </plurals>
     <string name="cards_done">Card pictures: %1$d downloaded. %2$d couldn\'t be downloaded: tap Card pictures to try again</string>
     <string name="cards_remove">Remove card pictures</string>
     <string name="cards_all">All %1$d on this phone, for your own use (not in backups). Pictures © GKP and each city, via Eki kara Manhole.</string>
@@ -550,7 +557,7 @@
     <string name="backup_section">Backup</string>
     <string name="photos_section">Photos</string>
     <string name="photos_kept">Photos kept in Meguri</string>
-    <string name="photos_kept_sub">%1$d photos · %2$s</string>
+    <plurals name="photos_kept_sub"><item quantity="one">%1$d photo · %2$s</item><item quantity="other">%1$d photos · %2$s</item></plurals>
     <string name="photos_kept_note">Meguri keeps its own copy of each photo you add, so it stays even if you delete it from the gallery. Backups with photos carry them to a new phone. %1$d photos, %2$s.</string>
     <string name="photos_none">No photos yet. Photos you add to a find show here.</string>
     <plurals name="photos_count">
@@ -644,7 +651,9 @@
     <string name="credit_maplibre">The map</string>
     <string name="credit_play_location">Your position and alerts</string>
     <string name="credit_mlkit">Scanning cards and reading Japanese text, on the phone</string>
-    <string name="privacy_intro">Meguri has no account and no server. Your finds, photos and settings stay on this phone, and in the backups you save. Nothing is collected about you.</string>
+    <string name="privacy_intro">Meguri has no account and no server of its own. Your finds, photos and settings stay on this phone, and in the backups you save. Nothing is collected about you.</string>
+    <string name="privacy_drive">Backup to one file in Google Drive, when you choose it: the backup file, sent to the file you picked</string>
+    <string name="privacy_webdav">Backup to your own server (WebDAV), when you set one up: the backup file, sent only to that server</string>
     <string name="privacy_online">Online services</string>
     <string name="privacy_online_sub">Meguri connects to these services only when you use the feature listed. Tap a name to open the service, or the button for its privacy policy.</string>
     <string name="privacy_tiles">Map tiles outside the offline pack: the area you look at</string>
@@ -692,6 +701,12 @@
     <string name="regions_download">Download (%1$s)</string>
     <string name="regions_on_phone">On this phone, with its map</string>
     <string name="regions_on_phone_no_map">On this phone, without its map</string>
+    <string name="regions_on_phone_plain">On this phone</string>
+    <plurals name="regions_partial">
+        <item quantity="one">Part of it is on this phone: %d download is missing</item>
+        <item quantity="other">Part of it is on this phone: %d downloads are missing</item>
+    </plurals>
+    <string name="regions_download_rest">Download the rest (%1$s)</string>
     <string name="regions_add_map">Add map (%1$s)</string>
     <string name="regions_remove">Remove</string>
     <string name="regions_remove_title">Remove %1$s?</string>

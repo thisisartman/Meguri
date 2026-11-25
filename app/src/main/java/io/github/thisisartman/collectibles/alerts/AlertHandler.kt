@@ -39,7 +39,13 @@ class AlertHandler @Inject constructor(
      */
     suspend fun candidates(): List<Item> {
         val getOff = trips.current()?.getOff.orEmpty()
-        return dao.uncollectedPlaces().filter { it.type != ItemType.EKI_STAMP || it.id in getOff }
+        val places = dao.uncollectedPlaces().filter { it.type != ItemType.EKI_STAMP || it.id in getOff }
+        // Ekitag follow the station rule too (#138): only those at a station you get off at today, found by place
+        // (within 300 m), since an Ekitag and that station's stamp are separate items
+        if (getOff.isEmpty()) return places
+        val stops = places(getOff.toList()).map { it.second }
+        val tags = dao.uncollectedEkitag().filter { t -> stops.any { (la, ln) -> distanceM(t.lat!!, t.lng!!, la, ln) <= EKITAG_AT_STATION_M } }
+        return places + tags
     }
 
     /** A position from Trip mode. Returns the nearest item still to get and its distance, for the status line. */
@@ -87,3 +93,6 @@ class AlertHandler @Inject constructor(
         const val MAX_PER_CHECK = 3
     }
 }
+
+/** How near a get-off station an Ekitag must be to count as that station's (#138). */
+internal const val EKITAG_AT_STATION_M = 300.0

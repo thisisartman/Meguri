@@ -157,7 +157,7 @@ class TripModeService : Service() {
         super.onDestroy()
     }
 
-    private fun time(ms: Long) = SimpleDateFormat("HH:mm", Locale.US).format(Date(ms))
+    private fun time(ms: Long) = io.github.thisisartman.collectibles.ui.Dates.time(ms)
 
     companion object {
         /** True while the service exists in this process. */

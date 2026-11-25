@@ -27,6 +27,7 @@ class CollectiblesApp : Application() {
     override fun onCreate() {
         super.onCreate()
         CrashLogger.install(log)
+        io.github.thisisartman.collectibles.ui.Dates.readClock(this)
         AppLanguage.ensureDefault(this)
         log.i(
             "App",
@@ -37,10 +38,11 @@ class CollectiblesApp : Application() {
         autoBackup.catchUpIfOverdue()
         notifier.createChannels()
         geofences.refreshInBackground()
-        io.github.thisisartman.collectibles.photo.CardPictures.load(this)
         // The new-photo hint waits for the next gallery photo again after each start (M7)
         if (alertSettings.photoHintsOn) io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(this, androidx.work.ExistingWorkPolicy.KEEP)
         CoroutineScope(Dispatchers.IO).launch {
+            // Which card pictures are on the phone: a folder listing and, for old placeholders, a hash (#167)
+            runCatching { io.github.thisisartman.collectibles.photo.CardPictures.load(this@CollectiblesApp) }
             runCatching { restore.resumeRelinkIfPending() }.onFailure { log.e("Restore", "Relink failed", it) }
             runCatching { photoCopier.copyAll() }.onFailure { log.e("Photo", "Copying photos into the app failed", it) }
             runCatching { catalogue.refreshBundledIfChanged() }.onFailure { log.e("Catalog", "Bundled refresh failed", it) }

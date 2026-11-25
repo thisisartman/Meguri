@@ -129,13 +129,18 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
     val tips = remember { context.getSharedPreferences("tips", Context.MODE_PRIVATE) }
     var failed by remember { mutableStateOf(false) }
     var notReady by remember { mutableStateOf(false) }
-    // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background)
+    // Ask Play services for the Japanese reader ahead of the first scan (it downloads once, in the background). Off the
+    // main thread and after the first screen has settled: creating the reader loads ML Kit's classes, which held the
+    // main thread long enough at start for an "isn't responding" dialog on a slow device (#166)
     androidx.compose.runtime.LaunchedEffect(Unit) {
-        runCatching {
-            val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
-            com.google.android.gms.common.moduleinstall.ModuleInstall.getClient(context).installModules(
-                com.google.android.gms.common.moduleinstall.ModuleInstallRequest.newBuilder().addApi(recognizer).build(),
-            )
+        kotlinx.coroutines.delay(5_000)
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+            runCatching {
+                val recognizer = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+                com.google.android.gms.common.moduleinstall.ModuleInstall.getClient(context).installModules(
+                    com.google.android.gms.common.moduleinstall.ModuleInstallRequest.newBuilder().addApi(recognizer).build(),
+                )
+            }
         }
     }
     if (notReady) AlertDialog(
@@ -149,15 +154,20 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
         scope.launch {
             val cards = rows.filter { it.item.type == ItemType.MANHOLE_CARD && it.item.code != null }
             val known = cards.mapNotNull { it.item.code }.toSet()
-            val reader = TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            val reader = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                TextRecognition.getClient(JapaneseTextRecognizerOptions.Builder().build())
+            }
             // The scanner straightens the card but does not know which way is up: it came back upside down on the S23
             // (owner, 2026-11-09). Read it as it comes, then turned 180, 90 and 270 degrees; the turn that reads the
             // card code is the upright one, and the photo is saved that way up
-            val page0 = runCatching {
-                android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, _, _ ->
-                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
-                }
-            }.getOrNull()
+            // Decoded off the main thread: a full-page scan is several megapixels (#167)
+            val page0 = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching {
+                    android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, _, _ ->
+                        d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                    }
+                }.getOrNull()
+            }
             var code: String? = null
             var turn = 0
             var failure: Throwable? = null
@@ -210,9 +220,12 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // A card that was read: upright, then trimmed to the top card by its blue frame (owner, 2026-11-09: the
             // scanner took in the cards under it or the box's edge). No clean frame: the upright page as it was
             val src = page1
-            val trimmed = if (code != null && src != null) cardCopy(context, src, turn) else null
+            // The copies are cut, turned and written to disk off the main thread (#167)
+            val trimmed = if (code != null && src != null) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { cardCopy(context, src, turn) } else null
             vm.log.d("Scan", "Card code ${code ?: "not read"}, turn $turn°, card-only read ${src !== page0}, trim ${trimmed?.second ?: "not tried"}" + (failure?.let { ", reader failed: $it" } ?: ""))
-            val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) uprightCopy(context, src, turn) ?: page.imageUri else page.imageUri
+            val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { uprightCopy(context, src, turn) } ?: page.imageUri
+            } else page.imageUri
             // Debug builds keep what the scanner returned and what was read, for tuning the crop on a laptop
             if (io.github.thisisartman.collectibles.BuildConfig.DEBUG) runCatching {
                 val dir = java.io.File(context.getExternalFilesDir(null), "scan-debug").apply { mkdirs() }
@@ -225,7 +238,9 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // No card code: maybe it is a manhole cover (owner, 2026-11-08). Then it is filed as a cover, cut to a circle,
             // on the card you pick from the nearest ones
             // A card whose code wasn't read is still a card (blue frame), not a cover: then it goes to Pick by hand
-            val isCard = code == null && page0 != null && runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            val isCard = code == null && page0 != null && kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching { io.github.thisisartman.collectibles.photo.CardTrim.looksLikeCard(page0) }.getOrDefault(false)
+            }
             // A notebook page (mostly plain paper), before the cover check: station stamps are round too (owner, 2026-11-09)
             if (code == null && !isCard) {
                 val small = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { decodePage(context, page.imageUri, 480) }
@@ -241,13 +256,16 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 }
                 small?.recycle()
             }
-            val cover = match == null && code == null && !isCard && runCatching {
-                val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
-                    d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
-                    val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
-                }
-                io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
-            }.getOrDefault(false)
+            // The cover check decodes the page again: off the main thread too (#167)
+            val cover = match == null && code == null && !isCard && kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+                runCatching {
+                    val bmp = android.graphics.ImageDecoder.decodeBitmap(android.graphics.ImageDecoder.createSource(context.contentResolver, page.imageUri)) { d, info, _ ->
+                        d.allocator = android.graphics.ImageDecoder.ALLOCATOR_SOFTWARE
+                        val s = 1200f / maxOf(info.size.width, info.size.height); if (s < 1f) d.setTargetSize((info.size.width * s).toInt(), (info.size.height * s).toInt())
+                    }
+                    io.github.thisisartman.collectibles.photo.CoverCrop.find(bmp) != null
+                }.getOrDefault(false)
+            }
             val near = if (cover) cards.mapNotNull { r -> vm.distanceTo(r)?.let { r to it } }.sortedBy { it.second }.take(3).map { it.first } else emptyList()
             if (page1 !== page0) page1?.recycle()
             page0?.recycle()
@@ -273,7 +291,13 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             .build()
         GmsDocumentScanning.getClient(options).getStartScanIntent(activity)
             .addOnSuccessListener { launcher.launch(IntentSenderRequest.Builder(it).build()) }
-            .addOnFailureListener { failed = true }
+            // With Play services on the phone, a scanner that won't start is still downloading its module: say so,
+            // rather than that the phone lacks Play services (#139)
+            .addOnFailureListener {
+                val play = com.google.android.gms.common.GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context) ==
+                    com.google.android.gms.common.ConnectionResult.SUCCESS
+                if (play) notReady = true else failed = true
+            }
     }
 
     if (reading) AlertDialog(

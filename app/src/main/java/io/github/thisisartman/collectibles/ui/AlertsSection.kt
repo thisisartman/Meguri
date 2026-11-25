@@ -81,7 +81,11 @@ class AlertsViewModel @Inject constructor(
     val geofences: Geofences,
     val notifier: AlertNotifier,
     val location: LocationSource,
-) : ViewModel()
+    private val db: io.github.thisisartman.collectibles.data.CollectiblesDb,
+) : ViewModel() {
+    /** Types with something on the phone; the others aren't offered for alerts (#138). */
+    suspend fun typesPresent(): Set<io.github.thisisartman.collectibles.data.ItemType> = db.dao().typesPresent().toSet()
+}
 
 /** Permissions Trip mode and alerts need first: notifications (Android 13+) and location while in use. */
 fun foregroundAlertPermissions(): Array<String> = buildList {
@@ -140,7 +144,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     val playOk = remember(tick) { vm.geofences.playServicesOk() }
     val notificationsOk = remember(tick) { vm.notifier.canPost() }
     val geoError = remember(tick) { s.geofenceError }
-    val until = remember(tick) { SimpleDateFormat("HH:mm", Locale.US).format(Date(s.tripUntilMs)) }
+    val until = remember(tick) { Dates.time(s.tripUntilMs) }
 
     // Design C (owner, 2026-11-09): one mode, one distance, categories one tap in
     val mode = when { geoOn -> 2; tripOn -> 1; else -> 0 }
@@ -230,7 +234,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     )
 
     val quiet = remember(tick) { s.quietOn }
-    SwitchRow(stringResource(R.string.quiet_title), stringResource(R.string.quiet_sub), quiet, onChange = { s.quietOn = it; tick++ })
+    SwitchRow(stringResource(R.string.quiet_title), if (quiet) stringResource(R.string.quiet_sub) else null, quiet, onChange = { s.quietOn = it; tick++ })
     }
 
     MoreLink(
@@ -276,7 +280,7 @@ fun PhotoHintRow(vm: AlertsViewModel = hiltViewModel()) {
 
 /** The categories that can alert, in the order they show. */
 val ALERT_TYPES = listOf(
-    ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
+    ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.EKITAG to R.string.type_ekitag, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
     ItemType.DAM_CARD to R.string.type_dam_plural, ItemType.MUSEUM_STAMP to R.string.type_museum_plural, ItemType.ROADSIDE_STATION to R.string.type_roadside_plural,
 )
 
@@ -287,7 +291,9 @@ fun AlertCategoriesSection(vm: AlertsViewModel = hiltViewModel()) {
     var tick by remember { mutableIntStateOf(0) }
     val types = remember(tick) { s.types }
     val main = remember(tick) { s.radiusM }
-    ALERT_TYPES.forEach { (t, label) ->
+    // Only categories with something on the phone, plus any switched on, so it can be switched off (#138)
+    val present by androidx.compose.runtime.produceState<Set<ItemType>?>(null) { value = runCatching { vm.typesPresent() }.getOrNull() }
+    ALERT_TYPES.filter { (t, _) -> present?.let { t in it || t in types } ?: true }.forEach { (t, label) ->
         val alerts = t in types
         Row(
             Modifier.fillMaxWidth()
@@ -301,7 +307,7 @@ fun AlertCategoriesSection(vm: AlertsViewModel = hiltViewModel()) {
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
                 Text(stringResource(label), style = MaterialTheme.typography.bodyLarge)
-                if (t == ItemType.EKI_STAMP) Text(stringResource(R.string.alerts_station_short), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (t == ItemType.EKI_STAMP || t == ItemType.EKITAG) Text(stringResource(R.string.alerts_station_short), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = alerts, onCheckedChange = null)
         }

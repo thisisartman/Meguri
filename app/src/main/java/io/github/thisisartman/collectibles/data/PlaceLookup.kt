@@ -37,7 +37,7 @@ object PlaceLookup {
             val url = URL("$ENDPOINT?q=$q&format=jsonv2&limit=8&countrycodes=jp&addressdetails=0&namedetails=1$near")
             val c = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8_000; readTimeout = 8_000
-                setRequestProperty("User-Agent", "Meguri/0.3 (personal collecting app for Android)")
+                setRequestProperty("User-Agent", UserAgent.value)
                 setRequestProperty("Accept-Language", if (japanese) "ja,en" else "en,ja")
             }
             c.inputStream.bufferedReader().use { r -> parse(r.readText()) }
