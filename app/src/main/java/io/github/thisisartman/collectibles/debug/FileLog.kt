@@ -53,9 +53,11 @@ class FileLog(
     fun d(tag: String, message: String) {
         runCatching { log(Level.DEBUG, tag, message) }
     }
-    fun i(tag: String, message: String) = log(Level.INFO, tag, message)
-    fun w(tag: String, message: String, error: Throwable? = null) = log(Level.WARN, tag, message, error)
-    fun e(tag: String, message: String, error: Throwable? = null) = log(Level.ERROR, tag, message, error)
+    // The other levels never throw either: an info line runs right after a find is saved, and a full disk or a
+    // removed log folder must not turn a saved find into a crash (#169)
+    fun i(tag: String, message: String) { runCatching { log(Level.INFO, tag, message) } }
+    fun w(tag: String, message: String, error: Throwable? = null) { runCatching { log(Level.WARN, tag, message, error) } }
+    fun e(tag: String, message: String, error: Throwable? = null) { runCatching { log(Level.ERROR, tag, message, error) } }
 
     /** All kept files, oldest first, joined into one text. */
     @Synchronized

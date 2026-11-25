@@ -247,9 +247,13 @@ class MoreViewModel @Inject constructor(
 
     fun downloadCards(context: android.content.Context) {
         val app = context.applicationContext
-        work.downloadCards({ progress -> CardPictures.download(app, cardCodes(), progress) }) { ok, failed ->
-            log.i("Cards", "Card pictures: $ok downloaded, $failed failed")
-            work.say(app.getString(SettingsWork.cardsDoneMessage(ok, failed), ok, failed))
+        work.downloadCards({ progress -> CardPictures.download(app, cardCodes(), progress) }) { r ->
+            log.i("Cards", "Card pictures: ${r.downloaded} downloaded, ${r.notOnSite} not on the site yet, ${r.failed} failed")
+            val text = app.getString(SettingsWork.cardsDoneMessage(r), r.downloaded, r.failed)
+            work.say(
+                if (r.notOnSite == 0) text
+                else text + " " + app.resources.getQuantityString(R.plurals.cards_not_on_site, r.notOnSite, r.notOnSite),
+            )
         }
     }
 }
@@ -715,9 +719,13 @@ fun MoreScreen(
                 val ctx = androidx.compose.ui.platform.LocalContext.current
                 val progress by vm.cardProgress.collectAsState()
                 val have by CardPictures.have.collectAsState()
-                var total by remember { mutableStateOf<Int?>(null) }
-                LaunchedEffect(Unit) { total = vm.cardCodes().size }
-                val allHere = total != null && total!! > 0 && have.size >= total!!
+                val none by CardPictures.none.collectAsState()
+                var codes by remember { mutableStateOf<List<String>?>(null) }
+                LaunchedEffect(Unit) { codes = vm.cardCodes() }
+                val total = codes?.size
+                // Nothing left to fetch: every card is here, or the site has no picture of it yet (#160)
+                val left = remember(codes, have, none) { codes?.let { CardPictures.toFetch(it).size } }
+                val allHere = total != null && total > 0 && left == 0
                 val allHereText = stringResource(R.string.cards_all_here)
                 MoreRow(
                     stringResource(R.string.cards_download),
