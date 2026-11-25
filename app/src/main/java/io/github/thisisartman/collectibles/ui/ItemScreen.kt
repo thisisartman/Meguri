@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 
 import android.content.Intent
@@ -206,7 +208,12 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
                     val ctx = androidx.compose.ui.platform.LocalContext.current
                     val picture = r.photoUri ?: r.item.code?.takeIf { it in cards && r.item.type == ItemType.MANHOLE_CARD }
                         ?.let { io.github.thisisartman.collectibles.photo.CardPictures.uri(ctx, it) }
-                    Mark(r, 64.dp, if (picture != null) Modifier.clickable { big = true } else Modifier)
+                    val openPicture = stringResource(R.string.item_picture_open)
+                    Mark(
+                        r, 64.dp,
+                        if (picture != null) Modifier.clickable(onClickLabel = openPicture) { big = true }
+                            .semantics { contentDescription = openPicture } else Modifier,
+                    )
                     if (big && picture != null) FullscreenPhoto(picture, onClose = { big = false })
                     Spacer(Modifier.width(14.dp))
                     Column {
@@ -248,7 +255,7 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
             }
             item { SectionTitle(stringResource(R.string.item_photos)) }
             // The station's photos and the Ekitag's screenshots in one grid
-            item { ItemPhotos(item.type, finds.flatMap { it.photos } + tagFinds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId, shownUri = r?.photoUri) }
+            item { ItemPhotos(item.type, finds.flatMap { it.photos } + tagFinds.flatMap { it.photos }, photoActions, coverId = item.coverPhotoId, shownUri = r?.photoUri, hasEkitag = item.type != io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP || ekitag != null) }
             if (finds.isNotEmpty()) {
                 item { SectionTitle(stringResource(R.string.item_your_record)) }
                 items(finds, key = { it.find.id }) { f ->
@@ -272,7 +279,12 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
             if (uri != null && k != null) photoActions.pickPhoto(uri, k)
             menuKind = null
         }
-        Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // A flow row: at large text sizes the buttons take a row each instead of wrapping their labels (#165)
+        @OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+        androidx.compose.foundation.layout.FlowRow(
+            Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             Box(Modifier.weight(1f)) {
                 InkOutlinedButton(onClick = { menu = true }, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                     Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
@@ -290,7 +302,7 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
             val collectContent: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
                 Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(collectLabel)
+                Text(collectLabel, maxLines = 1, softWrap = false)
             }
             if (r.collected) InkOutlinedButton(onClick = { confirm(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)
             else Button(onClick = { confirm(); vm.gotIt(r, name) }, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = collectContent)

@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.widthIn
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -72,12 +74,12 @@ private fun SquareAction(icon: Int, label: String, onClick: () -> Unit) {
     val tick = rememberTick()
     Surface(
         onClick = { tick(); onClick() },
-        modifier = Modifier.size(84.dp),
+        modifier = Modifier.widthIn(min = 84.dp).heightIn(min = 84.dp),
         shape = RoundedCornerShape(18.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
         contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
     ) {
-        Column(Modifier.fillMaxSize().padding(6.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Icon(painterResource(icon), contentDescription = null, modifier = Modifier.size(28.dp))
             Spacer(Modifier.height(6.dp))
             Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center, maxLines = 1)

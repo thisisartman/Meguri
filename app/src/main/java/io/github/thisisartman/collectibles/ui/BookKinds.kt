@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.filled.Check
 import android.net.Uri
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
@@ -60,7 +61,8 @@ import io.github.thisisartman.collectibles.data.ItemType
  */
 object BookKinds {
     /** One tile on My book. [key] is the type's name, or "custom:<id>" for one of your own collections. */
-    data class Kind(val key: String, val type: ItemType, val customTypeId: String?, val collected: Int, val total: Int?, val groups: Int)
+    /** [noStamp]: places marked "No stamp here", left out of [total] and said under it (#156). */
+    data class Kind(val key: String, val type: ItemType, val customTypeId: String?, val collected: Int, val total: Int?, val groups: Int, val noStamp: Int = 0)
 
     /** One collection inside a kind: a line's stamps, a prefecture's cards, or all of an open-ended kind. */
     data class Group(val key: String, val lineId: String?, val prefecture: String?, val rows: List<ItemRow>, val collected: Int, val total: Int?)
@@ -78,7 +80,10 @@ object BookKinds {
     fun kinds(rows: List<ItemRow>, lineOf: (String) -> Set<String>, customOrder: (String) -> Long = { 0L }): List<Kind> {
         val builtIn = ORDER.mapNotNull { t ->
             val of = rows.filter { it.item.type == t && !it.noneHere }
-            if (of.isEmpty()) null else Kind(t.name, t, null, of.count { it.collected }, if (openEnded(t)) null else of.size, groups(t.name, of, lineOf).size)
+            if (of.isEmpty()) null else Kind(
+                t.name, t, null, of.count { it.collected }, if (openEnded(t)) null else of.size, groups(t.name, of, lineOf).size,
+                noStamp = rows.count { it.item.type == t && it.noneHere },
+            )
         }
         val custom = rows.filter { it.item.type == ItemType.CUSTOM }.groupBy { it.item.customTypeId.orEmpty() }
             .toSortedMap(compareBy(customOrder))
@@ -159,7 +164,8 @@ fun ProgressRing(collected: Int, total: Int?, color: Color, size: Dp, modifier: 
 fun KindTiles(kinds: List<BookKinds.Kind>, nav: NavHostController) {
     val ja = isJapanese()
     Column(Modifier.padding(horizontal = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        kinds.chunked(3).forEach { row ->
+        val perRow = if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f) 2 else 3
+        kinds.chunked(perRow).forEach { row ->
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 row.forEach { k ->
                     Surface(
@@ -171,10 +177,15 @@ fun KindTiles(kinds: List<BookKinds.Kind>, nav: NavHostController) {
                             Spacer(Modifier.height(6.dp))
                             Text(kindTitle(k), style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Text(kindSub(k), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                            // Why the total is lower than the list: places marked "No stamp here" (#156)
+                            if (k.noStamp > 0) Text(
+                                androidx.compose.ui.res.pluralStringResource(io.github.thisisartman.collectibles.R.plurals.no_stamp_count, k.noStamp, k.noStamp),
+                                style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1,
+                            )
                         }
                     }
                 }
-                repeat(3 - row.size) { Spacer(Modifier.weight(1f)) }
+                repeat(perRow - row.size) { Spacer(Modifier.weight(1f)) }
             }
         }
     }
@@ -308,13 +319,20 @@ fun GroupScreen(vm: MainViewModel, kindKey: String, groupKey: String, nav: NavHo
         Row(Modifier.padding(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // The last one on can't be switched off: both off would show nothing
             androidx.compose.material3.FilterChip(selected = showHave, onClick = { if (!showHave || showToGet) showHave = !showHave },
-                label = { Text(stringResource(R.string.filter_have)) }, modifier = Modifier.heightIn(min = 48.dp))
+                label = { Text(stringResource(R.string.filter_have)) }, modifier = Modifier.heightIn(min = 48.dp),
+                leadingIcon = { if (showHave) androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Filled.Check, contentDescription = null, Modifier.size(18.dp)) },)
             androidx.compose.material3.FilterChip(selected = showToGet, onClick = { if (!showToGet || showHave) showToGet = !showToGet },
-                label = { Text(stringResource(R.string.filter_to_get)) }, modifier = Modifier.heightIn(min = 48.dp))
+                label = { Text(stringResource(R.string.filter_to_get)) }, modifier = Modifier.heightIn(min = 48.dp),
+                leadingIcon = { if (showToGet) androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Filled.Check, contentDescription = null, Modifier.size(18.dp)) },)
         }
         val list = group?.rows.orEmpty()
             .filter { r -> (r.collected && showHave) || (!r.collected && showToGet) }
             .sortedWith(compareBy<ItemRow> { it.item.code ?: it.item.displayName(ja) })
+        if (list.isEmpty() && group?.rows.orEmpty().isNotEmpty()) Text(
+            stringResource(if (showHave) R.string.filter_empty_have else R.string.filter_empty_to_get),
+            Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
         androidx.compose.foundation.lazy.grid.LazyVerticalGrid(
             columns = androidx.compose.foundation.lazy.grid.GridCells.Adaptive(88.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),

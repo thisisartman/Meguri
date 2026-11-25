@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.foundation.border
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.filled.KeyboardArrowUp
@@ -88,7 +90,11 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             // Only catalogue items still to get can be marked; things added by hand already have their find
             // 48 dp tall like every other control (it measured 32 dp in the 2026-11-06 Poco review)
             if (marking || rows.any { !it.collected && it.item.origin != io.github.thisisartman.collectibles.data.Origin.USER }) TextButton(onClick = { if (marking) { marking = false; selected = emptySet() } else nav.navigate("check") }, modifier = Modifier.weight(1f, fill = false).heightIn(min = 48.dp)) {
-                Text(stringResource(action), textAlign = TextAlign.End)
+                if (androidx.compose.ui.platform.LocalDensity.current.fontScale > 1.3f && !marking) {
+                    androidx.compose.material3.Icon(
+                        androidx.compose.material.icons.Icons.Filled.Check, contentDescription = stringResource(action),
+                    )
+                } else Text(stringResource(action), textAlign = TextAlign.End, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             // The same top-right menu as Nearby: Settings and Logs
             if (!marking) MenuButton(nav)
@@ -310,7 +316,9 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                 Column {
                     Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(
-                        stringResource(R.string.type_eki_plural) + sep() + stringResource(R.string.count, stations.count { it.collected }, stations.size),
+                        stringResource(R.string.type_eki_plural) + sep() +
+                            stations.filter { !it.noneHere }.let { s -> stringResource(R.string.count, s.count { it.collected }, s.size) } +
+                            stations.count { it.noneHere }.takeIf { it > 0 }?.let { n -> sep() + pluralStringResource(R.plurals.no_stamp_count, n, n) }.orEmpty(),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     nearest?.let { n ->
@@ -336,11 +344,17 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                 val state = stringResource(if (r.collected) R.string.state_collected else R.string.state_to_get)
                 Column(Modifier.clickable { nav.openItem(r.item.id) }.collectedState(state), horizontalAlignment = Alignment.CenterHorizontally) {
                     val isNearest = r.item.id == nearest?.item?.id
-                    Box(contentAlignment = Alignment.Center) { if (isNearest) EmptySlot(72.dp, strong = true) else Mark(r, 72.dp) }
+                    Box(contentAlignment = Alignment.Center) {
+                        Mark(r, 72.dp)
+                        if (isNearest) Box(
+                            Modifier.size(80.dp).border(2.5.dp, MaterialTheme.colorScheme.primary, androidx.compose.foundation.shape.CircleShape),
+                        )
+                    }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         r.item.displayName(ja).removeSuffix("駅").removeSuffix(" Station"),
-                        style = MaterialTheme.typography.bodySmall, fontWeight = if (isNearest) FontWeight.Bold else null,
+                        style = MaterialTheme.typography.bodySmall.copy(hyphens = androidx.compose.ui.text.style.Hyphens.Auto),
+                        fontWeight = if (isNearest) FontWeight.Bold else null,
                         textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                     if (r.collected) {

@@ -288,23 +288,30 @@ fun MoreScreen(
             vm.work.say(msg)
         }
     }
+    // Two buttons and a switch (#163): the photos are a setting of the one backup, not a third button
+    var includePhotos by remember { mutableStateOf(true) }
     if (askBackup) AlertDialog(
         onDismissRequest = { askBackup = false },
         title = { Text(stringResource(R.string.more_backup)) },
-        text = { Text(stringResource(R.string.backup_ask_text)) },
-        confirmButton = {
-            TextButton(onClick = { askBackup = false; withPhotos = true; saveBackup.launch(backupFileName(photos = true)) }) {
-                Text(stringResource(R.string.backup_with_photos))
-            }
-        },
-        dismissButton = {
-            Row {
-                TextButton(onClick = { askBackup = false }) { Text(stringResource(R.string.cancel)) }
-                TextButton(onClick = { askBackup = false; withPhotos = false; saveBackup.launch(backupFileName(photos = false)) }) {
-                    Text(stringResource(R.string.backup_without_photos))
+        text = {
+            Row(
+                Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                    .toggleable(value = includePhotos, role = Role.Switch, onValueChange = { includePhotos = it }),
+                verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(stringResource(R.string.backup_include_photos), style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.backup_include_photos_sub), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
+                androidx.compose.material3.Switch(checked = includePhotos, onCheckedChange = null)
             }
         },
+        confirmButton = {
+            TextButton(onClick = { askBackup = false; withPhotos = includePhotos; saveBackup.launch(backupFileName(photos = includePhotos)) }) {
+                Text(stringResource(R.string.backup_save))
+            }
+        },
+        dismissButton = { TextButton(onClick = { askBackup = false }) { Text(stringResource(R.string.cancel)) } },
     )
     val openCatalog = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult

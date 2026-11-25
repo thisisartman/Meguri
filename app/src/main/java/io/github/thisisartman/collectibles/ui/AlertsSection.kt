@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.ui.draw.alpha
 import android.Manifest
 import android.content.Context
 import android.content.Intent
@@ -202,6 +203,8 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
+    // With alerts Off, what they would use is dimmed (#164); it can still be set up before switching them on
+    androidx.compose.foundation.layout.Column(Modifier.alpha(if (mode == 0) 0.45f else 1f)) {
     val main = remember(tick) { s.radiusM }
     // A slider with three stops (owner, 2026-11-09: "maybe a slider would help")
     // Owner, 2026-11-09: one slider, and a menu above it says what it sets: every category, or one of them
@@ -232,6 +235,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
 
     val quiet = remember(tick) { s.quietOn }
     SwitchRow(stringResource(R.string.quiet_title), if (quiet) stringResource(R.string.quiet_sub) else null, quiet, onChange = { s.quietOn = it; tick++ })
+    }
 
     MoreLink(
         stringResource(R.string.setup_title),
