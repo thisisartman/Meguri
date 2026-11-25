@@ -145,7 +145,8 @@ class CatalogAndBackup @Inject constructor(
 
     /** For removing a prefecture's pack: its untouched items of [type], then lines left empty. */
     suspend fun removeUntouched(prefecture: String, type: ItemType): Int = lock.withLock {
-        db.withTransaction { dao.deleteUntouched(prefecture, type.name).also { dao.deleteEmptyLines() } }
+        // Stale display pictures from before 0.7 kept items from going with their region (#168)
+        db.withTransaction { dao.clearMissingCovers(); dao.deleteUntouched(prefecture, type.name).also { dao.deleteEmptyLines() } }
     }
 
     private val bundledPrefs get() = context.getSharedPreferences("catalogue", Context.MODE_PRIVATE)
@@ -243,6 +244,7 @@ class CatalogAndBackup @Inject constructor(
         try {
             val rows = snapshotDatabase(snapshot)
             val (items, finds, photos, lines, ls) = rows
+            val categories = rows.categories
             ZipOutputStream(out).let { zip ->
                 fun text(name: String, body: String) {
                     zip.putNextEntry(ZipEntry(name)); zip.write(body.toByteArray(Charsets.UTF_8)); zip.closeEntry()
@@ -251,6 +253,8 @@ class CatalogAndBackup @Inject constructor(
                 text("items.csv", itemsCsv(items))
                 text("finds.csv", findsCsv(finds, items.associateBy { it.id }))
                 text("photos.csv", photosCsv(photos))
+                // Your own categories, which items.csv points at by custom_type_id (#170)
+                text("categories.csv", categoriesCsv(categories))
                 text("lines.csv", buildString {
                     append(Csv.line("line_id", "name_ja", "name_romaji", "station_item_id", "seq"))
                     val byLine = lines.associateBy { it.id }
@@ -288,7 +292,7 @@ class CatalogAndBackup @Inject constructor(
         val rows = db.withTransaction {
             dbFile.inputStream().use { input -> target.outputStream().use { input.copyTo(it) } }
             if (wal.exists() && wal.length() > 0L) wal.inputStream().use { input -> targetWal.outputStream().use { input.copyTo(it) } }
-            Snapshot(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations())
+            Snapshot(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations(), dao.allCollectionTypes())
         }
         SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
             copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { c ->
@@ -304,31 +308,41 @@ class CatalogAndBackup @Inject constructor(
         val photos: List<Photo>,
         val lines: List<Line>,
         val lineStations: List<LineStation>,
+        val categories: List<CollectionType>,
     )
 
     companion object {
         fun itemsCsv(items: List<Item>) = buildString {
             append(Csv.line("id", "type", "catalog_key", "code", "name_ja", "name_romaji", "series", "release_date", "prefecture", "municipality",
-                "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url", "origin", "created_at", "updated_at", "none_here_at", "cover_photo_id"))
+                "place_name", "address", "place_phone", "lat", "lng", "hours_text", "closed_days", "notes", "source_url", "origin", "created_at", "updated_at", "none_here_at", "cover_photo_id", "parent_item_id", "custom_type_id", "edited_at"))
             items.forEach { i ->
                 append(Csv.line(i.id, i.type, i.catalogKey, i.code, i.nameJa, i.nameRomaji, i.series, i.releaseDate, i.prefecture, i.municipality,
-                    i.placeName, i.address, i.placePhone, i.lat, i.lng, i.hoursText, i.closedDays, i.notes, i.sourceUrl, i.origin, i.createdAt, i.updatedAt, i.noneHereAt, i.coverPhotoId))
+                    i.placeName, i.address, i.placePhone, i.lat, i.lng, i.hoursText, i.closedDays, i.notes, i.sourceUrl, i.origin, i.createdAt, i.updatedAt, i.noneHereAt, i.coverPhotoId, i.parentItemId, i.customTypeId, i.editedAt))
             }
         }
 
         fun findsCsv(finds: List<Acquisition>, items: Map<String, Item>) = buildString {
-            append(Csv.line("id", "item_id", "item_name_ja", "item_code", "acquired_at_iso", "before_app", "lat", "lng", "accuracy_m", "cost_yen", "notes", "via", "acquired_at", "created_at"))
+            append(Csv.line("id", "item_id", "item_name_ja", "item_code", "acquired_at_iso", "before_app", "lat", "lng", "accuracy_m", "cost_yen", "notes", "via", "acquired_at", "created_at", "quantity"))
             val iso = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", java.util.Locale.US)
             finds.forEach { a ->
                 val it = items[a.itemId]
                 append(Csv.line(a.id, a.itemId, it?.nameJa, it?.code, a.acquiredAt?.let { t -> iso.format(java.util.Date(t)) }, a.beforeApp,
-                    a.lat, a.lng, a.accuracyM, a.costYen, a.notes, a.via, a.acquiredAt, a.createdAt))
+                    a.lat, a.lng, a.accuracyM, a.costYen, a.notes, a.via, a.acquiredAt, a.createdAt, a.quantity))
             }
         }
 
         fun photosCsv(photos: List<Photo>) = buildString {
-            append(Csv.line("id", "find_id", "content_uri", "display_name", "relative_path", "size_bytes", "mediastore_id", "taken_at", "missing"))
-            photos.forEach { p -> append(Csv.line(p.id, p.acquisitionId, p.contentUri, p.displayName, p.relativePath, p.sizeBytes, p.mediastoreId, p.takenAt, p.missing)) }
+            append(Csv.line("id", "find_id", "content_uri", "display_name", "relative_path", "size_bytes", "mediastore_id", "taken_at", "missing",
+                "role", "exif_lat", "exif_lng", "created_at"))
+            photos.forEach { p ->
+                append(Csv.line(p.id, p.acquisitionId, p.contentUri, p.displayName, p.relativePath, p.sizeBytes, p.mediastoreId, p.takenAt, p.missing,
+                    p.role, p.exifLat, p.exifLng, p.createdAt))
+            }
+        }
+
+        fun categoriesCsv(categories: List<CollectionType>) = buildString {
+            append(Csv.line("id", "name", "name_ja", "color", "icon", "has_cost", "created_at"))
+            categories.forEach { c -> append(Csv.line(c.id, c.name, c.nameJa, c.color, c.icon, c.hasCost, c.createdAt)) }
         }
     }
 }

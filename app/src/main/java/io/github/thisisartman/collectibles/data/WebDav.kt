@@ -171,10 +171,19 @@ class WebDav(folderUrl: String, private val user: String, private val password: 
                 .build()
         }
 
+        private val DOCTYPE = Regex("<!DOCTYPE", RegexOption.IGNORE_CASE)
+
         /** The files (not folders) in a PROPFIND Depth 1 answer, without the folder itself. */
         fun parseListing(xml: String, folderPath: String): List<RemoteFile> {
             if (xml.isBlank()) return emptyList()
-            val doc = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }.newDocumentBuilder()
+            // A WebDAV listing never needs a DOCTYPE: refuse one, so no entity in it is ever read (#172). The parser
+            // is also told to refuse it where it supports that switch (Android's may not, hence the check above it)
+            if (DOCTYPE.containsMatchIn(xml)) throw java.io.IOException("The server's file listing has a DOCTYPE; refused")
+            val doc = DocumentBuilderFactory.newInstance().apply {
+                isNamespaceAware = true
+                isExpandEntityReferences = false
+                runCatching { setFeature("http://apache.org/xml/features/disallow-doctype-decl", true) }
+            }.newDocumentBuilder()
                 .parse(xml.byteInputStream())
             val responses = doc.getElementsByTagNameNS("DAV:", "response")
             val folderDecoded = URLDecoder.decode(folderPath, "UTF-8").trimEnd('/')
