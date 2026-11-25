@@ -494,6 +494,8 @@ fun MoreScreen(
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
         when (section) {
             null -> {
+                // A newer release, when Check for updates is on (#131): first, where people see it
+                UpdateNote()
                 // Each line says what is set now, so nothing needs opening just to check. Order (owner, 2026-11-09):
                 // Appearance, Alerts, Backup and data, Categories, Catalogue, Help and about
                 val themeName = stringResource(
@@ -785,6 +787,13 @@ fun MoreScreen(
                 // Feedback by mail to the owner, with screenshots (2026-11-15)
                 MoreRow(stringResource(R.string.feedback_title), stringResource(R.string.feedback_row_sub)) { feedback = true }
                 MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
+                // Check for updates (#131), off by default; the note sits right under it when there is one
+                val updates = io.github.thisisartman.collectibles.data.UpdateCheck
+                ToggleRow(stringResource(R.string.update_check), stringResource(R.string.update_check_sub), updates.on(context)) { on ->
+                    updates.set(context, on)
+                    if (on) scope.launch { updates.checkIfDue(app) }
+                }
+                UpdateNote()
                 MoreRow(stringResource(R.string.more_logs), stringResource(R.string.help_logs_sub), onLogs)
                 MoreRow(stringResource(R.string.more_about), stringResource(R.string.help_about_sub)) { section = S_ABOUT }
             }
