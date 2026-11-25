@@ -102,6 +102,17 @@
     <string name="more_restore_empty_title">このバックアップには記録がありません</string>
     <string name="more_restore_empty_body">復元すると記録がすべて消えます。現在のデータのコピーを先に「ダウンロード」へ保存します。</string>
     <string name="more_restore_continue">続ける</string>
+    <string name="photo_file">ファイルから写真を追加</string>
+    <string name="photo_file_sub">Meguriの写真ファイルの写真をコレクションに追加します。今あるデータは置き換えも削除もされません。</string>
+    <string name="photo_file_title">この写真を追加しますか？</string>
+    <string name="photo_file_body">写真%1$d枚：持っている項目%2$d件に写真を付け、自分の項目を%3$d件新しく作ります。現在のデータのコピーを先に「ダウンロード」へ保存します。</string>
+    <string name="photo_file_missing">この端末にない項目が%1$d件あるため、その写真は追加しません。地域をダウンロードしてから、もう一度追加してください。</string>
+    <string name="photo_file_problems">読めない行が%1$d行あり、除外しました。</string>
+    <string name="photo_file_add">追加</string>
+    <string name="photo_file_done">写真を%1$d枚追加しました（新しい項目%2$d件）。%3$d枚はすでにありました。</string>
+    <string name="photo_file_some_failed">%1$d枚の写真を読めませんでした。詳細はログにあります。</string>
+    <string name="photo_file_not">Meguriの写真ファイルではありません。</string>
+    <string name="photo_file_failed">写真を追加できませんでした。理由はログにあります。</string>
     <string name="more_restore_done">復元しました：%1$s</string>
     <string name="more_restore_failed">復元できませんでした。データは変更されていません。</string>
     <string name="more_restore_not_backup">このアプリのバックアップではありません。データは変更されていません。</string>

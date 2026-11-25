@@ -263,9 +263,13 @@ class CollectionRepository @Inject constructor(
      * A picture chosen from the gallery (a screenshot of an Ekitag, say) gets only Meguri's own copy (#79), with no
      * second copy in the gallery; the picker's short-lived access does not matter once it is copied.
      */
-    suspend fun attachFromGallery(context: android.content.Context, findId: String, picked: android.net.Uri, kind: String): Boolean =
+    suspend fun attachFromGallery(
+        context: android.content.Context, findId: String, picked: android.net.Uri, kind: String,
+        name: String? = null, size: Long? = null,
+    ): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
-            val info = pickedInfo(picked)
+            // A file from a photo file (#188) has no picker details: its own name and size are kept, to spot it again
+            val info = pickedInfo(picked).let { if (name != null) it.copy(displayName = name, sizeBytes = size ?: it.sizeBytes) else it }
             val id = newId()
             // An Ekitag screenshot is titled with the station's name on two lines, the app's language first (owner, Telegram 491)
             val title = if (kind == PhotoKind.EKITAG) dao.itemOfFind(findId)?.let { i ->
@@ -328,7 +332,17 @@ class CollectionRepository @Inject constructor(
      * at home long after. An item already collected only gains the photo; otherwise it is "had before Meguri" with no
      * date, or on [acquiredAt] when the person gives one.
      */
-    suspend fun addNotebookStamp(itemId: String, picture: android.net.Uri, acquiredAt: Long?): Boolean {
+    suspend fun addNotebookStamp(itemId: String, picture: android.net.Uri, acquiredAt: Long?): Boolean =
+        addOldPhoto(itemId, picture, acquiredAt, PhotoKind.STAMP, tag = "Notebook")
+
+    /**
+     * A photo of something collected earlier: from a notebook page, or from a photo file (#188). An item already
+     * collected only gains the photo; otherwise it is "had before Meguri", or found on [acquiredAt] (a day at noon).
+     */
+    suspend fun addOldPhoto(
+        itemId: String, picture: android.net.Uri, acquiredAt: Long?, kind: String,
+        name: String? = null, size: Long? = null, tag: String = "Import",
+    ): Boolean {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             // A date given is a day without a time (stored at noon): BULK, like "Already went", so no "12:00" shows
             dao.insertFind(
@@ -338,8 +352,8 @@ class CollectionRepository @Inject constructor(
                 ),
             )
         }
-        val ok = attachFromGallery(context, findId, picture, PhotoKind.STAMP)
-        log.i("Notebook", "Stamp for item $itemId from a notebook page (photo copied: $ok)")
+        val ok = attachFromGallery(context, findId, picture, kind, name, size)
+        log.i(tag, "Old $kind photo for item $itemId (photo copied: $ok)")
         return ok
     }
 

@@ -102,6 +102,17 @@
     <string name="more_restore_empty_title">This backup has no finds</string>
     <string name="more_restore_empty_body">Restoring it removes all of your finds. A copy of the current data is saved to Downloads first.</string>
     <string name="more_restore_continue">Continue</string>
+    <string name="photo_file">Add photos from a file</string>
+    <string name="photo_file_sub">Adds the photos in a Meguri photo file to your collection. Nothing here is replaced or removed.</string>
+    <string name="photo_file_title">Add these photos?</string>
+    <string name="photo_file_body">%1$d photos: %2$d items you have get their photos, and %3$d new items of your own are added. A copy of the current data is saved to Downloads first.</string>
+    <string name="photo_file_missing">%1$d items aren\'t on this phone, so their photos are left out. Download their region, then add the file again.</string>
+    <string name="photo_file_problems">%1$d lines couldn\'t be read and are left out.</string>
+    <string name="photo_file_add">Add</string>
+    <string name="photo_file_done">Added %1$d photos, with %2$d new items. %3$d were already here.</string>
+    <string name="photo_file_some_failed">%1$d photos couldn\'t be read. The log says which.</string>
+    <string name="photo_file_not">This isn\'t a Meguri photo file.</string>
+    <string name="photo_file_failed">Couldn\'t add the photos. The log says why.</string>
     <string name="more_restore_done">Restored: %1$s</string>
     <string name="more_restore_failed">Couldn\'t restore. Your data is unchanged.</string>
     <string name="more_restore_not_backup">That file isn\'t a backup from this app. Your data is unchanged.</string>
