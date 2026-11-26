@@ -79,7 +79,8 @@ import io.github.thisisartman.collectibles.data.PhotoKind
  * page per place, no inner pages; it replaced the item and station pages): the place's ring, name, kind, line and
  * distance at the top; a row of round tiles, one per thing; a tap on one opens its card just under the row, a
  * second tap closes it. The card holds all the item page had: its names, state, None here, where to get it,
- * Directions, Add photo, Collect, its finds, and Edit, reports and Remove in its ⋮ menu. Each thing's photos sit
+ * Directions, its finds, and Edit, reports and Remove in its ⋮ menu; Add photo and Collect for the open card are
+ * pinned in a bottom bar so they never scroll away. Each thing's photos sit
  * below under its name with the photo viewer (cover, kind, remove). [openArg] is the thing whose card opens first.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -153,7 +154,6 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
             menuKind = null
         }
         sectionOf(addFor)?.let { s ->
-            PhotoKindMenu(s.main.item.type, kindMenu, onDismiss = { kindMenu = false }, onPick = { menuKind = it })
             menuKind?.let { k ->
                 if (!picking) PhotoSourceDialog(
                     title = stringResource(R.string.photo_add_kind, stringResource(kindLabel(s.main.item.type, k))),
@@ -193,7 +193,6 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
             item {
                 ThingsAndCard(
                     place.things, open, onToggle = { t -> open = if (open == t) null else t }, vm, findsById,
-                    onAddPhoto = { t -> addFor = t; kindMenu = true },
                     // Your own thing removed: the page closes when it was the only one, else its card does
                     onRemoved = { t -> if (place.things.size == 1) onBack() else if (open == t) open = null },
                 )
@@ -219,6 +218,64 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
             }
             item { Spacer(Modifier.height(16.dp)) }
         }
+        // Pinned at the bottom, as on the old item page: Add photo and Collect never scroll away (owner rule). They act
+        // on the open card's thing; with no card open, on the first thing still to get, whose card then opens so the
+        // result shows. With no card open and nothing left to get, there is no bar
+        val barThing = place.things.firstOrNull { it.item.id == open } ?: place.things.firstOrNull { !it.collected && !it.noneHere }
+        if (barThing != null) PlaceActions(
+            barThing, kindMenu,
+            onAddPhoto = { open = barThing.item.id; addFor = barThing.item.id; kindMenu = true },
+            onCollect = { open = barThing.item.id },
+            kindMenuContent = {
+                sectionOf(addFor)?.let { s -> PhotoKindMenu(s.main.item.type, kindMenu, onDismiss = { kindMenu = false }, onPick = { menuKind = it }) }
+            },
+            vm = vm,
+        )
+    }
+}
+
+/**
+ * The place page's bottom bar, the old item page's: Add photo (outlined, opens the kinds for the thing) and Collect,
+ * or Collect again once collected (filled until then). A flow row: at large text sizes the buttons take a row each
+ * instead of wrapping their labels (#165). It sits under the list, so the list's end is never hidden behind it.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun PlaceActions(
+    t: ItemRow, kindMenu: Boolean, onAddPhoto: () -> Unit, onCollect: () -> Unit,
+    kindMenuContent: @Composable () -> Unit, vm: MainViewModel,
+) {
+    val ja = isJapanese()
+    val confirm = rememberConfirm()
+    val ekitagLabel = stringResource(R.string.type_ekitag)
+    val name = t.item.displayName(ja)
+    FlowRow(
+        Modifier.fillMaxWidth().padding(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Box(Modifier.weight(1f)) {
+            InkOutlinedButton(onClick = onAddPhoto, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
+                Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.place_add_photo), maxLines = 1, softWrap = false)
+            }
+            // Anchored here, so the kinds open over the button
+            if (kindMenu) kindMenuContent()
+        }
+        // One verb everywhere (#143): Collect, then Collect again; an Ekitag is named with its kind
+        val label = stringResource(if (t.collected) R.string.got_it_again else R.string.got_it)
+        val collect = {
+            confirm()
+            onCollect()
+            vm.gotIt(t, if (t.item.type == ItemType.EKITAG) "$name · $ekitagLabel" else name)
+        }
+        val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
+            Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(label, maxLines = 1, softWrap = false)
+        }
+        if (t.collected) InkOutlinedButton(onClick = collect, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = content)
+        else Button(onClick = collect, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = content)
     }
 }
 
@@ -226,7 +283,7 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
 @Composable
 private fun ThingsAndCard(
     things: List<ItemRow>, open: String?, onToggle: (String) -> Unit, vm: MainViewModel, findsById: Map<String, List<FindWithPhotos>>,
-    onAddPhoto: (String) -> Unit, onRemoved: (String) -> Unit,
+    onRemoved: (String) -> Unit,
 ) {
     val centres = remember { mutableStateMapOf<String, Float>() }
     var cardLeft by remember { mutableFloatStateOf(0f) }
@@ -266,7 +323,7 @@ private fun ThingsAndCard(
             Canvas(Modifier.padding(start = x.coerceAtLeast(12.dp)).size(18.dp, 9.dp)) {
                 drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, caret)
             }
-            ThingCard(t, vm, findsById[t.item.id].orEmpty(), onAddPhoto = { onAddPhoto(t.item.id) }, onRemoved = { onRemoved(t.item.id) })
+            ThingCard(t, vm, findsById[t.item.id].orEmpty(), onRemoved = { onRemoved(t.item.id) })
         }
     }
 }
@@ -274,19 +331,17 @@ private fun ThingsAndCard(
 /**
  * One thing's card on the place page, all the old item page had (owner, 2026-11-26: no inner pages): its picture
  * (tap for full screen), name lines and state; None here; where to get it (hours, place, phone, notes); Directions,
- * Add photo and Collect; its finds (tap one for how many and what you paid, Map, remove). Edit, the catalogue reports
+ * Add photo and Collect in the page's pinned bottom bar; its finds (tap one for how many and what you paid, Map, remove). Edit, the catalogue reports
  * and Remove are in the card's ⋮ menu.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>, onAddPhoto: () -> Unit, onRemoved: () -> Unit) {
+private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>, onRemoved: () -> Unit) {
     val ja = isJapanese()
     val context = LocalContext.current
-    val confirm = rememberConfirm()
     val tick = rememberTick()
     val item = t.item
     val name = item.displayName(ja)
-    val ekitagLabel = stringResource(R.string.type_ekitag)
     val own = item.origin == Origin.USER
     var editing by rememberSaveable(item.id) { mutableStateOf(false) }
     var confirmRemove by remember(item.id) { mutableStateOf(false) }
@@ -336,32 +391,15 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>
                 // Found nothing at the place (owner, 2026-11-07, at Minami-Yoshida): mark it, so it stops being "to get"
                 if (!t.collected) NoneHereRow(item, t.noneHere, onSet = { tick(); vm.setNoneHere(item.id, it) })
                 if (hasFacts(context, item)) Facts(item, Modifier.fillMaxWidth().padding(top = 8.dp))
-                FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    // Standing at the place (a goshuin added where it was logged, say), directions help nobody
-                    val meters = vm.distanceTo(t)
-                    if (item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)) {
-                        FilledTonalButton(onClick = { openDirections(context, item, meters) }, modifier = Modifier.heightIn(min = 48.dp)) {
-                            Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(6.dp))
-                            Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain), maxLines = 1)
-                        }
-                    }
-                    // Add photo here, so the place page needs no second page (owner, 2026-11-26)
-                    InkOutlinedButton(onClick = onAddPhoto, modifier = Modifier.heightIn(min = 48.dp)) {
-                        Icon(painterResource(R.drawable.ic_add_photo), contentDescription = null, modifier = Modifier.size(18.dp))
+                // Standing at the place (a goshuin added where it was logged, say), directions help nobody. Add photo
+                // and Collect are in the page's bottom bar, so they never scroll away (owner rule)
+                val meters = vm.distanceTo(t)
+                if (item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)) {
+                    FilledTonalButton(onClick = { openDirections(context, item, meters) }, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) {
+                        Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(stringResource(R.string.place_add_photo), maxLines = 1)
+                        Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain), maxLines = 1)
                     }
-                    // One verb everywhere (#143): Collect, then Collect again; an Ekitag is named with its kind
-                    val label = stringResource(if (t.collected) R.string.got_it_again else R.string.got_it)
-                    val collect = { confirm(); vm.gotIt(t, if (item.type == ItemType.EKITAG) "$name · $ekitagLabel" else name) }
-                    val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
-                        Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(label, maxLines = 1)
-                    }
-                    if (t.collected) InkOutlinedButton(onClick = collect, modifier = Modifier.heightIn(min = 48.dp), content = content)
-                    else Button(onClick = collect, modifier = Modifier.heightIn(min = 48.dp), content = content)
                 }
             }
             // Each time you collected it, newest first: tap one for how many and what you paid; Map; remove
