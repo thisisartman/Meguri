@@ -103,6 +103,17 @@
     <string name="more_restore_empty_title">This backup has no finds</string>
     <string name="more_restore_empty_body">Restoring it removes all of your finds. A copy of the current data is saved to Downloads first.</string>
     <string name="more_restore_continue">Continue</string>
+    <string name="photo_file">Add photos from a file</string>
+    <string name="photo_file_sub">Adds the photos in a Meguri photo file to your collection. Nothing here is replaced or removed.</string>
+    <string name="photo_file_title">Add these photos?</string>
+    <string name="photo_file_body">%1$d photos: %2$d items you have get their photos, and %3$d new items of your own are added. A copy of the current data is saved to Downloads first.</string>
+    <string name="photo_file_missing">%1$d items aren\'t on this phone, so their photos are left out. Download their region, then add the file again.</string>
+    <string name="photo_file_problems">%1$d lines couldn\'t be read and are left out.</string>
+    <string name="photo_file_add">Add</string>
+    <string name="photo_file_done">Added %1$d photos, with %2$d new items. %3$d were already here.</string>
+    <string name="photo_file_some_failed">%1$d photos couldn\'t be read. The log says which.</string>
+    <string name="photo_file_not">This isn\'t a Meguri photo file.</string>
+    <string name="photo_file_failed">Couldn\'t add the photos. The log says why.</string>
     <string name="more_restore_done">Restored: %1$s</string>
     <string name="more_restore_failed">Couldn\'t restore. Your data is unchanged.</string>
     <string name="more_restore_not_backup">That file isn\'t a backup from this app. Your data is unchanged.</string>
@@ -213,8 +224,6 @@
     <string name="kind_place">Location</string>
     <string name="kind_goshuin">Goshuin</string>
     <string name="kind_shrine">Shrine or temple</string>
-    <string name="added_on">Added %1$s</string>
-    <string name="no_date">—</string>
     <string name="item_map_not_saved">The map for this place is not saved on this phone, so it needs internet here.</string>
     <string name="search_show_on_map">Show on map</string>
     <string name="type_custom">Your own category</string>
@@ -291,7 +300,7 @@
     <string name="trip_get_off_next">Get off next: %1$s, %2$s</string>
     <string name="trip_clear">Clear the plan</string>
     <string name="trip_report">Trip report</string>
-    <string name="trip_report_none">Nothing collected on a known day yet. Each find you log keeps its day; things you had before the app have none.</string>
+    <string name="trip_report_none">Nothing collected yet. Each find keeps the day it was logged.</string>
     <string name="trip_report_share_image">Share image</string>
     <string name="trip_report_share_csv">Share CSV</string>
     <string name="trip_report_more">+%1$d more</string>
@@ -359,7 +368,7 @@
         <item quantity="other">Load %d regions</item>
     </plurals>
     <string name="onb_have_title">What do you already have?</string>
-    <string name="onb_have_sub">Search, tap a place, tick what you have there. Ticked ones are added as "had before the app"; add photos later.</string>
+    <string name="onb_have_sub">Search, tap a place, tick what you have there. Ticked ones are added as collected today; add photos later.</string>
     <string name="onb_have_search">Search stations, cards, places</string>
     <string name="onb_have_done">Done</string>
     <string name="onb_have_skip">Skip for now</string>
@@ -430,7 +439,7 @@
     <plurals name="kind_prefectures"><item quantity="one">%d prefecture</item><item quantity="other">%d prefectures</item></plurals>
     <string name="kind_next">Next: %s</string>
     <string name="timeline_title">Timeline</string>
-    <string name="timeline_empty">Nothing with a day yet. Each find you log keeps its day; things you had before the app have none.</string>
+    <string name="timeline_empty">Nothing collected yet. Each find keeps the day it was logged.</string>
     <string name="filter_to_get">Not collected</string>
     <string name="filter_have">Collected</string>
     <string name="photo_hint_setting">Photo suggestions</string>
@@ -480,8 +489,8 @@
         <item quantity="other">Save %d stamps</item>
     </plurals>
     <plurals name="nb_saved">
-        <item quantity="one">1 stamp saved, as had before Meguri</item>
-        <item quantity="other">%d stamps saved, as had before Meguri</item>
+        <item quantity="one">1 stamp saved</item>
+        <item quantity="other">%d stamps saved</item>
     </plurals>
     <plurals name="nb_done">
         <item quantity="one">Next (1 stamp)</item>

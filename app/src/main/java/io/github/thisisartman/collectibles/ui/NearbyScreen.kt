@@ -288,8 +288,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         origin = here.fix?.let { Math.round(it.lat * 100) to Math.round(it.lng * 100) },
                         onDone = { ids ->
                             if (ids.isEmpty()) { onboarding.step = OnboardingStep.START; onboarding.already = false }
-                            else vm.markBeforeApp(ids.toSet()) { n ->
-                                tick(); toastAdded(ctxPick, n)
+                            // Collected today, the day they were added (#194)
+                            else vm.markOn(ids.toSet(), System.currentTimeMillis()) { made ->
+                                tick(); toastAdded(ctxPick, made.size)
                                 onboarding.step = OnboardingStep.FINISHED
                             }
                         },
@@ -866,9 +867,8 @@ fun SummaryCard(s: CollectionSummary, title: String, next: Ranked? = null, onCli
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Mark(last, 26.dp)
                     Spacer(Modifier.width(8.dp))
-                    val whenText = if (last.lastAt != null) dateText(last.lastAt) else stringResource(R.string.no_date)
                     Text(
-                        stringResource(R.string.last, last.item.displayName(ja) + sep() + whenText),
+                        stringResource(R.string.last, listOfNotNull(last.item.displayName(ja), last.lastAt?.let { dateText(it) }).joinToString(sep())),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

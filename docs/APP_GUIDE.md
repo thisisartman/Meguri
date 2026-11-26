@@ -14,7 +14,6 @@ Line numbers follow the working copy as checked on 2026-11-09: commit `c5e5a75` 
 - Source references have the form `path:line`. A path that does not start with `app/` is relative to `app/src/main/java/io/github/thisisartman/collectibles/`. For example `ui/App.kt:205` means `app/src/main/java/io/github/thisisartman/collectibles/ui/App.kt`, line 205.
 - Pictures were taken from the 0.5 development build on a phone in light theme; the moving pictures are from 0.4.0 in dark theme, with a real collection; they show taps that were cancelled or undone, so nothing in the collection changed.
 - "Not confirmed from code" marks something the code does not settle, or that would need a test on a phone.
-- A dash shown as a value (no date) is the string `no_date`.
 
 ## Contents
 
@@ -81,7 +80,7 @@ There are no museum stamps in the bundled catalogue. Museum stamps exist only as
 
 **Collected and uncollected.** An item with at least one find is "Collected"; with none it is "Uncollected" (`data/Entities.kt:194`, `state_collected`, `state_to_get`).
 
-**Had before Meguri.** A find with no date, no place and no photo, marked `beforeApp` (`data/CollectionRepository.kt:172-184`). It records something you had before you used the app. The onboarding picker, Collection check and notebook stamps make these finds. They count as collected, show on the item page as "Added" with the day they were added (`ui/ItemScreen.kt:383-387`), and never appear on the Timeline or a Trip report, which need a date.
+**Every find has a date (#194).** There is no "had before Meguri" any more. The onboarding picker, Collection check, My book's marking and the deck make a find dated the moment you add it, with no place or photo (`markOn`, via `BULK`); notebook stamps are dated on the day picked, or today. Schema v5 gave every older undated find its `created_at` and cleared `before_app`; the column stays so older backups still read, and they migrate the same way on restore. These finds show on the item page as a day without a time and appear on the Timeline and Trip reports.
 
 **No stamp here / None here.** You can mark an uncollected item as checked and empty (`noneHereAt`, `data/Entities.kt:99-100`). Such an item is left out of "uncollected" counts, alerts, map pins on Nearby and My book totals, and is shown faded and last on Nearby (`data/Entities.kt:196-197`). Stamps use "No stamp here", everything else "None here" (`ui/ItemScreen.kt:439-441`).
 
@@ -152,7 +151,7 @@ The sheet sits at the height of its content, capped per step (60% of the screen 
 
 **Step 5, "What do you already have?" (picker).** (`ui/OnboardingPicker.kt`)
 - The sheet opens fully expanded. Pulled down, the map above shows the places the picker lists and frames them.
-- Title "What do you already have?", text "Search, tap a place, tick what you have there. Ticked ones are added as "had before the app"; add photos later."
+- Title "What do you already have?", text "Search, tap a place, tick what you have there. Ticked ones are added as collected today; add photos later."
 - Search field "Search stations, cards, places", using the shared search (section 3.8). While you type, the best match comes first.
 - A chip that shows the current order, "A to Z" or "Nearest". Tap to switch.
 - A grid of places, four to a row. A place is one or more uncollected items with the same Japanese name within about 100 m, such as a station's stamp and its Ekitag (`ui/PickerPlaces.kt:13-17`). Each tile shows the mark and the name. A small check shows on a tile when everything at that place is in your list.
@@ -160,7 +159,7 @@ The sheet sits at the height of its content, capped per step (60% of the screen 
 - Under the grid: up to 14 small circles in each added item's category colour, stacked, with "%d added" and the last added item's name and category.
 - Button "Skip for now" (nothing added) or "Done".
   - "Skip for now": back to step 1. As a catalogue is now loaded, the onboarding no longer shows, and you see Nearby.
-  - "Done": marks every item in the list as had before Meguri, vibrates, shows the toast "%d added to your profile", and opens the closing sheet.
+  - "Done": marks every item in the list as collected today, vibrates, shows the toast "%d added to your profile", and opens the closing sheet.
 - Back closes an open place card. With no card open, Back does nothing, so picks are not lost (`ui/OnboardingPicker.kt:99-100`, `ui/NearbyScreen.kt:198-203`).
 
 **Step 6, closing sheet.**
@@ -344,11 +343,11 @@ Not confirmed from code: a cover scan with no known position lists no nearest ca
   - When none is chosen and the best match scores 0.60 or more: an outlined button "This seems to be %1$s". Tap to choose it.
   - When none is chosen: a field "Type the station or place". As you type, up to five matches show as "name · distance"; tap one to choose it. Then "Not in Meguri? Add it", which opens the "New item" page.
   - A match that scores 0.75 or more is chosen to start with (section 3.7).
-- Button "Save 1 stamp" / "Save %d stamps" (stamps kept and chosen), disabled at 0. Tap: saves each stamp's picture on its item as the collectible's photo. An uncollected item gets a find marked had before Meguri (no date). Then the app returns to Nearby and shows "1 stamp saved, as had before Meguri" / "%d stamps saved, as had before Meguri" (`ui/App.kt:318-325`, `data/CollectionRepository.kt:284-291`).
+- Button "Save 1 stamp" / "Save %d stamps" (stamps kept and chosen), disabled at 0. Tap: saves each stamp's picture on its item as the collectible's photo. An uncollected item gets a find on the day under "Date" ("Today" unless another day is picked). Then the app returns to Nearby and shows "1 stamp saved" / "%d stamps saved" (`ui/App.kt:318-325`, `data/CollectionRepository.kt:284-291`).
 
 **Back.** Page 2 goes back to page 1, with the boxes as you left them. Page 1 goes back to where the scan started.
 
-Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the new item returns to page 2, but page 2 holds its readings in non-saved state (`ui/NotebookScreen.kt:97`), so it may read the stamps again and lose the choices made. "Add it" also saves the new item with a find dated now, not as had before Meguri (section 2.9).
+Not confirmed from code: after "Not in Meguri? Add it" and saving, Back from the new item returns to page 2, but page 2 holds its readings in non-saved state (`ui/NotebookScreen.kt:97`), so it may read the stamps again and lose the choices made. "Add it" also saves the new item with a find dated now (section 2.9).
 
 ### 2.8 Adding shared photos
 
@@ -484,11 +483,11 @@ Photo kinds by category (`ui/FindPhotos.kt:68-95`):
 Every category also has "Other photo".
 
 **"Collected"** (shown when the item has finds). One row per find, newest first (`ui/ItemScreen.kt:336-436`):
-- The date and time of the find; for a find had before Meguri, "Added %1$s" with the day it was added; else a dash (`no_date`). Then "×%1$d" when more than one, and the price as "¥500" when noted.
+- The date and time of the find; for a find marked without a place (`BULK`: Already went, ticked off, a notebook page), the day only. Then "×%1$d" when more than one, and the price as "¥500" when noted.
 - "location saved" once a position is stored; "finding position…" for up to 2 minutes after the find while none is stored yet.
 - The find's notes, if any.
 - "Map" (text button), when the find has a position. Tap: opens the maps app at the find's position (`geo:`).
-- "Remove the collection from %1$s" (icon, a bin). Tap: the dialog "Remove this collection?" with "This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Its photos leave Meguri; ones you took with the camera stay in your gallery.", "Remove" (red) and "Cancel". For a find had before Meguri, "Remove" removes every had-before-Meguri find of the item (`data/CollectionRepository.kt:199-203`).
+- "Remove the collection from %1$s" (icon, a bin). Tap: the dialog "Remove this collection?" with "This removes the collection from %1$s. If it is the only one, the item goes back to Uncollected. Its photos leave Meguri; ones you took with the camera stay in your gallery.", "Remove" (red) and "Cancel".
 - Tap the row: the dialog "This collection" with "How many" and the buttons "One fewer" and "One more" (icons; 1 to 99), and, for goshuin and your own categories with "Note what I paid", "What you paid" in yen. "Done" saves; "Cancel" closes.
 
 **Bottom buttons.**
@@ -537,7 +536,7 @@ Two views of one picture, used on the item page, in the photo dialog and in the 
 **Totals card** (`ui/ProfileScreen.kt:41-100`), three numbers:
 - "find" / "finds": the number of finds (each time you collected something; "How many" is not added in).
 - "category" / "categories": collections started. Not confirmed from code that this is the intended meaning: it counts collection groups with at least one find (each prefecture of manhole cards, each railway line, other stations, goshuin, dam cards, museum stamps, roadside stations), not categories, and leaves out your own categories and Ekitag (`ui/ProfileScreen.kt:75`, `ui/MainViewModel.kt:366-393`).
-- "today": items whose newest find is today, not counting things marked had before Meguri.
+- "today": items whose newest find is today.
 
 **Small map** (when anything is collected). A 170 dp map of everything collected, which cannot be moved. "Open map" (bottom right) or a tap on the map opens "Where you collected" (section 2.20). Tapping a pin on this small map does nothing.
 
@@ -593,7 +592,7 @@ Not confirmed from code: `ui/BookScreen.kt:71-210` also holds a "marking" mode (
 
 **What is on it.**
 - "Back" (icon) and "Timeline".
-- Empty: "Nothing with a day yet. Each find you log keeps its day; things you had before the app have none."
+- Empty: "Nothing collected yet. Each find keeps the day it was logged."
 - One block per day, newest first. The day header shows the full date and "%d find(s)" (finds, not quantities). Tap the header: opens the Trip report.
 - Under each header, that day's finds, newest first: the mark, the name, the category, and the time (HH:mm). Finds made with "Already went" have no time shown (`data/TripReport.kt:28-32`). Tap: item page.
 
@@ -629,7 +628,7 @@ Two screens share a route family: Collection check is a card deck (`ui/Collectio
 
 - A manhole card with a downloaded picture shows the whole card, as large as fits, in colour. Anything else shows its category seal.
 - Under the picture: the name (for a manhole card, the design as title and place and code under it), the Japanese name in English mode, and the municipality.
-- Swipe right, or tap "Have it": the item is saved as had before Meguri (no date, no place) and the next one shows. While dragging right, a "Have it" label in the category colour fades in.
+- Swipe right, or tap "Have it": the item is saved as collected today (no place) and the next one shows; Undo removes that find. While dragging right, a "Have it" label in the category colour fades in.
 - Swipe left, or tap "Not yet": nothing is saved; the next one shows. While dragging left, "Not yet" fades in. (Figure 15)
 - A short drag springs back.
 - "Undo" takes back the last swipe: a saved one is taken off again. Undo history lasts while the Collection check screen is open, including after going back to the prefecture list and opening another.
@@ -718,7 +717,7 @@ With nothing left: "Nothing left to collect along the line." The text goes to An
 
 **What is on it.**
 - "Back" (icon) and "Trip report".
-- Empty: "Nothing collected on a known day yet. Each find you log keeps its day; things you had before the app have none."
+- Empty: "Nothing collected yet. Each find keeps the day it was logged."
 - A row of day chips, "date · n" (n finds), newest first. The newest day is chosen to start with. Tap a chip to choose that day.
 - A preview of the report image, 9:16.
 - "Share CSV" (outlined) and "Share image". Each opens Android's share chooser.
@@ -1134,7 +1133,7 @@ On a line's stamp book the nearest uncollected station shows a solid dark ring i
 6. **Near ties.** When the runner-up is within 0.10 of the best, or another station whose name holds this one scores 0.60 or more (三条 inside 東三条), the best is held just under 0.75, so it is offered, not chosen.
 7. Distance never raises a score, since a notebook holds stamps from everywhere.
 
-**Saving.** Each stamp is saved as the item's collectible photo. An item not yet collected gets a find had before Meguri, never at the photo's time and place, since the page is photographed long after (`data/CollectionRepository.kt:279-291`).
+**Saving.** Each stamp is saved as the item's collectible photo. An item not yet collected gets a find on the day picked, or today, never at the photo's time and place, since the page is photographed long after (`data/CollectionRepository.kt:279-291`).
 
 ### 3.8 Search
 

@@ -13,7 +13,7 @@ class BookKindsTest {
     private fun row(id: String, type: ItemType, pref: String? = "新潟県", got: Boolean = false, custom: String? = null, none: Boolean = false) = ItemRow(
         Item(id = id, type = type, nameJa = id, origin = Origin.CSV_IMPORT, prefecture = pref, customTypeId = custom, createdAt = 1, updatedAt = 1,
             noneHereAt = if (none) 1L else null),
-        findCount = if (got) 1 else 0, lastAt = if (got) 5L else null, lastBeforeApp = null, photoUri = null,
+        findCount = if (got) 1 else 0, lastAt = if (got) 5L else null, photoUri = null,
     )
 
     private val lines = mapOf("s1" to setOf("echigo"), "s2" to setOf("echigo", "yahiko"))

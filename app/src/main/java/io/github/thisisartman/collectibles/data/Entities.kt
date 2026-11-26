@@ -104,13 +104,15 @@ data class Item(
     @ColumnInfo(name = "cover_photo_id") val coverPhotoId: String? = null,
     // Schema v4: when you last edited its details (name, place, position...); a catalogue update leaves it alone (owner, 2026-11-08)
     @ColumnInfo(name = "edited_at") val editedAt: Long? = null,
-    // Schema v5: where a manhole or dam card's own cover is, as printed on the card; lat/lng is where it is handed out (#203)
+    // Schema v6: where a manhole or dam card's own cover is, as printed on the card; lat/lng is where it is handed out (#203)
     @ColumnInfo(name = "cover_lat") val coverLat: Double? = null,
     @ColumnInfo(name = "cover_lng") val coverLng: Double? = null,
 )
 
 /**
- * One find. `acquiredAt` is null only for items marked "had before the app" (`beforeApp`).
+ * One find. Every find has a date (#194, owner 2026-11-26: "it's an app, not a journal"): `acquiredAt` and
+ * `beforeApp` stay in the schema so older backups still read, and schema v5 gave their undated finds the day they
+ * were added. Nothing writes a null `acquiredAt` or `beforeApp = true` any more.
  * RESTRICT: an item that has finds cannot be deleted, so a find is never lost with its item.
  */
 @Entity(
@@ -193,7 +195,6 @@ data class ItemRow(
     @Embedded val item: Item,
     @ColumnInfo(name = "find_count") val findCount: Int,
     @ColumnInfo(name = "last_at") val lastAt: Long?,
-    @ColumnInfo(name = "last_before_app") val lastBeforeApp: Boolean?,
     @ColumnInfo(name = "photo_uri") val photoUri: String?,
 ) {
     val collected: Boolean get() = findCount > 0

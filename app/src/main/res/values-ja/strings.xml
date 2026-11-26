@@ -103,6 +103,17 @@
     <string name="more_restore_empty_title">このバックアップには記録がありません</string>
     <string name="more_restore_empty_body">復元すると記録がすべて消えます。現在のデータのコピーを先に「ダウンロード」へ保存します。</string>
     <string name="more_restore_continue">続ける</string>
+    <string name="photo_file">ファイルから写真を追加</string>
+    <string name="photo_file_sub">Meguriの写真ファイルの写真をコレクションに追加します。今あるデータは置き換えも削除もされません。</string>
+    <string name="photo_file_title">この写真を追加しますか？</string>
+    <string name="photo_file_body">写真%1$d枚：持っている項目%2$d件に写真を付け、自分の項目を%3$d件新しく作ります。現在のデータのコピーを先に「ダウンロード」へ保存します。</string>
+    <string name="photo_file_missing">この端末にない項目が%1$d件あるため、その写真は追加しません。地域をダウンロードしてから、もう一度追加してください。</string>
+    <string name="photo_file_problems">読めない行が%1$d行あり、除外しました。</string>
+    <string name="photo_file_add">追加</string>
+    <string name="photo_file_done">写真を%1$d枚追加しました（新しい項目%2$d件）。%3$d枚はすでにありました。</string>
+    <string name="photo_file_some_failed">%1$d枚の写真を読めませんでした。詳細はログにあります。</string>
+    <string name="photo_file_not">Meguriの写真ファイルではありません。</string>
+    <string name="photo_file_failed">写真を追加できませんでした。理由はログにあります。</string>
     <string name="more_restore_done">復元しました：%1$s</string>
     <string name="more_restore_failed">復元できませんでした。データは変更されていません。</string>
     <string name="more_restore_not_backup">このアプリのバックアップではありません。データは変更されていません。</string>
@@ -213,8 +224,6 @@
     <string name="kind_place">もらった場所</string>
     <string name="kind_goshuin">御朱印</string>
     <string name="kind_shrine">寺社</string>
-    <string name="added_on">%1$sに追加</string>
-    <string name="no_date">—</string>
     <string name="item_map_not_saved">この場所の地図は端末に保存されていないため、ここではインターネットが必要です。</string>
     <string name="search_show_on_map">地図で見る</string>
     <string name="type_custom">自分のカテゴリー</string>
@@ -291,7 +300,7 @@
     <string name="trip_get_off_next">次に降りる駅：%1$s・%2$s</string>
     <string name="trip_clear">計画を消す</string>
     <string name="trip_report">トリップレポート</string>
-    <string name="trip_report_none">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="trip_report_none">まだ記録がありません。記録はそれぞれ記録した日に残ります。</string>
     <string name="trip_report_share_image">画像を共有</string>
     <string name="trip_report_share_csv">CSVを共有</string>
     <string name="trip_report_more">ほか%1$d件</string>
@@ -357,7 +366,7 @@
         <item quantity="other">%d地域を読み込む</item>
     </plurals>
     <string name="onb_have_title">もう持っているものは？</string>
-    <string name="onb_have_sub">検索して場所をタップし、持っているものにチェック。「アプリ以前に取得」として追加され、写真はあとで追加できます。</string>
+    <string name="onb_have_sub">検索して場所をタップし、持っているものにチェック。今日の日付で追加され、写真はあとで追加できます。</string>
     <string name="onb_have_search">駅・カード・場所を検索</string>
     <string name="onb_have_done">完了</string>
     <string name="onb_have_skip">今はスキップ</string>
@@ -425,7 +434,7 @@
     <plurals name="kind_prefectures"><item quantity="other">%d 都道府県</item></plurals>
     <string name="kind_next">次：%s</string>
     <string name="timeline_title">タイムライン</string>
-    <string name="timeline_empty">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="timeline_empty">まだ記録がありません。記録はそれぞれ記録した日に残ります。</string>
     <string name="filter_to_get">未取得</string>
     <string name="filter_have">取得済み</string>
     <string name="photo_hint_setting">写真の提案</string>
@@ -473,7 +482,7 @@
         <item quantity="other">%d個を保存</item>
     </plurals>
     <plurals name="nb_saved">
-        <item quantity="other">%d個を保存しました（Meguri以前に入手）</item>
+        <item quantity="other">%d個を保存しました</item>
     </plurals>
     <plurals name="nb_done">
         <item quantity="other">次へ（%d個）</item>

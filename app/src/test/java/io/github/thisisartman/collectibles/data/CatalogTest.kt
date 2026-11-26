@@ -52,11 +52,11 @@ class CatalogTest {
 
     private fun row(id: String, type: ItemType, pref: String? = null, finds: Int = 0, lastAt: Long? = null) = ItemRow(
         Item(id = id, type = type, nameJa = id, prefecture = pref, origin = Origin.USER, createdAt = 0, updatedAt = 0),
-        findCount = finds, lastAt = lastAt, lastBeforeApp = if (finds > 0 && lastAt == null) true else null, photoUri = null,
+        findCount = finds, lastAt = lastAt, photoUri = null,
     )
 
     @Test
-    fun summariesCountBeforeAppAsCollectedAndFollowLines() {
+    fun summariesCountCollectedAndFollowLines() {
         val rows = listOf(
             row("a", ItemType.MANHOLE_CARD, "新潟県", finds = 1, lastAt = null),
             row("b", ItemType.MANHOLE_CARD, "新潟県"),
