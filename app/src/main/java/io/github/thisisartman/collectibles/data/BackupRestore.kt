@@ -249,11 +249,11 @@ class BackupRestore @Inject constructor(
         }
     }
 
-    /** Null when there is nothing to protect. Caller holds [CatalogAndBackup.lock]. */
-    private suspend fun saveSafetyCopy(): String? {
+    /** Null when there is nothing to protect. Caller holds [CatalogAndBackup.lock]. Also before a photo file (#188). */
+    internal suspend fun saveSafetyCopy(prefix: String = "meguri-pre-restore"): String? {
         if (dao.itemCount() == 0 && dao.findTotal() == 0 && dao.lineCount() == 0) return null
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        val name = "meguri-pre-restore-$stamp.zip"
+        val name = "$prefix-$stamp.zip"
         val resolver = context.contentResolver
         val uri = resolver.insert(
             MediaStore.Downloads.getContentUri(MediaStore.VOLUME_EXTERNAL_PRIMARY),

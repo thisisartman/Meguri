@@ -275,4 +275,12 @@ interface CollectionDao {
 
     @Query("UPDATE item SET cover_photo_id = :photoId, updated_at = :now WHERE id = :id")
     suspend fun setCover(id: String, photoId: String?, now: Long)
+
+    /** Items you added yourself, for a photo file's own items (#188): found again by type and name, never added twice. */
+    @Query("SELECT * FROM item WHERE origin = 'USER'")
+    suspend fun ownItems(): List<Item>
+
+    /** Every photo on an item's finds, so a photo file doesn't add one that is already there (#188). */
+    @Query("SELECT p.* FROM photo p JOIN acquisition a ON p.acquisition_id = a.id WHERE a.item_id = :itemId")
+    suspend fun photosOfItem(itemId: String): List<Photo>
 }
