@@ -379,6 +379,19 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { repo.editItem(item) }
     }
 
+    /** The cover position printed on a scanned card, kept on that card unless it already has one (#203). */
+    fun setScannedCover(itemId: String, cover: io.github.thisisartman.collectibles.data.CoverCoords.LatLng) {
+        viewModelScope.launch { repo.setScannedCover(itemId, cover.lat, cover.lng) }
+    }
+
+    /** Metres from where you are to a card's cover, when both are known (#203). */
+    fun distanceToCover(item: io.github.thisisartman.collectibles.data.Item): Double? {
+        val f = _here.value.fix ?: return null
+        val lat = item.coverLat ?: return null
+        val lng = item.coverLng ?: return null
+        return distanceM(f.lat, f.lng, lat, lng)
+    }
+
     suspend fun readLink(text: String, japanese: Boolean): LinkRead {
         val raw = MapsLink.findUrl(text) ?: return LinkRead.NotALink
         val url = if (MapsLink.isShort(raw)) MapsLink.resolve(raw) ?: return LinkRead.Offline else raw

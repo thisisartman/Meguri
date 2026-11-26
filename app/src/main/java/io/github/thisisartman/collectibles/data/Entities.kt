@@ -104,6 +104,9 @@ data class Item(
     @ColumnInfo(name = "cover_photo_id") val coverPhotoId: String? = null,
     // Schema v4: when you last edited its details (name, place, position...); a catalogue update leaves it alone (owner, 2026-11-08)
     @ColumnInfo(name = "edited_at") val editedAt: Long? = null,
+    // Schema v5: where a manhole or dam card's own cover is, as printed on the card; lat/lng is where it is handed out (#203)
+    @ColumnInfo(name = "cover_lat") val coverLat: Double? = null,
+    @ColumnInfo(name = "cover_lng") val coverLng: Double? = null,
 )
 
 /**

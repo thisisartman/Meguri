@@ -72,6 +72,10 @@
     <string name="nearby_next">Next: %1$s · %2$s</string>
     <string name="item_directions">Directions · %1$s</string>
     <string name="item_directions_plain">Directions</string>
+    <string name="item_cover_directions">Cover · %1$s</string>
+    <string name="item_cover_directions_plain">Cover</string>
+    <string name="item_dam_directions">Dam · %1$s</string>
+    <string name="item_dam_directions_plain">Dam</string>
     <string name="item_call">Call</string>
     <string name="item_remove_find">Remove</string>
     <string name="item_remove_find_title">Remove this find?</string>
@@ -393,6 +397,12 @@
     <string name="edit_link_failed">That link has no place Meguri can read (a short link needs the network once).</string>
     <string name="edit_no_position">No position yet.</string>
     <string name="edit_search_none">Nothing found.</string>
+    <string name="edit_cover">Cover position</string>
+    <string name="edit_dam">Dam position</string>
+    <string name="edit_cover_field">Latitude, longitude</string>
+    <string name="edit_cover_hint">As printed on the card</string>
+    <string name="edit_cover_bad">Not a position in Japan.</string>
+    <string name="edit_cover_clear">Clear</string>
     <!-- Share to Meguri (#80) -->
     <plurals name="share_title"><item quantity="one">Add %d photo</item><item quantity="other">Add %d photos</item></plurals>
     <string name="share_grouped">Grouped by where they were taken</string>

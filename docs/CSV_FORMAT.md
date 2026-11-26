@@ -14,6 +14,7 @@ Load with "More" → "Load catalogue (CSV)". UTF-8 (a BOM is fine), comma-separa
 | `prefecture`, `municipality` | no | Cards are grouped by prefecture |
 | `place_name`, `address`, `place_phone` | no | Where to get it |
 | `lat`, `lng` | no | Decimal degrees of **where you get it**; used for "Nearby" distances |
+| `cover_lat`, `cover_lng` | no | Manhole and dam cards: decimal degrees of **the cover itself**, as printed on the card. Both or neither; a pair outside Japan is ignored. Older apps ignore these columns |
 | `hours_text`, `closed_days` | no | Free text (structured hours come with #21) |
 | `notes`, `source_url` | no | |
 | `line_id` | stamps | Railway line id, e.g. `JR_JOETSU` (puts the station in that line's stamp book) |

@@ -125,6 +125,10 @@ interface CollectionDao {
         AND id NOT IN (SELECT item_id FROM acquisition)""")
     suspend fun deleteUntouched(prefecture: String, type: String): Int
 
+    /** A cover position read off a scanned card (#203): only where there is none yet, and not counted as your edit. */
+    @Query("UPDATE item SET cover_lat = :lat, cover_lng = :lng, updated_at = :now WHERE id = :itemId AND cover_lat IS NULL")
+    suspend fun setCoverIfEmpty(itemId: String, lat: Double, lng: Double, now: Long): Int
+
     /** Lines left with no stations after a removal. */
     @Query("DELETE FROM line WHERE id NOT IN (SELECT line_id FROM line_station)")
     suspend fun deleteEmptyLines(): Int

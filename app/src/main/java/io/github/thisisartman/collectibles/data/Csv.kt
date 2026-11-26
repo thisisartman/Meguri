@@ -71,6 +71,9 @@ data class CatalogRow(
     val lineNameJa: String?,
     val lineNameRomaji: String?,
     val lineSeq: Int?,
+    /** Optional columns `cover_lat`, `cover_lng` (#203): where the card's cover is; older files have neither. */
+    val coverLat: Double? = null,
+    val coverLng: Double? = null,
 ) {
     companion object {
         /** Reads one CSV map; returns null with a reason when the row cannot be used. */
@@ -83,11 +86,16 @@ data class CatalogRow(
                 ItemType.MANHOLE_CARD -> "MANHOLE_CARD:" + (code ?: error("manhole card without code"))
                 else -> "$type:$nameJa"
             }
+            // A cover position is both numbers in Japan or none: a bad one leaves the card without it rather than unread
+            val coverLat = v("cover_lat")?.toDoubleOrNull()
+            val coverLng = v("cover_lng")?.toDoubleOrNull()
+            val cover = coverLat != null && coverLng != null && CoverCoords.inJapan(coverLat, coverLng)
             CatalogRow(
                 type, key, code, nameJa, v("name_romaji"), v("series"), v("release_date"), v("prefecture"), v("municipality"),
                 v("place_name"), v("address"), v("place_phone"), v("lat")?.toDouble(), v("lng")?.toDouble(),
                 v("hours_text"), v("closed_days"), v("notes"), v("source_url"),
                 v("line_id"), v("line_name_ja"), v("line_name_romaji"), v("line_seq")?.toInt(),
+                coverLat = if (cover) coverLat else null, coverLng = if (cover) coverLng else null,
             )
         }
     }
@@ -122,5 +130,8 @@ data class CatalogRow(
         noneHereAt = existing?.noneHereAt,
         coverPhotoId = existing?.coverPhotoId,
         editedAt = existing?.editedAt,
+        // The pair together: the catalogue's when it has one, else the one you already had (from a scan, say)
+        coverLat = if (coverLat != null) coverLat else existing?.coverLat,
+        coverLng = if (coverLat != null) coverLng else existing?.coverLng,
     )
 }

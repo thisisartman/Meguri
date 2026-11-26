@@ -83,4 +83,20 @@ class MigrationTest {
         assertEquals(null, one("SELECT edited_at FROM item WHERE id = 's1'"))
         db.close()
     }
+
+    /** #203: v4 cards keep everything, edits included, and have no cover position yet. */
+    @Test
+    fun v4CardsGetAnEmptyCoverPosition() {
+        helper.createDatabase("migration-test-4.db", 4).apply {
+            execSQL("INSERT INTO item (id, type, catalog_key, code, name_ja, origin, lat, lng, created_at, updated_at, edited_at) VALUES ('c1', 'MANHOLE_CARD', 'MANHOLE_CARD:15-202-A001', '15-202-A001', '長岡市 A001', 'CSV_IMPORT', 37.44, 138.85, 1, 2, 3)")
+            close()
+        }
+        val db = helper.runMigrationsAndValidate("migration-test-4.db", 5, true, *CollectiblesDb.MIGRATIONS)
+        fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
+        assertEquals("37.44", one("SELECT lat FROM item WHERE id = 'c1'"))
+        assertEquals("3", one("SELECT edited_at FROM item WHERE id = 'c1'"))
+        assertEquals(null, one("SELECT cover_lat FROM item WHERE id = 'c1'"))
+        assertEquals(null, one("SELECT cover_lng FROM item WHERE id = 'c1'"))
+        db.close()
+    }
 }

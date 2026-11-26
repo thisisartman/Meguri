@@ -106,6 +106,8 @@ private data class Scan(
     val photo: Uri, val code: String?, val row: ItemRow?, val cover: Boolean = false, val nearCards: List<ItemRow> = emptyList(),
     /** Cards whose code differs only by a look-alike letter (I or L), offered as "Or is it...?" */
     val lookalikes: List<ItemRow> = emptyList(),
+    /** The cover's position printed on the card, when it was read (#203); kept on the card you confirm */
+    val coverAt: io.github.thisisartman.collectibles.data.CoverCoords.LatLng? = null,
 )
 
 /**
@@ -172,6 +174,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             var turn = 0
             var failure: Throwable? = null
             var rawText = ""
+            var codeText = ""
             for (deg in listOf(0, 180, 90, 270)) {
                 val read = runCatching {
                     val input = page0?.let { InputImage.fromBitmap(it, deg) } ?: InputImage.fromFilePath(context, page.imageUri)
@@ -183,6 +186,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 if (deg == 0) rawText = found.text
                 code = CardCode.best(found.text, known)
                 if (code != null) {
+                    codeText = found.text
                     turn = deg
                     // The reader reads upside-down cards too (owner's photos, 2026-11-09), so reading isn't enough to know
                     // which way is up. A manhole card's code is printed top right: turn until it sits there
@@ -207,6 +211,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                     val found = runCatching { reader.process(InputImage.fromBitmap(card, deg)).await() }.getOrNull() ?: break
                     val c = CardCode.best(found.text, known) ?: continue
                     code = c
+                    codeText = found.text
                     val box = found.textBlocks.flatMap { it.lines }.firstOrNull { CardCode.best(it.text, known) == c }?.boundingBox
                     turn = if (box == null) deg else (deg + CardCode.turnToTopRight(box.exactCenterX(), box.exactCenterY(), card.width.toFloat(), card.height.toFloat())) % 360
                     page1 = card
@@ -275,8 +280,11 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 (if (match != null) CardCode.lookalikes(c, known) else CardCode.nearest(c, known))
                     .mapNotNull { k -> cards.firstOrNull { it.item.code == k } }
             } ?: emptyList()
-            vm.log.d("Scan", "Result: ${match?.item?.id ?: "no match"}, cover $cover, card without a code $isCard, ${alike.size} look-alikes")
-            result = Scan(photo, code, match, cover, near, alike)
+            // The cover's position, printed on the card under its code (#203): from the read that found the code, else
+            // the first read (a code typed by hand afterwards still gets it)
+            val coverAt = io.github.thisisartman.collectibles.data.CoverCoords.parse(codeText) ?: io.github.thisisartman.collectibles.data.CoverCoords.parse(rawText)
+            vm.log.d("Scan", "Result: ${match?.item?.id ?: "no match"}, cover $cover, card without a code $isCard, ${alike.size} look-alikes, cover position ${if (coverAt != null) "read" else "not read"}")
+            result = Scan(photo, code, match, cover, near, alike, coverAt)
             reading = false
         }
     }
@@ -360,6 +368,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             confirmButton = {
                 if (row != null) TextButton(onClick = {
                     result = null
+                    s.coverAt?.let { vm.setScannedCover(row.item.id, it) }
                     // A scan is the card itself. Already collected: the photo joins its latest find. Not yet: a find now,
                     // where you are, with "Collected ... Undo" like every other way of collecting (finding 29)
                     if (row.collected) vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
@@ -382,7 +391,11 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 }
             },
             dismissButton = {
-                if (row != null) TextButton(onClick = { result = null; nav.openItem(row.item.id) }) { Text(stringResource(R.string.scan_open)) }
+                if (row != null) TextButton(onClick = {
+                    result = null
+                    s.coverAt?.let { vm.setScannedCover(row.item.id, it) }
+                    nav.openItem(row.item.id)
+                }) { Text(stringResource(R.string.scan_open)) }
                 else if (s.code == null && !s.cover) TextButton(onClick = { result = null; retake++ }) { Text(stringResource(R.string.scan_retake)) }
                 // A code that isn't in the catalogue: Pick by hand stays beside Type code
                 else if (s.code != null) TextButton(onClick = {
