@@ -26,7 +26,7 @@ abstract class CollectiblesDb : RoomDatabase() {
 
     companion object {
         const val NAME = "collectibles.db"
-        const val VERSION = 5
+        const val VERSION = 6
 
         /**
          * v1 to v2 (2026-11-07), additions only, so every v1 row and every v1 backup stays as it is:
@@ -73,8 +73,16 @@ abstract class CollectiblesDb : RoomDatabase() {
             }
         }
 
+        /** v5 to v6 (2026-11-26): where a card's cover is, as printed on the card, beside where it is handed out (#203). */
+        val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `item` ADD COLUMN `cover_lat` REAL")
+                db.execSQL("ALTER TABLE `item` ADD COLUMN `cover_lng` REAL")
+            }
+        }
+
         /** Used by the app and by restore, so an older backup migrates the same way the app does. */
-        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
     }
 }
 

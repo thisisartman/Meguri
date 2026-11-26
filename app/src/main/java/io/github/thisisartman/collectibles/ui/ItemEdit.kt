@@ -64,6 +64,13 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
     var notes by remember { mutableStateOf(item.notes.orEmpty()) }
     var lat by remember { mutableStateOf(item.lat) }
     var lng by remember { mutableStateOf(item.lng) }
+    // A card's cover (#203): typed or pasted as on the card, or where you stand at the cover; blank clears it
+    var cover by remember {
+        mutableStateOf(
+            if (item.coverLat != null && item.coverLng != null) String.format(Locale.US, "%.6f, %.6f", item.coverLat, item.coverLng) else "",
+        )
+    }
+    var coverBad by remember { mutableStateOf(false) }
     var link by remember { mutableStateOf("") }
     var query by remember { mutableStateOf("") }
     var hits by remember { mutableStateOf<List<PlaceHit>>(emptyList()) }
@@ -145,6 +152,31 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                     h.address?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
             }
+            if (type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD || type == io.github.thisisartman.collectibles.data.ItemType.DAM_CARD) {
+                Text(
+                    stringResource(if (type == io.github.thisisartman.collectibles.data.ItemType.DAM_CARD) R.string.edit_dam else R.string.edit_cover),
+                    Modifier.padding(top = 12.dp), style = MaterialTheme.typography.titleSmall,
+                )
+                OutlinedTextField(
+                    cover, { cover = it; coverBad = false }, Modifier.fillMaxWidth().padding(vertical = 4.dp), singleLine = true,
+                    label = { Text(stringResource(R.string.edit_cover_field)) },
+                    supportingText = { Text(stringResource(if (coverBad) R.string.edit_cover_bad else R.string.edit_cover_hint)) },
+                    isError = coverBad,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedButton(
+                        onClick = {
+                            vm.here.value.fix?.let { cover = String.format(Locale.US, "%.6f, %.6f", it.lat, it.lng); coverBad = false; message = null }
+                                ?: run { message = noHere }
+                        },
+                        modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.edit_use_here)) }
+                    OutlinedButton(
+                        enabled = cover.isNotBlank(), onClick = { cover = ""; coverBad = false },
+                        modifier = Modifier.heightIn(min = 48.dp),
+                    ) { Text(stringResource(R.string.edit_cover_clear)) }
+                }
+            }
         }
             Row(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onDismiss, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) { Text(stringResource(R.string.cancel)) }
@@ -152,10 +184,15 @@ fun ItemEditSheet(item: Item, vm: MainViewModel, onDismiss: () -> Unit) {
                     enabled = nameJa.isNotBlank(),
                     onClick = {
                         fun opt(s: String) = s.trim().ifEmpty { null }
+                        val coverAt = io.github.thisisartman.collectibles.data.CoverCoords.parseTyped(cover)
+                        val cardType = type == io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD ||
+                            type == io.github.thisisartman.collectibles.data.ItemType.DAM_CARD
+                        if (cardType && cover.isNotBlank() && coverAt == null) { coverBad = true; return@Button }
                         vm.editItem(
                             item.copy(
                                 type = type, nameJa = nameJa.trim(), nameRomaji = opt(nameEn), placeName = opt(place), address = opt(address),
                                 hoursText = opt(hours), notes = opt(notes), lat = lat, lng = lng,
+                                coverLat = if (cardType) coverAt?.lat else item.coverLat, coverLng = if (cardType) coverAt?.lng else item.coverLng,
                             ),
                         )
                         onDismiss()

@@ -72,6 +72,10 @@
     <string name="nearby_next">次：%1$s・%2$s</string>
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
+    <string name="item_cover_directions">マンホール・%1$s</string>
+    <string name="item_cover_directions_plain">マンホール</string>
+    <string name="item_dam_directions">ダム・%1$s</string>
+    <string name="item_dam_directions_plain">ダム</string>
     <string name="item_call">電話</string>
     <string name="item_remove_find">削除</string>
     <string name="item_remove_find_title">この記録を削除しますか？</string>
@@ -397,6 +401,12 @@
     <string name="edit_link_failed">このリンクからは場所を読み取れません（短縮リンクは一度ネット接続が必要です）。</string>
     <string name="edit_no_position">まだ現在地がありません。</string>
     <string name="edit_search_none">見つかりませんでした。</string>
+    <string name="edit_cover">マンホールの位置</string>
+    <string name="edit_dam">ダムの位置</string>
+    <string name="edit_cover_field">緯度、経度</string>
+    <string name="edit_cover_hint">カードに書かれたとおり</string>
+    <string name="edit_cover_bad">日本国内の位置として読めません。</string>
+    <string name="edit_cover_clear">消去</string>
     <!-- Share to Meguri (#80) -->
     <plurals name="share_title"><item quantity="other">%d 枚の写真を追加</item></plurals>
     <string name="share_grouped">撮った場所ごとにまとめました</string>

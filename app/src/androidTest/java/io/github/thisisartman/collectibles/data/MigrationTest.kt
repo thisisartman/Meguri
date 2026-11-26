@@ -111,4 +111,24 @@ class MigrationTest {
         org.junit.Assert.assertTrue(moved >= start)
         db.close()
     }
+
+    /** #203: v4 cards keep everything, edits included, and reach v6 (through #194's v5) with no cover position yet. */
+    @Test
+    fun v4CardsGetAnEmptyCoverPosition() {
+        helper.createDatabase("migration-test-4-6.db", 4).apply {
+            execSQL("INSERT INTO item (id, type, catalog_key, code, name_ja, origin, lat, lng, created_at, updated_at, edited_at) VALUES ('c1', 'MANHOLE_CARD', 'MANHOLE_CARD:15-202-A001', '15-202-A001', '長岡市 A001', 'CSV_IMPORT', 37.44, 138.85, 1, 2, 3)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('f1', 'c1', NULL, 1, 'BULK', 7000, 1)")
+            close()
+        }
+        val db = helper.runMigrationsAndValidate("migration-test-4-6.db", 6, true, *CollectiblesDb.MIGRATIONS)
+        fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
+        assertEquals("37.44", one("SELECT lat FROM item WHERE id = 'c1'"))
+        assertEquals("3", one("SELECT edited_at FROM item WHERE id = 'c1'"))
+        assertEquals(null, one("SELECT cover_lat FROM item WHERE id = 'c1'"))
+        assertEquals(null, one("SELECT cover_lng FROM item WHERE id = 'c1'"))
+        // #194's v5 step ran on the way
+        assertEquals("7000", one("SELECT acquired_at FROM acquisition WHERE id = 'f1'"))
+        assertEquals("0", one("SELECT before_app FROM acquisition WHERE id = 'f1'"))
+        db.close()
+    }
 }

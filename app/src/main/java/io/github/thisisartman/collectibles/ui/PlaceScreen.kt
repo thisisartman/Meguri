@@ -30,6 +30,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -394,11 +395,29 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>
                 // Standing at the place (a goshuin added where it was logged, say), directions help nobody. Add photo
                 // and Collect are in the page's bottom bar, so they never scroll away (owner rule)
                 val meters = vm.distanceTo(t)
-                if (item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)) {
-                    FilledTonalButton(onClick = { openDirections(context, item, meters) }, modifier = Modifier.padding(top = 8.dp).heightIn(min = 48.dp)) {
+                val toPlace = item.lat != null && item.lng != null && (meters == null || meters >= HERE_M)
+                // A card's cover, where the card says it is (#203, owner 2026-11-26: "directions to the cover should be
+                // accessible too"). Shown at the hand-out place too: that is where you set off for the cover
+                val cLat = item.coverLat
+                val cLng = item.coverLng
+                val coverMeters = vm.distanceToCover(item)
+                val toCover = (item.type == ItemType.MANHOLE_CARD || item.type == ItemType.DAM_CARD) && cLat != null && cLng != null &&
+                    (coverMeters == null || coverMeters >= HERE_M)
+                if (toPlace || toCover) FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (toPlace) FilledTonalButton(onClick = { openDirections(context, item, meters) }, modifier = Modifier.heightIn(min = 48.dp)) {
                         Icon(painterResource(R.drawable.ic_directions), contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
                         Text(distanceText(meters)?.let { stringResource(R.string.item_directions, it) } ?: stringResource(R.string.item_directions_plain), maxLines = 1)
+                    }
+                    if (toCover && cLat != null && cLng != null) OutlinedButton(onClick = { openCoverDirections(context, cLat, cLng, coverMeters) }, modifier = Modifier.heightIn(min = 48.dp)) {
+                        Icon(painterResource(if (item.type == ItemType.DAM_CARD) R.drawable.ic_type_dam else R.drawable.ic_type_manhole), contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(6.dp))
+                        val dam = item.type == ItemType.DAM_CARD
+                        Text(
+                            distanceText(coverMeters)?.let { stringResource(if (dam) R.string.item_dam_directions else R.string.item_cover_directions, it) }
+                                ?: stringResource(if (dam) R.string.item_dam_directions_plain else R.string.item_cover_directions_plain),
+                            maxLines = 1,
+                        )
                     }
                 }
             }

@@ -339,6 +339,16 @@ class CollectionRepository @Inject constructor(
         log.i("Item", "Edited ${item.id}: name, place or position")
     }
 
+    /**
+     * The cover position read off a scanned card (#203). Only fills an empty one, so a position you set in Edit details
+     * (or one the catalogue gave) stays; and it is not an edit, so catalogue updates still reach the card.
+     */
+    suspend fun setScannedCover(itemId: String, lat: Double, lng: Double): Boolean {
+        val n = dao.setCoverIfEmpty(itemId, lat, lng, now())
+        if (n > 0) log.i("Scan", "Cover position for $itemId read off the card")
+        return n > 0
+    }
+
     suspend fun setPhotoKind(photoId: String, kind: String) {
         dao.setPhotoRole(photoId, kind)
         log.i("Photo", "Kind of $photoId is now $kind")

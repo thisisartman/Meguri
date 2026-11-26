@@ -29,10 +29,22 @@ private const val WALK_M = 2_000.0
 /** Directions to the item's place in the maps app; falls back to a name search near its position. */
 fun openDirections(context: Context, item: Item, meters: Double? = null) {
     val q = placeQuery(item)
-    val dir = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(q)}&travelmode=${travelMode(meters)}")
-    val ok = runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, dir)) }.isSuccess
-    if (!ok && item.lat != null && item.lng != null) {
+    startDirections(context, "https://www.google.com/maps/dir/?api=1&destination=${Uri.encode(q)}&travelmode=${travelMode(meters)}") {
         // geo: with a text query searches for that place near the position (no custom pin)
-        runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("geo:${item.lat},${item.lng}?q=${Uri.encode(q)}"))) }
+        if (item.lat != null && item.lng != null) "geo:${item.lat},${item.lng}?q=${Uri.encode(q)}" else null
     }
+}
+
+/** Directions to a point: a card's cover (#203), which has no place name to look up, only the position printed on the card. */
+fun pointDirectionsUrl(lat: Double, lng: Double, meters: Double?): String =
+    String.format(java.util.Locale.US, "https://www.google.com/maps/dir/?api=1&destination=%.6f,%.6f&travelmode=%s", lat, lng, travelMode(meters))
+
+/** Directions to a card's cover, the same way as [openDirections]; falls back to a pin at the cover. */
+fun openCoverDirections(context: Context, lat: Double, lng: Double, meters: Double? = null) {
+    startDirections(context, pointDirectionsUrl(lat, lng, meters)) { String.format(java.util.Locale.US, "geo:0,0?q=%.6f,%.6f", lat, lng) }
+}
+
+private fun startDirections(context: Context, url: String, fallback: () -> String?) {
+    val ok = runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) }.isSuccess
+    if (!ok) fallback()?.let { geo -> runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(geo))) } }
 }
