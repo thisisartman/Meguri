@@ -107,7 +107,9 @@ data class Item(
 )
 
 /**
- * One find. `acquiredAt` is null only for items marked "had before the app" (`beforeApp`).
+ * One find. Every find has a date (#194, owner 2026-11-26: "it's an app, not a journal"): `acquiredAt` and
+ * `beforeApp` stay in the schema so older backups still read, and schema v5 gave their undated finds the day they
+ * were added. Nothing writes a null `acquiredAt` or `beforeApp = true` any more.
  * RESTRICT: an item that has finds cannot be deleted, so a find is never lost with its item.
  */
 @Entity(
@@ -190,7 +192,6 @@ data class ItemRow(
     @Embedded val item: Item,
     @ColumnInfo(name = "find_count") val findCount: Int,
     @ColumnInfo(name = "last_at") val lastAt: Long?,
-    @ColumnInfo(name = "last_before_app") val lastBeforeApp: Boolean?,
     @ColumnInfo(name = "photo_uri") val photoUri: String?,
 ) {
     val collected: Boolean get() = findCount > 0

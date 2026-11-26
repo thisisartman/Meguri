@@ -18,7 +18,7 @@ class PlacesTest {
             id = id, type = type, nameJa = nameJa, nameRomaji = romaji, placeName = placeName, origin = Origin.CSV_IMPORT,
             lat = lat, lng = lng, createdAt = 1, updatedAt = 1, noneHereAt = if (noneHere) 1L else null,
         ),
-        findCount = found, lastAt = null, lastBeforeApp = null, photoUri = null,
+        findCount = found, lastAt = null, photoUri = null,
     )
 
     // About 1 m of latitude in degrees, to place things a known distance north of Urasa

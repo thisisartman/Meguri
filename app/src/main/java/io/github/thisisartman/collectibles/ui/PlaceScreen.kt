@@ -414,7 +414,7 @@ private fun ThingCard(t: ItemRow, vm: MainViewModel, finds: List<FindWithPhotos>
                 finds.forEach { f ->
                     androidx.compose.runtime.key(f.find.id) {
                         CollectionRow(
-                            f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                            f, ja, name, onRemoveFind = { vm.removeFind(f.find.id) },
                             hasCost = hasCost, onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
                         )
                     }

@@ -8,8 +8,8 @@
     <string name="cards_remove_text">この端末のカードの画像を削除します。あとでまたダウンロードできます。</string>
     <string name="backup_now_sub">記録をファイルに保存します（写真ありかなしを選べます）</string>
     <string name="nb_date">日付</string>
-    <string name="nb_no_date">日付なし</string>
-    <string name="nb_date_clear">日付を消す</string>
+    <string name="nb_today">今日</string>
+    <string name="nb_date_clear">今日に戻す</string>
     <string name="nb_new_where">場所を検索するか、空のままにします。</string>
     <string name="nb_new_save">保存</string>
     <string name="check_cards_missing">カードの画像がまだこの端末にないため、カードはアイコンで表示されます。</string>

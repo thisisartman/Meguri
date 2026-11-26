@@ -80,6 +80,8 @@ import javax.inject.Inject
 class MoreViewModel @Inject constructor(
     val io: CatalogAndBackup,
     val restore: BackupRestore,
+    /** A photo file's photos added to what is here (#188). */
+    val photoFile: io.github.thisisartman.collectibles.data.PhotoImport,
     val auto: AutoBackup,
     val log: FileLog,
     private val db: CollectiblesDb,
@@ -369,6 +371,53 @@ fun MoreScreen(
                 }
         }
     }
+    // A photo file (#188): read and shown first, then added on "Add"; nothing is replaced
+    var pendingPhotoFile by remember { mutableStateOf<io.github.thisisartman.collectibles.data.PhotoFileInfo?>(null) }
+    val photoFileNot = stringResource(R.string.photo_file_not)
+    val photoFileFailed = stringResource(R.string.photo_file_failed)
+    val photoFileDone = stringResource(R.string.photo_file_done)
+    val photoFileSomeFailed = stringResource(R.string.photo_file_some_failed)
+    val openPhotoFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        vm.run {
+            runCatching { vm.photoFile.inspect(uri) }
+                .onSuccess { pendingPhotoFile = it }
+                .onFailure {
+                    vm.log.w("PhotoFile", "Photo file refused: ${it.message}", it)
+                    vm.work.say(if (it is io.github.thisisartman.collectibles.data.PhotoFileError) photoFileNot else photoFileFailed)
+                }
+        }
+    }
+    pendingPhotoFile?.let { info ->
+        val p = info.plan
+        AlertDialog(
+            onDismissRequest = { pendingPhotoFile = null; vm.photoFile.discard(info) },
+            title = { Text(stringResource(R.string.photo_file_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.photo_file_body, p.photos, p.toItems, p.newItems))
+                    if (p.missing.isNotEmpty()) Text(stringResource(R.string.photo_file_missing, p.missing.size))
+                    if (info.problems.isNotEmpty()) Text(stringResource(R.string.photo_file_problems, info.problems.size))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    pendingPhotoFile = null
+                    vm.run {
+                        runCatching { vm.photoFile.add(info) }
+                            .onSuccess { r ->
+                                vm.work.say(photoFileDone.format(r.added, r.newItems, r.alreadyThere) + if (r.failed > 0) " " + photoFileSomeFailed.format(r.failed) else "")
+                            }
+                            .onFailure {
+                                vm.log.e("PhotoFile", "Adding a photo file failed", it)
+                                vm.work.say(photoFileFailed)
+                            }
+                    }
+                }) { Text(stringResource(R.string.photo_file_add)) }
+            },
+            dismissButton = { TextButton(onClick = { pendingPhotoFile = null; vm.photoFile.discard(info) }) { Text(stringResource(R.string.cancel)) } },
+        )
+    }
     val pickFolder = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
         if (uri != null) { vm.auto.enable(uri); autoTick++ }
     }
@@ -638,6 +687,9 @@ fun MoreScreen(
                 }
                 MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
+                }
+                MoreRow(stringResource(R.string.photo_file), stringResource(R.string.photo_file_sub)) {
+                    openPhotoFile.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
                 if (remember(autoTick) { vm.auto.server.address } != null) {
                     MoreRow(stringResource(R.string.restore_server), stringResource(R.string.restore_server_sub)) { restoreFromServer() }
