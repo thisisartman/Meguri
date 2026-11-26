@@ -53,6 +53,19 @@ class EkitagArtTest {
     private fun assertEquals(expected: Int, actual: Int, tol: Int) =
         assertTrue("expected $expected ± $tol, was $actual", kotlin.math.abs(expected - actual) <= tol)
 
+    @Test fun aScreenshotsStatusBarAndCloseButtonAreNotPartOfTheStamp() {
+        // The owner's 56 detail and full-screen screenshots (2026-11-25): a pale page edge to edge reads like a saved
+        // image's white edge, and the status bar icons and the close button stretched "the stamp" to the whole screen
+        val s = Shot(300, 650, page)
+        for (x in listOf(20, 40, 60, 240, 260, 280)) s.rect(x, 6, x + 8, 16, rgb(40, 40, 40)) // status bar icons
+        s.disc(150, 620, 12, rgb(40, 40, 40))  // the close button
+        s.disc(150, 300, 100, white)            // the stamp's white outline
+        s.disc(150, 300, 90, red)
+        val f = EkitagArt.find(s.px, s.w, s.h)
+        assertNotNull(f)
+        assertEquals(201, f!!.w, 3); assertEquals(201, f.h, 3); assertEquals(200, f.y, 2)
+    }
+
     @Test fun aSavedStampImageIsTheStampItself() {
         // Yahiko's and Yoshida's saved stamps (2026-11-13): white edge to edge, a red ring with white inside
         val s = Shot(400, 400, white)
