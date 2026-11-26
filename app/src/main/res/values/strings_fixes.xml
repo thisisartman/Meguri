@@ -9,8 +9,8 @@
     <string name="cards_remove_text">The card pictures on this phone are removed. You can download them again later.</string>
     <string name="backup_now_sub">Saves a file with your finds, with or without photos</string>
     <string name="nb_date">Date</string>
-    <string name="nb_no_date">No date</string>
-    <string name="nb_date_clear">Clear date</string>
+    <string name="nb_today">Today</string>
+    <string name="nb_date_clear">Back to today</string>
     <string name="nb_new_where">Find its place, or leave it empty.</string>
     <string name="nb_new_save">Save</string>
     <string name="check_cards_missing">Card pictures aren\'t on this phone yet, so cards show as icons.</string>

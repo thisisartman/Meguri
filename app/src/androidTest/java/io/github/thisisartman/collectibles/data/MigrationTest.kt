@@ -41,9 +41,10 @@ class MigrationTest {
         assertEquals("1", one("SELECT COUNT(*) FROM line_station"))
         // Every find starts as one of a thing
         assertEquals("0", one("SELECT COUNT(*) FROM acquisition WHERE quantity != 1"))
-        // "Had before the app" keeps its missing date and its flag
-        assertEquals(null, one("SELECT acquired_at FROM acquisition WHERE id = 'f2'"))
-        assertEquals("1", one("SELECT before_app FROM acquisition WHERE id = 'f2'"))
+        // "Had before the app" is gone by v5 (#194): the find is dated when it was added, and the flag is cleared
+        assertEquals("1001", one("SELECT acquired_at FROM acquisition WHERE id = 'f2'"))
+        assertEquals("0", one("SELECT before_app FROM acquisition WHERE id = 'f2'"))
+        assertEquals("1000", one("SELECT acquired_at FROM acquisition WHERE id = 'f1'"))
         // Values on the dated find and its photo are unchanged
         assertEquals("メモ", one("SELECT notes FROM acquisition WHERE id = 'f1'"))
         assertEquals("38183", one("SELECT mediastore_id FROM photo WHERE id = 'p1'"))
@@ -81,6 +82,33 @@ class MigrationTest {
         assertEquals("吉田駅", one("SELECT name_ja FROM item WHERE id = 's1'"))
         assertEquals("9", one("SELECT none_here_at FROM item WHERE id = 's1'"))
         assertEquals(null, one("SELECT edited_at FROM item WHERE id = 's1'"))
+        db.close()
+    }
+
+    /** v4 to v5 (#194): every undated or "had before" find gets the day it was added; dated finds are untouched. */
+    @Test
+    fun v4UndatedFindsGetTheDayTheyWereAdded() {
+        helper.createDatabase("migration-test-4.db", 4).apply {
+            execSQL("INSERT INTO item (id, type, catalog_key, name_ja, origin, created_at, updated_at) VALUES ('s1', 'EKI_STAMP', 'EKI_STAMP:弥彦駅', '弥彦駅', 'CSV_IMPORT', 1, 2)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, lat, lng, via, created_at, quantity) VALUES ('dated', 's1', 5000, 0, 37.7, 138.8, 'MANUAL', 6000, 1)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('before', 's1', NULL, 1, 'BULK', 7000, 1)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('undated', 's1', NULL, 0, 'MANUAL', 8000, 2)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('nocreated', 's1', NULL, 1, 'BULK', 0, 1)")
+            close()
+        }
+        val start = System.currentTimeMillis()
+        val db = helper.runMigrationsAndValidate("migration-test-4.db", 5, true, *CollectiblesDb.MIGRATIONS)
+        fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
+        assertEquals("4", one("SELECT COUNT(*) FROM acquisition"))
+        assertEquals("0", one("SELECT COUNT(*) FROM acquisition WHERE acquired_at IS NULL OR before_app = 1"))
+        assertEquals("5000", one("SELECT acquired_at FROM acquisition WHERE id = 'dated'"))
+        assertEquals("37.7", one("SELECT lat FROM acquisition WHERE id = 'dated'"))
+        assertEquals("7000", one("SELECT acquired_at FROM acquisition WHERE id = 'before'"))
+        assertEquals("8000", one("SELECT acquired_at FROM acquisition WHERE id = 'undated'"))
+        assertEquals("2", one("SELECT quantity FROM acquisition WHERE id = 'undated'"))
+        // No created_at to go by: the moment of the migration, never 1970
+        val moved = one("SELECT acquired_at FROM acquisition WHERE id = 'nocreated'")!!.toLong()
+        org.junit.Assert.assertTrue(moved >= start)
         db.close()
     }
 }

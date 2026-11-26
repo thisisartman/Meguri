@@ -60,6 +60,9 @@ object EkitagArt {
         for (i in 0 until w * h) if (ink[i]) { val x = i % w; val y = i / w; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y }
         if (x1 < 0 || x1 - x0 < w * 0.3f || y1 - y0 < h * 0.3f) return null
         val bw = x1 - x0 + 1; val bh = y1 - y0 + 1
+        // A stamp is about as wide as it is tall; ink from top to bottom of a tall picture is a screenshot's status bar
+        // and close button around a stamp on a pale page (2026-11-25: 56 of the owner's 68), found by its outline below
+        if (bh > bw * 1.6f || bw > bh * 1.6f) return null
         val outside = BooleanArray(bw * bh); val queue = IntArray(bw * bh); var head = 0; var tail = 0
         fun seed(x: Int, y: Int) {
             val j = y * bw + x

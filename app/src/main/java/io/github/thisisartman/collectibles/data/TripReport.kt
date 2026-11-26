@@ -8,7 +8,7 @@ data class ReportRow(val find: Acquisition, val item: Item, val collection: Stri
 
 /**
  * The trip report (#61): a day's finds, as the owner defined a trip (one day). An image for stories (portrait 9:16)
- * and a CSV; no PDF (owner, 2026-11-07). Finds with no date (had before the app) are never on a report.
+ * and a CSV; no PDF (owner, 2026-11-07). Every find has a date (#194), so everything collected that day is on it.
  */
 object TripReport {
     /** Local midnight of the day [ms] falls on. */

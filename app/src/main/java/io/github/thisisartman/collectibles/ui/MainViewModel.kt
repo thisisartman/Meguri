@@ -248,18 +248,11 @@ class MainViewModel @Inject constructor(
 
     fun removePhoto(photoId: String) { viewModelScope.launch { repo.removePhoto(photoId) } }
 
-    fun markBeforeApp(ids: Set<String>, onDone: (Int) -> Unit) {
-        viewModelScope.launch { onDone(repo.markBeforeApp(ids)) }
-    }
-
     fun setCover(itemId: String, photoId: String?) { viewModelScope.launch { repo.setCover(itemId, photoId) } }
 
     fun setNoneHere(itemId: String, none: Boolean) { viewModelScope.launch { repo.setNoneHere(itemId, none) } }
 
-    fun unmarkBeforeApp(itemId: String) {
-        viewModelScope.launch { repo.unmarkBeforeApp(itemId) }
-    }
-
+    /** Things collected on [atMs], no place: a past trip's day, or now for what you already have. */
     fun markOn(ids: Set<String>, atMs: Long, onDone: (List<String>) -> Unit) {
         viewModelScope.launch { onDone(repo.markOn(ids, atMs)) }
     }
@@ -318,7 +311,7 @@ class MainViewModel @Inject constructor(
     }
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
-    /** Notebook stamps: each (item, picture), saved as "had before Meguri" unless already collected; [onDone] gets how many. */
+    /** Notebook stamps: each (item, picture), found on [atMs] or today unless already collected; [onDone] gets how many. */
     fun addNotebookStamps(stamps: List<Pair<String, android.net.Uri>>, atMs: Long? = null, onDone: (Int) -> Unit) {
         viewModelScope.launch {
             var n = 0

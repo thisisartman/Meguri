@@ -223,8 +223,6 @@
     <string name="kind_place">もらった場所</string>
     <string name="kind_goshuin">御朱印</string>
     <string name="kind_shrine">寺社</string>
-    <string name="added_on">%1$sに追加</string>
-    <string name="no_date">—</string>
     <string name="item_map_not_saved">この場所の地図は端末に保存されていないため、ここではインターネットが必要です。</string>
     <string name="search_show_on_map">地図で見る</string>
     <string name="type_custom">自分のカテゴリー</string>
@@ -301,7 +299,7 @@
     <string name="trip_get_off_next">次に降りる駅：%1$s・%2$s</string>
     <string name="trip_clear">計画を消す</string>
     <string name="trip_report">トリップレポート</string>
-    <string name="trip_report_none">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="trip_report_none">まだ記録がありません。記録はそれぞれ記録した日に残ります。</string>
     <string name="trip_report_share_image">画像を共有</string>
     <string name="trip_report_share_csv">CSVを共有</string>
     <string name="trip_report_more">ほか%1$d件</string>
@@ -367,7 +365,7 @@
         <item quantity="other">%d地域を読み込む</item>
     </plurals>
     <string name="onb_have_title">もう持っているものは？</string>
-    <string name="onb_have_sub">検索して場所をタップし、持っているものにチェック。「アプリ以前に取得」として追加され、写真はあとで追加できます。</string>
+    <string name="onb_have_sub">検索して場所をタップし、持っているものにチェック。今日の日付で追加され、写真はあとで追加できます。</string>
     <string name="onb_have_search">駅・カード・場所を検索</string>
     <string name="onb_have_done">完了</string>
     <string name="onb_have_skip">今はスキップ</string>
@@ -429,7 +427,7 @@
     <plurals name="kind_prefectures"><item quantity="other">%d 都道府県</item></plurals>
     <string name="kind_next">次：%s</string>
     <string name="timeline_title">タイムライン</string>
-    <string name="timeline_empty">日付のある記録がまだありません。記録した日がそれぞれ残ります（アプリ以前に持っていたものには日付がありません）。</string>
+    <string name="timeline_empty">まだ記録がありません。記録はそれぞれ記録した日に残ります。</string>
     <string name="filter_to_get">未取得</string>
     <string name="filter_have">取得済み</string>
     <string name="photo_hint_setting">写真の提案</string>
@@ -477,7 +475,7 @@
         <item quantity="other">%d個を保存</item>
     </plurals>
     <plurals name="nb_saved">
-        <item quantity="other">%d個を保存しました（Meguri以前に入手）</item>
+        <item quantity="other">%d個を保存しました</item>
     </plurals>
     <plurals name="nb_done">
         <item quantity="other">次へ（%d個）</item>

@@ -41,7 +41,7 @@ import java.util.Calendar
 /** Totals shown at the top of the profile page. */
 data class ProfileTotals(val finds: Int, val kinds: Int, val today: Int)
 
-/** Finds counts every collection (duplicates too); today leaves out things marked as had before the app. */
+/** Finds counts every collection (duplicates too); today counts what was collected or added today. */
 fun profileTotals(rows: List<ItemRow>, now: Long = System.currentTimeMillis()): ProfileTotals {
     val start = Calendar.getInstance().apply {
         timeInMillis = now
@@ -51,7 +51,7 @@ fun profileTotals(rows: List<ItemRow>, now: Long = System.currentTimeMillis()): 
     return ProfileTotals(
         finds = got.sumOf { it.findCount },
         kinds = got.map { it.item.type }.distinct().size,
-        today = got.count { (it.lastAt ?: 0) >= start && it.lastBeforeApp != true },
+        today = got.count { (it.lastAt ?: 0) >= start },
     )
 }
 

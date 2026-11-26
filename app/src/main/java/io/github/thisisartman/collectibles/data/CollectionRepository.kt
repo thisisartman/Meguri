@@ -128,7 +128,7 @@ class CollectionRepository @Inject constructor(
 
     /**
      * A new item with no find yet (finding 33): "Not in Meguri? Add it" from a notebook page. Saving the page then
-     * gives it its find, had before Meguri or on the date chosen, like every other stamp on the page. No position
+     * gives it its find, today or on the date chosen, like every other stamp on the page. No position
      * from the phone: the page is photographed at home, so only a place looked up counts.
      */
     suspend fun addItem(type: ItemType, nameJa: String, nameRomaji: String?, customTypeId: String? = null, place: PlaceHit? = null): String {
@@ -176,8 +176,9 @@ class CollectionRepository @Inject constructor(
     }
 
     /**
-     * A trip that already happened (#46, #68): a find on that day for each item, no place or photo. Skips items
-     * already collected. Returns the new finds, so Undo can take exactly these back.
+     * A trip that already happened (#46, #68), or things you already have (onboarding, Collection check, My book,
+     * the deck; #194: dated now, never "had before Meguri"): a find on that day for each item, no place or photo.
+     * Skips items already collected. Returns the new finds, so Undo can take exactly these back.
      */
     suspend fun markOn(itemIds: Collection<String>, atMs: Long): List<String> {
         val made = mutableListOf<String>()
@@ -189,7 +190,7 @@ class CollectionRepository @Inject constructor(
                 made += f
             }
         }
-        log.i("Log", "Marked ${made.size} items as got on a past trip")
+        log.i("Log", "Marked ${made.size} items as collected, without a place")
         return made
     }
 
@@ -216,21 +217,6 @@ class CollectionRepository @Inject constructor(
         log.i("Log", "Removed ${findIds.size} finds")
     }
 
-    /** Marks items as "had before the app": a find with no date, place or photo. Skips items already collected. */
-    suspend fun markBeforeApp(itemIds: Collection<String>): Int {
-        var added = 0
-        db.withTransaction {
-            for (id in itemIds) {
-                if (dao.findCount(id) > 0) continue
-                dao.insertFind(Acquisition(id = newId(), itemId = id, acquiredAt = null, beforeApp = true, via = Via.BULK, createdAt = now()))
-                added++
-            }
-        }
-        log.i("Log", "Marked $added items as had before the app")
-        return added
-    }
-
-    /** Removes only "had before the app" finds of an item; real finds stay. */
     /** The photo that stands for the item in lists, on tiles and on the map (null: the latest one). */
     suspend fun setCover(itemId: String, photoId: String?) {
         dao.setCover(itemId, photoId, System.currentTimeMillis())
@@ -243,11 +229,6 @@ class CollectionRepository @Inject constructor(
         log.i("Log", (if (none) "Marked nothing here: item " else "Cleared nothing here: item ") + itemId)
     }
 
-    suspend fun unmarkBeforeApp(itemId: String): Int {
-        val removed = dao.deleteBeforeAppFinds(itemId)
-        log.i("Log", "Removed had-before-the-app from item $itemId: $removed finds")
-        return removed
-    }
 
     /**
      * The kind the next camera photo for a find gets (#54). Held in memory only: if Android stops the app while the
@@ -329,8 +310,8 @@ class CollectionRepository @Inject constructor(
 
     /**
      * A stamp from a notebook page (owner, 2026-11-09). Never the photo's time and place: the page is photographed
-     * at home long after. An item already collected only gains the photo; otherwise it is "had before Meguri" with no
-     * date, or on [acquiredAt] when the person gives one.
+     * at home long after. An item already collected only gains the photo; otherwise it is found on [acquiredAt] when
+     * the person gives a day, else today (#194: never "had before Meguri").
      */
     suspend fun addNotebookStamp(itemId: String, picture: android.net.Uri, acquiredAt: Long?): Boolean =
         addOldPhoto(itemId, picture, acquiredAt, PhotoKind.STAMP, tag = "Notebook")
@@ -344,13 +325,8 @@ class CollectionRepository @Inject constructor(
         name: String? = null, size: Long? = null, tag: String = "Import",
     ): Boolean {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
-            // A date given is a day without a time (stored at noon): BULK, like "Already went", so no "12:00" shows
-            dao.insertFind(
-                Acquisition(
-                    id = f, itemId = itemId, acquiredAt = acquiredAt, beforeApp = acquiredAt == null,
-                    via = if (acquiredAt == null) Via.MANUAL else Via.BULK, createdAt = now(),
-                ),
-            )
+            // A day without a time (a date given is stored at noon): BULK, like "Already went", so no time shows
+            dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt ?: now(), via = Via.BULK, createdAt = now()))
         }
         val ok = attachFromGallery(context, findId, picture, kind, name, size)
         log.i(tag, "Old $kind photo for item $itemId (photo copied: $ok)")
