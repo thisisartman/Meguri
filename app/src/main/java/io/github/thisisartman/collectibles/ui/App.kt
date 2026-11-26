@@ -63,7 +63,14 @@ private const val NEARBY = "nearby"
 private const val BOOK = "book"
 private const val MORE = "more"
 
-fun NavHostController.openItem(id: String) = navigate("item/$id")
+/**
+ * A thing opens the page of the place it is at, with its card open (owner, 2026-11-26: one page per place, no inner
+ * pages). The page finds the place from the thing (Places.placeOf), so this needs no rows and works before they load.
+ */
+fun NavHostController.openItem(id: String) = openPlace(id, open = id)
+/** A place (#192), by any thing at it; [open] is the thing whose card shows open. */
+fun NavHostController.openPlace(id: String, open: String? = null) =
+    navigate("place/" + android.net.Uri.encode(id) + (open?.let { "?open=" + android.net.Uri.encode(it) } ?: ""))
 fun NavHostController.openMap(section: MapSection = MapSection.ALL, kind: String? = null) =
     navigate("map/${section.name}" + (kind?.let { "?category=" + android.net.Uri.encode(it) } ?: ""))
 fun NavHostController.openLine(id: String) = navigate("line/${id.ifEmpty { "_other" }}")
@@ -235,8 +242,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     val customTypes by vm.collectionTypes.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalPhoto provides photo, LocalCustomTypes provides customTypes.associateBy { it.id }) {
         Scaffold(
-            // On an item page the snackbar would cover its Photo and Got it buttons, so it sits above them
-            snackbarHost = { SnackbarHost(snackbar, Modifier.padding(bottom = if (route?.startsWith("item/") == true) 72.dp else 0.dp)) },
+            snackbarHost = { SnackbarHost(snackbar) },
             bottomBar = {
                 // Hidden while marking owned cards: the mark button takes the bottom of the screen
                 if (topLevel && !(route == BOOK && bookMarking)) {
@@ -315,8 +321,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                             )
                         }
                     }
-                    composable("item/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
-                        Page { ItemScreen(vm, it.arguments?.getString("id").orEmpty(), onBack = { nav.popBackStack() }, onOpenItem = { id -> nav.openItem(id) }) }
+                    composable("place/{id}?open={open}", listOf(navArgument("id") { type = NavType.StringType }, navArgument("open") { type = NavType.StringType; nullable = true; defaultValue = null })) {
+                        Page { PlaceScreen(vm, it.arguments?.getString("id").orEmpty(), it.arguments?.getString("open"), onBack = { nav.popBackStack() }) }
                     }
                     composable("line/{id}", listOf(navArgument("id") { type = NavType.StringType })) {
                         val id = it.arguments?.getString("id").orEmpty().let { s -> if (s == "_other") "" else s }

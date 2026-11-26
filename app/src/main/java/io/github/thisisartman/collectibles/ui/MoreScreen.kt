@@ -663,6 +663,12 @@ fun MoreScreen(
                     }
                     Note(stringResource(R.string.look_device_colours_sub))
                 }
+                // Nearby's switch with the names and counts, in place of two icons (#192); off by default
+                SectionTitle(stringResource(R.string.look_nearby))
+                ToggleRow(
+                    stringResource(R.string.look_switch_names), stringResource(R.string.look_switch_names_sub),
+                    NearbyPrefs.namesOnSwitch(context),
+                ) { NearbyPrefs.setNamesOnSwitch(context, it) }
                 SectionTitle(stringResource(R.string.more_language))
                 Choice(listOf(stringResource(R.string.more_english), stringResource(R.string.more_japanese)), if (ja) 1 else 0) {
                     // The in-app switch needs Android 13; before that the phone's own language page sets it

@@ -29,7 +29,6 @@
     <string name="state_to_get">未取得</string>
     <string name="got_it">集める</string>
     <string name="got_it_again">もう一度集める</string>
-    <string name="photo">写真</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを集めた・%2$s</string>
     <string name="last">最新：%1$s</string>
@@ -50,7 +49,6 @@
     <string name="cancel">キャンセル</string>
 
     <string name="item_your_record">記録</string>
-    <string name="item_where">入手場所</string>
     <string name="item_handed_out_at">配布場所</string>
     <string name="item_hours">配布時間</string>
     <string name="open_until">営業中・%1$sまで</string>
@@ -75,7 +73,6 @@
     <string name="item_directions">経路・%1$s</string>
     <string name="item_directions_plain">経路</string>
     <string name="item_call">電話</string>
-    <string name="item_on_lines">%1$s</string>
     <string name="item_remove_find">削除</string>
     <string name="item_remove_find_title">この記録を削除しますか？</string>
     <string name="item_remove_find_text">%1$sの記録を削除します。ほかになければ未取得に戻ります。写真はMeguriから消えます（カメラで撮った写真はギャラリーに残ります）。</string>
@@ -706,4 +703,32 @@
     <string name="backup_include_photos">写真を含める</string>
     <string name="backup_include_photos_sub">含めるとファイルが大きくなります</string>
     <string name="backup_save">保存</string>
+    <!-- 近く：場所とコレクション（#192） -->
+    <string name="nearby_view_places">場所</string>
+    <string name="nearby_view_collectibles">コレクション</string>
+    <string name="nearby_view_count">%1$s・%2$d</string>
+    <string name="nearby_help">ヘルプ</string>
+    <string name="nearby_help_places">駅、市役所、寺社など、近くで何かを集められる場所。輪は、そこで集めたものを表します。</string>
+    <string name="nearby_help_collectibles">スタンプとカードそのもの。「スタンプ」と「カード」に分かれています。</string>
+    <string name="nearby_help_again">？をタップすると、いつでもこの説明を表示できます。</string>
+    <string name="nearby_help_got_it">OK</string>
+    <string name="nearby_group_kind">種類ごとに分ける</string>
+    <string name="place_kind_stations">駅</string>
+    <string name="place_kind_cities">市町村</string>
+    <string name="place_kind_shrines">寺社</string>
+    <string name="place_kind_roadside">道の駅</string>
+    <string name="place_kind_dams">ダム</string>
+    <string name="place_kind_other">その他</string>
+    <string name="place_kind_city">市町村</string>
+    <string name="place_kind_shrine">寺社</string>
+    <string name="place_kind_dam">ダム</string>
+    <string name="place_kind_place">場所</string>
+    <string name="place_kind_heading">%1$s・%2$d</string>
+    <string name="place_of">%2$d件中%1$d件</string>
+    <string name="place_to_get">未取得</string>
+    <string name="place_add_photo">写真を追加</string>
+    <string name="ring_a11y">%2$d件中%1$d件取得済み</string>
+    <string name="look_nearby">近く</string>
+    <string name="look_switch_names">切り替えに名前を表示</string>
+    <string name="look_switch_names_sub">2つのアイコンの代わりに、「場所」と「コレクション」を件数つきで表示します</string>
 </resources>
