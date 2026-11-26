@@ -201,7 +201,8 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             Button(
                 onClick = {
                     val ids = selected
-                    vm.markBeforeApp(ids) { n -> scope.launch { snackbar.showSnackbar(context.getString(R.string.book_marked, n)) } }
+                    // Collected today, with no place (#194: every find has a date)
+                    vm.markOn(ids, System.currentTimeMillis()) { made -> scope.launch { snackbar.showSnackbar(context.getString(R.string.book_marked, made.size)) } }
                     marking = false
                     selected = emptySet()
                 },
@@ -279,7 +280,7 @@ fun ItemListRow(
             val sub = listOfNotNull(
                 r.item.code,
                 distanceText(meters),
-                if (r.collected) (r.lastAt?.let { dateText(it) } ?: stringResource(R.string.no_date)) else null,
+                if (r.collected) r.lastAt?.let { dateText(it) } else null,
             ).joinToString(sep())
             if (sub.isNotEmpty()) Text(sub, style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
@@ -357,7 +358,7 @@ fun LineScreen(vm: MainViewModel, lineId: String, nav: NavHostController, onBack
                         textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis,
                     )
                     if (r.collected) {
-                        Text(r.lastAt?.let { dateText(it) } ?: stringResource(R.string.no_date), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                        Text(r.lastAt?.let { dateText(it) }.orEmpty(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                     } else {
                         distanceText(dist[r.item.id])?.let {
                             Text(it, style = MaterialTheme.typography.labelSmall.copy(fontFeatureSettings = "tnum"), color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)

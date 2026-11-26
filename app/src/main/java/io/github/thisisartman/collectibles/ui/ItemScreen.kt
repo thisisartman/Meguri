@@ -241,7 +241,7 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
                 }
                 items(tagFinds, key = { "tag-" + it.find.id }) { f ->
                     CollectionRow(
-                        f, ja, e.item.displayName(ja), onRemoveBeforeApp = { vm.unmarkBeforeApp(e.item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                        f, ja, e.item.displayName(ja), onRemoveFind = { vm.removeFind(f.find.id) },
                         hasCost = false, onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
                     )
                 }
@@ -262,7 +262,7 @@ private fun StationOrItem(vm: MainViewModel, itemId: String, onBack: () -> Unit,
                     // Cost only where something is paid: goshuin, and your own collections that note it (owner, 2026-11-07)
                     val custom = item.customTypeId?.let { LocalCustomTypes.current[it] }
                     CollectionRow(
-                        f, ja, name, onRemoveBeforeApp = { vm.unmarkBeforeApp(item.id) }, onRemoveFind = { vm.removeFind(f.find.id) },
+                        f, ja, name, onRemoveFind = { vm.removeFind(f.find.id) },
                         hasCost = item.type == ItemType.GOSHUIN || (item.type == ItemType.CUSTOM && custom?.hasCost == true),
                         onQuantity = { vm.setQuantity(f.find.id, it) }, onCost = { vm.setCost(f.find.id, it) },
                     )
@@ -442,11 +442,11 @@ private const val POSITION_WAIT_MS = 2 * 60 * 1000L
 
 /**
  * One time you collected the item, as a single line (owner, 2026-11-07: no "had before the app", no "record"):
- * the date, or "Date not recorded"; Map when a position was saved; a delete icon that asks first.
+ * the date; Map when a position was saved; a delete icon that asks first.
  */
 @Composable
 private fun CollectionRow(
-    f: FindWithPhotos, ja: Boolean, name: String, onRemoveBeforeApp: () -> Unit, onRemoveFind: () -> Unit,
+    f: FindWithPhotos, ja: Boolean, name: String, onRemoveFind: () -> Unit,
     hasCost: Boolean = false, onQuantity: (Int) -> Unit = {}, onCost: (Int?) -> Unit = {},
 ) {
     val a = f.find
@@ -490,12 +490,9 @@ private fun CollectionRow(
             dismissButton = { TextButton(onClick = { editing = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    // Owner, 2026-11-07: something you had before the app shows the day it was added; a dash if there is no date at all
-    val whenText = when {
-        !a.beforeApp && a.acquiredAt != null -> dateTimeText(a.acquiredAt)
-        a.createdAt > 0 -> stringResource(R.string.added_on, dateText(a.createdAt))
-        else -> stringResource(R.string.no_date)
-    }
+    // Every find has a date (#194); one marked without a place (Already went, ticked off, a notebook page) is a day,
+    // with no time
+    val whenText = (a.acquiredAt ?: a.createdAt).let { if (a.via == io.github.thisisartman.collectibles.data.Via.BULK) dateText(it) else dateTimeText(it) }
     var confirmRemove by remember { mutableStateOf(false) }
     if (confirmRemove) {
         AlertDialog(
@@ -503,7 +500,7 @@ private fun CollectionRow(
             title = { Text(stringResource(R.string.item_remove_find_title)) },
             text = { Text(stringResource(R.string.item_remove_find_text, whenText)) },
             confirmButton = {
-                TextButton(onClick = { confirmRemove = false; if (a.beforeApp) onRemoveBeforeApp() else onRemoveFind() }) {
+                TextButton(onClick = { confirmRemove = false; onRemoveFind() }) {
                     Text(stringResource(R.string.item_remove_find), color = MaterialTheme.colorScheme.error)
                 }
             },
@@ -513,10 +510,11 @@ private fun CollectionRow(
     // The position is filled in after the collection is saved; for a while it is pending, not missing
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     LaunchedEffect(a.id, a.lat) {
-        while (!a.beforeApp && a.lat == null && now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS) { delay(5_000); now = System.currentTimeMillis() }
+        while (a.via != io.github.thisisartman.collectibles.data.Via.BULK && a.lat == null && now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS) { delay(5_000); now = System.currentTimeMillis() }
     }
     val whereText = when {
-        a.beforeApp -> null
+        // Marked without a place: no position is looked for
+        a.via == io.github.thisisartman.collectibles.data.Via.BULK -> null
         a.lat != null && a.lng != null -> stringResource(R.string.item_position_saved)
         now - (a.acquiredAt ?: 0L) < POSITION_WAIT_MS -> stringResource(R.string.item_finding_position)
         else -> null

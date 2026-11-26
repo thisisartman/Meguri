@@ -56,7 +56,7 @@ class RailGraphTest {
 class TripRulesTest {
     private fun row(id: String, type: ItemType, lat: Double?, lng: Double?, collected: Boolean = false) = ItemRow(
         Item(id = id, type = type, nameJa = id, lat = lat, lng = lng, origin = Origin.CSV_IMPORT, createdAt = 0, updatedAt = 0),
-        findCount = if (collected) 1 else 0, lastAt = null, lastBeforeApp = null, photoUri = null,
+        findCount = if (collected) 1 else 0, lastAt = null, photoUri = null,
     )
 
     // Two stations about 11 km apart on one line

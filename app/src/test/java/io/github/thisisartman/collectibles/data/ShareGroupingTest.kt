@@ -16,7 +16,7 @@ class ShareGroupingTest {
     private fun photo(name: String, at: Pair<Double, Double>?) = SharedPhoto(name, at?.first, at?.second)
     private fun item(id: String, type: ItemType, at: Pair<Double, Double>, finds: Int = 0) = ItemRow(
         Item(id = id, type = type, nameJa = id, origin = Origin.CSV_IMPORT, lat = at.first, lng = at.second, createdAt = 1, updatedAt = 1),
-        findCount = finds, lastAt = null, lastBeforeApp = null, photoUri = null,
+        findCount = finds, lastAt = null, photoUri = null,
     )
 
     @Test fun photosAtOnePlaceGroupAndOthersSplit() {

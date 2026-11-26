@@ -40,8 +40,8 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Timeline (M6): every find with a day, newest day first, each day with its finds and their times. Finds had before
- * the app have no day and are not here. A day opens its trip report.
+ * Timeline (M6): every find, newest day first, each day with its finds and their times (every find has a day
+ * since #194). A day opens its trip report.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -12,7 +12,7 @@ import org.junit.Test
 class StationPairTest {
     private fun row(id: String, type: ItemType, lat: Double, lng: Double) = ItemRow(
         Item(id = id, type = type, nameJa = id, origin = Origin.CSV_IMPORT, lat = lat, lng = lng, createdAt = 1, updatedAt = 1),
-        findCount = 0, lastAt = null, lastBeforeApp = null, photoUri = null,
+        findCount = 0, lastAt = null, photoUri = null,
     )
 
     private val rows = listOf(

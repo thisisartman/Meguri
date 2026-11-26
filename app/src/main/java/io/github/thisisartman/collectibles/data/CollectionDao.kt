@@ -12,8 +12,6 @@ private const val ITEM_ROW = """
     SELECT i.*,
       (SELECT COUNT(*) FROM acquisition a WHERE a.item_id = i.id) AS find_count,
       (SELECT MAX(a.acquired_at) FROM acquisition a WHERE a.item_id = i.id) AS last_at,
-      (SELECT a.before_app FROM acquisition a WHERE a.item_id = i.id
-         ORDER BY COALESCE(a.acquired_at, 0) DESC, a.created_at DESC LIMIT 1) AS last_before_app,
       COALESCE(
         (SELECT c.content_uri FROM photo c WHERE c.id = i.cover_photo_id AND c.missing = 0),
         (SELECT p.content_uri FROM photo p JOIN acquisition a ON p.acquisition_id = a.id
@@ -101,8 +99,6 @@ interface CollectionDao {
     @Query("DELETE FROM item WHERE id = :id")
     suspend fun deleteItem(id: String)
 
-    @Query("DELETE FROM acquisition WHERE item_id = :itemId AND before_app = 1")
-    suspend fun deleteBeforeAppFinds(itemId: String): Int
 
     /** Finds dated in [from, to), oldest first, for the trip report (#61). Finds with no date are left out. */
     @Transaction

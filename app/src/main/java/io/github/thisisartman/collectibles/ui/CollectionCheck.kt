@@ -220,17 +220,12 @@ fun CollectionCheckScreen(
             enabled = ticked.isNotEmpty(),
             onClick = {
                 val ids = ticked
-                if (tripDay) vm.markOn(ids, dayMs) { made ->
+                // On the trip's day, or today: every find has a date (#194)
+                vm.markOn(ids, if (tripDay) dayMs else System.currentTimeMillis()) { made ->
                     ticked = emptySet()
                     scope.launch {
                         val r = snackbar.showSnackbar(addedText.format(made.size), actionLabel = undoText, duration = SnackbarDuration.Long)
                         if (r == SnackbarResult.ActionPerformed) vm.removeFinds(made)
-                    }
-                } else vm.markBeforeApp(ids) { added ->
-                    ticked = emptySet()
-                    scope.launch {
-                        val r = snackbar.showSnackbar(addedText.format(added), actionLabel = undoText, duration = SnackbarDuration.Long)
-                        if (r == SnackbarResult.ActionPerformed) ids.forEach { vm.unmarkBeforeApp(it) }
                     }
                 }
             },
