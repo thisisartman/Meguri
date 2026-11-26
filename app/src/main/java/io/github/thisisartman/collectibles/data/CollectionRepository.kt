@@ -318,7 +318,7 @@ class CollectionRepository @Inject constructor(
 
     /**
      * A photo of something collected earlier: from a notebook page, or from a photo file (#188). An item already
-     * collected only gains the photo; otherwise it is "had before Meguri", or found on [acquiredAt] (a day at noon).
+     * collected only gains the photo; otherwise it is found on [acquiredAt] (a day at noon), or now (#194).
      */
     suspend fun addOldPhoto(
         itemId: String, picture: android.net.Uri, acquiredAt: Long?, kind: String,
