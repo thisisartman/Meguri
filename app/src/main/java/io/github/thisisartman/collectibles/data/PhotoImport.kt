@@ -80,11 +80,17 @@ class PhotoImport @Inject constructor(
             // Something not collected yet is found on the row's day, or now, as the file is added (owner, 2026-11-26:
             // "just assign it the date it was added"; never "had before Meguri")
             val now = System.currentTimeMillis()
-            var added = 0; var newItems = 0; var already = 0; var failed = 0
+            var added = 0; var newItems = 0; var already = 0; var failed = 0; var covers = 0
             for (row in info.rows) {
                 val (itemId, _) = when (val t = row.target) {
                     is PhotoBundle.Target.Catalogue -> byKey[t.key] ?: continue // region not on this phone: in the plan's "missing"
                     is PhotoBundle.Target.Own -> own.getOrPut(t.type to t.name) { newItems++; repo.addItem(t.type, t.name, null) } to t.type
+                }
+                // The row's cover position goes only onto an item with none yet; a set one is never changed by a later
+                // import or scan (owner rule), and the update itself checks again that it is still empty
+                if (row.cover != null) {
+                    val at = PhotoBundle.coverToSet(row, dao.item(itemId)?.coverLat)
+                    if (at != null && dao.setCoverIfEmpty(itemId, at.lat, at.lng, now) > 0) covers++
                 }
                 val file = File(info.dir, PhotoBundle.PHOTOS + row.photo)
                 // The name and size are the file's own, cut or not, so adding the same file again still finds it
@@ -98,7 +104,7 @@ class PhotoImport @Inject constructor(
                 )
                 if (ok) added++ else failed++
             }
-            log.i("PhotoFile", "Added $added photos, $newItems new items, $already already there, $failed failed; safety copy $safety")
+            log.i("PhotoFile", "Added $added photos, $newItems new items, $already already there, $failed failed, $covers cover positions given; safety copy $safety")
             PhotoFileResult(added, newItems, already, failed, safety)
         } finally {
             discard(info)
