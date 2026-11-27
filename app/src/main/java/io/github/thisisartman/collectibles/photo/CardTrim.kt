@@ -142,13 +142,16 @@ object CardTrim {
      * Whether [page] shows a manhole card at all (a large patch of frame blue), even when it can't be trimmed:
      * a card whose code wasn't read must not be taken for a manhole cover (owner's batch, 2026-11-09: 3 were).
      */
-    fun looksLikeCard(page: Bitmap): Boolean {
+    fun looksLikeCard(page: Bitmap): Boolean = detect(page) != Result.NO_FRAME
+
+    /** What [find] makes of [page] looked at small: OK for a whole card, NO_FRAME for no card frame at all. */
+    fun detect(page: Bitmap): Result {
         val scale = min(1f, WORK.toFloat() / max(page.width, page.height))
         val sw = max(1, (page.width * scale).roundToInt()); val sh = max(1, (page.height * scale).roundToInt())
         val small = shrink(page, sw, sh)
         val px = IntArray(sw * sh).also { small.getPixels(it, 0, sw, 0, 0, sw, sh) }
         if (small !== page) small.recycle()
-        return find(px, sw, sh).second != Result.NO_FRAME
+        return find(px, sw, sh).second
     }
 
     /** [page] trimmed to the top card and straightened, or null (with why) to keep the scanner's own crop. */

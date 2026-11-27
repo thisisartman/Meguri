@@ -86,6 +86,28 @@ class PhotoBundleTest {
         assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.PLACE))
     }
 
+    @Test fun readsCardAsAKind() {
+        val p = PhotoBundle.parse(
+            header +
+                "a.jpg,Cards,card,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,,,\n" +
+                "b.jpg,Cards,Card,extra,,,,,,,\n" +
+                "c.jpg,Cards,manhole,extra,,,,,,,cover\n" +
+                "d.jpg,Dams,CARD,own,DAM_CARD,,奥只見ダム,,2026-11-01,,\n",
+        )
+        assertTrue(p.bad.toString(), p.bad.isEmpty())
+        assertEquals(listOf(PhotoBundle.CARD, PhotoBundle.CARD, PhotoKind.MANHOLE, PhotoBundle.CARD), p.rows.map { it.kind })
+        assertEquals(PhotoBundle.Target.Own(ItemType.DAM_CARD, "奥只見ダム"), p.rows[3].target)
+    }
+
+    @Test fun aCardRowIsFiledInTheCardSlotNeverAsCard() {
+        // photo.role must never be the literal "card": the item page would show it as Other
+        val sort = io.github.thisisartman.collectibles.photo.PhotoSort
+        val none = io.github.thisisartman.collectibles.photo.PhotoSort.Facts()
+        assertEquals(PhotoKind.STAMP, sort.decide(ItemType.MANHOLE_CARD, PhotoBundle.CARD, none).kind)
+        assertEquals(PhotoKind.STAMP, sort.decide(ItemType.DAM_CARD, PhotoBundle.CARD, none).kind)
+        for (t in ItemType.entries) assertTrue(t.name, sort.decide(t, PhotoBundle.CARD, none).kind != PhotoBundle.CARD)
+    }
+
     @Test fun aDayIsKeptAtNoon() {
         val tokyo = ZoneId.of("Asia/Tokyo")
         val ms = PhotoBundle.dayMs(LocalDate.of(2025, 12, 30), tokyo)

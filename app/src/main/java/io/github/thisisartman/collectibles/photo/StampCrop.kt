@@ -16,11 +16,18 @@ object StampCrop {
     /** Writes [file]'s stamp to [out] as a JPEG; false when there is none to cut, and then nothing is written. */
     fun crop(file: File, out: File): Boolean = runCatching {
         val full = decode(file, 3000) ?: return false
+        val cleaned = cut(full) ?: return false
+        out.outputStream().use { cleaned.compress(Bitmap.CompressFormat.JPEG, 95, it) }
+        true
+    }.getOrDefault(false)
+
+    /** [full]'s stamp, cut and cleaned, or null when it isn't a page with a stamp on it. */
+    fun cut(full: Bitmap): Bitmap? = runCatching {
         val s = 480f / max(full.width, full.height)
         val small = if (s < 1f) Bitmap.createScaledBitmap(full, max(1, (full.width * s).toInt()), max(1, (full.height * s).toInt()), true) else full
         val px = IntArray(small.width * small.height).also { small.getPixels(it, 0, small.width, 0, 0, small.width, small.height) }
-        if (!StampFind.isPage(px)) return false
-        val b = StampFind.find(px, small.width, small.height).firstOrNull() ?: return false
+        if (!StampFind.isPage(px)) return null
+        val b = StampFind.find(px, small.width, small.height).firstOrNull() ?: return null
         val x = (b.left * full.width).toInt(); val y = (b.top * full.height).toInt()
         val w = ((b.right - b.left) * full.width).toInt().coerceAtLeast(8); val h = ((b.bottom - b.top) * full.height).toInt().coerceAtLeast(8)
         val cut = Bitmap.createBitmap(full, x, y, min(w, full.width - x), min(h, full.height - y))
@@ -28,10 +35,8 @@ object StampCrop {
         val c = min(1f, 1200f / max(cut.width, cut.height))
         val stamp = if (c < 1f) Bitmap.createScaledBitmap(cut, (cut.width * c).toInt(), (cut.height * c).toInt(), true) else cut
         val sp = IntArray(stamp.width * stamp.height).also { stamp.getPixels(it, 0, stamp.width, 0, 0, stamp.width, stamp.height) }
-        val cleaned = Bitmap.createBitmap(StampFind.clean(sp, stamp.width, stamp.height), stamp.width, stamp.height, Bitmap.Config.ARGB_8888)
-        out.outputStream().use { cleaned.compress(Bitmap.CompressFormat.JPEG, 95, it) }
-        true
-    }.getOrDefault(false)
+        Bitmap.createBitmap(StampFind.clean(sp, stamp.width, stamp.height), stamp.width, stamp.height, Bitmap.Config.ARGB_8888)
+    }.getOrNull()
 
     private fun decode(file: File, longSide: Int): Bitmap? = runCatching {
         ImageDecoder.decodeBitmap(ImageDecoder.createSource(file)) { d, info, _ ->

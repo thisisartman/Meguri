@@ -8,7 +8,8 @@ import java.time.LocalDate
  * a find on the date given, or else dated when the file is added (owner, 2026-11-26: "just assign it the date it
  * was added"). Stamp photos are cut to the stamp ([cropsStamp]). Pure, for tests; [PhotoImport] does the phone's side.
  *
- * The list's columns: `photo` (file name under `photos/`), `kind` (a [PhotoKind]), `match` (`catalogue`: an item
+ * The list's columns: `photo` (file name under `photos/`), `kind` (a [PhotoKind], or [CARD]; each photo is then
+ * sorted by what it shows, so a card filed as `manhole` still goes to the Card slot: photo/PhotoSort.kt), `match` (`catalogue`: an item
  * every phone has, found by `key`; `own`: your own item, found again by `type` and `name`; `extra`: one more photo
  * for the row above; `skip`: left out), `type` (an [ItemType]), `key`, `name`, `date` (yyyy-mm-dd, or empty).
  */
@@ -27,7 +28,14 @@ object PhotoBundle {
     /** The list, read and checked. Bad lines are skipped and counted, never guessed. */
     data class Parsed(val rows: List<Row>, val skipped: Int, val bad: List<String>)
 
-    private val kinds = setOf(PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.MANHOLE, PhotoKind.PLACE, PhotoKind.GOSHUIN, PhotoKind.PROOF, PhotoKind.OTHER)
+    /**
+     * A photo of the card itself, on a manhole or dam card (owner, 2026-11-27): it goes to the Card slot
+     * ([PhotoKind.STAMP]); `manhole` is the card's cover. Kept as written here and filed by
+     * [io.github.thisisartman.collectibles.photo.PhotoSort] when the photo is added.
+     */
+    const val CARD = "card"
+
+    private val kinds = setOf(CARD, PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.MANHOLE, PhotoKind.PLACE, PhotoKind.GOSHUIN, PhotoKind.PROOF, PhotoKind.OTHER)
 
     fun parse(text: String): Parsed {
         val rows = mutableListOf<Row>()
