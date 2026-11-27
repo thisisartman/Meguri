@@ -99,6 +99,15 @@ class PhotoBundleTest {
         assertEquals(PhotoBundle.Target.Own(ItemType.DAM_CARD, "奥只見ダム"), p.rows[3].target)
     }
 
+    @Test fun aRowWithNoKindIsKeptAsOtherToBeSorted() {
+        val p = PhotoBundle.parse(header + "Screenshot_1.png,Tags,,own,EKITAG,,弥彦駅,,,,\n")
+        assertTrue(p.bad.toString(), p.bad.isEmpty())
+        assertEquals(PhotoKind.OTHER, p.rows.single().kind)
+        // Sorted when added: a screenshot of a station is its Ekitag
+        val shot = io.github.thisisartman.collectibles.photo.PhotoSort.Facts(screenshot = true)
+        assertEquals(PhotoKind.EKITAG, io.github.thisisartman.collectibles.photo.PhotoSort.decide(ItemType.EKITAG, p.rows.single().kind, shot).kind)
+    }
+
     @Test fun aCardRowIsFiledInTheCardSlotNeverAsCard() {
         // photo.role must never be the literal "card": the item page would show it as Other
         val sort = io.github.thisisartman.collectibles.photo.PhotoSort

@@ -50,7 +50,8 @@ object PhotoBundle {
                 "skip" -> { skipped++; continue }
                 "catalogue", "own", "extra" -> {
                     if (photo.isEmpty() || photo.contains("..") || photo.contains('/') || photo.contains('\\')) { bad += "$line: no usable photo name"; continue }
-                    val kind = v("kind").lowercase().takeIf { it in kinds } ?: run { bad += "$line: unknown kind '${v("kind")}'"; continue }
+                    // No kind given: sorted by what the photo shows when added (a screenshot of a station is its Ekitag)
+                    val kind = v("kind").lowercase().ifEmpty { PhotoKind.OTHER }.takeIf { it in kinds } ?: run { bad += "$line: unknown kind '${v("kind")}'"; continue }
                     val date = v("date").takeIf { it.isNotEmpty() }?.let { d ->
                         runCatching { LocalDate.parse(d) }.getOrNull() ?: run { bad += "$line: date '$d' is not yyyy-mm-dd"; continue }
                     }
