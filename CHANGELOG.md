@@ -15,6 +15,7 @@ Merged into `testing` and heading toward 0.7.1.
 - Add photo and Collect now stay pinned at the bottom of a place page. Your thumb knows exactly where to go, even mid-sprint to catch the train.
 - Tile size now lives in the sort menu, and grouping is an on/off switch there too. Everything for tidying your view sits in one spot.
 - Screenshot a station's Ekitag details page and Meguri keeps just the stamp now.
+- The card has these weird numbers written on it. Meguri couldn't decode those ancient runes. After much RnD, Claude & I finally cracked the code. Turns out, they were just coordinates to the manhole cover. Now that we know, you can finally visit the actual cover. Go wild. Seek out your manhole covers! (What are we doing with our lives, guys?)
 
 ### Everything in this release
 - Added `Places` and `Collectibles` to Nearby. Places gives each station, city office or shrine one tile with a ring that fills as you collect what's there, and a help bubble explains both views (#192)
@@ -30,9 +31,9 @@ Merged into `testing` and heading toward 0.7.1.
 
 ## [0.7.0] - 2026-11-25
 
-Pack a bag, there are four new prefectures to explore. Ibaraki, Kyoto, Osaka and Aichi are ready to download, and Ekitags can now ping you at the stations you get off at.
+Four new prefectures just landed. Ibaraki, Kyoto, Osaka and Aichi are ready to download, so your weekends now belong to Meguri. Ekitags can ping you at the stations you get off at too.
 
-Starting fresh also stops handing you half a region. The first one arrives whole, and if a piece ever goes missing, Regions tells you and fetches the rest. Switch on the update check and Meguri will even tell you when a newer version is out. Your weekends are officially booked.
+Remember the first region showing up half built, like flat-pack furniture with the screws missing? After much RnD, it now arrives whole, and if a piece ever wanders off, Regions tells you and fetches it. There's even an update check that pokes you when a new version drops. Go forth and collect. (Your wallet has been notified.)
 
 ### Highlights
 - Ibaraki, Kyoto, Osaka and Aichi are new regions to download. Your weekend plans just got a lot more expensive. They work in 0.6.0 too. So, you can waste money while using a dated release too.
@@ -71,9 +72,9 @@ Starting fresh also stops handing you half a region. The first one arrives whole
 
 ## [0.6.0] - 2026-11-20
 
-My weekly backup sat on the same phone it was meant to protect. One puddle and both would be gone.
+The weekly backup lived on the same phone it was meant to protect. One puddle, one banana peel, and it would all be gone.
 
-So the weekly backup now asks where it should go. Pick a folder, Google Drive or another cloud app, or your own server, and bring it back from your server when you need it. This is also the first version anyone can try, so if a stamp has moved or a shrine stopped doing goshuin, the ⋮ menu on its page lets you tell me. And the keyboard no longer gets to eat the Save button.
+So the backup learned to travel. Send it to a folder, Google Drive, another cloud app or your own server, and bring it home from the server when disaster strikes. This is also the first version anyone can try, so if a stamp moved or a shrine quit the goshuin business, tell us from the ⋮ menu. And the keyboard is banned from eating the Save button. (It was getting fat.)
 
 ### Highlights
 - Backups sitting on the same phone that falls in the puddle drove me nuts. Now the weekly backup asks where to go, whether that's a folder, Google Drive or another cloud app, or your own server.
@@ -95,9 +96,9 @@ So the weekly backup now asks where it should go. Pick a folder, Google Drive or
 
 ## [0.5.0] - 2026-11-15
 
-A 134 MB app for collecting stamps was embarrassing. Everyone got every map, whether they collected in Tokyo or had never left Niigata.
+Meguri weighed 134 MB, which is a lot for an app about stamps. Everyone got every map, even people who had never left Niigata.
 
-Now each prefecture is its own download, offline map optional, and Meguri itself is 28 MB. Items also say whether they are open right now, in Japan time with holidays counted, so you stop reaching shrines ten minutes after they close. Your phone storage and your feet can both relax.
+After a strict diet, Meguri is 28 MB and each prefecture is its own download. Things now tell you whether they're open, in Japan time with holidays counted, so you can stop sprinting to shrines that closed ten minutes ago. Your storage can breathe again. (Your legs too.)
 
 ### Highlights
 - It bugged me that everyone got every map whether they wanted it or not. Now each prefecture is its own download, offline map optional, and "Remove" keeps your finds, photos and edits.
@@ -145,9 +146,9 @@ Now each prefecture is its own download, offline map optional, and Meguri itself
 
 ## [0.4.0] - 2026-11-09
 
-I had years of station stamps in paper notebooks and zero patience to type them in one by one. Every page sat on the shelf, judging me.
+I had months of station stamps sitting in paper notebooks, and typing them in one by one was a hard no.
 
-Now you scan a notebook page and Meguri boxes every stamp, cleans it up and works out the station, asking only when it isn't sure. Ticking off what you already have is a card deck you swipe, and the + button opens a small card with Scan, Search and Add. The notebooks can go back on the shelf, finally at peace.
+So Meguri learned to read. Scan a notebook page and it boxes every stamp, cleans it up and works out the station, asking only when it's stumped. Ticking off what you already have became a card deck you swipe, and the + button opens a small card with Scan, Search and Add. The notebooks can finally retire. (They earned it.)
 
 ### Highlights
 - Typing in every stamp from my old notebooks was killing me. Now you scan a page and Meguri boxes each stamp, cleans it up and finds the station, or asks when unsure.
@@ -201,9 +202,9 @@ Now you scan a notebook page and Meguri boxes every stamp, cleans it up and work
 
 ## [0.3.0] - 2026-11-08
 
-Planning a collecting day took three apps, a train timetable and a lot of squinting. Then I typed every card code in by hand.
+Planning one collecting day took three apps, a train timetable and an alarming amount of squinting. Then came typing every card code by hand.
 
-Now Nearby is a map, Trip finds every station on your train and what's within 2 km of it, and the scanner reads a card's printed code for you. My book became one page with your totals and a ring for each category. Two of those three apps can leave the home screen.
+Now Nearby is a map, Trip finds every station on your route and everything within 2 km of it, and the scanner reads a card's printed code so your thumbs don't have to. My book became one page with your totals and a ring for each category. Go ahead and delete two of those three apps. (We won't tell.)
 
 ### Highlights
 - On the map, you can now tap on the items and go to their pages to add them easily.
@@ -271,9 +272,9 @@ Now Nearby is a map, Trip finds every station on your train and what's within 2 
 
 ## [0.2.0] - 2026-11-06
 
-I once walked right past a manhole card office with my phone in my pocket, and only found out from the map afterwards.
+Picture strolling right past a manhole card office with your phone in your pocket, and only finding out from the map that evening. Devastating, right?
 
-Now Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when something you still need is close, even while the app is closed, with Got it and Photo right on the notification. It stays quiet at night and alerts you once a visit. You won't walk past treasure again.
+So Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when something you still need is close, even with the app closed, with Got it and Photo right on the notification. It keeps quiet at night and pings once per visit. You'll never walk past treasure again. (Probably.)
 
 ### Highlights
 - Royalty got better by enabling Trip mode to receive alerts whenever there’s anything nearby. Because we cool like that.
@@ -307,7 +308,7 @@ Now Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when 
 
 Collecting manhole cards and station stamps meant kanji-heavy apps, a hundred websites and a notebook full of my own scribbles. Logging a find took longer than finding it.
 
-So I made Meguri. Tap Got it and the time and place are saved, Nearby shows the closest things you still need, and My book keeps it all by prefecture and by railway line. It works with no internet, in English or Japanese.
+So I built Meguri. Tap Got it and the time and place are saved, Nearby shows the closest things you still need, and My book sorts it all by prefecture and by railway line. It works offline, in English or Japanese. And so it begins. (What have I done.)
 
 ### Highlights
 - I collected a thing but the process of adding it was tedious and time-consuming. So, now, I can just mark it as collected to make sure it doesn’t cause me to lose aura points.
