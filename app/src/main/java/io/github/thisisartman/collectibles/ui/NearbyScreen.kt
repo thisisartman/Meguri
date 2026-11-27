@@ -386,7 +386,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                             if (placesShown) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.nearby_group_kind)) },
+                                    text = { Text(stringResource(R.string.nearby_group_type)) },
                                     onClick = { NearbyPrefs.setGroupByKind(ctx, !grouped); sortOpen = false },
                                     leadingIcon = { Icon(Icons.Outlined.Category, contentDescription = null) },
                                     trailingIcon = { androidx.compose.material3.Switch(checked = grouped, onCheckedChange = null) },

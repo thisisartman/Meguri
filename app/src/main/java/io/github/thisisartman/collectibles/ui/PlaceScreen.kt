@@ -139,6 +139,7 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
                 setKind = vm::setPhotoKind,
                 remove = vm::removePhoto,
                 setCover = { id -> vm.setCover(s.main.item.id, id) },
+                edit = vm::editPhoto,
             )
         }
         fun sectionOf(thingId: String?) = sections.firstOrNull { it.main.item.id == thingId || it.ekitag?.item?.id == thingId }
@@ -236,9 +237,10 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
 }
 
 /**
- * The place page's bottom bar, the old item page's: Add photo (outlined, opens the kinds for the thing) and Collect,
- * or Collect again once collected (filled until then). A flow row: at large text sizes the buttons take a row each
- * instead of wrapping their labels (#165). It sits under the list, so the list's end is never hidden behind it.
+ * The place page's bottom bar, the old item page's: Add photo (outlined, opens the kinds for the thing) and Collect
+ * (filled) while the thing is not collected; once collected, Add photo alone, full width (#211). A flow row: at large
+ * text sizes the buttons take a row each instead of wrapping their labels (#165). It sits under the list, so the
+ * list's end is never hidden behind it.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -263,20 +265,21 @@ private fun PlaceActions(
             // Anchored here, so the kinds open over the button
             if (kindMenu) kindMenuContent()
         }
-        // One verb everywhere (#143): Collect, then Collect again; an Ekitag is named with its kind
-        val label = stringResource(if (t.collected) R.string.got_it_again else R.string.got_it)
-        val collect = {
-            confirm()
-            onCollect()
-            vm.gotIt(t, if (t.item.type == ItemType.EKITAG) "$name · $ekitagLabel" else name)
+        // Once collected, Add photo stands alone, full width (#211). An Ekitag is named with its kind
+        if (!t.collected) {
+            Button(
+                onClick = {
+                    confirm()
+                    onCollect()
+                    vm.gotIt(t, if (t.item.type == ItemType.EKITAG) "$name · $ekitagLabel" else name)
+                },
+                modifier = Modifier.weight(1f).heightIn(min = 48.dp),
+            ) {
+                Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(Modifier.width(6.dp))
+                Text(stringResource(R.string.got_it), maxLines = 1, softWrap = false)
+            }
         }
-        val content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit = {
-            Icon(painterResource(R.drawable.ic_collect), contentDescription = null, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(label, maxLines = 1, softWrap = false)
-        }
-        if (t.collected) InkOutlinedButton(onClick = collect, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = content)
-        else Button(onClick = collect, modifier = Modifier.weight(1f).heightIn(min = 48.dp), content = content)
     }
 }
 

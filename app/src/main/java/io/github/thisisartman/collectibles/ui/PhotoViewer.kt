@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Crop
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.Icon
@@ -93,9 +94,12 @@ fun LargePhoto(uri: String, modifier: Modifier = Modifier, onFullscreen: () -> U
     }
 }
 
-/** The photo on black, the whole screen: pinch to zoom, drag to look around, double-tap to zoom in or out. */
+/**
+ * The photo on black, the whole screen: pinch to zoom, drag to look around, double-tap to zoom in or out. With
+ * [onEdit], a crop icon beside Close opens the edit screen (#208).
+ */
 @Composable
-fun FullscreenPhoto(uri: String, onClose: () -> Unit) {
+fun FullscreenPhoto(uri: String, onClose: () -> Unit, onEdit: (() -> Unit)? = null) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false)) {
         // The stored copy whole, so zooming into card text stays sharp
         val (bmp, done) = rememberPicture(uri, PhotoStore.LONG_SIDE)
@@ -119,11 +123,15 @@ fun FullscreenPhoto(uri: String, onClose: () -> Unit) {
                 done -> Icon(painterResource(R.drawable.ic_image), contentDescription = null, tint = Color.Gray)
                 else -> CircularProgressIndicator(color = Color.White)
             }
-            IconButton(
-                onClick = onClose,
-                modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp).size(48.dp),
-                colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.5f), contentColor = Color.White),
-            ) { Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.photo_view_close)) }
+            androidx.compose.foundation.layout.Row(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
+                val colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.5f), contentColor = Color.White)
+                if (onEdit != null && bmp != null) IconButton(onClick = onEdit, modifier = Modifier.size(48.dp), colors = colors) {
+                    Icon(Icons.Outlined.Crop, contentDescription = stringResource(R.string.photo_edit))
+                }
+                IconButton(onClick = onClose, modifier = Modifier.size(48.dp), colors = colors) {
+                    Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.photo_view_close))
+                }
+            }
         }
     }
 }

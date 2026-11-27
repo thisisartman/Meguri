@@ -268,6 +268,10 @@ interface CollectionDao {
     @Query("UPDATE photo SET content_uri = :uri, missing = 0 WHERE id = :id")
     suspend fun setPhotoUri(id: String, uri: String)
 
+    /** The original a cut photo was cut from (#208); null when it isn't kept. */
+    @Query("UPDATE photo SET original_uri = :uri WHERE id = :id")
+    suspend fun setPhotoOriginal(id: String, uri: String?)
+
     @Query("UPDATE photo SET missing = :missing WHERE id = :id")
     suspend fun setPhotoMissing(id: String, missing: Boolean)
 

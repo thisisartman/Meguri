@@ -3,6 +3,7 @@ package io.github.thisisartman.collectibles.data
 import androidx.room.withTransaction
 import io.github.thisisartman.collectibles.debug.FileLog
 import io.github.thisisartman.collectibles.location.LocationSource
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -18,6 +19,7 @@ class CollectionRepository @Inject constructor(
     private val db: CollectiblesDb,
     private val location: LocationSource,
     private val log: FileLog,
+    private val backup: CatalogAndBackup,
 ) {
     private val dao = db.dao()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -208,7 +210,7 @@ class CollectionRepository @Inject constructor(
             findIds.forEach { dao.deleteFind(it) }
             if (alsoItem) dao.deleteItem(itemId)
         }
-        photos.forEach { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri) }
+        photos.forEach { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri, it.originalUri) }
         log.i("Log", if (alsoItem) "Removed item $itemId with ${findIds.size} finds and ${photos.size} photos" else "Took $itemId out of the collection: ${findIds.size} finds, ${photos.size} photos")
     }
 
@@ -246,7 +248,7 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun attachFromGallery(
         context: android.content.Context, findId: String, picked: android.net.Uri, kind: String,
-        name: String? = null, size: Long? = null, cutStamps: Boolean = false,
+        name: String? = null, size: Long? = null, cutStamps: Boolean = false, original: android.net.Uri? = null,
     ): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             // A file from a photo file (#188) has no picker details: its own name and size are kept, to spot it again
@@ -265,15 +267,19 @@ class CollectionRepository @Inject constructor(
             val sorted = io.github.thisisartman.collectibles.photo.PhotoStore.importSorted(context, picked, id, decide = { bmp ->
                 sort(item?.type, kind, bmp, info.displayName, folder, camera, cutStamps)
             }, ekitagTitle = title)
-            val uri = sorted?.first
+            val uri = sorted?.uri
             if (uri == null) {
+                sorted?.originalUri?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it) }
                 log.w("Photo", "Could not copy a gallery photo for find $findId")
                 return@withContext false
             }
-            val d = sorted.second
+            val d = sorted.decision
             if (d.kind != kind) log.i("Photo", "Filed as $kind, sorted to ${d.kind} (${d.crop})") else log.d("Photo", "Kind $kind, cut ${d.crop}")
             nextKind[findId] = d.kind
-            insertPhoto(id, findId, info.copy(uri = uri))
+            // A scanned card comes in already trimmed: its untrimmed page is the original (#208), in place of any the import kept
+            val kept = original?.let { io.github.thisisartman.collectibles.photo.PhotoStore.importOriginal(context, it, id) } ?: sorted.originalUri
+            if (original != null) log.d("Photo", "Scan original kept: ${kept != null}")
+            insertPhoto(id, findId, info.copy(uri = uri), kept)
             true
         }
 
@@ -327,7 +333,10 @@ class CollectionRepository @Inject constructor(
      * was taken and placed where they were taken. Each gets Meguri's own copy, filed as Other to sort later. Returns
      * how many were copied.
      */
-    suspend fun addShared(itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?, kind: String = PhotoKind.OTHER): Int {
+    suspend fun addShared(
+        itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?, kind: String = PhotoKind.OTHER,
+        originals: Map<String, android.net.Uri> = emptyMap(),
+    ): Int {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             dao.insertFind(
                 Acquisition(
@@ -337,7 +346,7 @@ class CollectionRepository @Inject constructor(
             )
         }
         var copied = 0
-        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), kind)) copied++
+        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), kind, original = originals[p.uri])) copied++
         log.i("Share", "Added $copied of ${photos.size} shared photos to item $itemId")
         return copied
     }
@@ -393,8 +402,41 @@ class CollectionRepository @Inject constructor(
     suspend fun removePhoto(photoId: String) {
         val p = dao.allPhotos().firstOrNull { it.id == photoId }
         db.withTransaction { dao.deletePhoto(photoId); dao.clearMissingCovers() }
-        p?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri) }
+        p?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri, it.originalUri) }
         log.i("Photo", "Removed photo $photoId from its find, with Meguri's copy (a camera original stays in the gallery)")
+    }
+
+    /**
+     * Saves an edit of a photo (#208): a new copy cut from its kept original, under a new name so nothing shows the
+     * old picture; the photo keeps its id, kind and display-picture choice, and its original stays. A photo with no
+     * original first gets the photo as it is as its original ([io.github.thisisartman.collectibles.photo.EditOriginal]).
+     * False if the picture couldn't be read or written; then the photo shows as before.
+     */
+    suspend fun editPhoto(photoId: String, edit: io.github.thisisartman.collectibles.photo.PhotoEdit): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val store = io.github.thisisartman.collectibles.photo.PhotoStore
+        // The backup lock, so a backup never zips a photo halfway through being replaced
+        backup.lock.withLock {
+            val p = dao.allPhotos().firstOrNull { it.id == photoId } ?: return@withLock false
+            val plan = io.github.thisisartman.collectibles.photo.EditOriginal.plan(
+                p.contentUri, p.originalUri, p.originalUri?.let { store.exists(context, it) } == true, store.isApp(p.contentUri),
+            )
+            val source = plan.source
+            if (!store.exists(context, source)) {
+                log.w("Photo", "Edit of $photoId: its picture isn't in the app")
+                return@withLock false
+            }
+            // A photo with no original keeps itself, as it was before this edit, as its original (owner, 2026-11-28),
+            // so the first crop is never for good
+            val original = plan.storeOriginal?.also { dao.setPhotoOriginal(photoId, it) } ?: p.originalUri
+            val uri = store.saveEdit(context, source, photoId, edit) ?: run {
+                log.w("Photo", "Edit of $photoId could not be written")
+                return@withLock false
+            }
+            dao.setPhotoUri(photoId, uri)
+            if (p.contentUri != uri && p.contentUri != original) store.delete(context, p.contentUri)
+            log.i("Photo", "Edited $photoId: ${edit.quarterTurns} turns, ${edit.degrees} degrees, circle ${edit.circle}, original stored now ${plan.storeOriginal != null}")
+            true
+        }
     }
 
     /** A camera photo: Meguri keeps its own copy (#79); if the copy fails, the photo points at the gallery and a later start copies it. */
@@ -408,22 +450,23 @@ class CollectionRepository @Inject constructor(
         val sorted = io.github.thisisartman.collectibles.photo.PhotoStore.importSorted(context, source, id, decide = { bmp ->
             sort(type, asked, bmp, photo.displayName, photo.relativePath, camera, cutStamps = false)
         })
-        val uri = sorted?.first
+        val uri = sorted?.uri
+        if (uri == null) sorted?.originalUri?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it) }
         // A photo that couldn't be read keeps the kind asked for; the copy is tried again later
-        sorted?.second?.let { d ->
+        sorted?.decision?.let { d ->
             if (d.kind != asked) log.i("Photo", "Camera photo filed as $asked, sorted to ${d.kind} (${d.crop})")
             nextKind[findId] = d.kind
         }
-        insertPhoto(id, findId, if (uri != null) photo.copy(uri = uri) else photo)
+        insertPhoto(id, findId, if (uri != null) photo.copy(uri = uri) else photo, sorted?.originalUri?.takeIf { uri != null })
     }
 
-    private suspend fun insertPhoto(id: String, findId: String, photo: PhotoInfo) {
+    private suspend fun insertPhoto(id: String, findId: String, photo: PhotoInfo, originalUri: String? = null) {
         dao.insertPhoto(
             Photo(
                 id = id, acquisitionId = findId, contentUri = photo.uri, takenAt = photo.takenAt,
                 role = nextKind.remove(findId) ?: PhotoKind.OTHER,
                 mediastoreId = photo.mediastoreId, displayName = photo.displayName, relativePath = photo.relativePath,
-                sizeBytes = photo.sizeBytes, createdAt = now(),
+                sizeBytes = photo.sizeBytes, createdAt = now(), originalUri = originalUri,
             ),
         )
         log.i("Photo", "Attached ${photo.displayName} to find $findId")

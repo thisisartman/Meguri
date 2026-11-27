@@ -63,6 +63,8 @@ class FindPhotoActions(
     val remove: (photoId: String) -> Unit,
     // Choose the photo that stands for the item (owner, 2026-11-07); null goes back to the latest
     val setCover: (photoId: String?) -> Unit = {},
+    // Crop, rotate or straighten a photo (#208); the answer says whether it was saved
+    val edit: ((photoId: String, edit: io.github.thisisartman.collectibles.photo.PhotoEdit, done: (Boolean) -> Unit) -> Unit)? = null,
 )
 
 /**
@@ -123,7 +125,23 @@ fun ItemPhotos(
     var adding by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<Photo?>(null) }
     var fullscreen by remember { mutableStateOf<String?>(null) }
-    fullscreen?.let { FullscreenPhoto(it, onClose = { fullscreen = null }) }
+    // The photo being edited (#208), from the full-screen view
+    var cropping by remember { mutableStateOf<Photo?>(null) }
+    val edit = actions.edit
+    fullscreen?.let { u ->
+        // The edit icon only for one of this item's own photos in the app (not a gallery address before it is copied)
+        val p = photos.firstOrNull { it.contentUri == u }?.takeIf { edit != null && io.github.thisisartman.collectibles.photo.PhotoStore.isApp(it.contentUri) }
+        FullscreenPhoto(u, onClose = { fullscreen = null }, onEdit = p?.let { ph -> { cropping = ph } })
+    }
+    cropping?.let { p ->
+        if (edit != null) PhotoEditScreen(p, onCancel = { cropping = null }, onSave = { e, done ->
+            edit(p.id, e) { ok ->
+                done(ok)
+                // The saved copy has a new address, so the full-screen view of the old one closes; the photo's dialog shows the new one
+                if (ok) fullscreen = null
+            }
+        })
+    }
     var pendingKind by remember { mutableStateOf(PhotoKind.STAMP) }
     val pick = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) actions.pickPhoto(uri, pendingKind)
@@ -173,7 +191,9 @@ fun ItemPhotos(
         )
     }
 
-    editing?.let { p ->
+    editing?.let { e ->
+        // As the photo is now: an edit gives it a new address (#208)
+        val p = photos.firstOrNull { it.id == e.id } ?: e
         var kind by remember(p.id) { mutableStateOf(if (p.role in kinds || isOther(p.role)) (if (isOther(p.role)) PhotoKind.OTHER else p.role) else kinds.firstOrNull { sameKind(p.role, it, type) } ?: PhotoKind.OTHER) }
         // An Other photo can carry its own name ("Gundam collaboration"; owner, 2026-11-09), kept in photo.role
         var otherName by remember(p.id) { mutableStateOf(p.role.takeIf { it.startsWith(OTHER_PREFIX) }?.removePrefix(OTHER_PREFIX).orEmpty()) }

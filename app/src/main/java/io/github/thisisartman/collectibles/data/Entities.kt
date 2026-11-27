@@ -168,6 +168,8 @@ data class Photo(
     @ColumnInfo(name = "relative_path") val relativePath: String? = null,
     @ColumnInfo(name = "size_bytes") val sizeBytes: Long? = null,
     @ColumnInfo(name = "created_at") val createdAt: Long,
+    // Schema v7 (#208): the picture before the app cut it (a card, a stamp, a cover, an Ekitag), for the edit screen
+    @ColumnInfo(name = "original_uri") val originalUri: String? = null,
 )
 
 /** A railway line, for the eki-stamp book. */

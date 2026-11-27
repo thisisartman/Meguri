@@ -237,7 +237,8 @@ class CatalogAndBackup @Inject constructor(
 
     /**
      * Caller holds [lock]. [withPhotos] (#66, moving to a new phone): each photo's picture goes into the zip as
-     * `photos/<photo id>`, so a phone that doesn't have it can put it back in its gallery on restore.
+     * `photos/<photo id>`, so a phone that doesn't have it can put it back in its gallery on restore. A photo's kept
+     * original (#208) goes in as `originals/<photo id>`, so it can still be edited after a move.
      */
     suspend fun writeBackup(out: OutputStream, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
         val snapshot = File(context.noBackupFilesDir, "export-${UUID.randomUUID()}.db")
@@ -265,10 +266,18 @@ class CatalogAndBackup @Inject constructor(
                     // A picture that can't be read (deleted from the gallery) is left out; the row still travels
                     runCatching {
                         io.github.thisisartman.collectibles.photo.PhotoStore.open(context, p.contentUri)!!.use { input ->
-                            zip.putNextEntry(ZipEntry("photos/${p.id}")); input.copyTo(zip); zip.closeEntry()
+                            zip.putNextEntry(ZipEntry(io.github.thisisartman.collectibles.photo.PhotoNames.backupPhoto(p.id))); input.copyTo(zip); zip.closeEntry()
                         }
                         files++
                     }.onFailure { log.w("Backup", "Photo ${p.id} could not be read, left out") }
+                    // Its original, when it has one; a missing one only means it can't be widened on the new phone
+                    p.originalUri?.takeIf { io.github.thisisartman.collectibles.photo.PhotoStore.exists(context, it) }?.let { o ->
+                        runCatching {
+                            io.github.thisisartman.collectibles.photo.PhotoStore.open(context, o)!!.use { input ->
+                                zip.putNextEntry(ZipEntry(io.github.thisisartman.collectibles.photo.PhotoNames.backupOriginal(p.id))); input.copyTo(zip); zip.closeEntry()
+                            }
+                        }.onFailure { log.w("Backup", "Original of photo ${p.id} could not be read, left out") }
+                    }
                 }
                 text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":${CollectiblesDb.VERSION},"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size},"photo_files":$files}""")
                 zip.finish()
@@ -333,10 +342,10 @@ class CatalogAndBackup @Inject constructor(
 
         fun photosCsv(photos: List<Photo>) = buildString {
             append(Csv.line("id", "find_id", "content_uri", "display_name", "relative_path", "size_bytes", "mediastore_id", "taken_at", "missing",
-                "role", "exif_lat", "exif_lng", "created_at"))
+                "role", "exif_lat", "exif_lng", "created_at", "original_uri"))
             photos.forEach { p ->
                 append(Csv.line(p.id, p.acquisitionId, p.contentUri, p.displayName, p.relativePath, p.sizeBytes, p.mediastoreId, p.takenAt, p.missing,
-                    p.role, p.exifLat, p.exifLng, p.createdAt))
+                    p.role, p.exifLat, p.exifLng, p.createdAt, p.originalUri))
             }
         }
 

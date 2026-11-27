@@ -66,6 +66,20 @@ class CardTrimTest {
         assertNear(160f, q[4], 4f, "right"); assertNear(224f, q[5], 4f, "bottom")
     }
 
+    // Owner, 2026-11-28: a card in a binder page, the neighbours' edges showing, a grey sleeve between
+    @Test fun findsTheMiddleCardOfABinderPage() {
+        val sleeve = rgb(150, 140, 130)
+        val c = Canvas(240, 320, sleeve)
+        card(c, 40, 40, 160, 224)                  // the card in the middle
+        card(c, -150, 40, 160, 224)                // the left neighbour's right edge
+        card(c, 230, 40, 160, 224)                 // the right neighbour's left edge
+        card(c, 40, 280, 160, 224)                 // the card below, its top showing
+        val (q, why) = CardTrim.find(c.px, c.w, c.h)
+        assertEquals(CardTrim.Result.OK, why)
+        assertNear(40f, q!![0], 4f, "left"); assertNear(40f, q[1], 4f, "top")
+        assertNear(200f, q[4], 4f, "right"); assertNear(264f, q[5], 4f, "bottom")
+    }
+
     @Test fun noBlueFrameIsLeftAlone() {
         val c = Canvas(200, 280, desk)
         c.rect(30, 30, 170, 250, white)

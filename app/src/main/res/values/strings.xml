@@ -28,7 +28,6 @@
     <string name="a11y_remove_find">Remove the find from %1$s</string>
     <string name="state_collected">Collected</string>
     <string name="state_to_get">Not collected</string>
-    <string name="got_it_again">Collect again</string>
     <string name="undo">Undo</string>
     <string name="logged">Collected %1$s · %2$s</string>
     <string name="last">Last: %1$s</string>
@@ -452,6 +451,14 @@
     <string name="photo_hint_channel_sub">A new photo taken near something you have not collected</string>
     <string name="photo_view_fullscreen">View full screen</string>
     <string name="photo_view_close">Close</string>
+    <string name="photo_edit">Edit</string>
+    <string name="photo_edit_rotate">Rotate</string>
+    <string name="photo_edit_straighten">Straighten</string>
+    <string name="photo_edit_reset">Reset</string>
+    <string name="photo_edit_circle">Circle</string>
+    <string name="photo_edit_save">Save</string>
+    <string name="photo_edit_no_original">The full photo wasn\'t kept for this older photo.</string>
+    <string name="photo_edit_failed">Couldn\'t save the photo</string>
     <string name="type_roadside">Roadside station</string>
     <string name="type_roadside_plural">Roadside stations</string>
     <string name="type_place">Place</string>
@@ -742,7 +749,7 @@
     <string name="nearby_help_collectibles">the stamps and cards themselves, split into Stamps and Cards.</string>
     <string name="nearby_help_again">Tap ? any time to see this again.</string>
     <string name="nearby_help_got_it">Got it</string>
-    <string name="nearby_group_kind">Group by kind</string>
+    <string name="nearby_group_type">Group by type</string>
     <string name="place_kind_stations">Stations</string>
     <string name="place_kind_cities">Cities and towns</string>
     <string name="place_kind_shrines">Shrines and temples</string>
