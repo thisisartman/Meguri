@@ -19,7 +19,7 @@ Merged into `testing` and heading toward 0.7.1.
 
 ### Everything in this release
 - Added `Places` and `Collectibles` to Nearby. Places gives each station, city office or shrine one tile with a ring that fills as you collect what's there, and a help bubble explains both views (#192)
-- Added `Group by kind` to the sort menu in Places, with headings for stations, cities and towns, shrines and temples, roadside stations and dams (#192)
+- Added `Group by type` to the sort menu in Places, with headings for stations, cities and towns, shrines and temples, roadside stations and dams (#192)
 - Added a page for each place, with a tile for each thing you can get there; tap one to open its card with its picture, `Directions` and `Collect`, and see the photos from the whole place below (#192)
 - Added `Add photos from a file` in `Settings › Backup and data`, which brings in a batch of your own photos without replacing anything and crops stamp photos to the stamp (#188)
 - Added a `Cover` button beside `Directions` on manhole cards (`Dam` on dam cards) that shows how far the cover is and opens directions to it; Meguri reads the position printed on the card when you scan it, and you can type it in `Edit details` (#203)
