@@ -8,9 +8,15 @@ import java.time.LocalDate
  * a find on the date given, or else dated when the file is added (owner, 2026-11-26: "just assign it the date it
  * was added"). Stamp photos are cut to the stamp ([cropsStamp]). Pure, for tests; [PhotoImport] does the phone's side.
  *
- * The list's columns: `photo` (file name under `photos/`), `kind` (a [PhotoKind]), `match` (`catalogue`: an item
+ * The list's columns: `photo` (file name under `photos/`), `kind` (a [PhotoKind], or [CARD]; each photo is then
+ * sorted by what it shows, so a card filed as `manhole` still goes to the Card slot: photo/PhotoSort.kt), `match` (`catalogue`: an item
  * every phone has, found by `key`; `own`: your own item, found again by `type` and `name`; `extra`: one more photo
  * for the row above; `skip`: left out), `type` (an [ItemType]), `key`, `name`, `date` (yyyy-mm-dd, or empty).
+ *
+ * Optional, and older files have neither: `cover_lat`, `cover_lng`, where the item's manhole cover is, in decimal
+ * degrees. Both must be numbers inside Japan ([CoverCoords.inJapan]), or the pair is ignored and the row is still
+ * used; an `extra` row's pair is always ignored. A position is only ever given to an item that has none: one set by
+ * hand, a scan, the catalogue or an earlier file is never changed ([PhotoImport]).
  */
 object PhotoBundle {
     const val MANIFEST = "meguri-photos.csv"
@@ -22,12 +28,29 @@ object PhotoBundle {
         data class Own(val type: ItemType, val name: String) : Target
     }
 
-    data class Row(val photo: String, val kind: String, val target: Target, val date: LocalDate?)
+    data class Row(val photo: String, val kind: String, val target: Target, val date: LocalDate?, val cover: CoverCoords.LatLng? = null)
+
+    /** The row's cover position, when both columns are numbers inside Japan; anything else is no position. */
+    fun cover(lat: String, lng: String): CoverCoords.LatLng? {
+        val a = lat.trim().toDoubleOrNull() ?: return null
+        val b = lng.trim().toDoubleOrNull() ?: return null
+        return if (CoverCoords.inJapan(a, b)) CoverCoords.LatLng(a, b) else null
+    }
+
+    /** The position to give an item: the row's, only when the item has none yet ([current] is its cover_lat). */
+    fun coverToSet(row: Row, current: Double?): CoverCoords.LatLng? = if (current == null) row.cover else null
 
     /** The list, read and checked. Bad lines are skipped and counted, never guessed. */
     data class Parsed(val rows: List<Row>, val skipped: Int, val bad: List<String>)
 
-    private val kinds = setOf(PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.MANHOLE, PhotoKind.PLACE, PhotoKind.GOSHUIN, PhotoKind.PROOF, PhotoKind.OTHER)
+    /**
+     * A photo of the card itself, on a manhole or dam card (owner, 2026-11-27): it goes to the Card slot
+     * ([PhotoKind.STAMP]); `manhole` is the card's cover. Kept as written here and filed by
+     * [io.github.thisisartman.collectibles.photo.PhotoSort] when the photo is added.
+     */
+    const val CARD = "card"
+
+    private val kinds = setOf(CARD, PhotoKind.STAMP, PhotoKind.EKITAG, PhotoKind.MANHOLE, PhotoKind.PLACE, PhotoKind.GOSHUIN, PhotoKind.PROOF, PhotoKind.OTHER)
 
     fun parse(text: String): Parsed {
         val rows = mutableListOf<Row>()
@@ -42,7 +65,8 @@ object PhotoBundle {
                 "skip" -> { skipped++; continue }
                 "catalogue", "own", "extra" -> {
                     if (photo.isEmpty() || photo.contains("..") || photo.contains('/') || photo.contains('\\')) { bad += "$line: no usable photo name"; continue }
-                    val kind = v("kind").lowercase().takeIf { it in kinds } ?: run { bad += "$line: unknown kind '${v("kind")}'"; continue }
+                    // No kind given: sorted by what the photo shows when added (a screenshot of a station is its Ekitag)
+                    val kind = v("kind").lowercase().ifEmpty { PhotoKind.OTHER }.takeIf { it in kinds } ?: run { bad += "$line: unknown kind '${v("kind")}'"; continue }
                     val date = v("date").takeIf { it.isNotEmpty() }?.let { d ->
                         runCatching { LocalDate.parse(d) }.getOrNull() ?: run { bad += "$line: date '$d' is not yyyy-mm-dd"; continue }
                     }
@@ -57,7 +81,8 @@ object PhotoBundle {
                             Target.Own(type, name)
                         }
                     }
-                    rows += Row(photo, kind, target, date)
+                    val cover = if (match == "extra") null else cover(v("cover_lat"), v("cover_lng"))
+                    rows += Row(photo, kind, target, date, cover)
                     if (match != "extra") last = target
                 }
                 else -> bad += "$line: match '$match' is not catalogue, own, extra or skip"

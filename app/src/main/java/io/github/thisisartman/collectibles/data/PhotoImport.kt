@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.thisisartman.collectibles.debug.FileLog
-import io.github.thisisartman.collectibles.photo.StampCrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -31,8 +30,9 @@ sealed class PhotoFileError(message: String) : Exception(message) {
 
 /**
  * Adds a photo file's photos to what is on the phone (#188); never replaces or removes anything. Each photo goes
- * through the same save as a notebook stamp or a gallery pick, so cards get their cover cut out and Ekitag
- * screenshots their stamp picture; a stamp photo is first cut to its stamp ([StampCrop]), a goshuin stays whole. A photo already on its item (same name and size) is skipped, so adding the same
+ * through the same save as a gallery pick, sorted by what it shows (photo/PhotoSort.kt): a card goes to the Card
+ * slot, trimmed to the card and never cut to a circle; only a real cover photo is; Ekitag screenshots get their
+ * stamp picture; a stamp photo is cut to its stamp (StampCrop), a goshuin stays whole. A photo already on its item (same name and size) is skipped, so adding the same
  * file twice changes nothing.
  */
 @Singleton
@@ -80,25 +80,31 @@ class PhotoImport @Inject constructor(
             // Something not collected yet is found on the row's day, or now, as the file is added (owner, 2026-11-26:
             // "just assign it the date it was added"; never "had before Meguri")
             val now = System.currentTimeMillis()
-            var added = 0; var newItems = 0; var already = 0; var failed = 0; var cropped = 0
+            var added = 0; var newItems = 0; var already = 0; var failed = 0; var covers = 0
             for (row in info.rows) {
-                val (itemId, type) = when (val t = row.target) {
+                val (itemId, _) = when (val t = row.target) {
                     is PhotoBundle.Target.Catalogue -> byKey[t.key] ?: continue // region not on this phone: in the plan's "missing"
                     is PhotoBundle.Target.Own -> own.getOrPut(t.type to t.name) { newItems++; repo.addItem(t.type, t.name, null) } to t.type
+                }
+                // The row's cover position goes only onto an item with none yet; a set one is never changed by a later
+                // import or scan (owner rule), and the update itself checks again that it is still empty
+                if (row.cover != null) {
+                    val at = PhotoBundle.coverToSet(row, dao.item(itemId)?.coverLat)
+                    if (at != null && dao.setCoverIfEmpty(itemId, at.lat, at.lng, now) > 0) covers++
                 }
                 val file = File(info.dir, PhotoBundle.PHOTOS + row.photo)
                 // The name and size are the file's own, cut or not, so adding the same file again still finds it
                 if (dao.photosOfItem(itemId).any { it.displayName == row.photo && it.sizeBytes == file.length() }) { already++; continue }
-                // A stamp photo is cut to its stamp, as from a notebook page; with no stamp found it stays whole
-                val cut = File(info.dir, "cut-" + row.photo).takeIf { PhotoBundle.cropsStamp(type, row.kind) && StampCrop.crop(file, it) }
-                if (cut != null) cropped++
+                // Sorted on the photo as it is in the file, before any cut (photo/PhotoSort.kt): a card filed as a cover
+                // goes to the card, a screenshot of a station to its Ekitag; a stamp photo is cut to its stamp, as from a
+                // notebook page, and with no stamp found it stays whole
                 val ok = repo.addOldPhoto(
-                    itemId, Uri.fromFile(cut ?: file), PhotoBundle.findDate(row, now), row.kind,
-                    name = row.photo, size = file.length(), tag = "PhotoFile",
+                    itemId, Uri.fromFile(file), PhotoBundle.findDate(row, now), row.kind,
+                    name = row.photo, size = file.length(), tag = "PhotoFile", cutStamps = true,
                 )
                 if (ok) added++ else failed++
             }
-            log.i("PhotoFile", "Added $added photos ($cropped cut to the stamp), $newItems new items, $already already there, $failed failed; safety copy $safety")
+            log.i("PhotoFile", "Added $added photos, $newItems new items, $already already there, $failed failed, $covers cover positions given; safety copy $safety")
             PhotoFileResult(added, newItems, already, failed, safety)
         } finally {
             discard(info)

@@ -2,6 +2,7 @@ package io.github.thisisartman.collectibles.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
@@ -86,11 +87,99 @@ class PhotoBundleTest {
         assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.PLACE))
     }
 
+    @Test fun readsCardAsAKind() {
+        val p = PhotoBundle.parse(
+            header +
+                "a.jpg,Cards,card,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,,,\n" +
+                "b.jpg,Cards,Card,extra,,,,,,,\n" +
+                "c.jpg,Cards,manhole,extra,,,,,,,cover\n" +
+                "d.jpg,Dams,CARD,own,DAM_CARD,,奥只見ダム,,2026-11-01,,\n",
+        )
+        assertTrue(p.bad.toString(), p.bad.isEmpty())
+        assertEquals(listOf(PhotoBundle.CARD, PhotoBundle.CARD, PhotoKind.MANHOLE, PhotoBundle.CARD), p.rows.map { it.kind })
+        assertEquals(PhotoBundle.Target.Own(ItemType.DAM_CARD, "奥只見ダム"), p.rows[3].target)
+    }
+
+    @Test fun aRowWithNoKindIsKeptAsOtherToBeSorted() {
+        val p = PhotoBundle.parse(header + "Screenshot_1.png,Tags,,own,EKITAG,,弥彦駅,,,,\n")
+        assertTrue(p.bad.toString(), p.bad.isEmpty())
+        assertEquals(PhotoKind.OTHER, p.rows.single().kind)
+        // Sorted when added: a screenshot of a station is its Ekitag
+        val shot = io.github.thisisartman.collectibles.photo.PhotoSort.Facts(screenshot = true)
+        assertEquals(PhotoKind.EKITAG, io.github.thisisartman.collectibles.photo.PhotoSort.decide(ItemType.EKITAG, p.rows.single().kind, shot).kind)
+    }
+
+    @Test fun aCardRowIsFiledInTheCardSlotNeverAsCard() {
+        // photo.role must never be the literal "card": the item page would show it as Other
+        val sort = io.github.thisisartman.collectibles.photo.PhotoSort
+        val none = io.github.thisisartman.collectibles.photo.PhotoSort.Facts()
+        assertEquals(PhotoKind.STAMP, sort.decide(ItemType.MANHOLE_CARD, PhotoBundle.CARD, none).kind)
+        assertEquals(PhotoKind.STAMP, sort.decide(ItemType.DAM_CARD, PhotoBundle.CARD, none).kind)
+        for (t in ItemType.entries) assertTrue(t.name, sort.decide(t, PhotoBundle.CARD, none).kind != PhotoBundle.CARD)
+    }
+
     @Test fun aDayIsKeptAtNoon() {
         val tokyo = ZoneId.of("Asia/Tokyo")
         val ms = PhotoBundle.dayMs(LocalDate.of(2025, 12, 30), tokyo)
         val back = java.time.Instant.ofEpochMilli(ms).atZone(tokyo)
         assertEquals(LocalDate.of(2025, 12, 30), back.toLocalDate())
         assertEquals(12, back.hour)
+    }
+
+    private val coverHeader = "photo,kind,match,type,key,name,date,cover_lat,cover_lng\n"
+
+    @Test fun readsACoverPosition() {
+        val p = PhotoBundle.parse(coverHeader + "a.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,37.44569,138.86007\n")
+        assertTrue(p.bad.isEmpty())
+        assertEquals(CoverCoords.LatLng(37.44569, 138.86007), p.rows.single().cover)
+    }
+
+    @Test fun aFileWithoutTheColumnsHasNoCoverPosition() {
+        val p = PhotoBundle.parse(header + "a.jpg,Cards,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,15-202-F001,,,yes,\n")
+        assertTrue(p.bad.isEmpty())
+        assertNull(p.rows.single().cover)
+    }
+
+    @Test fun aHalfPairOrNonNumberIsIgnoredAndTheRowKept() {
+        val p = PhotoBundle.parse(
+            coverHeader +
+                "a.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,37.44569,\n" +
+                "b.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F002,,,,138.86007\n" +
+                "c.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F003,,,37.4,abc\n",
+        )
+        assertTrue(p.bad.isEmpty())
+        assertEquals(listOf("a.jpg", "b.jpg", "c.jpg"), p.rows.map { it.photo })
+        assertTrue(p.rows.all { it.cover == null })
+    }
+
+    @Test fun aPositionOutsideJapanIsIgnoredAndTheRowKept() {
+        val p = PhotoBundle.parse(
+            coverHeader +
+                "a.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,51.5,-0.1\n" +
+                "b.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F002,,,19.9,138.8\n" +
+                "c.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F003,,,37.4,154.1\n" +
+                "d.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F004,,,46.0,122.0\n",
+        )
+        assertTrue(p.bad.isEmpty())
+        assertEquals(4, p.rows.size)
+        assertEquals(listOf(null, null, null, CoverCoords.LatLng(46.0, 122.0)), p.rows.map { it.cover })
+    }
+
+    @Test fun anExtraRowsPositionIsIgnored() {
+        val p = PhotoBundle.parse(
+            coverHeader +
+                "a.jpg,manhole,catalogue,MANHOLE_CARD,MANHOLE_CARD:15-202-F001,,,,\n" +
+                "b.jpg,manhole,extra,,,,,37.44569,138.86007\n",
+        )
+        assertTrue(p.bad.isEmpty())
+        assertEquals(2, p.rows.size)
+        assertNull(p.rows[1].cover)
+    }
+
+    @Test fun aCoverPositionOnlyFillsAnEmptyOne() {
+        val row = PhotoBundle.Row("a.jpg", "manhole", PhotoBundle.Target.Catalogue("MANHOLE_CARD:15-202-F001"), null, CoverCoords.LatLng(37.44569, 138.86007))
+        assertEquals(CoverCoords.LatLng(37.44569, 138.86007), PhotoBundle.coverToSet(row, null))
+        assertNull(PhotoBundle.coverToSet(row, 37.5))
+        assertNull(PhotoBundle.coverToSet(row.copy(cover = null), null))
     }
 }

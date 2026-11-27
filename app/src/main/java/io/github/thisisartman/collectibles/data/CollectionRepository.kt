@@ -246,27 +246,55 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun attachFromGallery(
         context: android.content.Context, findId: String, picked: android.net.Uri, kind: String,
-        name: String? = null, size: Long? = null,
+        name: String? = null, size: Long? = null, cutStamps: Boolean = false,
     ): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             // A file from a photo file (#188) has no picker details: its own name and size are kept, to spot it again
             val info = pickedInfo(picked).let { if (name != null) it.copy(displayName = name, sizeBytes = size ?: it.sizeBytes) else it }
             val id = newId()
+            val item = dao.itemOfFind(findId)
             // An Ekitag screenshot is titled with the station's name on two lines, the app's language first (owner, Telegram 491)
-            val title = if (kind == PhotoKind.EKITAG) dao.itemOfFind(findId)?.let { i ->
+            val title = item?.let { i ->
                 val en = i.nameRomaji?.takeIf { it.isNotBlank() && it != i.nameJa }
                 val ja = context.resources.configuration.locales[0]?.language == "ja"
                 if (en == null) i.nameJa else if (ja) "${i.nameJa}\n$en" else "$en\n${i.nameJa}"
-            } else null
-            val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, picked, id, circle = kind == PhotoKind.MANHOLE, ekitagTitle = title)
+            }
+            // Filed by what the picture shows, not only by what it was filed as (2026-11-27): a card is the card, a screenshot an Ekitag
+            val camera = hasCameraExif(picked)
+            val folder = pickedFolder(picked)
+            val sorted = io.github.thisisartman.collectibles.photo.PhotoStore.importSorted(context, picked, id, decide = { bmp ->
+                sort(item?.type, kind, bmp, info.displayName, folder, camera, cutStamps)
+            }, ekitagTitle = title)
+            val uri = sorted?.first
             if (uri == null) {
                 log.w("Photo", "Could not copy a gallery photo for find $findId")
                 return@withContext false
             }
-            nextKind[findId] = kind
+            val d = sorted.second
+            if (d.kind != kind) log.i("Photo", "Filed as $kind, sorted to ${d.kind} (${d.crop})") else log.d("Photo", "Kind $kind, cut ${d.crop}")
+            nextKind[findId] = d.kind
             insertPhoto(id, findId, info.copy(uri = uri))
             true
         }
+
+    /** [PhotoSort.decide] on a picture as read: a card item's photo is looked at for a card, any photo for a screenshot. */
+    private fun sort(
+        type: ItemType?, kind: String, bmp: android.graphics.Bitmap, name: String?, path: String?, camera: Boolean, cutStamps: Boolean,
+    ): io.github.thisisartman.collectibles.photo.PhotoSort.Decision {
+        val sort = io.github.thisisartman.collectibles.photo.PhotoSort
+        val card = if (sort.checksCard(type, kind)) runCatching { io.github.thisisartman.collectibles.photo.CardTrim.detect(bmp) }.getOrNull() else null
+        val shot = sort.isScreenshot(name, path, bmp.width, bmp.height, camera)
+        return sort.decide(type, kind, io.github.thisisartman.collectibles.photo.PhotoSort.Facts(card, shot), cutStamps)
+    }
+
+    /** Whether the picture says which camera took it (EXIF make or model); a screenshot doesn't. */
+    private fun hasCameraExif(uri: android.net.Uri): Boolean = runCatching {
+        context.contentResolver.openInputStream(uri)?.use { s ->
+            val exif = android.media.ExifInterface(s)
+            !exif.getAttribute(android.media.ExifInterface.TAG_MAKE).isNullOrBlank() ||
+                !exif.getAttribute(android.media.ExifInterface.TAG_MODEL).isNullOrBlank()
+        } ?: false
+    }.getOrDefault(false)
 
     /** What the picker tells about a picked picture: its name, size and, where it says, when it was taken. */
     private fun pickedInfo(picked: android.net.Uri): PhotoInfo {
@@ -284,6 +312,12 @@ class CollectionRepository @Inject constructor(
         }.getOrNull()
         return PhotoInfo(picked.toString(), null, name, null, size, taken ?: now())
     }
+
+    /** The gallery folder a picked picture is in (Pictures/Screenshots/, say), where the picker tells; for sorting only. */
+    private fun pickedFolder(picked: android.net.Uri): String? = runCatching {
+        context.contentResolver.query(picked, arrayOf(android.provider.MediaStore.MediaColumns.RELATIVE_PATH), null, null, null)
+            ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null }
+    }.getOrNull()
 
     suspend fun readShared(uri: android.net.Uri): SharedPhoto =
         kotlinx.coroutines.withContext(Dispatchers.IO) { SharedPhotoReader.read(context, uri) }
@@ -322,13 +356,13 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun addOldPhoto(
         itemId: String, picture: android.net.Uri, acquiredAt: Long?, kind: String,
-        name: String? = null, size: Long? = null, tag: String = "Import",
+        name: String? = null, size: Long? = null, tag: String = "Import", cutStamps: Boolean = false,
     ): Boolean {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             // A day without a time (a date given is stored at noon): BULK, like "Already went", so no time shows
             dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt ?: now(), via = Via.BULK, createdAt = now()))
         }
-        val ok = attachFromGallery(context, findId, picture, kind, name, size)
+        val ok = attachFromGallery(context, findId, picture, kind, name, size, cutStamps)
         log.i(tag, "Old $kind photo for item $itemId (photo copied: $ok)")
         return ok
     }
@@ -366,7 +400,20 @@ class CollectionRepository @Inject constructor(
     /** A camera photo: Meguri keeps its own copy (#79); if the copy fails, the photo points at the gallery and a later start copies it. */
     suspend fun attachPhoto(findId: String, photo: PhotoInfo) = kotlinx.coroutines.withContext(Dispatchers.IO) {
         val id = newId()
-        val uri = io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, android.net.Uri.parse(photo.uri), id, circle = nextKind[findId] == PhotoKind.MANHOLE)
+        // Sorted like a gallery pick (2026-11-27): a card photographed for the cover slot goes to the card, uncut
+        val type = dao.itemOfFind(findId)?.type
+        val asked = nextKind[findId] ?: PhotoKind.OTHER
+        val source = android.net.Uri.parse(photo.uri)
+        val camera = hasCameraExif(source)
+        val sorted = io.github.thisisartman.collectibles.photo.PhotoStore.importSorted(context, source, id, decide = { bmp ->
+            sort(type, asked, bmp, photo.displayName, photo.relativePath, camera, cutStamps = false)
+        })
+        val uri = sorted?.first
+        // A photo that couldn't be read keeps the kind asked for; the copy is tried again later
+        sorted?.second?.let { d ->
+            if (d.kind != asked) log.i("Photo", "Camera photo filed as $asked, sorted to ${d.kind} (${d.crop})")
+            nextKind[findId] = d.kind
+        }
         insertPhoto(id, findId, if (uri != null) photo.copy(uri = uri) else photo)
     }
 

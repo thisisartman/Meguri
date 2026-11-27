@@ -44,10 +44,15 @@ object PhotoKind {
     const val OTHER = "other"
 }
 
-/** Which photo kind becomes an item's display picture on its own when it has none (owner, 2026-11-08). */
+/**
+ * Which photo kind becomes an item's display picture on its own when it has none (owner, 2026-11-08). A manhole or
+ * dam card shows the card itself (2026-11-27; it was the cover photo, so a cover landing first won and card photos
+ * filed as covers became circles on the tiles). A display picture already set, by you or by this, is kept.
+ */
 object AutoCover {
     fun makesCover(type: ItemType, role: String): Boolean = when (type) {
-        ItemType.MANHOLE_CARD -> role == PhotoKind.MANHOLE
+        ItemType.MANHOLE_CARD -> role == PhotoKind.STAMP || role == PhotoKind.PROOF
+        ItemType.DAM_CARD -> role == PhotoKind.STAMP
         ItemType.EKI_STAMP, ItemType.EKITAG -> role == PhotoKind.EKITAG
         ItemType.GOSHUIN -> role == PhotoKind.STAMP
         else -> false

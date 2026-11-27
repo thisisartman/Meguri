@@ -55,6 +55,17 @@ class CardTrimTest {
         assertNear(200f, q[4], 4f, "right: not the stack's edge at 220"); assertNear(258f, q[5], 4f, "bottom: not 290")
     }
 
+    // A scan already trimmed to the card comes through the photo sort again (2026-11-27): found whole, corners at the
+    // picture's edges, so a second trim changes next to nothing
+    @Test fun aCardAlreadyTrimmedIsFoundWholeAtTheEdges() {
+        val c = Canvas(160, 224, desk)
+        card(c, 0, 0, 160, 224)
+        val (q, why) = CardTrim.find(c.px, c.w, c.h)
+        assertEquals(CardTrim.Result.OK, why)
+        assertNear(0f, q!![0], 4f, "left"); assertNear(0f, q[1], 4f, "top")
+        assertNear(160f, q[4], 4f, "right"); assertNear(224f, q[5], 4f, "bottom")
+    }
+
     @Test fun noBlueFrameIsLeftAlone() {
         val c = Canvas(200, 280, desk)
         c.rect(30, 30, 170, 250, white)

@@ -6,6 +6,7 @@ import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
 import android.util.Size
+import io.github.thisisartman.collectibles.data.PhotoKind
 import java.io.File
 import java.io.InputStream
 
@@ -48,22 +49,51 @@ object PhotoStore {
      * never leaves half a picture. Returns the new content_uri, or null if the source can't be read.
      */
     fun importCopy(context: Context, source: ImageDecoder.Source, photoId: String, circle: Boolean = false, ekitagTitle: String? = null): String? {
-        val whole = runCatching { decode(source, LONG_SIDE) }.getOrNull() ?: return null
-        // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
-        // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
-        val bmp = when {
-            circle -> runCatching { CoverCrop.crop(whole) }.getOrNull()?.also { whole.recycle() } ?: whole
-            ekitagTitle != null -> runCatching {
-                // "first\nsecond": the station's name in the app's language first
-                // M PLUS Rounded 1c, the owner's pick (Telegram 500, 2026-11-09)
-                EkitagArt.render(
-                    whole, ekitagTitle.substringBefore('\n'), ekitagTitle.substringAfter('\n', ""),
-                    bold = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_bold) ?: android.graphics.Typeface.DEFAULT_BOLD,
-                    regular = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_medium) ?: android.graphics.Typeface.DEFAULT,
-                )
-            }.getOrNull()?.also { whole.recycle() } ?: whole
-            else -> whole
+        val crop = when {
+            circle -> PhotoSort.Crop.CIRCLE
+            ekitagTitle != null -> PhotoSort.Crop.EKITAG
+            else -> PhotoSort.Crop.NONE
         }
+        return importSorted(context, source, photoId, { PhotoSort.Decision(PhotoKind.OTHER, crop) }, ekitagTitle)?.first
+    }
+
+    /**
+     * Like [importCopy], with the slot and cut chosen from the picture itself ([PhotoSort]): [decide] sees the
+     * picture as read, before any cut. Returns the new content_uri (null if it couldn't be written) and the
+     * decision, or null if the source can't be read.
+     */
+    fun importSorted(
+        context: Context, source: ImageDecoder.Source, photoId: String,
+        decide: (Bitmap) -> PhotoSort.Decision, ekitagTitle: String? = null,
+    ): Pair<String?, PhotoSort.Decision>? {
+        val whole = runCatching { decode(source, LONG_SIDE) }.getOrNull() ?: return null
+        val decision = decide(whole)
+        // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
+        // A card is trimmed to the card (2026-11-27); no whole card found, the whole photo.
+        // A stamp photo from a photo file is cut to its stamp (#188); no stamp found, the whole photo.
+        // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
+        val cut: Bitmap? = when (decision.crop) {
+            PhotoSort.Crop.CIRCLE -> runCatching { CoverCrop.crop(whole) }.getOrNull()
+            PhotoSort.Crop.CARD -> runCatching { CardTrim.trim(whole).first }.getOrNull()
+            PhotoSort.Crop.STAMP -> StampCrop.cut(whole)
+            PhotoSort.Crop.EKITAG -> ekitagTitle?.let { t ->
+                runCatching {
+                    // "first\nsecond": the station's name in the app's language first
+                    // M PLUS Rounded 1c, the owner's pick (Telegram 500, 2026-11-09)
+                    EkitagArt.render(
+                        whole, t.substringBefore('\n'), t.substringAfter('\n', ""),
+                        bold = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_bold) ?: android.graphics.Typeface.DEFAULT_BOLD,
+                        regular = androidx.core.content.res.ResourcesCompat.getFont(context, io.github.thisisartman.collectibles.R.font.mplus_rounded_medium) ?: android.graphics.Typeface.DEFAULT,
+                    )
+                }.getOrNull()
+            }
+            PhotoSort.Crop.NONE -> null
+        }
+        val bmp = cut?.takeIf { it !== whole }?.also { whole.recycle() } ?: whole
+        return write(context, photoId, bmp) to decision
+    }
+
+    private fun write(context: Context, photoId: String, bmp: Bitmap): String? {
         val target = File(dir(context), "$photoId.webp")
         val tmp = File(dir(context), "$photoId.webp.tmp")
         val ok = runCatching {
@@ -81,6 +111,9 @@ object PhotoStore {
 
     fun importCopy(context: Context, source: Uri, photoId: String, circle: Boolean = false, ekitagTitle: String? = null): String? =
         importCopy(context, ImageDecoder.createSource(context.contentResolver, source), photoId, circle, ekitagTitle)
+
+    fun importSorted(context: Context, source: Uri, photoId: String, decide: (Bitmap) -> PhotoSort.Decision, ekitagTitle: String? = null): Pair<String?, PhotoSort.Decision>? =
+        importSorted(context, ImageDecoder.createSource(context.contentResolver, source), photoId, decide, ekitagTitle)
 
     fun importCopy(context: Context, source: File, photoId: String): String? =
         importCopy(context, ImageDecoder.createSource(source), photoId)
