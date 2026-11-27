@@ -11,6 +11,8 @@ sealed interface AppRequest {
     data object StartTrip : AppRequest
     data class Share(val uris: List<android.net.Uri>) : AppRequest
     data class Attach(val itemId: String, val uri: android.net.Uri) : AppRequest
+    /** An app shortcut on the launcher icon (#205). */
+    data class Shortcut(val target: ShortcutTarget) : AppRequest
 
     companion object {
         fun from(intent: Intent?): AppRequest? {
@@ -37,6 +39,7 @@ sealed interface AppRequest {
             }
             intent.getStringExtra(MainActivity.EXTRA_OPEN_ITEM)?.let { return OpenItem(it) }
             if (intent.getBooleanExtra(MainActivity.EXTRA_START_TRIP, false)) return StartTrip
+            ShortcutTarget.from(intent.getStringExtra(MainActivity.EXTRA_SHORTCUT))?.let { return Shortcut(it) }
             return null
         }
     }

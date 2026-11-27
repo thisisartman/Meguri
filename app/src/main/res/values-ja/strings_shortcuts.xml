@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_add">追加</string>
+    <string name="shortcut_add_long">スキャン、検索、追加</string>
+    <string name="shortcut_book">コレクション</string>
+    <string name="shortcut_book_long">コレクション</string>
+    <string name="shortcut_trip">トリップ</string>
+    <string name="shortcut_trip_long">今日のトリップ</string>
+</resources>

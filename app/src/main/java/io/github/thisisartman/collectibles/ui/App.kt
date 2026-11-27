@@ -219,6 +219,12 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
             is AppRequest.Share -> { vm.openShare(r.uris); nav.navigate("share") }
             is AppRequest.Attach -> vm.attachPhoto(r.itemId, r.uri) { nav.openItem(r.itemId) }
+            // App shortcuts (#205): each page sits straight on Nearby, so Back goes to Nearby
+            is AppRequest.Shortcut -> when (r.target) {
+                ShortcutTarget.ADD -> { nav.popBackStack(NEARBY, inclusive = false); showLog = true }
+                ShortcutTarget.BOOK -> { showLog = false; nav.openBook() }
+                ShortcutTarget.TRIP -> { showLog = false; nav.navigate("trip") { popUpTo(NEARBY); launchSingleTop = true } }
+            }
         }
         onRequestHandled()
     }

@@ -46,6 +46,8 @@ class MainActivity : ComponentActivity() {
         const val EXTRA_FIX_ACC = "fix_acc"
         const val EXTRA_FIX_TIME = "fix_time"
         const val EXTRA_START_TRIP = "start_trip"
+        /** The app shortcut's id (#205): the same name as the extra in res/xml/shortcuts.xml. */
+        const val EXTRA_SHORTCUT = "shortcut"
 
         fun launchIntent(context: Context) = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)

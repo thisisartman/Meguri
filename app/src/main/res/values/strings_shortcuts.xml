@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App shortcuts on a long press of the icon (#205): short labels up to 10 characters, long ones up to 25 -->
+<resources>
+    <string name="shortcut_add">Add</string>
+    <string name="shortcut_add_long">Scan, search or add</string>
+    <string name="shortcut_book">My book</string>
+    <string name="shortcut_book_long">My book</string>
+    <string name="shortcut_trip">Trip</string>
+    <string name="shortcut_trip_long">Today\'s trip</string>
+</resources>
