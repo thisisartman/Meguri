@@ -29,11 +29,11 @@ The name comes from *meguri* (巡り): going round a circuit, the way you would 
 
 ## Why Meguri
 
-You're out wandering somewhere and you wonder: is there a manhole card around here? Does this station have a stamp? Is the shrine down the road handing out goshuin today?
+You're wandering around Japan and a thought hits you. Is there a manhole card around here? Does this station have a stamp? Is the shrine down the road doing goshuin today?
 
-The answers are out there, but they're scattered across dozens of websites and apps, and the ones that exist are often hard to use or hard to read. What you really want is simple: to see where everything is, so you can plan a day around it, and to keep track of what you've already got. And when you head somewhere off the beaten track, you don't want to be stuck waiting for a signal.
+The answers do exist, scattered across a hundred websites, a few kanji-heavy apps and the odd forum thread. So I built Meguri to keep it all in one place, as a tiny side project.
 
-Meguri is made for exactly that. Everything is on your phone, logging a find takes one tap, and it all works offline.
+It did not stay tiny. Meguri now has maps, trips, alerts, a notebook scanner, a card scanner and strong opinions about manhole covers. Logging a find takes one tap, and all of it works with no signal. Go collect something.
 
 ## What you can do
 
