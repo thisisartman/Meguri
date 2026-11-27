@@ -28,7 +28,6 @@
     <string name="a11y_remove_find">Remove the find from %1$s</string>
     <string name="state_collected">Collected</string>
     <string name="state_to_get">Not collected</string>
-    <string name="got_it_again">Collect again</string>
     <string name="undo">Undo</string>
     <string name="logged">Collected %1$s · %2$s</string>
     <string name="last">Last: %1$s</string>

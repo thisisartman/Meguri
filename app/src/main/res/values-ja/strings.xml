@@ -28,7 +28,6 @@
     <string name="state_collected">取得済み</string>
     <string name="state_to_get">未取得</string>
     <string name="got_it">集める</string>
-    <string name="got_it_again">もう一度集める</string>
     <string name="undo">元に戻す</string>
     <string name="logged">%1$sを集めた・%2$s</string>
     <string name="last">最新：%1$s</string>
