@@ -306,9 +306,9 @@ So Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when s
 
 ## [0.1.0] - 2026-11-03
 
-Collecting manhole cards and station stamps meant kanji-heavy apps, a hundred websites and a notebook full of my own scribbles. Logging a find took longer than finding it.
+Finally got something to track my collections, hehehe. Tap Got it and the time and place are saved, Nearby shows the closest things you still need, and My book sorts it all by prefecture and by railway line. It works offline, in English or Japanese. Nothing complicated, nothing full blown, just a little app for a little hobby.
 
-So I built Meguri. Tap Got it and the time and place are saved, Nearby shows the closest things you still need, and My book sorts it all by prefecture and by railway line. It works offline, in English or Japanese. And so it begins. (What have I done.)
+Narrator: he did not, in fact, keep it little, and proceeded to spend ungodly hours on this hobby project for weeks on end.
 
 ### Highlights
 - I collected a thing but the process of adding it was tedious and time-consuming. So, now, I can just mark it as collected to make sure it doesn’t cause me to lose aura points.
