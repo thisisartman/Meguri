@@ -98,7 +98,7 @@ So the backup learned to travel. Send it to a folder, Google Drive, another clou
 
 Meguri weighed 134 MB, which is a lot for an app about stamps. Everyone got every map, even people who had never left Niigata.
 
-After a strict diet, Meguri is 28 MB and each prefecture is its own download. Things now tell you whether they're open, in Japan time with holidays counted, so you can stop sprinting to shrines that closed ten minutes ago. Your storage can breathe again. (Your legs too.)
+After a strict diet, Meguri is 28 MB and each prefecture is its own download. Things now tell you whether they're open, in Japan time with holidays counted, so you can stop sprinting to shrines that closed ten minutes ago. Your storage can breathe again.
 
 ### Highlights
 - It bugged me that everyone got every map whether they wanted it or not. Now each prefecture is its own download, offline map optional, and "Remove" keeps your finds, photos and edits.
@@ -148,7 +148,7 @@ After a strict diet, Meguri is 28 MB and each prefecture is its own download. Th
 
 I had months of station stamps sitting in paper notebooks, and typing them in one by one was a hard no.
 
-So Meguri learned to read. Scan a notebook page and it boxes every stamp, cleans it up and works out the station, asking only when it's stumped. Ticking off what you already have became a card deck you swipe, and the + button opens a small card with Scan, Search and Add. The notebooks can finally retire. (They earned it.)
+So Meguri learned to read. Scan a notebook page and it boxes every stamp, cleans it up and works out the station, asking only when it's stumped. Ticking off what you already have became a card deck you swipe, and the + button opens a small card with Scan, Search and Add. The notebooks can finally retire.
 
 ### Highlights
 - Typing in every stamp from my old notebooks was killing me. Now you scan a page and Meguri boxes each stamp, cleans it up and finds the station, or asks when unsure.
@@ -204,7 +204,7 @@ So Meguri learned to read. Scan a notebook page and it boxes every stamp, cleans
 
 Planning one collecting day took three apps, a train timetable and an alarming amount of squinting. Then came typing every card code by hand.
 
-Now Nearby is a map, Trip finds every station on your route and everything within 2 km of it, and the scanner reads a card's printed code so your thumbs don't have to. My book became one page with your totals and a ring for each category. Go ahead and delete two of those three apps. (We won't tell.)
+Now Nearby is a map, Trip finds every station on your route and everything within 2 km of it, and the scanner reads a card's printed code so your thumbs don't have to. My book became one page with your totals and a ring for each category. Go ahead and delete two of those three apps.
 
 ### Highlights
 - On the map, you can now tap on the items and go to their pages to add them easily.
@@ -274,7 +274,7 @@ Now Nearby is a map, Trip finds every station on your route and everything withi
 
 Picture strolling right past a manhole card office with your phone in your pocket, and only finding out from the map that evening. Devastating, right?
 
-So Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when something you still need is close, even with the app closed, with Got it and Photo right on the notification. It keeps quiet at night and pings once per visit. You'll never walk past treasure again. (Probably.)
+So Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when something you still need is close, even with the app closed, with Got it and Photo right on the notification. It keeps quiet at night and pings once per visit. You'll never walk past treasure again.
 
 ### Highlights
 - Royalty got better by enabling Trip mode to receive alerts whenever there’s anything nearby. Because we cool like that.
