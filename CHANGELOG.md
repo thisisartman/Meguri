@@ -1,197 +1,352 @@
 # Changelog
 
-All notable changes to Meguri are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to Meguri are listed here, newest first. Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each big release opens with the story behind it, then its highlights, then everything in it.
+
+## [Unreleased]
+
+Merged into `testing` and heading toward 0.7.1.
+
+### Highlights
+- Nearby now splits into Places and Collectibles. Every station, city office or shrine gets a ring that fills as you collect there, a tiny progress bar of joy. A help bubble explains both.
+- Every station and shrine gets one page with everything you can get there, each with its own card, photos and Collect. One stop, one page, maximum efficiency.
+- Got a folder full of stamp photos from last summer? Bring the whole batch in at once. Nothing gets replaced, and stamps are cropped for you automatically.
+- Every find now has the date it was added. The mysterious "had before Meguri" era is officially over.
+- Station stamps wear red and Ekitag teal, so you can tell a station's two halves apart at a glance. Colour coordination is a love language.
+- Add photo and Collect now stay pinned at the bottom of a place page. Your thumb knows exactly where to go, even mid-sprint to catch the train.
+- Tile size now lives in the sort menu, and grouping is an on/off switch there too. Everything for tidying your view sits in one spot.
+- Screenshot a station's Ekitag details page and Meguri keeps just the stamp now.
+
+### Everything in this release
+- Added `Places` and `Collectibles` to Nearby. Places gives each station, city office or shrine one tile with a ring that fills as you collect what's there, and a help bubble explains both views (#192)
+- Added `Group by kind` to the sort menu in Places, with headings for stations, cities and towns, shrines and temples, roadside stations and dams (#192)
+- Added a page for each place, with a tile for each thing you can get there; tap one to open its card with its picture, `Directions` and `Collect`, and see the photos from the whole place below (#192)
+- Added `Add photos from a file` in `Settings › Backup and data`, which brings in a batch of your own photos without replacing anything and crops stamp photos to the stamp (#188)
+- Added a `Cover` button beside `Directions` on manhole cards (`Dam` on dam cards) that shows how far the cover is and opens directions to it; Meguri reads the position printed on the card when you scan it, and you can type it in `Edit details` (#203)
+- Changed every way of marking something you already have (first open, Collection check, My book and notebook pages) to save a find with the date it was added, so "had before Meguri" is gone (#194)
+- Changed station stamps to red, so they stand apart from teal Ekitags (#192)
+- Changed `Add photo` and `Collect` to stay pinned at the bottom of a place page
+- Changed `Tile size` to live in the sort menu (#192)
+- Fixed an Ekitag screenshot of a station's details page saving the whole screen as the stamp (#190)
 
 ## [0.7.0] - 2026-11-25
 
-### Added
-- New regions to download in Settings › Catalogue › Regions: Ibaraki, Kyoto, Osaka and Aichi (they also work in 0.6.0).
-- Ekitags can alert, under the station rule: only at stations you get off at in today's trip. Categories with nothing on your phone are left out of the alert list.
-- Check for updates in Help and about, off unless you switch it on: once a day Meguri asks GitHub for the latest release and says when a newer one is out. Nothing is downloaded or installed.
-- The first-open region step offers the offline map, ticked as in Regions.
-- Backups carry every column in their readable CSV files, and a categories.csv.
+Pack a bag, there are four new prefectures to explore. Ibaraki, Kyoto, Osaka and Aichi are ready to download, and Ekitags can now ping you at the stations you get off at.
 
-### Changed
-- One word for each thing: Collect and Collect again everywhere, and "find" for what you collected.
-- Times follow your phone's 12 or 24-hour setting on every screen.
-- Back up now is one dialog with an Include photos switch.
-- Settings keeps its bar with Back on screen while the page scrolls.
-- Map credits open from a 48 dp button as "Map data".
-- Shorter explanations where the controls already say it.
+Starting fresh also stops handing you half a region. The first one arrives whole, and if a piece ever goes missing, Regions tells you and fetches the rest. Switch on the update check and Meguri will even tell you when a newer version is out. Your weekends are officially booked.
 
-### Fixed
-- The first region you load came in only in part; now every pack loads, and Regions says when part of a prefecture is missing, with "Download the rest".
-- Maps opened on the whole world when you were far from your finds; they now frame your finds.
-- Card pictures the card site doesn't have yet no longer count as failures every time.
-- A display picture whose photo was removed is cleared, and the item can go with its region.
-- Station totals say how many have no stamp, and line pages count like My book.
-- Road numbers shared by two routes show one number ("8" not "8;17").
-- Less work on the main thread at start, when scanning and in the log.
+### Highlights
+- Ibaraki, Kyoto, Osaka and Aichi are new regions to download. Your weekend plans just got a lot more expensive. They work in 0.6.0 too. So, you can waste money while using a dated release too.
+- Ekitags can alert you now, at the stations you get off at on today's trip. Categories with nothing on your phone stay out of the alert list, so no ghost options.
+- Switch it on and Meguri checks once a day whether a newer version is out, and tells you. It never downloads or installs anything by itself. Polite king behaviour.
+- Setting up for the first time? The region step now offers the offline map too, already ticked, same as in Regions. One less trip to Settings.
+- Backups now carry every detail in their readable spreadsheet files, plus a list of your categories. Your data, fully portable, fully yours.
+- One word for each thing, everywhere. It's Collect and Collect again, and "find" for what you collected. The council of words is pleased.
+- Times follow your phone's 12 or 24-hour setting on every screen. Team 5 PM and team 17:00 can finally live in peace.
+- Back up now is a single dialog with an Include photos switch, so backing up takes about as long as saying "itadakimasu".
+- Settings keeps its bar and Back button on screen while you scroll. Scrolling all the way back up is for peasants.
+- Map credits open from a big, easy-to-tap "Map data" button. The map makers get their credit and your thumb gets a big target.
+- Explanations got shorter where the buttons already say it all. You can read, we trust you.
+- The first region you loaded sometimes came in only partly, like a jigsaw with missing pieces. Now every pack loads, and Regions tells you when part of a prefecture is missing, with "Download the rest".
+- Maps used to open on the whole planet when you were far from your finds. Now they frame your finds, because you're the main character here.
+
+### Everything in this release
+- Added Ibaraki, Kyoto, Osaka and Aichi to `Settings › Catalogue › Regions`; they download in 0.6.0 too
+- Added Ekitags to alerts under the station rule, so they alert only at stations you get off at on today's trip; categories with nothing on your phone stay out of the alert list (#138)
+- Added `Check for updates` in `Help and about`, off until you switch it on; once a day Meguri asks GitHub whether a newer release is out and tells you, and it never downloads or installs anything (#131)
+- Added the offline map to the first-open region step, ticked as in `Regions` (#135)
+- Added every detail to the readable spreadsheet files inside a backup, plus a list of your categories (#170)
+- Changed the wording so each thing has one word, with `Collect` and `Collect again` everywhere and "find" for what you collected (#143, #144)
+- Changed times to follow your phone's 12 or 24-hour setting on every screen (#145)
+- Changed `Back up now` to one dialog with an `Include photos` switch (#163)
+- Changed Settings pages to keep their bar and `Back` on screen while the page scrolls (#141)
+- Changed the map credits to open from a bigger, easier-to-tap `Map data` button (#152)
+- Changed explanations to be shorter where the controls already say it (#148, #149)
+- Fixed the first region you load coming in only in part; every pack loads now, and `Regions` says when part of a prefecture is missing, with `Download the rest` (#134)
+- Fixed maps opening on the whole world when you were far from your finds; they frame your finds now (#136)
+- Fixed card pictures the card site hasn't put up yet counting as failures every time (#160)
+- Fixed a display picture still pointing at a removed photo; it is cleared now, and the item can go with its region (#168)
+- Fixed station totals and line pages counting differently from My book; totals also say how many have no stamp (#156)
+- Fixed road numbers shared by two routes showing as "8;17"; they show one number now (#150)
+- Fixed stutters at start, while scanning and in the log, where Meguri did heavy work while drawing the screen (#166)
 
 ## [0.6.0] - 2026-11-20
 
-The first public test version.
+My weekly backup sat on the same phone it was meant to protect. One puddle and both would be gone.
 
-### Added
-- Weekly backup asks where: a folder, one file (Google Drive and other cloud apps, replaced each week), or your own server (Nextcloud or any WebDAV, HTTPS).
-- Restore from your server.
-- Report availability, a correction or something new from an item's ⋮ menu.
+So the weekly backup now asks where it should go. Pick a folder, Google Drive or another cloud app, or your own server, and bring it back from your server when you need it. This is also the first version anyone can try, so if a stamp has moved or a shrine stopped doing goshuin, the ⋮ menu on its page lets you tell me. And the keyboard no longer gets to eat the Save button.
 
-### Changed
-- Send, Cancel and Save stay on screen above the keyboard.
-- The Privacy page lists every online service and permission.
+### Highlights
+- Backups sitting on the same phone that falls in the puddle drove me nuts. Now the weekly backup asks where to go, whether that's a folder, Google Drive or another cloud app, or your own server.
+- Backing up to my own server with no way to bring it back felt like a prank. Now you can restore from your server too.
+- Every time a stamp moved or a shrine stopped doing goshuin, I had nowhere to say so. Now an item's ⋮ menu lets you report it, send a correction or suggest something new.
+- Watching the keyboard eat the Save button was my villain origin story. Send, Cancel and Save now stay on screen above the keyboard.
+- I wanted to know exactly what the app talks to and why. The Privacy page now lists every online service and permission.
+- Places I added myself kept ending up in the wrong spot in My book. Now they sit under their prefecture, where they belong.
+- Downloading a map and still staring at the old one was a special kind of sad. Maps now redraw right after a map download.
 
-### Fixed
-- Places you add go under their prefecture in My book.
-- Maps redraw after a map download.
+### Everything in this release
+- Added a choice of place for the weekly backup, with a folder, one file in Google Drive or another cloud app (replaced each week), or your own server such as Nextcloud over HTTPS (#3)
+- Added `Restore` from your own server (#3)
+- Added reporting from an item's `⋮` menu, to say whether it is still there, send a correction or suggest something new
+- Changed `Send`, `Cancel` and `Save` to stay on screen above the keyboard (#16)
+- Changed the Privacy page to list every online service and permission (#15)
+- Fixed places you add yourself landing outside their prefecture in My book (#17)
+- Fixed maps not redrawing after a map download (#18)
 
 ## [0.5.0] - 2026-11-15
 
-### Added
-- Region downloads: each prefecture is its own download in Settings › Catalogue › Regions, with what you can collect there and, if you want it, its offline map (36 to 43 MB). "Update all" when something changed; "Remove" keeps your finds, photos and edits. The first-open region step downloads too. Prefectures on your phone come first.
-- Opening hours: an item says whether it is open ("Open until 17:00", "Closed now · opens at 9:30", "Closed today"), in Japan time, with national holidays and the "closed Monday, or the next day when Monday is a holiday" rule. Trip stops you haven't collected warn when they are closed today. Hours Meguri can't read for certain show no status rather than a wrong one.
-- Places: a new type for somewhere with more than one thing to collect (for example a stamp and a goshuin), with its own "Places" tile in My book. Add one from Add › Category › "Place".
-- Change the type of something you added yourself from the pencil on its page; its photos stay.
-- Send feedback (Settings › Help and about): write a note, add screenshots and send it with your mail app, with the app version, phone model and, if ticked, the app log.
-- Scan: a code that isn't in Meguri (often one misread digit) offers the closest cards ("Or is it ...?"), "Type code" and "Pick by hand". Pick by hand's "Near you" looks 50 km around you when the photo has no place.
-- Motion: pages slide in and out; onboarding and Collection check steps fade into place; choice cards show their press.
+A 134 MB app for collecting stamps was embarrassing. Everyone got every map, whether they collected in Tokyo or had never left Niigata.
 
-### Changed
-- The app is 28 MB (0.4.0 was 134 MB): the offline map no longer comes inside the app. Updating from 0.4.0 keeps everything; the old built-in map keeps working until each prefecture's map is downloaded, then it is removed.
-- One station page: a station's stamp and its Ekitag open the same page, with an Ekitag section that has its own Collect and finds. Collecting it says "Collected Urasa Station · Ekitag".
-- Map: zoomed out, every marker shows its category icon; tapping a group glides in with its pins already drawn; groups are a little larger and easier to tap. Water is plain grey and light-mode land a neutral light grey.
-- Nearby: the category filter is the same pill and menu as on Alerts ("All categories" or one category). Search results use it too.
-- Manhole cards, dam cards and the other categories list prefectures you have started first; station stamps list lines you have started first, then the nearest.
-- What's new has a new layout: icon, title, the version in a pill and the notes in a scrolling box.
-- The photo slot "Where you got it" is now "Location".
-- A card's page shows its code once.
+Now each prefecture is its own download, offline map optional, and Meguri itself is 28 MB. Items also say whether they are open right now, in Japan time with holidays counted, so you stop reaching shrines ten minutes after they close. Your phone storage and your feet can both relax.
 
-### Fixed
-- First-open picker: Nearest starts at the top; tapping a place puts the keyboard away; OK clears the search; Done stays above the keyboard.
-- Nearby: Back clears a typed search before it leaves the app.
-- Collection check offers the card picture download while pictures are missing.
-- Card pictures: no "Downloading 0 of 0"; a failed download says to tap Card pictures to try again; the source site's "image coming soon" picture is no longer kept.
-- Road number signs show their number again on the offline map.
-- Ekitag pictures: a saved stamp image now fills its tile correctly.
-- The Nagaoka mascot card is spelled "Kawagutchi" (かわぐっち).
-- The app log names each page with its real arguments.
+### Highlights
+- It bugged me that everyone got every map whether they wanted it or not. Now each prefecture is its own download, offline map optional, and "Remove" keeps your finds, photos and edits.
+- Nothing ruins a day like reaching a shrine that closed ten minutes ago. Items now say whether they're open, in Japan time with holidays counted, and trip stops warn you when they're closed today.
+- Some spots have a stamp and a goshuin, and cramming them into one type annoyed me. Places is a new type for exactly that, with its own tile in My book.
+- I picked the wrong type once and had to add the whole thing again. Now the pencil on its page changes the type, and the photos stay put.
+- Writing bug reports with screenshots scattered everywhere got old fast. Send feedback puts your note, screenshots and app details into one mail.
+- One misread digit and the scanner just shrugged at me. Now it offers the closest cards ("Or is it ...?"), lets you type the code, or pick it by hand.
+- The app felt like a slideshow from 2009. Pages slide in and out now, steps fade into place and choice cards show their press.
+- A 134 MB app for collecting stamps was honestly embarrassing. Meguri is 28 MB now because the offline map is its own download, and updating keeps everything.
+- A station's stamp and its Ekitag living on separate pages made zero sense to me. Now they share one page, and the Ekitag gets its own Collect.
+- Zoomed out, the map was a blob of identical dots. Now every marker shows its category icon, and groups are bigger and easier to tap.
+- Nearby and Alerts had two different filters, and my brain refused to learn both. Now they share the same pill and menu, search results included.
+- Scrolling past every prefecture to find the one I'd started was a workout I never signed up for. Prefectures and lines you've started now come first.
+- The old What's new screen looked like terms and conditions. Now it has an icon, a title, the version in a pill and notes that scroll.
+- "Where you got it" was a mouthful for a photo slot. It's just "Location" now.
+- Seeing a card's code twice on its page made me feel like I was losing it. Now it shows once.
+- The first-open picker fought me at every step. Nearest now starts at the top, the keyboard gets out of the way and Done stays visible.
+- "Downloading 0 of 0" was the most passive-aggressive message I've ever seen. It's gone, and failed downloads now tell you to tap Card pictures to try again.
+
+### Everything in this release
+- Added region downloads in `Settings › Catalogue › Regions`; each prefecture is its own download with what you can collect there and, if you want it, its offline map (36 to 43 MB). `Update all` fetches what changed, `Remove` keeps your finds, photos and edits, the first-open region step downloads too, and prefectures on your phone come first (#19)
+- Added opening hours to items, such as "Open until 17:00", "Closed now · opens at 9:30" or "Closed today", in Japan time with national holidays and the "closed Monday, or the next day when Monday is a holiday" rule; trip stops you haven't collected warn when they are closed today, and hours Meguri can't read for certain show no status (#20)
+- Added Places, a new type for somewhere with more than one thing to collect (a stamp and a goshuin, say), with its own `Places` tile in My book; add one from `Add › Category › Place` (#21)
+- Added changing the type of something you added yourself, from the pencil on its page; its photos stay (#22)
+- Added `Send feedback` in `Settings › Help and about`, which puts your note, screenshots, the app version, phone model and, if ticked, the app log into one mail (#23)
+- Added `Or is it ...?`, `Type code` and `Pick by hand` to Scan when a code isn't in Meguri (often one misread digit); `Near you` in `Pick by hand` looks 50 km around you when the photo has no place (#24)
+- Added motion, with pages sliding in and out, onboarding and Collection check steps fading into place and choice cards showing their press (#25)
+- Changed the app to 28 MB, down from 134 MB in 0.4.0, by moving the offline map into its own download; updating from 0.4.0 keeps everything, and the old built-in map keeps working until each prefecture's map is downloaded (#26)
+- Changed a station's stamp and its Ekitag to open the same page, with an Ekitag section that has its own `Collect` and finds; collecting it says "Collected Urasa Station · Ekitag" (#27)
+- Changed the map so that zoomed out, every marker shows its category icon, a tapped group glides in with its pins already drawn, and groups are larger and easier to tap; water is plain grey and light-mode land a neutral light grey (#28)
+- Changed the Nearby category filter to the same pill and menu as Alerts (`All categories` or one category), in search results too (#29)
+- Changed manhole cards, dam cards and the other categories to list prefectures you have started first; station stamps list lines you have started first, then the nearest (#30)
+- Changed What's new to a new layout with an icon, a title, the version in a pill and the notes in a scrolling box (#31)
+- Changed the photo slot `Where you got it` to `Location` (#32)
+- Changed a card's page to show its code once (#33)
+- Fixed the first-open picker; `Nearest` starts at the top, tapping a place puts the keyboard away, `OK` clears the search and `Done` stays above the keyboard (#34)
+- Fixed `Back` in Nearby leaving the app with a typed search still there; it clears the search first (#35)
+- Fixed Collection check not offering the card picture download while pictures are missing (#36)
+- Fixed card pictures saying "Downloading 0 of 0"; a failed download says to tap `Card pictures` to try again, and the card site's "image coming soon" picture is no longer kept (#37)
+- Fixed road number signs showing blank on the offline map (#38)
+- Fixed a saved Ekitag stamp image not filling its tile (#39)
+- Fixed the spelling of the Nagaoka mascot card, "Kawagutchi" (かわぐっち) (#40)
+- Fixed the app log naming pages vaguely; each page is logged with what it opened on (#41)
 
 ## [0.4.0] - 2026-11-09
 
-### Added
-- Notebook stamps: scan a notebook page and Meguri boxes each stamp (move, resize, remove or add boxes), cleans it, reads the station name and picks the station when sure, suggests it when fairly sure, or lets you search. Saved as had before Meguri; the date is optional.
-- Collection check is a card deck: choose a category and a prefecture, then swipe right ("Have it") or left ("Not yet") through what you don't have yet, with Undo.
-- Scan a card: trims to the top card, turns it so the code reads the right way up, offers "Or is it ...?" for look-alike codes, and offers Retake photo or Type code when the code can't be read. The first time you type a code, a short animation shows where it is on the card.
-- Item page: Remove item (for something you added) or Remove from my collection (for a catalogue item), both asking first.
-- Settings: Theme (Phone, Light or Dark; the map follows it), Colours (Meguri or Wallpaper) and Language as one-tap choices.
-- Categories: rename one, change its colour or icon, or remove it when empty. A type you write on the Add form that Meguri doesn't have becomes a category of its own.
-- Backup and data: Back up now (asks Without photos or With photos), a Weekly backup page (folder, Include photos, keep the last 2, 4 or 8), Restore, Suggest new photos, and Photos kept in Meguri (how many and how much space).
-- About page: version (tap to copy), credits for map and data sources, fonts and icons with their licences, third-party licences and privacy.
-- Logs record activity in Developer mode (Help and about › About); errors and crashes are always recorded.
+I had years of station stamps in paper notebooks and zero patience to type them in one by one. Every page sat on the shelf, judging me.
 
-### Changed
-- + opens a small card with Scan, Search and Add; the bottom bar stays usable.
-- Map: each pin is the item's picture in a ring of its category colour; places with many items show a gold circle with a count; items on the same spot sit side by side. The land is a shade apart from the app so the search bar and sheet stand out.
-- Nearby: a station's stamp and its Ekitag are one tile, with a badge that fills in once you have the Ekitag. Shorter tile names; empty tiles show their category icon in grey. Distances update as you move.
-- Alerts, simpler: When to alert is Off, Travelling or Always; one slider for How close (everything starts at 500 m, station stamps at 200 m), and any category can keep its own distance. Always no longer stops Proximity mode.
-- Search is forgiving everywhere: any part of a card code, full-width typing, hiragana or katakana, either language, the town; best match first, then nearest. Search results name their category.
-- What you collect is called a category everywhere. Wording: Collected and Not collected, Roadside station, Travelling alerts, "added to My book".
-- Settings list: an icon and a summary of what is set for each section.
-- Manhole cards show the design as the title, with place and code below.
-- Photos: Meguri's own copy is 3000 px, so full screen and zoom stay sharp; an Other photo can be named; Remove photo asks first.
-- Dates follow the phone's date style everywhere.
-- Backups, restores, card picture downloads and CSV imports keep running after you leave Settings. Files Meguri saves are named meguri-.
+Now you scan a notebook page and Meguri boxes every stamp, cleans it up and works out the station, asking only when it isn't sure. Ticking off what you already have is a card deck you swipe, and the + button opens a small card with Scan, Search and Add. The notebooks can go back on the shelf, finally at peace.
 
-### Fixed
-- Scan: a collected card keeps where you were, with Undo; the full screen button works.
-- Nearby: Back closes a tapped pin's card first; location is asked for once per visit.
-- Search: letters in order count as an abbreviation only from the start of a name.
-- Taps vibrate on more phones.
+### Highlights
+- Typing in every stamp from my old notebooks was killing me. Now you scan a page and Meguri boxes each stamp, cleans it up and finds the station, or asks when unsure.
+- Ticking off a giant list of what I already had felt like doing taxes. Now it's a card deck you swipe, right for "Have it" and left for "Not yet", with Undo for butterfingers.
+- Card scans kept failing on sideways or stacked cards. Now the scanner trims to the top card, turns it the right way up, and offers to retake or type the code.
+- Something I added by mistake just sat there judging me, with no way to get rid of it. Now the item page can remove it, after asking first.
+- Digging around for theme and language settings got on my nerves. Theme, Colours and Language are one-tap choices now, and the map follows your theme.
+- I made a category with a typo in it and couldn't rename it. Now you can rename, recolour, change the icon or remove an empty one. Because ARTman learns from his mistakes.
+- Backups felt like a mystery box, and I like knowing where my stuff is. Backup and data now has Back up now, a weekly backup page, Restore and how much space your photos take.
+- The map and data people deserved credit. The About page has the version, credits, licences and privacy in one place.
+- Logs record activity only in Developer mode, and errors and crashes are always kept. Nerds only, move along.
+- The + button took over the whole screen when I just wanted to scan something. Now it opens a small card with Scan, Search and Add, and the bottom bar stays usable.
+- Every pin looked the same, so I tapped each one to see what it was. Dumb, I know. Now each pin is the item's picture in its category colour, and busy spots show a gold count.
+- A station's stamp and Ekitag hogging two tiles felt like double-booking. Now they share one tile with a badge that fills in once you have the Ekitag, and distances update as you walk.
+- The old alert settings needed a manual. Now it's Off, Travelling or Always, one slider for how close, and any category can keep its own distance.
+- Search wanted the card code typed exactly right, which I never managed. Now any part of the code, hiragana or katakana, either language or the town will find it. Keyboard Warriors rejoice!
+- The app called the same thing three different names and I kept confusing myself. It's "category" everywhere now, with clearer words like Collected and Not collected.
+- Opening every Settings section to check what I'd set was tedious. Each one now shows an icon and a summary right in the list.
+- Manhole cards were titled by their code, which tells you nothing about the pretty design. The design is the title now, with the place and code below.
+- Zooming into my photos and getting a blurry mess was sad. Meguri keeps a much sharper copy now, so full screen and zoom look crisp, and Remove photo asks first.
+- Dates showed up in a style my phone never asked for. Now they follow your phone's date style everywhere.
+- Leaving Settings in the middle of a backup made me nervous. Backups, restores and downloads now keep running after you leave, and saved files start with "meguri-".
+- Collecting a card in Scan threw me back to the start every time. Now it keeps your place, with Undo, and the full screen button actually works.
+- Back closed the whole page when I only wanted to close a pin's card. Now it closes the card first, and location is asked for once per visit.
+
+### Everything in this release
+- Added scanning a notebook page of stamps. Meguri boxes each stamp (move, resize, remove or add boxes), cleans it, reads the station name and picks the station when sure, suggests one when fairly sure, or lets you search; they save as had before Meguri, with an optional date (#42)
+- Added a card deck to Collection check; choose a category and a prefecture, then swipe right (`Have it`) or left (`Not yet`) through what you don't have yet, with `Undo` (#43)
+- Added trimming to the top card when you scan a card, turning it so the code reads the right way up, `Or is it ...?` for look-alike codes, and `Retake photo` or `Type code` when the code can't be read; the first time you type a code, a short animation shows where it is on the card (#44)
+- Added `Remove item` (for something you added) and `Remove from my collection` (for a catalogue item) to the item page, both asking first (#45)
+- Added `Theme` (Phone, Light or Dark, and the map follows it), `Colours` (Meguri or Wallpaper) and `Language` to Settings as one-tap choices (#46)
+- Added renaming a category, changing its colour or icon, and removing it when empty; a type you write on the Add form that Meguri doesn't have becomes a category of its own (#47)
+- Added `Backup and data`, with `Back up now` (asks `Without photos` or `With photos`), a `Weekly backup` page (folder, `Include photos`, keep the last 2, 4 or 8), `Restore`, `Suggest new photos` and `Photos kept in Meguri` (how many and how much space) (#48)
+- Added an About page with the version (tap to copy), credits for map and data sources, fonts and icons with their licences, third-party licences and privacy (#49)
+- Added activity logs in Developer mode (`Help and about › About`); errors and crashes are always recorded (#50)
+- Changed `+` to open a small card with `Scan`, `Search` and `Add`, so the bottom bar stays usable (#51)
+- Changed map pins to the item's picture in a ring of its category colour; places with many items show a gold circle with a count, items on the same spot sit side by side, and the land is a shade apart from the app so the search bar and sheet stand out (#52)
+- Changed a station's stamp and its Ekitag to one tile in Nearby, with a badge that fills in once you have the Ekitag; tile names are shorter, empty tiles show their category icon in grey, and distances update as you move (#53)
+- Changed Alerts to be simpler; `When to alert` is `Off`, `Travelling` or `Always`, one `How close` slider sets the distance (500 m to start, 200 m for station stamps), any category can keep its own, and `Always` leaves Proximity mode running (#54)
+- Changed search to forgive everywhere, matching any part of a card code, full-width typing, hiragana or katakana, either language and the town, best match first, then nearest; results name their category (#55)
+- Changed the word for what you collect to "category" everywhere, with clearer wording such as `Collected` and `Not collected`, Roadside station, Travelling alerts and "added to My book" (#56)
+- Changed the Settings list to show an icon and a summary of what is set in each section (#57)
+- Changed manhole cards to show the design as the title, with place and code below (#58)
+- Changed photos so Meguri's own copy is 3000 pixels across and stays sharp full screen and zoomed in; an `Other` photo can be named, and `Remove photo` asks first (#59)
+- Changed dates to follow the phone's date style everywhere (#60)
+- Changed backups, restores, card picture downloads and catalogue imports to keep running after you leave Settings; files Meguri saves start with "meguri-" (#61)
+- Fixed Scan losing your place after you collect a card; it keeps where you were, with `Undo`, and the full screen button works (#62)
+- Fixed `Back` in Nearby closing the page while a tapped pin's card was open; it closes the card first, and location is asked for once per visit (#63)
+- Fixed search treating letters in order as an abbreviation from the middle of a name; it counts them only from the start (#64)
+- Fixed taps not vibrating on some phones (#65)
 
 ## [0.3.0] - 2026-11-08
 
-### Added
-- Nearby is a map with a sheet of round tiles (Stamps and Cards tabs, filters, nearest or A to Z, three tile sizes). Tapping a pin opens a compact card with Directions and Collect.
-- First open: Meguri explains the permissions it needs, lets you pick the prefectures you collect in, and, if you already have some, a picker to tick what you have.
-- Trip: pick where you start and end, or paste a Google Maps directions link; Meguri finds the train, every station on the way and what is within 2 km. Station stamps count only where you tap "Get off". Start trip turns on Proximity mode, which says where you get off next.
-- Trip report: share a day you collected on as a story image or a CSV.
-- Timeline in My book lists everything you collected, by day.
-- Scan a card: the on-device scanner finds the card, reads its printed code and offers the matching card to collect with the photo. A photo filed as a manhole cover is cut out as a circle.
-- Card pictures: Settings › Catalogue › Card pictures downloads each manhole card's picture onto your phone, for your own use only.
-- Share photos to Meguri from Android's share sheet: photos are grouped by where they were taken and matched to the nearest item.
-- Photo suggestions (off by default): a camera photo taken near something you haven't collected brings a quiet notification to attach it.
-- Your own collections, with duplicate counts and, for goshuin, what you paid.
-- Collection check, to tick off what you already have.
-- "No stamp here" marks a place where there was nothing to get.
-- Edit an item's details (names, where to get it, hours, notes, position); your edits stay when the catalogue is updated.
-- Several photos per find, kept as Meguri's own copies so clearing the gallery loses nothing. Choose which photo is the display picture, or let the first matching photo become it.
-- New categories: dam cards, museum stamps and roadside stations. Goshuin show the official map symbol (torii or 卍).
-- Catalogue: every Niigata, Saitama and Tokyo manhole card with where to get it; JR East station stamps for Saitama and Tokyo; dam cards for Saitama and Tokyo; 20 Niigata Ekitag stations; Kamitokoro Station.
-- Back up with photos, for moving to a new phone.
-- What's new shows once after an update.
+Planning a collecting day took three apps, a train timetable and a lot of squinting. Then I typed every card code in by hand.
 
-### Changed
-- My book is one page with your totals, a map of where you collected and one tile per category with a progress ring.
-- The bottom bar is Nearby, a gold + for logging a find, and My book. The menu (Trip, Collection check, Settings, Logs) is on My book.
-- Buttons say "Collect" and "Collect again".
-- Settings is a short list of sections, each opening its own page; Alerts have a distance for each category.
-- The offline map covers all of Niigata (with Sado), Saitama and Tokyo; it is flat and the same online and offline, light and dark.
-- Search is forgiving (spaces, hyphens, long vowels, small typos, Japanese) and searches every name and code.
-- The item page puts "Where to get it" right under the name; Directions open the place in Google Maps.
-- Faster start.
-- The database is upgraded when you update; back up first.
+Now Nearby is a map, Trip finds every station on your train and what's within 2 km of it, and the scanner reads a card's printed code for you. My book became one page with your totals and a ring for each category. Two of those three apps can leave the home screen.
 
-### Fixed
-- The release build no longer crashes when starting the card scanner.
-- Restoring onto a new phone no longer links a find to the wrong picture.
-- The welcome screen no longer flashes on start after an update.
-- What's new lists the current version's changes.
+### Highlights
+- On the map, you can now tap on the items and go to their pages to add them easily.
+- Getting thrown into the app with no idea why it wanted my location was weird. Now the first open explains the permissions, lets you pick your prefectures and tick what you already have.
+- Working out which stamps were on my train route took three apps and forever. Now you pick a start and end, or paste a Google Maps link, and Meguri finds every station and what's within 2 km.
+- I had a great collecting day and nothing to show off. Now you can share it as a story image or a spreadsheet file.
+- Remembering what I collected on which day was hopeless. The Timeline in My book lists everything by day, like a diary that writes itself.
+- Typing card codes by hand was the most boring part of the hobby. Now the scanner reads the printed code and offers the matching card, and manhole cover photos get cut into a circle.
+- A manhole card list with no pictures is just a boring list. Now you can download each card's picture onto your phone, for your own use only.
+- Adding photos one at a time after a long trip was soul-crushing. Now you can share a pile from your gallery, and Meguri groups them by place and matches each to the nearest item.
+- I kept forgetting to attach the photo I'd just taken. Turn this on and a camera photo near something you haven't collected brings a quiet nudge to attach it.
+- I collect things the app had never heard of, which felt lonely. Now you can make your own collections, count duplicates, and keep track of what you paid for goshuin.
+- Marking everything I already had was a chore I kept putting off. Collection check lets you tick off what you already have.
+- Turning up and finding nothing there hurt, and the app kept listing it anyway. Now "No stamp here" marks a place where there was nothing to get.
+- Some hours and notes were wrong and I couldn't fix them. Now you can edit an item's details, and your edits stay when the catalogue updates.
+- One photo per find was never enough, and clearing my gallery made me nervous. Now each find holds several photos as Meguri's own copies, and you pick the display picture.
+- Dam cards and museum stamps had no home, which hurt my heart. Now dam cards, museum stamps and roadside stations are in, and goshuin show a torii or 卍.
+- Hunting down where to get every card on random websites wore me out. The catalogue now has every Niigata, Saitama and Tokyo manhole card with where to get it, plus stamps and dam cards.
+- Losing my photos when I switch phones is my recurring nightmare. Back up with photos and take everything with you.
+- Finding new features by accident annoyed me. What's new now shows once after an update.
+- Google Photos, but for your collectibles.
+- App Navigation has never looked better.
+- "Got it" sounded like I was agreeing to terms and conditions. Buttons now say "Collect" and "Collect again", which is what you're actually doing.
+- Settings looks a lot prettier now.
+- The map looked different online and offline, light and dark, like four apps in a trench coat. Now it covers all of Niigata (with Sado), Saitama and Tokyo and looks the same everywhere.
+- One typo or a missing long vowel and search found nothing. Now it forgives spaces, hyphens, small typos and Japanese, and searches every name and code.
+- Scrolling to find where to get something was silly when that's the whole point. "Where to get it" sits right under the name now, and Directions open in Google Maps.
+- The app took its sweet time to start. It's faster now.
+- The database gets upgraded when you update, so back up first. Trust me on this one.
+- The card scanner crashed the moment I opened it, which is a bold choice for a scanner. It starts properly now.
+- Restoring onto a new phone paired finds with the wrong pictures, which was pure chaos. Now every find keeps its own picture.
+
+### Everything in this release
+- Added a map to Nearby with a sheet of round tiles (`Stamps` and `Cards` tabs, filters, nearest or A to Z, three tile sizes); tapping a pin opens a small card with `Directions` and `Collect` (#66)
+- Added a first-open guide that explains the permissions Meguri needs, lets you pick the prefectures you collect in and, if you already have some, offers a picker to tick what you have (#67)
+- Added Trip. Pick where you start and end, or paste a Google Maps directions link, and Meguri finds the train, every station on the way and what is within 2 km; station stamps count only where you tap `Get off`, and `Start trip` turns on Proximity mode, which says where you get off next (#68)
+- Added the trip report, which shares a day you collected on as a story image or a spreadsheet file (#69)
+- Added Timeline in My book, listing everything you collected by day (#70)
+- Added card scanning; the scanner on your phone finds the card, reads its printed code and offers the matching card to collect with the photo, and a photo filed as a manhole cover is cut out as a circle (#71)
+- Added `Card pictures` in `Settings › Catalogue`, which downloads each manhole card's picture onto your phone, for your own use only (#72)
+- Added sharing photos to Meguri from Android's share menu; photos are grouped by where they were taken and matched to the nearest item (#73)
+- Added photo suggestions, off at first; a camera photo taken near something you haven't collected brings a quiet notification to attach it (#74)
+- Added your own collections, with duplicate counts and, for goshuin, what you paid (#75)
+- Added Collection check, to tick off what you already have (#76)
+- Added `No stamp here`, to mark a place where there was nothing to get (#77)
+- Added editing an item's details (names, where to get it, hours, notes, position); your edits stay when the catalogue is updated (#78)
+- Added several photos per find, kept as Meguri's own copies so clearing the gallery loses nothing; choose the display picture, or let the first matching photo become it (#79)
+- Added dam cards, museum stamps and roadside stations as categories; goshuin show the official map symbol (torii or 卍) (#80)
+- Added to the catalogue every Niigata, Saitama and Tokyo manhole card with where to get it, JR East station stamps and dam cards for Saitama and Tokyo, 20 Niigata Ekitag stations and Kamitokoro Station (#81)
+- Added backing up with photos, for moving to a new phone (#82)
+- Added What's new, shown once after an update (#83)
+- Changed My book to one page with your totals, a map of where you collected and one tile per category with a progress ring (#84)
+- Changed the bottom bar to Nearby, a gold `+` for logging a find, and My book; the menu (Trip, Collection check, Settings, Logs) moved to My book (#85)
+- Changed the buttons to say `Collect` and `Collect again` (#86)
+- Changed Settings to a short list of sections, each opening its own page; Alerts have a distance for each category (#87)
+- Changed the offline map to cover all of Niigata (with Sado), Saitama and Tokyo, and to look the same online and offline, light and dark (#88)
+- Changed search to forgive spaces, hyphens, long vowels, small typos and Japanese, across every name and code (#89)
+- Changed the item page to put `Where to get it` right under the name; `Directions` opens the place in Google Maps (#90)
+- Changed start-up to be faster (#91)
+- Changed the database, which upgrades when you update; back up first (#92)
+- Fixed the release build crashing when starting the card scanner (#93)
+- Fixed a restore onto a new phone linking a find to the wrong picture (#94)
+- Fixed the welcome screen flashing on start after an update (#95)
+- Fixed What's new listing older changes; it lists the current version's now (#96)
 
 ## [0.2.0] - 2026-11-06
 
-### Added
-- Alerts near things still to get: Trip mode (checks your position until midnight, from More or a quick-settings tile) and alerts while the app is closed. Got it, Photo and Dismiss on the notification. Distance 200 m to 1 km, a switch per type, quiet at night, once a visit.
-- More says when background alerts can't work and opens the right settings page; "Keep alerts working" opens battery settings.
+I once walked right past a manhole card office with my phone in my pocket, and only found out from the map afterwards.
 
-### Changed
-- Nearby says why there is no position, with the right button, and says when nothing is within 30 km.
-- My book: sections fold, headers stay at the top, complete collections show a check.
-- One button and chip style, with visible borders and 48 dp touch targets.
-- Distances under 25 m read "here".
-- Japanese mode reads more naturally.
-- Backups name the file they saved; the weekly backup dialog says its folder and how many it keeps.
+Now Meguri taps you on the shoulder. Switch on Trip mode and it alerts you when something you still need is close, even while the app is closed, with Got it and Photo right on the notification. It stays quiet at night and alerts you once a visit. You won't walk past treasure again.
 
-### Fixed
-- "Approximate" location now gives a position.
-- A double tap on Got it logs one find, not two.
-- After the camera closes, "Logged ... Undo" shows again.
-- Reloading the same catalogue says it is up to date.
-- Screen readers hear which item a button is for.
-- No white flash before the first frame.
+### Highlights
+- Royalty got better by enabling Trip mode to receive alerts whenever there’s anything nearby. Because we cool like that.
+- Background alerts quietly stopped working and I had no clue why. Now More tells you when they can't work and opens the right settings page, battery settings included.
+- Nearby just showed nothing when it had no position, and I'd stare at it confused. Now it says why, gives you the right button, and tells you when nothing is within 30 km.
+- Your book looks better now, because that’s what bros do for one another.
+- Every button looked a bit different and my thumb kept missing the tiny ones. Now buttons and chips share one style, with visible borders and bigger spots to tap.
+- Being told something was 7 m away while standing on it felt silly. Anything under 25 m now just says "here".
+- Japanese mode read like a robot translated it, and it made me cringe. It reads more naturally now. Yokatta.
+- Backups went somewhere and I never knew where. Now they name the file they saved, and the weekly backup says its folder and how many it keeps.
+- Choosing "Approximate" location gave no position at all, which is approximately useless. Now it gives a position.
+- A double tap on Got it logged the same find twice, and I am not that good. Now it logs one.
+
+### Everything in this release
+- Added alerts near things still to get, with Trip mode (checks your position until midnight, from More or a quick settings tile) and alerts while the app is closed; the notification has `Got it`, `Photo` and `Dismiss`, the distance runs from 200 m to 1 km, each type has a switch, and alerts stay quiet at night and come once a visit (#97)
+- Added a note in More when background alerts can't work, with a button to the right settings page; `Keep alerts working` opens battery settings (#98)
+- Changed Nearby to say why there is no position, with the right button, and to say when nothing is within 30 km (#99)
+- Changed My book so sections fold, headers stay at the top and complete collections show a check (#100)
+- Changed buttons and chips to one style, with visible borders and bigger spots to tap (#101)
+- Changed distances under 25 m to read "here" (#102)
+- Changed Japanese mode to read more naturally (#104)
+- Changed backups to name the file they saved; the weekly backup dialog says its folder and how many it keeps (#105)
+- Fixed `Approximate` location giving no position (#106)
+- Fixed a double tap on `Got it` logging the same find twice (#107)
+- Fixed "Logged ... Undo" going missing after the camera closes (#108)
+- Fixed reloading the same catalogue giving no sign it was up to date (#109)
+- Fixed screen readers not hearing which item a button is for (#110)
+- Fixed a white flash before the first frame (#111)
 
 ## [0.1.0] - 2026-11-03
 
-### Added
-- Log a find with "Got it" (time and position saved, Undo for a few seconds), with or without a photo.
-- Nearby: the nearest things you still need, and your collections with progress.
-- My book: manhole cards by prefecture, station stamps as a stamp book per railway line, goshuin; mark the ones you already have in one go.
-- Add a goshuin, stamp or card that isn't in the list.
-- Back up all finds to a file; restore from a backup (your current data is saved first); optional weekly backup to a folder you pick.
-- Load a catalogue from a CSV file. Catalogue for Niigata (with Nagaoka, Tsubame, Niigata City, Sado and Kashiwazaki cards and Yahiko, Echigo and Shin'etsu Line stamp books) and Tokyo.
-- English or Japanese, chosen in the app.
-- An item's page with Directions and Call; a station says which lines it is on.
-- Logs screen with Export logs; errors and crashes are saved on the phone.
+Collecting manhole cards and station stamps meant kanji-heavy apps, a hundred websites and a notebook full of my own scribbles. Logging a find took longer than finding it.
 
-### Changed
-- The app is called Meguri (巡り, going round a circuit), under the MIT license.
-- No internet permission; Android backup and device-to-device transfer are off.
+So I made Meguri. Tap Got it and the time and place are saved, Nearby shows the closest things you still need, and My book keeps it all by prefecture and by railway line. It works with no internet, in English or Japanese.
 
-### Fixed
-- Photos taken in the app are no longer deleted after capture.
-- Nearby no longer crashes for items under 1 km.
-- A find logged with a photo keeps its position.
-- Large text: distances, titles and labels stay visible.
-- Removing a "had before the app" mark asks first.
+### Highlights
+- I collected a thing but the process of adding it was tedious and time-consuming. So, now, I can just mark it as collected to make sure it doesn’t cause me to lose aura points.
+- Only peasants keep looking for nearby cards and stamps via kanji-heavy apps and a 100 different websites and forums. Royalty uses the nearby feature to see collectibles.
+- Where can you see the stuff you collected? In your book, of course! Check the My Book page for the most clear idea of what you’ve collected, where you did and more information!
+- Sometimes, you just find something at random that’s not available on the already awesome app. It’s okay. Nobody’s perfect. Now you can add it yourself.
+- Oh no! Your phone fell into a puddle of water, because you slipped on a banana peel that you dropped. It’s okay. Meguri backs up your data.
+- How does one find the list of stuff to collect? Import the catalogue and make your life easier.
+- Oh! Nihongo ga dekimasu ka? Sasuga na! Nihongo ga jouzu desu ne!
+- You can’t find the location or wanna call to check? Who you gonna call? Ask Meguri. It has an answer.
+- This is just for nerds. Don’t worry about this.
+- I wanted a name that felt like a trip around Japan. Meguri (巡り) means going round a circuit, and it's open for anyone under the MIT license.
+- Because Google knows enough already.
+- Taking a photo in the app and watching it vanish right after was cursed. Photos taken in the app stay put now.
+- The nearby wasn’t nearbying. Now it will.
 
+### Everything in this release
+- Added `Got it` to log a find, with or without a photo; the time and position are saved, with `Undo` for a few seconds (#112)
+- Added Nearby, with the nearest things you still need and your collections with progress (#113)
+- Added My book, with manhole cards by prefecture, station stamps as a stamp book per railway line, and goshuin; mark the ones you already have in one go (#114)
+- Added a way to add a goshuin, stamp or card that isn't in the list (#115)
+- Added backing up all finds to a file and restoring from a backup (your current data is saved first), with an optional weekly backup to a folder you pick (#116)
+- Added loading a catalogue from a spreadsheet file, with a catalogue for Niigata (Nagaoka, Tsubame, Niigata City, Sado and Kashiwazaki cards, and Yahiko, Echigo and Shin'etsu Line stamp books) and Tokyo (#117)
+- Added English or Japanese, chosen in the app (#118)
+- Added an item page with `Directions` and `Call`; a station says which lines it is on (#119)
+- Added a Logs screen with `Export logs`; errors and crashes are saved on the phone (#120)
+- Changed the app's name to Meguri (巡り, going round a circuit), under the MIT license (#121)
+- Changed Meguri to run with no internet permission, and turned off Android backup and device-to-device transfer (#122)
+- Fixed photos taken in the app being deleted after capture (#123)
+- Fixed Nearby crashing for items under 1 km (#124)
+- Fixed a find logged with a photo losing its position (#125)
+- Fixed large text hiding distances, titles and labels (#126)
+- Fixed removing a "had before the app" mark without asking first (#127)
+
+[Unreleased]: https://github.com/thisisartman/Meguri/compare/v0.7.0...testing
+[0.7.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.7.0
 [0.6.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.6.0
 [0.5.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.5.0
+[0.4.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.4.0
+[0.3.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.3.0
+[0.2.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.2.0
+[0.1.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.1.0
