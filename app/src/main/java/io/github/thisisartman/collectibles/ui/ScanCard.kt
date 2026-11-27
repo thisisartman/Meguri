@@ -78,7 +78,8 @@ private suspend fun uprightCopy(context: Context, bmp: android.graphics.Bitmap, 
             val dir = java.io.File(context.cacheDir, "scans").apply { mkdirs() }
             val f = java.io.File(dir, "scan-${System.currentTimeMillis()}.jpg")
             f.outputStream().use { check(turned.compress(android.graphics.Bitmap.CompressFormat.JPEG, 95, it)) }
-            turned.recycle()
+            // Unturned, createBitmap can hand back [bmp] itself, which the caller still uses
+            if (turned !== bmp) turned.recycle()
             Uri.fromFile(f)
         }.getOrNull()
     }
@@ -108,6 +109,8 @@ private data class Scan(
     val lookalikes: List<ItemRow> = emptyList(),
     /** The cover's position printed on the card, when it was read (#203); kept on the card you confirm */
     val coverAt: io.github.thisisartman.collectibles.data.CoverCoords.LatLng? = null,
+    /** The page upright and untrimmed, when [photo] is the trimmed card: kept as the photo's original for the edit screen (#208) */
+    val original: Uri? = null,
 )
 
 /**
@@ -228,6 +231,9 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // The copies are cut, turned and written to disk off the main thread (#167)
             val trimmed = if (code != null && src != null) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { cardCopy(context, src, turn) } else null
             vm.log.d("Scan", "Card code ${code ?: "not read"}, turn $turn°, card-only read ${src !== page0}, trim ${trimmed?.second ?: "not tried"}" + (failure?.let { ", reader failed: $it" } ?: ""))
+            // A photo that isn't the whole page (trimmed here, or the card the code was read off) keeps the page as it
+            // came, turned upright, as its original for the edit screen (#208). That card was cut from the page unturned
+            val original = if (page0 != null && (trimmed?.first != null || src !== page0)) kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { uprightCopy(context, page0, turn) } else null
             val photo = trimmed?.first ?: if (src != null && (turn != 0 || src !== page0)) {
                 kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { uprightCopy(context, src, turn) } ?: page.imageUri
             } else page.imageUri
@@ -284,7 +290,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
             // the first read (a code typed by hand afterwards still gets it)
             val coverAt = io.github.thisisartman.collectibles.data.CoverCoords.parse(codeText) ?: io.github.thisisartman.collectibles.data.CoverCoords.parse(rawText)
             vm.log.d("Scan", "Result: ${match?.item?.id ?: "no match"}, cover $cover, card without a code $isCard, ${alike.size} look-alikes, cover position ${if (coverAt != null) "read" else "not read"}")
-            result = Scan(photo, code, match, cover, near, alike, coverAt)
+            result = Scan(photo, code, match, cover, near, alike, coverAt, original)
             reading = false
         }
     }
@@ -371,8 +377,8 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                     s.coverAt?.let { vm.setScannedCover(row.item.id, it) }
                     // A scan is the card itself. Already collected: the photo joins its latest find. Not yet: a find now,
                     // where you are, with "Collected ... Undo" like every other way of collecting (finding 29)
-                    if (row.collected) vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
-                    else vm.collectWithPhoto(context, row, row.item.displayName(ja), s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP) { nav.openItem(row.item.id) }
+                    if (row.collected) vm.attachPhoto(row.item.id, s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP, s.original) { nav.openItem(row.item.id) }
+                    else vm.collectWithPhoto(context, row, row.item.displayName(ja), s.photo, io.github.thisisartman.collectibles.data.PhotoKind.STAMP, s.original) { nav.openItem(row.item.id) }
                 }) { Text(stringResource(if (row.collected) R.string.scan_add_photo else R.string.scan_collect)) }
                 // No code read, or one that isn't in the catalogue (often a misread digit): the person can usually read
                 // it, so type it (owner, 2026-11-09; for a misread code, owner 2026-11-10: "there needs to be an option
@@ -400,7 +406,7 @@ fun ScanCardHost(vm: MainViewModel, nav: NavHostController, trigger: Int) {
                 // A code that isn't in the catalogue: Pick by hand stays beside Type code
                 else if (s.code != null) TextButton(onClick = {
                     result = null
-                    vm.openShare(listOf(s.photo), io.github.thisisartman.collectibles.data.PhotoKind.STAMP)
+                    vm.openShare(listOf(s.photo), io.github.thisisartman.collectibles.data.PhotoKind.STAMP, s.original?.let { mapOf(s.photo.toString() to it) } ?: emptyMap())
                     nav.navigate("share")
                 }) { Text(stringResource(R.string.scan_pick)) }
                 else TextButton(onClick = { result = null }) { Text(stringResource(android.R.string.cancel)) }

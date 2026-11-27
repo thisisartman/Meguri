@@ -248,7 +248,7 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun attachFromGallery(
         context: android.content.Context, findId: String, picked: android.net.Uri, kind: String,
-        name: String? = null, size: Long? = null, cutStamps: Boolean = false,
+        name: String? = null, size: Long? = null, cutStamps: Boolean = false, original: android.net.Uri? = null,
     ): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             // A file from a photo file (#188) has no picker details: its own name and size are kept, to spot it again
@@ -276,7 +276,10 @@ class CollectionRepository @Inject constructor(
             val d = sorted.decision
             if (d.kind != kind) log.i("Photo", "Filed as $kind, sorted to ${d.kind} (${d.crop})") else log.d("Photo", "Kind $kind, cut ${d.crop}")
             nextKind[findId] = d.kind
-            insertPhoto(id, findId, info.copy(uri = uri), sorted.originalUri)
+            // A scanned card comes in already trimmed: its untrimmed page is the original (#208), in place of any the import kept
+            val kept = original?.let { io.github.thisisartman.collectibles.photo.PhotoStore.importOriginal(context, it, id) } ?: sorted.originalUri
+            if (original != null) log.d("Photo", "Scan original kept: ${kept != null}")
+            insertPhoto(id, findId, info.copy(uri = uri), kept)
             true
         }
 
@@ -330,7 +333,10 @@ class CollectionRepository @Inject constructor(
      * was taken and placed where they were taken. Each gets Meguri's own copy, filed as Other to sort later. Returns
      * how many were copied.
      */
-    suspend fun addShared(itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?, kind: String = PhotoKind.OTHER): Int {
+    suspend fun addShared(
+        itemId: String, photos: List<SharedPhoto>, centre: Pair<Double, Double>?, kind: String = PhotoKind.OTHER,
+        originals: Map<String, android.net.Uri> = emptyMap(),
+    ): Int {
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             dao.insertFind(
                 Acquisition(
@@ -340,7 +346,7 @@ class CollectionRepository @Inject constructor(
             )
         }
         var copied = 0
-        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), kind)) copied++
+        for (p in photos) if (attachFromGallery(context, findId, android.net.Uri.parse(p.uri), kind, original = originals[p.uri])) copied++
         log.i("Share", "Added $copied of ${photos.size} shared photos to item $itemId")
         return copied
     }

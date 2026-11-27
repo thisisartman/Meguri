@@ -181,6 +181,15 @@ object PhotoStore {
         return write(context, PhotoNames.original(photoId), bmp)
     }
 
+    /**
+     * Writes [source] (a scanned card before its trim, already upright) as the kept original of [photoId], at most
+     * [LONG_SIDE] px; it replaces one the import wrote. Its content_uri, or null.
+     */
+    fun importOriginal(context: Context, source: Uri, photoId: String): String? {
+        val bmp = runCatching { decode(ImageDecoder.createSource(context.contentResolver, source), LONG_SIDE) }.getOrNull() ?: return null
+        return write(context, PhotoNames.original(photoId), bmp)
+    }
+
     /** A picture from the app's files at most [px] on its long side, for the edit screen; null if it can't be read. */
     fun load(context: Context, uri: String, px: Int): Bitmap? =
         if (!isApp(uri)) null else runCatching { decode(ImageDecoder.createSource(file(context, uri)), px) }.getOrNull()

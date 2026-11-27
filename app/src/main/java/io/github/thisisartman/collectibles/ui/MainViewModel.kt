@@ -308,11 +308,18 @@ class MainViewModel @Inject constructor(
     /** What the shared photos are filed as on a manhole card: a scanned card (or cover) says so, a gallery share is Other. */
     private var shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
 
-    fun openShare(uris: List<android.net.Uri>, cardKind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER) {
+    /** For a trimmed card scan among the shared photos, its untrimmed page, by the scan's address (#208). */
+    private var shareOriginals: Map<String, android.net.Uri> = emptyMap()
+
+    fun openShare(
+        uris: List<android.net.Uri>, cardKind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER,
+        originals: Map<String, android.net.Uri> = emptyMap(),
+    ) {
         log.d("Share", "${uris.size} photos shared into Meguri")
         sharedUris.value = uris
         _shared.value = null
         shareCardKind = cardKind
+        shareOriginals = originals
     }
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
@@ -331,20 +338,27 @@ class MainViewModel @Inject constructor(
      * Scan, "Collect with this photo" (finding 29): a find now, placed where you are like Got it, with the scan as its
      * photo, and the same "Collected ... Undo" snackbar as every other way of collecting.
      */
-    fun collectWithPhoto(context: android.content.Context, row: ItemRow, name: String, uri: android.net.Uri, kind: String, onDone: (String) -> Unit) {
+    fun collectWithPhoto(
+        context: android.content.Context, row: ItemRow, name: String, uri: android.net.Uri, kind: String,
+        original: android.net.Uri? = null, onDone: (String) -> Unit,
+    ) {
         log.d("Tap", "Collect with this photo on ${row.item.id}")
         viewModelScope.launch {
             val findId = repo.logFind(row.item.id, Via.MANUAL)
             emit(Logged(findId, name, System.currentTimeMillis()))
-            repo.attachFromGallery(context.applicationContext, findId, uri, kind)
+            repo.attachFromGallery(context.applicationContext, findId, uri, kind, original = original)
             onDone(findId)
         }
     }
 
-    fun attachPhoto(itemId: String, uri: android.net.Uri, kind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER, onDone: () -> Unit) {
+    /** [original]: a trimmed card scan's untrimmed page, kept as the photo's original (#208). */
+    fun attachPhoto(
+        itemId: String, uri: android.net.Uri, kind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER,
+        original: android.net.Uri? = null, onDone: () -> Unit,
+    ) {
         viewModelScope.launch {
             val p = repo.readShared(uri)
-            repo.addShared(itemId, listOf(p), if (p.hasPlace) p.lat!! to p.lng!! else null, kind)
+            repo.addShared(itemId, listOf(p), if (p.hasPlace) p.lat!! to p.lng!! else null, kind, original?.let { mapOf(p.uri to it) } ?: emptyMap())
             onDone()
         }
     }
@@ -360,11 +374,12 @@ class MainViewModel @Inject constructor(
         var photos = 0
         val types = rows.value.associate { it.item.id to it.item.type }
         for ((itemId, group) in choices) {
-            photos += repo.addShared(itemId, group.photos, group.centre, sharedKind(types[itemId], shareCardKind))
+            photos += repo.addShared(itemId, group.photos, group.centre, sharedKind(types[itemId], shareCardKind), shareOriginals)
         }
         sharedUris.value = emptyList()
         _shared.value = null
         shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
+        shareOriginals = emptyMap()
         return photos to choices.map { it.first }.distinct().size
     }
 
