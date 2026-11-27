@@ -63,6 +63,7 @@ import io.github.thisisartman.collectibles.data.Photo
 import io.github.thisisartman.collectibles.data.PhotoKind
 import io.github.thisisartman.collectibles.photo.CoverCrop
 import io.github.thisisartman.collectibles.photo.EditGeometry
+import io.github.thisisartman.collectibles.photo.EditOriginal
 import io.github.thisisartman.collectibles.photo.EditRect
 import io.github.thisisartman.collectibles.photo.Handle
 import io.github.thisisartman.collectibles.photo.PhotoEdit
@@ -79,9 +80,10 @@ private const val PREVIEW_PX = 1600
 /**
  * Edit a photo (#208; owner, 2026-11-28: "some cards are not properly cropped"): a crop box with corners and edges
  * to drag, rotate a quarter turn, straighten up to 15 degrees, Reset, and for a manhole cover a circle. It starts
- * from the kept original when there is one (photos the app cut since this version); Reset goes back to that
- * whole original. Without one it edits the photo as it is: rotate and crop tighter only, and it says so.
- * Cancel and Save stay at the bottom. [onSave] reports whether the edit was written.
+ * from the kept original when there is one; Reset goes back to that whole original. Without one it edits the photo
+ * as it is, and saving keeps that as the original ([EditOriginal]), so the next edit can widen or reset. Only a photo
+ * the app cut before originals were kept says its full photo is gone. The straighten slider, Cancel and Save stay
+ * at the bottom. [onSave] reports whether the edit was written.
  */
 @Composable
 fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boolean) -> Unit) -> Unit) {
@@ -159,7 +161,7 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                     Icon(Icons.Outlined.Rotate90DegreesCw, contentDescription = stringResource(R.string.photo_edit_rotate))
                 }
                 // A cover can be cut as a circle again, or kept as the full photo (needs the original)
-                if (cover && fromOriginal) IconToggleButton(
+                if (cover) IconToggleButton(
                     checked = circle,
                     onCheckedChange = { on -> circle = on; if (on) crop = EditGeometry.square(crop) },
                     enabled = b != null && !saving,
@@ -169,7 +171,8 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                     Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.photo_edit_reset))
                 }
             }
-            if (fromOriginal) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            // Straighten, for every photo (owner, 2026-11-28: it was missing for photos with no original)
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Straighten, contentDescription = stringResource(R.string.photo_edit_straighten), tint = Color.White)
                 Spacer(Modifier.width(12.dp))
                 Slider(
@@ -186,7 +189,8 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                     modifier = Modifier.weight(1f),
                 )
                 Text("%+.1f°".format(degrees), color = Color.White, style = MaterialTheme.typography.labelMedium, modifier = Modifier.width(56.dp).padding(start = 8.dp))
-            } else if (loaded && b != null) Text(
+            }
+            if (loaded && b != null && EditOriginal.fullPhotoLost(fromOriginal, photo.role, photo.createdAt)) Text(
                 stringResource(R.string.photo_edit_no_original), color = Color.LightGray, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
             )

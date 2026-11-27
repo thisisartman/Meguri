@@ -27,6 +27,43 @@ data class EditRect(val left: Float, val top: Float, val right: Float, val botto
  */
 data class PhotoEdit(val quarterTurns: Int, val degrees: Float, val crop: EditRect, val circle: Boolean, val fromOriginal: Boolean)
 
+/**
+ * Which picture an edit starts from, and when the edit screen says the full photo is gone (#208; owner's device
+ * test, 2026-11-28: a photo never cut had no original, so its first crop was for good). Pure, for tests.
+ */
+object EditOriginal {
+    /** Schema v7, which keeps the original of every photo the app cuts, came in on this day (2026-11-28, JST). */
+    const val ORIGINALS_SINCE = 1_795_791_600_000L
+
+    /** The kinds the app may have cut on the way in before v7: a card or stamp, a cover's circle, an Ekitag. */
+    private val CUT_KINDS = setOf(
+        io.github.thisisartman.collectibles.data.PhotoKind.STAMP,
+        io.github.thisisartman.collectibles.data.PhotoKind.MANHOLE,
+        io.github.thisisartman.collectibles.data.PhotoKind.EKITAG,
+    )
+
+    /** What an edit cuts from ([source]), and the original to store before the edit ([storeOriginal]; null: none). */
+    data class Plan(val source: String, val storeOriginal: String?)
+
+    /**
+     * A kept original that still exists is the source. Without one, the photo as it is now is stored as its
+     * original first, so a later Reset or a wider crop always has it; [inApp] says the photo is the app's own copy
+     * (a picture still only in the gallery is not taken as an original).
+     */
+    fun plan(contentUri: String, originalUri: String?, originalExists: Boolean, inApp: Boolean): Plan = when {
+        originalUri != null && originalExists -> Plan(originalUri, null)
+        inApp -> Plan(contentUri, contentUri)
+        else -> Plan(contentUri, null)
+    }
+
+    /**
+     * Whether to say the full photo isn't kept: only for a photo with no original, of a kind the app cut, added
+     * before originals were kept. Any other photo is itself the full photo, or has its original.
+     */
+    fun fullPhotoLost(hasOriginal: Boolean, role: String, createdAt: Long): Boolean =
+        !hasOriginal && role in CUT_KINDS && createdAt < ORIGINALS_SINCE
+}
+
 /** Which part of the crop box a finger holds. */
 enum class Handle { TOP_LEFT, TOP, TOP_RIGHT, RIGHT, BOTTOM_RIGHT, BOTTOM, BOTTOM_LEFT, LEFT, MOVE }
 

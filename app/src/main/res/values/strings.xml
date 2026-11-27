@@ -457,7 +457,7 @@
     <string name="photo_edit_reset">Reset</string>
     <string name="photo_edit_circle">Circle</string>
     <string name="photo_edit_save">Save</string>
-    <string name="photo_edit_no_original">The full photo isn\'t kept for photos added before this version: crop tighter or rotate only.</string>
+    <string name="photo_edit_no_original">The full photo wasn\'t kept for this older photo.</string>
     <string name="photo_edit_failed">Couldn\'t save the photo</string>
     <string name="type_roadside">Roadside station</string>
     <string name="type_roadside_plural">Roadside stations</string>
@@ -749,7 +749,7 @@
     <string name="nearby_help_collectibles">the stamps and cards themselves, split into Stamps and Cards.</string>
     <string name="nearby_help_again">Tap ? any time to see this again.</string>
     <string name="nearby_help_got_it">Got it</string>
-    <string name="nearby_group_kind">Group by kind</string>
+    <string name="nearby_group_type">Group by type</string>
     <string name="place_kind_stations">Stations</string>
     <string name="place_kind_cities">Cities and towns</string>
     <string name="place_kind_shrines">Shrines and temples</string>

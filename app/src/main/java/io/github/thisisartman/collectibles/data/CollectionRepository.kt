@@ -407,27 +407,34 @@ class CollectionRepository @Inject constructor(
     }
 
     /**
-     * Saves an edit of a photo (#208): a new copy cut from its kept original (or, without one, from the photo as it
-     * is), under a new name so nothing shows the old picture; the photo keeps its id, kind and display-picture choice,
-     * and its original stays. False if the picture couldn't be read or written; then nothing changes.
+     * Saves an edit of a photo (#208): a new copy cut from its kept original, under a new name so nothing shows the
+     * old picture; the photo keeps its id, kind and display-picture choice, and its original stays. A photo with no
+     * original first gets the photo as it is as its original ([io.github.thisisartman.collectibles.photo.EditOriginal]).
+     * False if the picture couldn't be read or written; then the photo shows as before.
      */
     suspend fun editPhoto(photoId: String, edit: io.github.thisisartman.collectibles.photo.PhotoEdit): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
         val store = io.github.thisisartman.collectibles.photo.PhotoStore
         // The backup lock, so a backup never zips a photo halfway through being replaced
         backup.lock.withLock {
             val p = dao.allPhotos().firstOrNull { it.id == photoId } ?: return@withLock false
-            val source = if (edit.fromOriginal) p.originalUri else p.contentUri
-            if (source == null || !store.exists(context, source)) {
+            val plan = io.github.thisisartman.collectibles.photo.EditOriginal.plan(
+                p.contentUri, p.originalUri, p.originalUri?.let { store.exists(context, it) } == true, store.isApp(p.contentUri),
+            )
+            val source = plan.source
+            if (!store.exists(context, source)) {
                 log.w("Photo", "Edit of $photoId: its picture isn't in the app")
                 return@withLock false
             }
+            // A photo with no original keeps itself, as it was before this edit, as its original (owner, 2026-11-28),
+            // so the first crop is never for good
+            val original = plan.storeOriginal?.also { dao.setPhotoOriginal(photoId, it) } ?: p.originalUri
             val uri = store.saveEdit(context, source, photoId, edit) ?: run {
                 log.w("Photo", "Edit of $photoId could not be written")
                 return@withLock false
             }
             dao.setPhotoUri(photoId, uri)
-            if (p.contentUri != uri && p.contentUri != p.originalUri) store.delete(context, p.contentUri)
-            log.i("Photo", "Edited $photoId: ${edit.quarterTurns} turns, ${edit.degrees} degrees, circle ${edit.circle}, from the original ${edit.fromOriginal}")
+            if (p.contentUri != uri && p.contentUri != original) store.delete(context, p.contentUri)
+            log.i("Photo", "Edited $photoId: ${edit.quarterTurns} turns, ${edit.degrees} degrees, circle ${edit.circle}, original stored now ${plan.storeOriginal != null}")
             true
         }
     }

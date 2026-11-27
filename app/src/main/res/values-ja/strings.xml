@@ -452,7 +452,7 @@
     <string name="photo_edit_reset">リセット</string>
     <string name="photo_edit_circle">円形</string>
     <string name="photo_edit_save">保存</string>
-    <string name="photo_edit_no_original">このバージョンより前に追加した写真は元の写真がないため、狭く切り抜くか回転だけできます。</string>
+    <string name="photo_edit_no_original">この古い写真は、切り抜く前の写真が残っていません。</string>
     <string name="photo_edit_failed">写真を保存できませんでした</string>
     <string name="type_roadside">道の駅</string>
     <string name="type_roadside_plural">道の駅</string>
@@ -729,7 +729,7 @@
     <string name="nearby_help_collectibles">スタンプとカードそのもの。「スタンプ」と「カード」に分かれています。</string>
     <string name="nearby_help_again">？をタップすると、いつでもこの説明を表示できます。</string>
     <string name="nearby_help_got_it">OK</string>
-    <string name="nearby_group_kind">種類ごとに分ける</string>
+    <string name="nearby_group_type">種類ごとに分ける</string>
     <string name="place_kind_stations">駅</string>
     <string name="place_kind_cities">市町村</string>
     <string name="place_kind_shrines">寺社</string>
