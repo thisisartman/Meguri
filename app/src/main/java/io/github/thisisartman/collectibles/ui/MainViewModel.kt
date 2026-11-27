@@ -248,6 +248,11 @@ class MainViewModel @Inject constructor(
 
     fun removePhoto(photoId: String) { viewModelScope.launch { repo.removePhoto(photoId) } }
 
+    /** Saves a photo edit (#208); [done] says whether it was written, on the main thread. */
+    fun editPhoto(photoId: String, edit: io.github.thisisartman.collectibles.photo.PhotoEdit, done: (Boolean) -> Unit) {
+        viewModelScope.launch { done(repo.editPhoto(photoId, edit)) }
+    }
+
     fun setCover(itemId: String, photoId: String?) { viewModelScope.launch { repo.setCover(itemId, photoId) } }
 
     fun setNoneHere(itemId: String, none: Boolean) { viewModelScope.launch { repo.setNoneHere(itemId, none) } }

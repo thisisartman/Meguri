@@ -452,6 +452,14 @@
     <string name="photo_hint_channel_sub">A new photo taken near something you have not collected</string>
     <string name="photo_view_fullscreen">View full screen</string>
     <string name="photo_view_close">Close</string>
+    <string name="photo_edit">Edit</string>
+    <string name="photo_edit_rotate">Rotate</string>
+    <string name="photo_edit_straighten">Straighten</string>
+    <string name="photo_edit_reset">Reset</string>
+    <string name="photo_edit_circle">Circle</string>
+    <string name="photo_edit_save">Save</string>
+    <string name="photo_edit_no_original">The full photo isn\'t kept for photos added before this version: crop tighter or rotate only.</string>
+    <string name="photo_edit_failed">Couldn\'t save the photo</string>
     <string name="type_roadside">Roadside station</string>
     <string name="type_roadside_plural">Roadside stations</string>
     <string name="type_place">Place</string>

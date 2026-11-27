@@ -91,10 +91,11 @@ class BackupRestore @Inject constructor(
                         while (entry != null) {
                             when {
                                 entry.name == CollectiblesDb.NAME -> dbFile.outputStream().use { copyCapped(zip, it) }
-                                // Pictures carried by a "with photos" backup (#66); the name is a photo id only
-                                entry.name.startsWith("photos/") && PHOTO_ID.matches(entry.name.removePrefix("photos/")) -> {
-                                    val dirP = File(dir, "photos").apply { mkdirs() }
-                                    File(dirP, entry.name.removePrefix("photos/")).outputStream().use { copyCapped(zip, it, MAX_PHOTO_BYTES) }
+                                // Pictures carried by a "with photos" backup (#66), and their originals (#208); the name is a photo id only
+                                io.github.thisisartman.collectibles.photo.PhotoNames.parseBackup(entry.name) != null -> {
+                                    val (id, original) = io.github.thisisartman.collectibles.photo.PhotoNames.parseBackup(entry.name)!!
+                                    val dirP = File(dir, if (original) "originals" else "photos").apply { mkdirs() }
+                                    File(dirP, id).outputStream().use { copyCapped(zip, it, MAX_PHOTO_BYTES) }
                                 }
                                 entry.name == "backup.json" -> createdMs = CREATED_MS.find(zip.readBytes().toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
                             }
@@ -191,6 +192,7 @@ class BackupRestore @Inject constructor(
             log.i("Restore", "Restored ${rows.finds.size} finds, ${rows.items.size} items, ${rows.photos.size} photos; safety copy $safety")
             // A "with photos" backup (#66): pictures this phone can't open are put back in its gallery first
             val placed = restoreBundledPhotos(File(info.dir, "photos"))
+            restoreOriginals(File(info.dir, "originals"))
             val relink = if (rows.photos.isEmpty() || placed == rows.photos.size) null else relinkPhotos()
             // Every photo already has its picture: nothing left to find, so a later start mustn't relink them
             if (rows.photos.isNotEmpty() && placed == rows.photos.size) prefs.edit().putBoolean(KEY_RELINK, false).commit()
@@ -331,6 +333,24 @@ class BackupRestore @Inject constructor(
     }
 
     /**
+     * Each restored photo's kept original (#208): left alone when it is already on this phone, else put back from
+     * the backup; a photo whose original is in neither place can no longer be widened, so it loses the address.
+     */
+    private suspend fun restoreOriginals(dir: File) {
+        val store = io.github.thisisartman.collectibles.photo.PhotoStore
+        var put = 0
+        var lost = 0
+        for (p in dao.allPhotos()) {
+            val o = p.originalUri ?: continue
+            if (store.exists(context, o)) continue
+            val uri = File(dir, p.id).takeIf { it.isFile }?.let { f -> runCatching { store.importOriginal(context, f, p.id) }.getOrNull() }
+            dao.setPhotoOriginal(p.id, uri)
+            if (uri != null) put++ else lost++
+        }
+        if (put + lost > 0) log.i("Restore", "Originals from the backup: $put put back, $lost not in it")
+    }
+
+    /**
      * Whether the picture at the photo's stored address is that photo: it opens, and its name and size match the
      * fingerprint where both are known (MediaStore can report size 0 for a fresh picture, which counts as unknown).
      */
@@ -374,7 +394,6 @@ class BackupRestore @Inject constructor(
         private const val KEY_RELINK = "relink_pending"
         private const val MAX_DB_BYTES = 256L * 1024 * 1024
         private const val MAX_PHOTO_BYTES = 64L * 1024 * 1024
-        private val PHOTO_ID = Regex("[A-Za-z0-9-]{1,64}")
         private val CREATED_MS = Regex("\"created_ms\":(\\d+)")
 
         fun photoPermission(): String =

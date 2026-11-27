@@ -447,6 +447,14 @@
     <string name="photo_hint_channel_sub">未取得のものの近くで撮った新しい写真</string>
     <string name="photo_view_fullscreen">全画面で見る</string>
     <string name="photo_view_close">閉じる</string>
+    <string name="photo_edit">編集</string>
+    <string name="photo_edit_rotate">回転</string>
+    <string name="photo_edit_straighten">傾き補正</string>
+    <string name="photo_edit_reset">リセット</string>
+    <string name="photo_edit_circle">円形</string>
+    <string name="photo_edit_save">保存</string>
+    <string name="photo_edit_no_original">このバージョンより前に追加した写真は元の写真がないため、狭く切り抜くか回転だけできます。</string>
+    <string name="photo_edit_failed">写真を保存できませんでした</string>
     <string name="type_roadside">道の駅</string>
     <string name="type_roadside_plural">道の駅</string>
     <string name="type_place">スポット</string>

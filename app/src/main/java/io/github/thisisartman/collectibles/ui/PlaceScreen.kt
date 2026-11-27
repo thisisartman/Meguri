@@ -139,6 +139,7 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
                 setKind = vm::setPhotoKind,
                 remove = vm::removePhoto,
                 setCover = { id -> vm.setCover(s.main.item.id, id) },
+                edit = vm::editPhoto,
             )
         }
         fun sectionOf(thingId: String?) = sections.firstOrNull { it.main.item.id == thingId || it.ekitag?.item?.id == thingId }

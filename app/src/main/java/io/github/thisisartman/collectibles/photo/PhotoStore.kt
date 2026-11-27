@@ -19,11 +19,11 @@ import java.io.InputStream
  */
 object PhotoStore {
     const val SCHEME = "app:"
-    private const val DIR = "photos"
+    private const val DIR = PhotoNames.DIR
     const val LONG_SIDE = 3000
     const val QUALITY = 85
 
-    fun appUri(photoId: String) = "${SCHEME}$DIR/$photoId.webp"
+    fun appUri(photoId: String) = PhotoNames.copy(photoId)
 
     fun isApp(uri: String) = uri.startsWith(SCHEME)
 
@@ -54,18 +54,25 @@ object PhotoStore {
             ekitagTitle != null -> PhotoSort.Crop.EKITAG
             else -> PhotoSort.Crop.NONE
         }
-        return importSorted(context, source, photoId, { PhotoSort.Decision(PhotoKind.OTHER, crop) }, ekitagTitle)?.first
+        return importSorted(context, source, photoId, { PhotoSort.Decision(PhotoKind.OTHER, crop) }, ekitagTitle)?.uri
     }
 
     /**
+     * What [importSorted] wrote: the shown copy's content_uri (null if it couldn't be written), how it was sorted, and
+     * the original kept beside a copy the app cut ([PhotoNames.original]; null when nothing was cut or it failed).
+     */
+    data class Saved(val uri: String?, val decision: PhotoSort.Decision, val originalUri: String?)
+
+    /**
      * Like [importCopy], with the slot and cut chosen from the picture itself ([PhotoSort]): [decide] sees the
-     * picture as read, before any cut. Returns the new content_uri (null if it couldn't be written) and the
-     * decision, or null if the source can't be read.
+     * picture as read, before any cut. When the app cuts the picture (a card, a stamp, a cover, an Ekitag), the
+     * picture as read is kept too, upright and at most [LONG_SIDE] px (#208), so the cut can be redone. Null if the
+     * source can't be read.
      */
     fun importSorted(
         context: Context, source: ImageDecoder.Source, photoId: String,
         decide: (Bitmap) -> PhotoSort.Decision, ekitagTitle: String? = null,
-    ): Pair<String?, PhotoSort.Decision>? {
+    ): Saved? {
         val whole = runCatching { decode(source, LONG_SIDE) }.getOrNull() ?: return null
         val decision = decide(whole)
         // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
@@ -89,13 +96,17 @@ object PhotoStore {
             }
             PhotoSort.Crop.NONE -> null
         }
-        val bmp = cut?.takeIf { it !== whole }?.also { whole.recycle() } ?: whole
-        return write(context, photoId, bmp) to decision
+        val cutDone = cut?.takeIf { it !== whole }
+        // The original, before the cut: what the edit screen starts from (#208). Written first, as write() recycles it
+        val original = cutDone?.let { write(context, PhotoNames.original(photoId), whole) }
+        val bmp = cutDone ?: whole
+        return Saved(write(context, appUri(photoId), bmp), decision, original)
     }
 
-    private fun write(context: Context, photoId: String, bmp: Bitmap): String? {
-        val target = File(dir(context), "$photoId.webp")
-        val tmp = File(dir(context), "$photoId.webp.tmp")
+    /** Writes [bmp] as WebP to the app file of [uri] (an `app:` address), through a temporary file; recycles [bmp]. */
+    private fun write(context: Context, uri: String, bmp: Bitmap): String? {
+        val target = file(context, uri).also { it.parentFile?.mkdirs() }
+        val tmp = File(target.path + ".tmp")
         val ok = runCatching {
             tmp.outputStream().use { out ->
                 @Suppress("DEPRECATION")
@@ -106,13 +117,48 @@ object PhotoStore {
         }.isSuccess
         bmp.recycle()
         if (!ok) tmp.delete()
-        return if (ok) appUri(photoId) else null
+        return if (ok) uri else null
+    }
+
+    /**
+     * Writes an edited copy of [photoId] (#208): the picture at [sourceUri] (the original, or the photo as it was)
+     * turned, straightened and cut as [edit] says, as a circle for a cover, under a new file name. Its content_uri, or null.
+     */
+    fun saveEdit(context: Context, sourceUri: String, photoId: String, edit: PhotoEdit, now: Long = System.currentTimeMillis()): String? {
+        val src = load(context, sourceUri, LONG_SIDE) ?: return null
+        val out = runCatching { render(src, edit) }.getOrNull()
+        src.recycle()
+        return out?.let { write(context, PhotoNames.edited(photoId, now), it) }
+    }
+
+    /** [src] turned, straightened and cut by [edit]. */
+    fun render(src: Bitmap, edit: PhotoEdit): Bitmap {
+        val (fw, fh) = EditGeometry.turnedSize(src.width.toFloat(), src.height.toFloat(), edit.quarterTurns)
+        var box = EditGeometry.fromShares(edit.crop, fw, fh)
+        if (edit.circle) box = EditGeometry.square(box)
+        val w = maxOf(1, Math.round(box.width))
+        val h = maxOf(1, Math.round(box.height))
+        val m = EditGeometry.affine(src.width.toFloat(), src.height.toFloat(), edit.quarterTurns, edit.degrees)
+        val matrix = android.graphics.Matrix().apply {
+            setValues(floatArrayOf(m[0], m[1], m[2], m[3], m[4], m[5], 0f, 0f, 1f))
+            postTranslate(-box.left, -box.top)
+        }
+        val out = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(out)
+        val paint = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG or android.graphics.Paint.FILTER_BITMAP_FLAG)
+        if (edit.circle) {
+            // As CoverCrop cuts a cover: transparent outside the circle
+            canvas.drawCircle(w / 2f, h / 2f, minOf(w, h) / 2f, paint)
+            paint.xfermode = android.graphics.PorterDuffXfermode(android.graphics.PorterDuff.Mode.SRC_IN)
+        }
+        canvas.drawBitmap(src, matrix, paint)
+        return out
     }
 
     fun importCopy(context: Context, source: Uri, photoId: String, circle: Boolean = false, ekitagTitle: String? = null): String? =
         importCopy(context, ImageDecoder.createSource(context.contentResolver, source), photoId, circle, ekitagTitle)
 
-    fun importSorted(context: Context, source: Uri, photoId: String, decide: (Bitmap) -> PhotoSort.Decision, ekitagTitle: String? = null): Pair<String?, PhotoSort.Decision>? =
+    fun importSorted(context: Context, source: Uri, photoId: String, decide: (Bitmap) -> PhotoSort.Decision, ekitagTitle: String? = null): Saved? =
         importSorted(context, ImageDecoder.createSource(context.contentResolver, source), photoId, decide, ekitagTitle)
 
     fun importCopy(context: Context, source: File, photoId: String): String? =
@@ -122,6 +168,22 @@ object PhotoStore {
     fun delete(context: Context, uri: String) {
         if (isApp(uri)) file(context, uri).delete()
     }
+
+    /** Deletes a photo's app copy and its kept original (#208). */
+    fun delete(context: Context, uri: String, originalUri: String?) {
+        delete(context, uri)
+        originalUri?.let { delete(context, it) }
+    }
+
+    /** Writes a backup's original of [photoId] as its kept original, upright and resized as on the way in; its content_uri, or null. */
+    fun importOriginal(context: Context, source: File, photoId: String): String? {
+        val bmp = runCatching { decode(ImageDecoder.createSource(source), LONG_SIDE) }.getOrNull() ?: return null
+        return write(context, PhotoNames.original(photoId), bmp)
+    }
+
+    /** A picture from the app's files at most [px] on its long side, for the edit screen; null if it can't be read. */
+    fun load(context: Context, uri: String, px: Int): Bitmap? =
+        if (!isApp(uri)) null else runCatching { decode(ImageDecoder.createSource(file(context, uri)), px) }.getOrNull()
 
     /** Scaled down so the long side is at most [px]; ImageDecoder applies the EXIF rotation. Software, so it can be compressed. */
     private fun decode(source: ImageDecoder.Source, px: Int): Bitmap = ImageDecoder.decodeBitmap(source) { decoder, info, _ ->

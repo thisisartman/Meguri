@@ -26,7 +26,7 @@ abstract class CollectiblesDb : RoomDatabase() {
 
     companion object {
         const val NAME = "collectibles.db"
-        const val VERSION = 6
+        const val VERSION = 7
 
         /**
          * v1 to v2 (2026-11-07), additions only, so every v1 row and every v1 backup stays as it is:
@@ -81,8 +81,16 @@ abstract class CollectiblesDb : RoomDatabase() {
             }
         }
 
+        /** v6 to v7 (2026-11-28, #208): the original a cut photo was cut from, for the edit screen. Null for older photos. */
+        const val SQL_6_7 = "ALTER TABLE `photo` ADD COLUMN `original_uri` TEXT"
+        val MIGRATION_6_7 = object : Migration(6, 7) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL(SQL_6_7)
+            }
+        }
+
         /** Used by the app and by restore, so an older backup migrates the same way the app does. */
-        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
+        val MIGRATIONS = arrayOf<Migration>(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
     }
 }
 

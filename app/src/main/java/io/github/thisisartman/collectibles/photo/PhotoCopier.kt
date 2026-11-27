@@ -37,7 +37,8 @@ class PhotoCopier @Inject constructor(
                 val uri = PhotoStore.importCopy(context, Uri.parse(p.contentUri), p.id)
                 if (uri != null) { dao.setPhotoUri(p.id, uri); copied++ } else unreadable++
             }
-            val wanted = dao.allPhotos().map { it.contentUri }.filter(PhotoStore::isApp).map { PhotoStore.file(context, it).name }.toSet()
+            // A photo's kept original (#208) is wanted as much as its copy
+            val wanted = PhotoNames.wanted(dao.allPhotos().flatMap { listOf(it.contentUri, it.originalUri) })
             var orphans = 0
             // A copy written in the last minutes may belong to a photo being added right now: leave it
             val settled = System.currentTimeMillis() - 10 * 60_000

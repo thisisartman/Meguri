@@ -131,4 +131,21 @@ class MigrationTest {
         assertEquals("0", one("SELECT before_app FROM acquisition WHERE id = 'f1'"))
         db.close()
     }
+
+    /** #208: v6 photos keep everything and reach v7 with no original. */
+    @Test
+    fun v6PhotosGetNoOriginal() {
+        helper.createDatabase("migration-test-6-7.db", 6).apply {
+            execSQL("INSERT INTO item (id, type, catalog_key, name_ja, origin, created_at, updated_at) VALUES ('i1', 'GOSHUIN', 'GOSHUIN:豪徳寺', '豪徳寺', 'CSV_IMPORT', 1, 1)")
+            execSQL("INSERT INTO acquisition (id, item_id, acquired_at, before_app, via, created_at, quantity) VALUES ('f1', 'i1', 5, 0, 'MANUAL', 5, 1)")
+            execSQL("INSERT INTO photo (id, acquisition_id, content_uri, role, missing, created_at) VALUES ('p1', 'f1', 'app:photos/p1.webp', 'stamp', 0, 9)")
+            close()
+        }
+        val db = helper.runMigrationsAndValidate("migration-test-6-7.db", 7, true, *CollectiblesDb.MIGRATIONS)
+        fun one(sql: String): String? = db.query(sql).use { c -> if (c.moveToFirst()) (if (c.isNull(0)) null else c.getString(0)) else "no row" }
+        assertEquals("app:photos/p1.webp", one("SELECT content_uri FROM photo WHERE id = 'p1'"))
+        assertEquals("stamp", one("SELECT role FROM photo WHERE id = 'p1'"))
+        assertEquals(null, one("SELECT original_uri FROM photo WHERE id = 'p1'"))
+        db.close()
+    }
 }
