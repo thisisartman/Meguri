@@ -263,11 +263,11 @@ Narrator: he did not, in fact, keep it little, and proceeded to spend ungodly ho
 - Where can you see the stuff you collected? In your book, of course! Check the My Book page for the most clear idea of what you’ve collected, where you did and more information!
 - Sometimes, you just find something at random that’s not available on the already awesome app. It’s okay. Nobody’s perfect. Now you can add it yourself.
 - Oh no! Your phone fell into a puddle of water, because you slipped on a banana peel that you dropped. It’s okay. Meguri backs up your data.
-- How does one find the list of stuff to collect? Import the catalogue and make your life easier.
 - Oh! Nihongo ga dekimasu ka? Sasuga na! Nihongo ga jouzu desu ne!
 - You can’t find the location or wanna call to check? Who you gonna call? Ask Meguri. It has an answer.
-- This is just for nerds. Don’t worry about this.
 - I wanted a name that felt like a trip around Japan. Meguri (巡り) means going round a circuit, and it's open for anyone under the MIT license.
+- Because Google knows enough already.
+- The nearby wasn’t nearbying. Now it will.
 
 ### Everything in this release
 - Added `Got it` to log a find, with or without a photo; the time and position are saved, with `Undo` for a few seconds (#112)
