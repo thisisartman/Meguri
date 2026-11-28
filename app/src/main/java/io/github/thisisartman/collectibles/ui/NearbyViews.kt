@@ -168,13 +168,12 @@ fun HelpBubble(anchorHeight: Int, onDismiss: () -> Unit) {
                 drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, bg)
             }
             Surface(color = bg, contentColor = ink, shape = RoundedCornerShape(16.dp), shadowElevation = 6.dp) {
-                Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                // Got it sits on the last line's row, so the bubble ends with the text (S23, 2026-11-28: it had a row
+                // of its own and left an empty band)
+                Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     HelpLine(Icons.Outlined.LocationOn, stringResource(R.string.nearby_view_places), stringResource(R.string.nearby_help_places))
                     HelpLine(Icons.Outlined.GridView, stringResource(R.string.nearby_view_collectibles), stringResource(R.string.nearby_help_collectibles))
-                    HelpLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again))
-                    TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.nearby_help_got_it), color = MaterialTheme.colorScheme.inversePrimary, fontWeight = FontWeight.Bold)
-                    }
+                    HelpLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again), onGotIt = onDismiss)
                 }
             }
         }
@@ -182,8 +181,9 @@ fun HelpBubble(anchorHeight: Int, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun HelpLine(icon: ImageVector, title: String?, text: String) {
-    Row(Modifier.fillMaxWidth().padding(end = 8.dp)) {
+internal fun HelpLine(icon: ImageVector, title: String?, text: String, onGotIt: (() -> Unit)? = null) {
+    // With Got it, the text takes what is left of the row and wraps, so the button never leaves the bubble at 200 % text
+    Row(Modifier.fillMaxWidth().padding(end = if (onGotIt == null) 8.dp else 0.dp), verticalAlignment = if (onGotIt == null) Alignment.Top else Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp).padding(top = 1.dp))
         Spacer(Modifier.width(10.dp))
         Text(
@@ -192,7 +192,11 @@ private fun HelpLine(icon: ImageVector, title: String?, text: String) {
                 append(text)
             },
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
         )
+        if (onGotIt != null) TextButton(onClick = onGotIt, modifier = Modifier.heightIn(min = 48.dp)) {
+            Text(stringResource(R.string.nearby_help_got_it), color = MaterialTheme.colorScheme.inversePrimary, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
     }
 }
 
