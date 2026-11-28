@@ -1,7 +1,17 @@
 package io.github.thisisartman.collectibles.ui
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -80,6 +90,24 @@ object NearbyPrefs {
     fun namesOnSwitch(context: Context): Boolean = namesState.value ?: prefs(context).getBoolean("switch_names", false).also { namesState.value = it }
 
     fun setNamesOnSwitch(context: Context, on: Boolean) { prefs(context).edit().putBoolean("switch_names", on).apply(); namesState.value = on }
+
+    private val columnsState = mutableStateOf<Int?>(null)
+    private val foldedState = mutableStateOf<Set<String>?>(null)
+
+    /** Tiles per row, 3 to 6 (#225: − and + in the sort menu, in place of the size slider). */
+    fun columns(context: Context): Int = columnsState.value
+        ?: prefs(context).getInt("columns", SheetLayout.DEFAULT_COLUMNS).coerceIn(SheetLayout.MIN_COLUMNS, SheetLayout.MAX_COLUMNS).also { columnsState.value = it }
+
+    fun setColumns(context: Context, n: Int) { prefs(context).edit().putInt("columns", n).apply(); columnsState.value = n }
+
+    /** The Group by type sections folded shut (#225), by type name; kept between opens. */
+    fun folded(context: Context): Set<String> = foldedState.value
+        ?: (prefs(context).getStringSet("folded", emptySet())?.toSet() ?: emptySet()).also { foldedState.value = it }
+
+    fun toggleFolded(context: Context, kind: String) {
+        val now = folded(context).let { if (kind in it) it - kind else it + kind }
+        prefs(context).edit().putStringSet("folded", now).apply(); foldedState.value = now
+    }
 
     /** The help bubble shows once after this update, then only when ? is tapped. */
     fun helpSeen(context: Context): Boolean = prefs(context).getBoolean("help_seen", false)
@@ -200,16 +228,56 @@ internal fun HelpLine(icon: ImageVector, title: String?, text: String, onGotIt: 
     }
 }
 
-/** A heading under Group by kind: the kind's icon, its name and how many places. */
+/**
+ * A heading under Group by type: the type's icon, its name and how many places (the full count, #225). A tap folds
+ * or unfolds the section; the arrow on the right shows which.
+ */
 @Composable
-fun KindHeading(kind: PlaceKind, count: Int, modifier: Modifier = Modifier) {
-    Row(modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp).semantics(mergeDescendants = true) { heading() }, verticalAlignment = Alignment.CenterVertically) {
+fun KindHeading(kind: PlaceKind, count: Int, folded: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val state = stringResource(if (folded) R.string.nearby_section_folded else R.string.nearby_section_open)
+    val action = stringResource(if (folded) R.string.nearby_section_unfold else R.string.nearby_section_fold)
+    Row(
+        modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .clickable(onClickLabel = action, onClick = onToggle)
+            .padding(start = 8.dp, end = 8.dp, top = 4.dp)
+            .semantics(mergeDescendants = true) { heading(); stateDescription = state },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Icon(kind.icon(), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
         Text(
             stringResource(R.string.place_kind_heading, stringResource(kind.plural()), count),
             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
         )
+        val turn by animateFloatAsState(if (folded) -90f else 0f, label = "fold")
+        Icon(
+            Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp).rotate(turn),
+        )
+    }
+}
+
+/**
+ * The tile after a section's nearest few (#225): the same round shape with a down arrow, "N more" under it; a tap
+ * shows the whole section.
+ */
+@Composable
+fun MoreTile(size: Dp, hidden: Int, onOpen: () -> Unit) {
+    val label = stringResource(R.string.nearby_more_tile, hidden)
+    Column(
+        Modifier.clickable(onClickLabel = stringResource(R.string.nearby_more_tile_action), onClick = onOpen)
+            .padding(vertical = 6.dp, horizontal = 2.dp)
+            .semantics(mergeDescendants = true) { contentDescription = label },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(size)) {
+            androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.ArrowDownward, contentDescription = null, modifier = Modifier.size(size * 0.42f))
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2)
     }
 }
 

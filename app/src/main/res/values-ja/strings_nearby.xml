@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 近くのシート（#225）：タブ、タイルの大きさ、たためる見出し、「もっと見る」タイル -->
+<resources>
+    <string name="nearby_tiles_fewer">タイルを大きく</string>
+    <string name="nearby_tiles_more">タイルを小さく</string>
+    <string name="nearby_tiles_per_row">1行に%1$d個</string>
+    <string name="nearby_section_open">開いています</string>
+    <string name="nearby_section_folded">たたんでいます</string>
+    <string name="nearby_section_fold">たたむ</string>
+    <string name="nearby_section_unfold">開く</string>
+    <string name="nearby_more_tile">あと%1$d件</string>
+    <string name="nearby_more_tile_action">すべて表示</string>
+    <string name="nearby_tab_count">%1$s、%3$d件中%2$d件</string>
+</resources>
