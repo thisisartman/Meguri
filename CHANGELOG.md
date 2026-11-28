@@ -2,7 +2,43 @@
 
 All notable changes to Meguri are listed here, newest first. Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each big release opens with the story behind it, then its highlights, then everything in it.
 
+## [0.7.2] - 2026-11-28
+
+What if you're doing 60 on a country road and Meguri politely mentions the roadside station you passed a minute ago? Thanks, buddy. After much RnD, places you drive to now speak up a whole kilometre early, and a new High priority mode keeps pace with the car.
+
+Meanwhile, I visited my first roadside station and added its stamp. But the stamp showed up as a tiny circle in the middle of an ocean of white paper, because Meguri kept the whole photo. Not anymore. Stamps now crop themselves by shape: round ones fill a circle, square ones get a neat white border. Oh, and Meguri can update itself now.
+
+Meguri is now available for public testing. The era of suffering begins.
+
+### Highlights
+- Roadside stations, manhole cards and dam cards now alert from 1 km away. Early enough to actually take the exit.
+- Pick how hard Meguri watches the road: Low power for every day, High priority for trips, with your location every 5 seconds. Your battery gets a say.
+- Round stamps become circles. Square ones get a neat white border. Unsure? Meguri leaves the photo alone, like a responsible adult.
+- The photo editor now has Circle, Square and Free frames. The frame stays put; drag and pinch the photo under it until it sits just right.
+- Edit sits right on the photo now, next to full screen. No digging.
+- Meguri updates itself. It checks the download really is Meguri before Android installs it. Obtainium fans, the README has you covered.
+- A bad week can no longer overwrite your best backup with a nearly empty one. Accidents happen; disappearing collections shouldn't.
+
+### Everything in this release
+- Added `Location updates` in `Settings › Alerts`: `Low power` (every 20 s to 2 min, the default) or `High priority` (every 5 s, for trips), each saying what it costs (#218)
+- Added in-app updates: `Update` downloads the release, checks its size, SHA-256, package and signing certificate, then opens Android's installer; the update check is on for new installs (#222)
+- Added an Obtainium section to the README (#222)
+- Added `Circle`, `Square` and `Free` to the photo editor; in Circle and Square the frame stays fixed and the photo moves and zooms under it, and a cropped stamp opens in its own shape (#221)
+- Added an `Edit` button on the photo in the photo sheet, next to full screen (#221)
+- Added credits in `About`: Image Toolbox, Cashew and KashCal, as inspiration
+- Changed roadside stations, manhole cards and dam cards to alert from 1 km by default, and to report reaching the alert area within 5 s; a distance you set yourself still applies (#218)
+- Changed stamp photos to be cut by their shape on every way in (camera, `Add photo`, sharing, files): round to a circle, square to a square with a white margin, anything unclear left whole; place and other photos are never cut (#221)
+- Changed place search to send a position rounded to about 1 km, and logs to keep positions rounded; the Privacy page says what backups and trip reports contain
+- Changed Drive single-file backup to refuse replacing a backup with far fewer finds, to read the file back after writing, and to keep the backup with the most finds when tidying old ones
+- Changed backups to run one at a time, each with its own temporary file
+- Fixed Travelling alerts crashing when location access was taken away; it now turns off and says why
+- Fixed backup and region files being able to name paths outside Meguri's folders, and capped the size of files Meguri unpacks
+- Fixed other apps being able to start Meguri's internal actions
+- Fixed alert areas being refreshed twice at once
+
 ## [0.7.1] - 2026-11-28
+
+Your collection lived in three places: the app, a camera roll full of stamp photos, and a binder of manhole cards with weird numbers printed on them. Time to bring them all together.
 
 ### Highlights
 - Nearby now splits into Places and Collectibles. Every station, city office or shrine gets a ring that fills as you collect there, a tiny progress bar of joy. A help bubble explains both.
@@ -291,7 +327,9 @@ Narrator: he did not, in fact, keep it little, and proceeded to spend ungodly ho
 - Fixed large text hiding distances, titles and labels (#126)
 - Fixed removing a "had before the app" mark without asking first (#127)
 
-[Unreleased]: https://github.com/thisisartman/Meguri/compare/v0.7.0...testing
+[Unreleased]: https://github.com/thisisartman/Meguri/compare/v0.7.2...testing
+[0.7.2]: https://github.com/thisisartman/Meguri/releases/tag/v0.7.2
+[0.7.1]: https://github.com/thisisartman/Meguri/releases/tag/v0.7.1
 [0.7.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.7.0
 [0.6.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.6.0
 [0.5.0]: https://github.com/thisisartman/Meguri/releases/tag/v0.5.0
