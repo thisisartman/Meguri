@@ -1,13 +1,15 @@
 package io.github.thisisartman.collectibles.mockup
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
-import androidx.compose.foundation.background
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -19,12 +21,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -42,22 +42,24 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.IntRect
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import io.github.thisisartman.collectibles.R
@@ -66,11 +68,14 @@ import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.data.Origin
 import io.github.thisisartman.collectibles.ui.Mark
-import io.github.thisisartman.collectibles.ui.QuickPlacement
 import io.github.thisisartman.collectibles.ui.SectorRing
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.math.cos
+import kotlin.math.sin
 
 /** One dummy tile: its name and the things on it; one thing is a single collectible, several a place. */
-private class MockTile(val name: String, val things: List<ItemRow>)
+private class MockTile(val id: String, val name: String, val things: List<ItemRow>)
 
 /** A quick button: what it collects, its label and icon (null: the tick). */
 private class MockAction(val tile: MockTile, val row: ItemRow, val label: String, val icon: Int?)
@@ -80,20 +85,21 @@ private fun row(id: String, type: ItemType, nameJa: String, romaji: String, coll
     findCount = if (collected) 1 else 0, lastAt = null, photoUri = null,
 )
 
-private val TILES = listOf(
-    MockTile("Urasa", listOf(
-        row("s", ItemType.EKI_STAMP, "浦佐駅", "Urasa Station"),
-        row("e", ItemType.EKITAG, "浦佐駅", "Urasa Station"),
-        row("c", ItemType.MANHOLE_CARD, "南魚沼市", "Minamiuonuma", code = "15-226-A001"),
-    )),
-    MockTile("Tsubame", listOf(row("m", ItemType.MANHOLE_CARD, "燕市", "Tsubame", code = "15-213-A001"))),
-    MockTile("Michi-no-eki Yukiguni", listOf(row("r", ItemType.ROADSIDE_STATION, "道の駅 雪国", "Michi-no-eki Yukiguni"))),
-    MockTile("Okutadami Dam", listOf(row("d", ItemType.DAM_CARD, "奥只見ダム", "Okutadami Dam", collected = true))),
+private fun station(id: String, ja: String, en: String) = MockTile(id, en, listOf(
+    row("$id-s", ItemType.EKI_STAMP, "${ja}駅", "$en Station"),
+    row("$id-e", ItemType.EKITAG, "${ja}駅", "$en Station"),
+    row("$id-c", ItemType.MANHOLE_CARD, "南魚沼市", "Minamiuonuma", code = "15-226-A001"),
+))
+
+private val ROW_ONE = listOf(
+    station("urasa", "浦佐", "Urasa"),
+    MockTile("tsubame", "Tsubame", listOf(row("m", ItemType.MANHOLE_CARD, "燕市", "Tsubame", code = "15-213-A001"))),
+    MockTile("yukiguni", "Michi-no-eki Yukiguni", listOf(row("r", ItemType.ROADSIDE_STATION, "道の駅 雪国", "Michi-no-eki Yukiguni"))),
+    MockTile("okutadami", "Okutadami Dam", listOf(row("d", ItemType.DAM_CARD, "奥只見ダム", "Okutadami Dam", collected = true))),
 )
 
-/** B: which button the finger is over, by the buttons' bounds in root coordinates; -1 for none. Pure, so it is unit tested. */
-internal fun hoveredIndex(finger: Offset, bounds: Map<Int, Rect>): Int =
-    bounds.entries.filter { it.value.contains(finger) }.minOfOrNull { it.key } ?: -1
+/** One station per placement: left edge (fans right), middle (fans up), right edge (fans left). */
+private val ROW_TWO = listOf(station("muika", "六日町", "Muikamachi"), station("echigo", "越後湯沢", "Echigo-Yuzawa"), station("koide", "小出", "Koide"))
 
 private fun actionsOf(t: MockTile): List<MockAction> = t.things.map { r ->
     when (r.item.type) {
@@ -105,10 +111,9 @@ private fun actionsOf(t: MockTile): List<MockAction> = t.things.map { r ->
 }
 
 /**
- * #227 prototype: a row of four tiles and two ways to choose.
- * A) Hold, lift, tap: the buttons open wide with labels and shrink to icons after 1.5 s (Replay shows it again).
- * B) Hold and drag: the buttons open as icons; the one under your finger widens with its label and a tick of haptic;
- *    lift on a button to choose it, anywhere else to cancel.
+ * #227 prototype, radial (owner, 2026-11-28): the buttons sit on an arc around the held tile, 45 degrees apart, on
+ * the side with room. A) Hold, lift, tap: labels beside the icons, shrinking away after 1.5 s (Replay shows it
+ * again). B) Hold and drag: the button under the finger grows and shows its label; lift on it to choose.
  */
 @Composable
 fun HoldTileMockup() {
@@ -119,111 +124,143 @@ fun HoldTileMockup() {
     var hovered by remember { mutableIntStateOf(-1) }
     var chose by remember { mutableStateOf("Nothing chosen yet") }
     val tileBounds = remember { mutableStateMapOf<String, Rect>() }
-    val buttonBounds = remember { mutableStateMapOf<Int, Rect>() }
     var rootSize by remember { mutableStateOf(IntSize.Zero) }
-    var panelSize by remember { mutableStateOf(IntSize.Zero) }
     val haptic = LocalHapticFeedback.current
+    val density = LocalDensity.current
+    val tileDp = 64.dp
+    val buttonDp = 48.dp
+    // The ring clears the tile and the finger: tile size + 16 dp from the centre to the buttons' inner edge
+    val radius = with(density) { (tileDp + 16.dp + buttonDp / 2).toPx() }
+    val buttonPx = with(density) { buttonDp.toPx() }
+    val band = with(density) { 44.dp.toPx() }
+    // Each button's way out from the tile's centre, 0 at the centre and 1 on the arc
+    val progress = remember { List(4) { Animatable(0f) } }
+    val scope = rememberCoroutineScope()
 
+    fun geometry(t: MockTile): Pair<Offset, List<Double>>? {
+        val b = tileBounds[t.id] ?: return null
+        val c = b.center
+        val f = Radial.fan(c.x, c.y, rootSize.width.toFloat(), radius, buttonPx)
+        return c to Radial.angles(f, actionsOf(t).size)
+    }
+    fun close() {
+        scope.launch {
+            // Back in, the last out first in
+            progress.indices.reversed().forEach { i -> launch { delay((progress.lastIndex - i) * 30L); progress[i].animateTo(0f, tween(160)) } }
+            delay(160L + progress.size * 30L)
+            held = null; hovered = -1
+        }
+    }
     fun choose(a: MockAction) {
         chose = if (a.row.collected) "${a.label} at ${a.tile.name} is already collected" else "Chose: ${a.label} at ${a.tile.name}"
-        held = null; hovered = -1
+        close()
     }
     fun open(t: MockTile) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        buttonBounds.clear(); panelSize = IntSize.Zero; hovered = -1
-        held = t; wide = variant == "A"; replay++
+        hovered = -1; held = t; wide = variant == "A"; replay++
+        scope.launch {
+            progress.forEachIndexed { i, p ->
+                launch { p.snapTo(0f); delay(i * 30L); p.animateTo(1f, spring(dampingRatio = Spring.DampingRatioMediumBouncy, stiffness = Spring.StiffnessMediumLow)) }
+            }
+        }
     }
-    // A: wide with labels, then icons after about 1.5 s
+    // A: labels beside the icons, then icons only after about 1.5 s
     LaunchedEffect(replay, variant) {
-        if (variant == "A" && held != null) { wide = true; kotlinx.coroutines.delay(1500); wide = false }
+        if (variant == "A" && held != null) { wide = true; delay(1500); wide = false }
+    }
+
+    @Composable
+    fun Tile(t: MockTile, modifier: Modifier) {
+        Column(
+            modifier
+                .onGloballyPositioned { tileBounds[t.id] = it.boundsInRoot() }
+                .pointerInput(variant) {
+                    detectDragGesturesAfterLongPress(
+                        onDragStart = { open(t) },
+                        onDrag = { change, _ ->
+                            if (variant != "B") return@detectDragGesturesAfterLongPress
+                            val b = tileBounds[t.id] ?: return@detectDragGesturesAfterLongPress
+                            val (c, angles) = geometry(t) ?: return@detectDragGesturesAfterLongPress
+                            // Hit by angle and distance from the tile's centre: the nearest button within the ring band
+                            val at = b.topLeft + change.position
+                            val now = Radial.hit(at.x, at.y, c.x, c.y, angles, radius, band)
+                            if (now != hovered) { hovered = now; if (now >= 0) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+                        },
+                        onDragEnd = {
+                            if (variant == "B") {
+                                val a = actionsOf(t).getOrNull(hovered)
+                                if (a != null) choose(a) else { chose = "Cancelled"; close() }
+                            }
+                        },
+                        onDragCancel = { if (variant == "B") close() },
+                    )
+                }
+                .padding(vertical = 6.dp, horizontal = 2.dp)
+                .alpha(if (held == t) 0.6f else 1f),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            if (t.things.size > 1) SectorRing(t.things, tileDp) else Mark(t.things.first(), tileDp)
+            Spacer(Modifier.height(4.dp))
+            Text(t.name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2)
+        }
     }
 
     Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
         Column(Modifier.fillMaxSize().padding(16.dp)) {
-            Text("Hold a tile (#227 prototype)", style = MaterialTheme.typography.titleLarge)
+            Text("Hold a tile (#227 prototype, radial)", style = MaterialTheme.typography.titleLarge)
             Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = variant == "A", onClick = { variant = "A"; held = null }, label = { Text("A: tap") })
                 FilterChip(selected = variant == "B", onClick = { variant = "B"; held = null }, label = { Text("B: drag") })
-                if (variant == "A") OutlinedButton(onClick = { held?.let { replay++ } ?: TILES.first().let { open(it) } }) {
+                if (variant == "A") OutlinedButton(onClick = { held?.let { replay++ } ?: open(ROW_ONE.first()) }) {
                     Icon(Icons.Filled.Replay, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp)); Text("Replay")
                 }
             }
             Text(
-                if (variant == "A") "Hold a tile and lift. The buttons show their names, then shrink to icons. Tap one."
-                else "Hold a tile and keep your finger down. Drag over the icons; lift on one to choose it, elsewhere to cancel.",
+                if (variant == "A") "Hold a tile and lift. The buttons fan out with their names, then shrink to icons. Tap one."
+                else "Hold a tile and keep your finger down. Drag round the arc; lift on a button to choose it, elsewhere to cancel.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(120.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TILES.forEach { t ->
-                    var origin by remember { mutableStateOf(Offset.Zero) }
-                    Column(
-                        Modifier.weight(1f)
-                            .onGloballyPositioned { c -> c.boundsInRoot().let { origin = it.topLeft; tileBounds[t.name] = it } }
-                            .pointerInput(variant) {
-                                detectDragGesturesAfterLongPress(
-                                    onDragStart = { open(t) },
-                                    onDrag = { change, _ ->
-                                        if (variant != "B") return@detectDragGesturesAfterLongPress
-                                        val at = origin + change.position
-                                        val now = hoveredIndex(at, buttonBounds)
-                                        if (now != hovered) { hovered = now; if (now >= 0) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
-                                    },
-                                    onDragEnd = {
-                                        if (variant == "B") {
-                                            val a = actionsOf(t).getOrNull(hovered)
-                                            if (a != null) choose(a) else { held = null; hovered = -1; chose = "Cancelled" }
-                                        }
-                                    },
-                                    onDragCancel = { if (variant == "B") { held = null; hovered = -1 } },
-                                )
-                            }
-                            .padding(vertical = 6.dp, horizontal = 2.dp)
-                            .alpha(if (held == t) 0.6f else 1f),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        if (t.things.size > 1) SectorRing(t.things, 64.dp) else Mark(t.things.first(), 64.dp)
-                        Spacer(Modifier.height(4.dp))
-                        Text(t.name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2)
-                    }
-                }
+                ROW_ONE.forEach { t -> Tile(t, Modifier.weight(1f)) }
+            }
+            Spacer(Modifier.height(160.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                ROW_TWO.forEach { t -> Tile(t, Modifier.width(96.dp)) }
             }
             Spacer(Modifier.weight(1f))
             Text(chose, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(bottom = 8.dp))
         }
 
         val t = held
-        if (t != null) {
+        val g = t?.let { geometry(it) }
+        if (t != null && g != null) {
+            val (c, angles) = g
             // A tap outside closes (A); in B the finger is still down, so lifting decides instead
             if (variant == "A") Box(
-                Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { held = null },
+                Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { close() },
             )
-            val tile = tileBounds[t.name]
-            val place = if (tile != null && panelSize != IntSize.Zero) {
-                val r = IntRect(tile.left.toInt(), tile.top.toInt(), tile.right.toInt(), tile.bottom.toInt())
-                QuickPlacement.offset(QuickPlacement.side(r, rootSize, panelSize), r, rootSize, panelSize, 16)
-            } else IntOffset.Zero
-            Surface(
-                shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 6.dp,
-                modifier = Modifier.offset { place }.onSizeChanged { panelSize = it }.alpha(if (panelSize == IntSize.Zero) 0f else 1f),
-            ) {
-                Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    actionsOf(t).forEachIndexed { i, a ->
-                        val showLabel = if (variant == "A") wide else hovered == i
-                        MockButton(a, showLabel, highlighted = hovered == i,
-                            modifier = Modifier.onGloballyPositioned { buttonBounds[i] = it.boundsInRoot() },
-                            onClick = if (variant == "A") ({ choose(a) }) else null)
-                    }
-                }
+            actionsOf(t).forEachIndexed { i, a ->
+                val deg = angles[i]
+                val (tx, ty) = Radial.position(c.x, c.y, radius, deg, buttonPx / 2, rootSize.width.toFloat(), rootSize.height.toFloat())
+                val p = progress.getOrNull(i)?.value ?: 1f
+                val dir = Offset(cos(Math.toRadians(deg)).toFloat(), sin(Math.toRadians(deg)).toFloat())
+                val showLabel = if (variant == "A") wide else hovered == i
+                RadialButton(
+                    a, c.x + (tx - c.x) * p, c.y + (ty - c.y) * p, dir, p, showLabel, highlighted = hovered == i,
+                    onClick = if (variant == "A") ({ choose(a) }) else null,
+                )
             }
         }
     }
 }
 
+/** A round icon button centred on ([x], [y]), its label as a pill just outside the arc, pointing along [dir]. */
 @Composable
-private fun MockButton(a: MockAction, showLabel: Boolean, highlighted: Boolean, modifier: Modifier, onClick: (() -> Unit)?) {
+private fun RadialButton(a: MockAction, x: Float, y: Float, dir: Offset, progress: Float, showLabel: Boolean, highlighted: Boolean, onClick: (() -> Unit)?) {
     val done = a.row.collected
+    val scale by animateFloatAsState(if (highlighted) 1.25f else 1f, spring(stiffness = Spring.StiffnessMedium), label = "hover")
     val bg = when {
         done -> MaterialTheme.colorScheme.surfaceVariant
         highlighted -> MaterialTheme.colorScheme.primary
@@ -234,18 +271,39 @@ private fun MockButton(a: MockAction, showLabel: Boolean, highlighted: Boolean, 
         highlighted -> MaterialTheme.colorScheme.onPrimary
         else -> MaterialTheme.colorScheme.onSecondaryContainer
     }
-    Surface(
-        shape = RoundedCornerShape(24.dp), color = bg, contentColor = ink,
-        modifier = modifier.heightIn(min = 48.dp).widthIn(min = 48.dp)
-            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
-    ) {
-        Row(Modifier.padding(horizontal = 12.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (done || a.icon == null) Icon(Icons.Filled.Check, contentDescription = a.label, modifier = Modifier.size(24.dp))
-            else Icon(painterResource(a.icon), contentDescription = a.label, modifier = Modifier.size(24.dp))
-            val spec = tween<IntSize>(300, easing = FastOutSlowInEasing)
-            AnimatedVisibility(showLabel, enter = expandHorizontally(spec) + fadeIn(), exit = shrinkHorizontally(spec) + fadeOut()) {
-                Text(if (done) "${a.label}: collected" else a.label, Modifier.padding(start = 8.dp), maxLines = 1)
+    val gap = with(LocalDensity.current) { (24.dp * scale + 8.dp).toPx() }
+    Box(Modifier.placedAt(x, y, Offset.Zero)) {
+        Surface(
+            shape = CircleShape, color = bg, contentColor = ink, shadowElevation = 4.dp,
+            modifier = Modifier.size(48.dp)
+                .graphicsLayer { val s = scale * (0.4f + 0.6f * progress.coerceIn(0f, 1.2f)); scaleX = s; scaleY = s; alpha = progress.coerceIn(0f, 1f) }
+                .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier),
+        ) {
+            Box(contentAlignment = Alignment.Center) {
+                if (done || a.icon == null) Icon(Icons.Filled.Check, contentDescription = a.label, modifier = Modifier.size(24.dp))
+                else Icon(painterResource(a.icon), contentDescription = a.label, modifier = Modifier.size(24.dp))
             }
         }
+    }
+    // The label's near edge touches a point just past the button, along the arc's outward direction
+    Box(Modifier.placedAt(x + dir.x * gap, y + dir.y * gap, dir)) {
+        AnimatedVisibility(showLabel && progress > 0.5f, enter = fadeIn() + scaleIn(initialScale = 0.6f), exit = fadeOut() + scaleOut(targetScale = 0.6f)) {
+            Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.inverseSurface, contentColor = MaterialTheme.colorScheme.inverseOnSurface) {
+                Text(if (done) "${a.label}: collected" else a.label, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge, maxLines = 1)
+            }
+        }
+    }
+}
+
+/**
+ * Takes the whole parent and places the content so that its edge facing back along [dir] touches ([x], [y]); with
+ * [dir] zero, the content's centre sits there. Only the content itself takes touches.
+ */
+private fun Modifier.placedAt(x: Float, y: Float, dir: Offset) = this.layout { m, c ->
+    val p = m.measure(c.copy(minWidth = 0, minHeight = 0))
+    layout(c.maxWidth, c.maxHeight) {
+        val px = x - p.width / 2f + dir.x * p.width / 2f
+        val py = y - p.height / 2f + dir.y * p.height / 2f
+        p.place(px.toInt(), py.toInt())
     }
 }
