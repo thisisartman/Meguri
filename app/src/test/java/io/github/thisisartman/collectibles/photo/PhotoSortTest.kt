@@ -83,30 +83,47 @@ class PhotoSortTest {
 
     @Test fun aScreenshotOfAnythingElseKeepsItsKind() {
         assertEquals(Decision(PhotoKind.OTHER, Crop.NONE), PhotoSort.decide(ItemType.GOSHUIN, null, shot))
-        assertEquals(Decision(PhotoKind.STAMP, Crop.NONE), PhotoSort.decide(ItemType.GOSHUIN, PhotoKind.STAMP, shot))
+        // A goshuin's page is cut to the page however it came
+        assertEquals(Decision(PhotoKind.STAMP, Crop.PAGE), PhotoSort.decide(ItemType.GOSHUIN, PhotoKind.STAMP, shot))
         assertEquals(Decision(PhotoKind.OTHER, Crop.NONE), PhotoSort.decide(card, null, Facts(card = Result.NO_FRAME, screenshot = true)))
     }
 
     @Test fun aStationPhotoThatIsntAScreenshotKeepsItsKind() {
-        assertEquals(Decision(PhotoKind.STAMP, Crop.NONE), PhotoSort.decide(ItemType.EKI_STAMP, PhotoKind.STAMP, Facts()))
+        assertEquals(Decision(PhotoKind.STAMP, Crop.STAMP), PhotoSort.decide(ItemType.EKI_STAMP, PhotoKind.STAMP, Facts()))
         assertEquals(Decision(PhotoKind.OTHER, Crop.NONE), PhotoSort.decide(ItemType.EKI_STAMP, null, Facts()))
         assertEquals(Decision(PhotoKind.EKITAG, Crop.EKITAG), PhotoSort.decide(ItemType.EKITAG, PhotoKind.EKITAG, Facts()))
     }
 
-    @Test fun stampsAreCutOnlyForStampKindOnStampTypesWhereTheCallerCuts() {
-        for (t in listOf(ItemType.EKI_STAMP, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP, ItemType.PLACE)) {
-            assertEquals(Decision(PhotoKind.STAMP, Crop.STAMP), PhotoSort.decide(t, PhotoKind.STAMP, Facts(), cutStamps = true))
-            assertEquals(Decision(PhotoKind.STAMP, Crop.NONE), PhotoSort.decide(t, PhotoKind.STAMP, Facts()))
-            assertEquals(Crop.NONE, PhotoSort.decide(t, PhotoKind.PLACE, Facts(), cutStamps = true).crop)
+    @Test fun stampsAreCutOnEveryWayInForStampKindOnStampTypes() {
+        for (t in listOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP, ItemType.PLACE, ItemType.CUSTOM)) {
+            assertEquals(Decision(PhotoKind.STAMP, Crop.STAMP), PhotoSort.decide(t, PhotoKind.STAMP, Facts()))
+            // A stamp the caller cut already (a notebook stamp) isn't cut again
+            assertEquals(Decision(PhotoKind.STAMP, Crop.NONE), PhotoSort.decide(t, PhotoKind.STAMP, Facts(), cutStamps = false))
+            // Scenery stays whole
+            assertEquals(Crop.NONE, PhotoSort.decide(t, PhotoKind.PLACE, Facts()).crop)
+            assertEquals(Crop.NONE, PhotoSort.decide(t, PhotoKind.OTHER, Facts()).crop)
         }
-        // A goshuin stays whole, a card has its own cut
-        assertEquals(Crop.NONE, PhotoSort.decide(ItemType.GOSHUIN, PhotoKind.STAMP, Facts(), cutStamps = true).crop)
-        assertEquals(Crop.NONE, PhotoSort.decide(card, PhotoKind.STAMP, noCard, cutStamps = true).crop)
-        assertEquals(Crop.CARD, PhotoSort.decide(card, PhotoKind.STAMP, wholeCard, cutStamps = true).crop)
+        // A goshuin is cut to its page, a card has its own cut
+        assertEquals(Crop.PAGE, PhotoSort.decide(ItemType.GOSHUIN, PhotoKind.STAMP, Facts()).crop)
+        assertEquals(Crop.NONE, PhotoSort.decide(card, PhotoKind.STAMP, noCard).crop)
+        assertEquals(Crop.CARD, PhotoSort.decide(card, PhotoKind.STAMP, wholeCard).crop)
+    }
+
+    @Test fun aStampItemsPhotoWithNoKindIsTheStampWhenAClearStampIsOnIt() {
+        assertTrue(PhotoSort.checksStamp(ItemType.EKI_STAMP, null))
+        assertTrue(PhotoSort.checksStamp(ItemType.MUSEUM_STAMP, PhotoKind.OTHER))
+        assertFalse(PhotoSort.checksStamp(ItemType.EKI_STAMP, PhotoKind.PLACE))
+        assertFalse(PhotoSort.checksStamp(card, null))
+        assertFalse(PhotoSort.checksStamp(ItemType.GOSHUIN, null))
+        assertEquals(Decision(PhotoKind.STAMP, Crop.STAMP), PhotoSort.decide(ItemType.ROADSIDE_STATION, null, Facts(stamp = true)))
+        assertEquals(Decision(PhotoKind.OTHER, Crop.NONE), PhotoSort.decide(ItemType.ROADSIDE_STATION, null, Facts()))
+        // Filed as the place, it stays the place whatever is on it
+        assertEquals(Decision(PhotoKind.PLACE, Crop.NONE), PhotoSort.decide(ItemType.ROADSIDE_STATION, PhotoKind.PLACE, Facts(stamp = true)))
     }
 
     @Test fun otherKindsPassThrough() {
-        assertEquals(Decision(PhotoKind.GOSHUIN, Crop.NONE), PhotoSort.decide(ItemType.PLACE, PhotoKind.GOSHUIN, Facts(), cutStamps = true))
+        assertEquals(Decision(PhotoKind.GOSHUIN, Crop.PAGE), PhotoSort.decide(ItemType.PLACE, PhotoKind.GOSHUIN, Facts()))
+        assertEquals(Decision(PhotoKind.GOSHUIN, Crop.NONE), PhotoSort.decide(ItemType.PLACE, PhotoKind.GOSHUIN, Facts(), cutStamps = false))
         assertEquals(Decision(PhotoKind.PLACE, Crop.NONE), PhotoSort.decide(ItemType.GOSHUIN, PhotoKind.PLACE, Facts()))
         assertEquals(Decision(PhotoKind.OTHER, Crop.NONE), PhotoSort.decide(null, null, Facts()))
     }

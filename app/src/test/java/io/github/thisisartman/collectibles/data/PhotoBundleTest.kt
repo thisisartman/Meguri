@@ -80,9 +80,15 @@ class PhotoBundleTest {
         assertTrue(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.STAMP))
         assertTrue(PhotoBundle.cropsStamp(ItemType.MUSEUM_STAMP, PhotoKind.STAMP))
         assertTrue(PhotoBundle.cropsStamp(ItemType.ROADSIDE_STATION, PhotoKind.STAMP))
-        // A goshuin stays whole; a card's photo and an Ekitag screenshot have their own crops; a place photo is whole
+        assertTrue(PhotoBundle.cropsStamp(ItemType.EKITAG, PhotoKind.STAMP))
+        assertTrue(PhotoBundle.cropsStamp(ItemType.CUSTOM, PhotoKind.STAMP))
+        // A goshuin is cut to its page; a card's photo and an Ekitag screenshot have their own crops; a place photo is whole
         assertFalse(PhotoBundle.cropsStamp(ItemType.GOSHUIN, PhotoKind.STAMP))
+        assertTrue(PhotoBundle.cutsPage(ItemType.GOSHUIN, PhotoKind.STAMP))
+        assertTrue(PhotoBundle.cutsPage(ItemType.PLACE, PhotoKind.GOSHUIN))
+        assertFalse(PhotoBundle.cutsPage(ItemType.GOSHUIN, PhotoKind.PLACE))
         assertFalse(PhotoBundle.cropsStamp(ItemType.MANHOLE_CARD, PhotoKind.STAMP))
+        assertFalse(PhotoBundle.cropsStamp(ItemType.DAM_CARD, PhotoKind.STAMP))
         assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.EKITAG))
         assertFalse(PhotoBundle.cropsStamp(ItemType.EKI_STAMP, PhotoKind.PLACE))
     }

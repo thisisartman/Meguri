@@ -451,6 +451,15 @@
     <string name="photo_edit_straighten">傾き補正</string>
     <string name="photo_edit_reset">リセット</string>
     <string name="photo_edit_circle">円形</string>
+    <string name="photo_edit_square">正方形</string>
+    <string name="photo_edit_free">自由</string>
+    <string name="photo_edit_frame">切り抜き枠</string>
+    <string name="photo_edit_move_left">左へ移動</string>
+    <string name="photo_edit_move_right">右へ移動</string>
+    <string name="photo_edit_move_up">上へ移動</string>
+    <string name="photo_edit_move_down">下へ移動</string>
+    <string name="photo_edit_zoom_in">拡大</string>
+    <string name="photo_edit_zoom_out">縮小</string>
     <string name="photo_edit_save">保存</string>
     <string name="photo_edit_no_original">この古い写真は、切り抜く前の写真が残っていません。</string>
     <string name="photo_edit_failed">写真を保存できませんでした</string>
@@ -617,6 +626,11 @@
     <string name="about_sources">地図とデータの出典</string>
     <string name="about_sources_intro">地図、場所、カタログの出典です。名前をタップするとサイトが、横のボタンでライセンスが開きます。</string>
     <string name="about_art">フォントとアイコン</string>
+    <string name="about_inspired">参考にしたアプリ</string>
+    <string name="about_inspired_intro">Meguri が考え方を参考にしたアプリです。コードは使っていません。</string>
+    <string name="credit_image_toolbox">写真編集：切り抜き枠の参考</string>
+    <string name="credit_cashew">更新履歴のスタイル</string>
+    <string name="credit_kashcal">更新履歴のスタイル</string>
     <string name="about_licences">サードパーティのライセンス</string>
     <string name="about_licences_sub">Meguriが使っている%1$d個のライブラリ</string>
     <string name="about_licences_intro">名前をタップするとプロジェクトが、横のボタンでライセンスが開きます。</string>

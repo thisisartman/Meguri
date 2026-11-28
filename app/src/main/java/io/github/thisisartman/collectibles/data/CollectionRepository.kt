@@ -248,7 +248,7 @@ class CollectionRepository @Inject constructor(
      */
     suspend fun attachFromGallery(
         context: android.content.Context, findId: String, picked: android.net.Uri, kind: String,
-        name: String? = null, size: Long? = null, cutStamps: Boolean = false, original: android.net.Uri? = null,
+        name: String? = null, size: Long? = null, cutStamps: Boolean = true, original: android.net.Uri? = null,
     ): Boolean =
         kotlinx.coroutines.withContext(Dispatchers.IO) {
             // A file from a photo file (#188) has no picker details: its own name and size are kept, to spot it again
@@ -290,7 +290,10 @@ class CollectionRepository @Inject constructor(
         val sort = io.github.thisisartman.collectibles.photo.PhotoSort
         val card = if (sort.checksCard(type, kind)) runCatching { io.github.thisisartman.collectibles.photo.CardTrim.detect(bmp) }.getOrNull() else null
         val shot = sort.isScreenshot(name, path, bmp.width, bmp.height, camera)
-        return sort.decide(type, kind, io.github.thisisartman.collectibles.photo.PhotoSort.Facts(card, shot), cutStamps)
+        // A stamp item's photo given no kind: a clear stamp on paper makes it the stamp (#221)
+        val stamp = cutStamps && !shot && sort.checksStamp(type, kind) &&
+            io.github.thisisartman.collectibles.photo.StampCrop.plan(bmp) != null
+        return sort.decide(type, kind, io.github.thisisartman.collectibles.photo.PhotoSort.Facts(card, shot, stamp), cutStamps)
     }
 
     /** Whether the picture says which camera took it (EXIF make or model); a screenshot doesn't. */
@@ -448,7 +451,7 @@ class CollectionRepository @Inject constructor(
         val source = android.net.Uri.parse(photo.uri)
         val camera = hasCameraExif(source)
         val sorted = io.github.thisisartman.collectibles.photo.PhotoStore.importSorted(context, source, id, decide = { bmp ->
-            sort(type, asked, bmp, photo.displayName, photo.relativePath, camera, cutStamps = false)
+            sort(type, asked, bmp, photo.displayName, photo.relativePath, camera, cutStamps = true)
         })
         val uri = sorted?.uri
         if (uri == null) sorted?.originalUri?.let { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it) }

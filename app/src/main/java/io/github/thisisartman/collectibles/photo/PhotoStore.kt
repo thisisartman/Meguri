@@ -77,12 +77,13 @@ object PhotoStore {
         val decision = decide(whole)
         // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
         // A card is trimmed to the card (2026-11-27); no whole card found, the whole photo.
-        // A stamp photo from a photo file is cut to its stamp (#188); no stamp found, the whole photo.
+        // A stamp photo is cut to its stamp by its shape, a goshuin to its page (#221); unsure, the whole photo.
         // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
         val cut: Bitmap? = when (decision.crop) {
             PhotoSort.Crop.CIRCLE -> runCatching { CoverCrop.crop(whole) }.getOrNull()
             PhotoSort.Crop.CARD -> runCatching { CardTrim.trim(whole).first }.getOrNull()
             PhotoSort.Crop.STAMP -> StampCrop.cut(whole)
+            PhotoSort.Crop.PAGE -> StampCrop.cut(whole, page = true)
             PhotoSort.Crop.EKITAG -> ekitagTitle?.let { t ->
                 runCatching {
                     // "first\nsecond": the station's name in the app's language first

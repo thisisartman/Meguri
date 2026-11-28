@@ -456,6 +456,15 @@
     <string name="photo_edit_straighten">Straighten</string>
     <string name="photo_edit_reset">Reset</string>
     <string name="photo_edit_circle">Circle</string>
+    <string name="photo_edit_square">Square</string>
+    <string name="photo_edit_free">Free</string>
+    <string name="photo_edit_frame">Crop frame</string>
+    <string name="photo_edit_move_left">Move left</string>
+    <string name="photo_edit_move_right">Move right</string>
+    <string name="photo_edit_move_up">Move up</string>
+    <string name="photo_edit_move_down">Move down</string>
+    <string name="photo_edit_zoom_in">Zoom in</string>
+    <string name="photo_edit_zoom_out">Zoom out</string>
     <string name="photo_edit_save">Save</string>
     <string name="photo_edit_no_original">The full photo wasn\'t kept for this older photo.</string>
     <string name="photo_edit_failed">Couldn\'t save the photo</string>
@@ -635,6 +644,11 @@
     <string name="about_sources">Map and data sources</string>
     <string name="about_sources_intro">Where the map, places and catalogue come from. Tap a name to open its site, or the licence beside it.</string>
     <string name="about_art">Fonts and icons</string>
+    <string name="about_inspired">Inspired by</string>
+    <string name="about_inspired_intro">Apps whose ideas Meguri follows. No code is taken from them.</string>
+    <string name="credit_image_toolbox">Photo editor: inspired by its crop frames</string>
+    <string name="credit_cashew">Changelog style</string>
+    <string name="credit_kashcal">Changelog style</string>
     <string name="about_licences">Third-party licences</string>
     <string name="about_licences_sub">%1$d libraries Meguri is built with</string>
     <string name="about_licences_intro">Tap a name to open the project, or its licence.</string>

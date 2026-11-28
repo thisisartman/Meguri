@@ -209,6 +209,54 @@ object EditGeometry {
         return Triple(s, (boxW - w * s) / 2, (boxH - h * s) / 2)
     }
 
+    /**
+     * A Circle or Square frame (owner, 2026-11-28): the box is a square that stays put on screen while the photo
+     * moves under it. [r] as such a square: as big as it was, at most what [bounds] holds, centred where it was,
+     * moved inside [bounds].
+     */
+    fun toShape(r: EditRect, bounds: EditRect, minSide: Float): EditRect = panZoom(square(r), 0f, 0f, 1f, bounds, minSide)
+
+    /**
+     * The square box after the photo under a fixed frame was dragged and pinched: moved by [dx], [dy] (frame
+     * pixels, box's way), its side divided by [zoom] (spreading two fingers makes the photo bigger, so the box
+     * smaller). It stays a square at least [minSide], no bigger than [bounds] holds, wholly inside them, so the
+     * frame is always covered by the photo.
+     */
+    fun panZoom(r: EditRect, dx: Float, dy: Float, zoom: Float, bounds: EditRect, minSide: Float): EditRect {
+        val most = min(bounds.width, bounds.height)
+        val z = if (zoom.isFinite() && zoom > 0f) zoom else 1f
+        val side = (r.width / z).within(min(minSide, most), most)
+        val cx = (r.cx + dx).within(bounds.left + side / 2, bounds.right - side / 2)
+        val cy = (r.cy + dy).within(bounds.top + side / 2, bounds.bottom - side / 2)
+        return EditRect(cx - side / 2, cy - side / 2, cx + side / 2, cy + side / 2)
+    }
+
+    /** The steps a screen reader offers for a fixed frame: move a tenth of the box, zoom by a quarter. */
+    enum class Nudge { LEFT, RIGHT, UP, DOWN, ZOOM_IN, ZOOM_OUT }
+
+    /** The box after a [Nudge]: LEFT shows more of the photo to the left of the frame. */
+    fun nudge(r: EditRect, n: Nudge, bounds: EditRect, minSide: Float): EditRect {
+        val step = r.width / 10
+        return when (n) {
+            Nudge.LEFT -> panZoom(r, -step, 0f, 1f, bounds, minSide)
+            Nudge.RIGHT -> panZoom(r, step, 0f, 1f, bounds, minSide)
+            Nudge.UP -> panZoom(r, 0f, -step, 1f, bounds, minSide)
+            Nudge.DOWN -> panZoom(r, 0f, step, 1f, bounds, minSide)
+            Nudge.ZOOM_IN -> panZoom(r, 0f, 0f, 1.25f, bounds, minSide)
+            Nudge.ZOOM_OUT -> panZoom(r, 0f, 0f, 0.8f, bounds, minSide)
+        }
+    }
+
+    /**
+     * How the frame's picture sits under a fixed frame [frame] px wide, centred in a [viewW] by [viewH] view, so
+     * the box [r] fills that frame: the scale and the offset of the frame's top left. A frame point (x, y) is at
+     * (x * scale + ox, y * scale + oy) on screen.
+     */
+    fun under(r: EditRect, viewW: Float, viewH: Float, frame: Float): Triple<Float, Float, Float> {
+        val s = frame / max(1e-3f, r.width)
+        return Triple(s, viewW / 2 - r.cx * s, viewH / 2 - r.cy * s)
+    }
+
     /** A box in the frame as shares of it (0..1), for [PhotoEdit.crop], and back. */
     fun toShares(r: EditRect, w: Float, h: Float) = r.scaled(1 / w, 1 / h)
     fun fromShares(r: EditRect, w: Float, h: Float) = r.scaled(w, h)

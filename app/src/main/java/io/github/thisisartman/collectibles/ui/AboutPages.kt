@@ -83,6 +83,16 @@ val LIBRARIES = listOf(
     Credit("ML Kit (document scanner, Japanese text)", R.string.credit_mlkit, "ML Kit terms", "https://developers.google.com/ml-kit", "https://developers.google.com/ml-kit/terms"),
 )
 
+/**
+ * Apps whose ideas Meguri follows; no code is taken from any of them (owner, 2026-11-28). Image Toolbox is
+ * Apache 2.0; Cashew is GPL 3.0 and KashCal has no standard licence, so from those two only the idea, never code.
+ */
+val INSPIRATION = listOf(
+    Credit("Image Toolbox", R.string.credit_image_toolbox, "Apache 2.0", "https://github.com/T8RIN/ImageToolbox", APACHE),
+    Credit("Cashew", R.string.credit_cashew, "GPL 3.0", "https://github.com/jameskokoska/Cashew", "https://www.gnu.org/licenses/gpl-3.0.html"),
+    Credit("KashCal", R.string.credit_kashcal, null, "https://github.com/KashCal/KashCal", null),
+)
+
 fun openLink(context: Context, url: String) {
     runCatching { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
 }

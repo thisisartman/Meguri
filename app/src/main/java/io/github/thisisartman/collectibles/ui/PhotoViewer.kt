@@ -72,10 +72,11 @@ private fun rememberPicture(uri: String, maxPx: Int): Pair<Bitmap?, Boolean> {
 
 /**
  * A photo at card size, whole and uncropped (owner, 2026-11-08: "enlarge the image so it is clearer, with an option
- * for fullscreen"). Tapping it, or the fullscreen button, opens [FullscreenPhoto].
+ * for fullscreen"). Tapping it, or the fullscreen button, opens [FullscreenPhoto]. With [onEdit], an Edit button
+ * sits beside the fullscreen one and opens the edit screen straight away (owner, 2026-11-28).
  */
 @Composable
-fun LargePhoto(uri: String, modifier: Modifier = Modifier, onFullscreen: () -> Unit) {
+fun LargePhoto(uri: String, modifier: Modifier = Modifier, onEdit: (() -> Unit)? = null, onFullscreen: () -> Unit) {
     val (bmp, done) = rememberPicture(uri, 1200)
     Box(modifier.fillMaxWidth().heightIn(min = 160.dp, max = 420.dp).clip(RoundedCornerShape(16.dp)).background(Color.Black), contentAlignment = Alignment.Center) {
         when {
@@ -87,10 +88,17 @@ fun LargePhoto(uri: String, modifier: Modifier = Modifier, onFullscreen: () -> U
             done -> Icon(painterResource(R.drawable.ic_image), contentDescription = null, tint = Color.Gray)
             else -> CircularProgressIndicator(Modifier.size(28.dp), strokeWidth = 2.dp)
         }
-        if (bmp != null) FilledTonalIconButton(
-            onClick = onFullscreen,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(8.dp),
-        ) { Icon(painterResource(R.drawable.ic_fullscreen), contentDescription = stringResource(R.string.photo_view_fullscreen)) }
+        if (bmp != null) androidx.compose.foundation.layout.Row(
+            Modifier.align(Alignment.BottomEnd).padding(8.dp),
+            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+        ) {
+            if (onEdit != null) FilledTonalIconButton(onClick = onEdit) {
+                Icon(Icons.Outlined.Crop, contentDescription = stringResource(R.string.photo_edit))
+            }
+            FilledTonalIconButton(onClick = onFullscreen) {
+                Icon(painterResource(R.drawable.ic_fullscreen), contentDescription = stringResource(R.string.photo_view_fullscreen))
+            }
+        }
     }
 }
 

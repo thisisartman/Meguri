@@ -21,18 +21,22 @@ import io.github.thisisartman.collectibles.data.PhotoKind
  *    trimmed is kept whole in the Card slot.
  *  - A station or Ekitag item: a screenshot is the Ekitag (an Ekitag only comes as a screenshot, and a station
  *    stamp is never one), unless it was filed as the place. Elsewhere a screenshot keeps its kind.
- *  - Cut to the stamp ([StampCrop]) only a stamp photo of a stamp type, and only where the caller cuts stamps (a
- *    photo file).
+ *  - Cut to the stamp by its shape ([StampCrop], #221) every stamp photo of a stamp type (station, Ekitag photo,
+ *    roadside station, museum, place, your own types), on every way in (owner, 2026-11-28). A photo given no kind
+ *    on such an item that shows a clear stamp on paper ([Facts.stamp]) is the stamp too. A goshuin is cut to its
+ *    page ([Crop.PAGE]). Place and other photos (scenery) stay whole. Only a caller that has cut already (a
+ *    notebook stamp) says not to ([decide]'s cutStamps).
  */
 object PhotoSort {
     /** How the saved copy is cut. */
-    enum class Crop { NONE, CIRCLE, CARD, STAMP, EKITAG }
+    enum class Crop { NONE, CIRCLE, CARD, STAMP, EKITAG, PAGE }
 
     /**
-     * What was seen in the picture: [card] is what [CardTrim] made of it (null when it wasn't looked at), and
-     * [screenshot] is [isScreenshot].
+     * What was seen in the picture: [card] is what [CardTrim] made of it (null when it wasn't looked at),
+     * [screenshot] is [isScreenshot], and [stamp] says a stamp of a clear shape is on paper in it ([StampCrop.plan];
+     * only looked for on a stamp type's photo given no kind, [checksStamp]).
      */
-    data class Facts(val card: CardTrim.Result? = null, val screenshot: Boolean = false)
+    data class Facts(val card: CardTrim.Result? = null, val screenshot: Boolean = false, val stamp: Boolean = false)
 
     data class Decision(val kind: String, val crop: Crop)
 
@@ -49,7 +53,11 @@ object PhotoSort {
      * The slot and the cut for a photo of an item of [type], filed as [requested] (null, empty or `other`: no kind
      * given, as in a share or a photo file row without one).
      */
-    fun decide(type: ItemType?, requested: String?, facts: Facts, cutStamps: Boolean = false): Decision {
+    /** Whether a photo of [type] given no kind ([requested]) is looked at for a stamp ([Facts.stamp]). */
+    fun checksStamp(type: ItemType?, requested: String?): Boolean =
+        type != null && norm(requested) == null && PhotoBundle.cropsStamp(type, PhotoKind.STAMP)
+
+    fun decide(type: ItemType?, requested: String?, facts: Facts, cutStamps: Boolean = true): Decision {
         val req = norm(requested)
         val anyFrame = facts.card != null && facts.card != CardTrim.Result.NO_FRAME
         val wholeCard = facts.card == CardTrim.Result.OK
@@ -62,6 +70,7 @@ object PhotoSort {
                 else -> req
             }
             isStationType(type) && facts.screenshot && req != PhotoKind.PLACE -> PhotoKind.EKITAG
+            req == null && facts.stamp && type != null && PhotoBundle.cropsStamp(type, PhotoKind.STAMP) -> PhotoKind.STAMP
             // A card only has its own slot on a card item
             req == PhotoBundle.CARD -> PhotoKind.OTHER
             else -> req ?: PhotoKind.OTHER
@@ -70,6 +79,7 @@ object PhotoSort {
             kind == PhotoKind.MANHOLE && !anyFrame -> Crop.CIRCLE
             kind == PhotoKind.STAMP && isCardType(type) && wholeCard -> Crop.CARD
             kind == PhotoKind.EKITAG -> Crop.EKITAG
+            cutStamps && type != null && PhotoBundle.cutsPage(type, kind) -> Crop.PAGE
             cutStamps && type != null && PhotoBundle.cropsStamp(type, kind) -> Crop.STAMP
             else -> Crop.NONE
         }
