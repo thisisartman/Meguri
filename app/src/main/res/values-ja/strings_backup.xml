@@ -26,8 +26,8 @@
     <string name="trust_title">このサーバーを信頼しますか？</string>
     <string name="trust_body">この証明書は端末が知っている発行元に署名されていません（自宅のサーバーではよくあることです）。フィンガープリントがご自分のサーバーのものと一致する場合だけ信頼してください。</string>
     <string name="trust_ok">信頼する</string>
-    <string name="auto_failed_login">前回のバックアップに失敗：ユーザー名かパスワードが違います。</string>
-    <string name="auto_failed_certificate">前回のバックアップに失敗：サーバーの証明書が変わりました。</string>
+    <string name="auto_failed_login">前回の毎週のバックアップに失敗：ユーザー名かパスワードが違います。</string>
+    <string name="auto_failed_certificate">前回の毎週のバックアップに失敗：サーバーの証明書が変わりました。</string>
     <string name="auto_failed_offline">サーバーに接続できません。あとでもう一度試します。</string>
     <string name="restore_server">サーバーから復元</string>
     <string name="restore_server_sub">サーバーにある最新のバックアップ</string>

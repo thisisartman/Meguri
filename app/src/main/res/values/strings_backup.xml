@@ -27,8 +27,8 @@
     <string name="trust_title">Trust this server?</string>
     <string name="trust_body">Its certificate isn\'t signed by anyone your phone knows, which is normal for a home server. Only trust it if this fingerprint matches your server\'s.</string>
     <string name="trust_ok">Trust</string>
-    <string name="auto_failed_login">Last backup failed: wrong user name or password.</string>
-    <string name="auto_failed_certificate">Last backup failed: the server\'s certificate changed.</string>
+    <string name="auto_failed_login">Last weekly backup failed: wrong user name or password.</string>
+    <string name="auto_failed_certificate">Last weekly backup failed: the server\'s certificate changed.</string>
     <string name="auto_failed_offline">Couldn\'t reach the server. Trying again later.</string>
     <string name="restore_server">Restore from server</string>
     <string name="restore_server_sub">The newest backup on your server</string>

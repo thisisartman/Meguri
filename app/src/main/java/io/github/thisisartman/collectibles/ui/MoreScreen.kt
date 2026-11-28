@@ -53,6 +53,10 @@ import io.github.thisisartman.collectibles.data.BackupError
 import io.github.thisisartman.collectibles.data.BackupInfo
 import io.github.thisisartman.collectibles.data.BackupRestore
 import io.github.thisisartman.collectibles.data.CurrentCounts
+import io.github.thisisartman.collectibles.data.DataJob
+import io.github.thisisartman.collectibles.data.DataStep
+import androidx.compose.ui.draw.alpha
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Text
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.runtime.Composable
@@ -87,6 +91,8 @@ class MoreViewModel @Inject constructor(
     private val db: CollectiblesDb,
     /** Runs long work for the life of the app, so leaving Settings does not cancel it (finding 32). */
     val work: SettingsWork,
+    /** Back up now, Restore and Add photos from a file: how far, and how the last one went (#217). */
+    val jobs: DataJobs,
     /** Region packs (0.5): the catalogue and offline map per prefecture, downloaded. */
     val packs: io.github.thisisartman.collectibles.data.RegionPacks,
 ) : ViewModel() {
@@ -276,17 +282,28 @@ fun MoreScreen(
     // Back up now asks each time, with photos or without (finding 31); saveable, so the file picker can come back to it
     var withPhotos by rememberSaveable { mutableStateOf(true) }
     var askBackup by remember { mutableStateOf(false) }
+    val busyText = stringResource(R.string.job_busy)
+    // One of Back up now, Restore and Add photos runs at a time (#217): the rows wait while one runs
+    val running by vm.jobs.running.collectAsState()
+    val jobResults by vm.jobs.results.collectAsState()
+    fun fileName(uri: android.net.Uri) = runCatching { androidx.documentfile.provider.DocumentFile.fromSingleUri(app, uri)?.name }.getOrNull()
     val saveBackup = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
+        if (!vm.jobs.start(DataJob.BACKUP)) { vm.work.say(busyText); return@rememberLauncherForActivityResult }
         val photos = withPhotos
         vm.run {
-            val msg = runCatching { vm.io.exportBackup(uri, photos) }
+            val name = fileName(uri)
+            val msg = runCatching { vm.io.exportBackup(uri, photos, vm.jobs::report) }
                 .map {
-                    val name = androidx.documentfile.provider.DocumentFile.fromSingleUri(app, uri)?.name
+                    vm.jobs.finish(DataResult(DataJob.BACKUP, true, System.currentTimeMillis(), it.finds, it.photoFiles, name))
                     val counts = countsText(app.resources, it.finds, it.items)
                     if (name != null) app.getString(R.string.more_backup_done_named, name, counts) else app.getString(R.string.more_backup_done, counts)
                 }
-                .getOrElse { vm.log.e("Backup", "Export failed", it); failText }
+                .getOrElse {
+                    vm.log.e("Backup", "Export failed", it)
+                    vm.jobs.finish(DataResult(DataJob.BACKUP, false, System.currentTimeMillis(), file = name))
+                    failText
+                }
             vm.work.say(msg)
         }
     }
@@ -331,10 +348,18 @@ fun MoreScreen(
     val newer = stringResource(R.string.more_restore_newer)
     val damaged = stringResource(R.string.more_restore_damaged)
 
+    // The chosen backup's name, for the Restore row's last result (#217)
+    var restoreName by rememberSaveable { mutableStateOf<String?>(null) }
+    fun restoreFailedAt(name: String?) =
+        vm.jobs.finish(DataResult(DataJob.RESTORE, false, System.currentTimeMillis(), file = name))
+
     fun runRestore(info: BackupInfo) {
+        val name = restoreName
+        if (!vm.jobs.start(DataJob.RESTORE)) { vm.work.say(busyText); return }
         vm.run {
-            runCatching { vm.restore.restore(info) }
+            runCatching { vm.restore.restore(info, vm.jobs::report) }
                 .onSuccess {
+                    vm.jobs.finish(DataResult(DataJob.RESTORE, true, System.currentTimeMillis(), it.finds, it.photos, name))
                     Toast.makeText(app, restoreDone.format(countsText(app.resources, it.finds, it.items)), Toast.LENGTH_LONG).show()
                     // Back to a fresh start: no screen may still point at a row that is gone.
                     app.packageManager.getLaunchIntentForPackage(app.packageName)?.let { launch ->
@@ -343,6 +368,7 @@ fun MoreScreen(
                 }
                 .onFailure {
                     vm.log.e("Restore", "Restore failed", it)
+                    restoreFailedAt(name)
                     vm.work.say(restoreFailed)
                 }
         }
@@ -355,11 +381,15 @@ fun MoreScreen(
     }
     val openBackup = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
+        if (!vm.jobs.start(DataJob.RESTORE, DataStep.READING)) { vm.work.say(busyText); return@rememberLauncherForActivityResult }
+        val name = fileName(uri)
+        restoreName = name
         vm.run {
             runCatching { PendingRestore(vm.restore.inspect(uri), vm.restore.currentCounts()) }
-                .onSuccess { pendingRestore = it }
+                .onSuccess { vm.jobs.pause(); pendingRestore = it }
                 .onFailure {
                     vm.log.w("Restore", "Backup refused: ${it.message}", it)
+                    restoreFailedAt(name)
                     vm.work.say(
                         when (it) {
                             is BackupError.NewerVersion -> newer
@@ -377,13 +407,20 @@ fun MoreScreen(
     val photoFileFailed = stringResource(R.string.photo_file_failed)
     val photoFileDone = stringResource(R.string.photo_file_done)
     val photoFileSomeFailed = stringResource(R.string.photo_file_some_failed)
+    var photoFileName by rememberSaveable { mutableStateOf<String?>(null) }
+    fun photoFileFailedAt(name: String?) =
+        vm.jobs.finish(DataResult(DataJob.PHOTO_FILE, false, System.currentTimeMillis(), file = name))
     val openPhotoFile = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) return@rememberLauncherForActivityResult
+        if (!vm.jobs.start(DataJob.PHOTO_FILE, DataStep.READING)) { vm.work.say(busyText); return@rememberLauncherForActivityResult }
+        val name = fileName(uri)
+        photoFileName = name
         vm.run {
             runCatching { vm.photoFile.inspect(uri) }
-                .onSuccess { pendingPhotoFile = it }
+                .onSuccess { vm.jobs.pause(); pendingPhotoFile = it }
                 .onFailure {
                     vm.log.w("PhotoFile", "Photo file refused: ${it.message}", it)
+                    photoFileFailedAt(name)
                     vm.work.say(if (it is io.github.thisisartman.collectibles.data.PhotoFileError) photoFileNot else photoFileFailed)
                 }
         }
@@ -403,13 +440,17 @@ fun MoreScreen(
             confirmButton = {
                 TextButton(onClick = {
                     pendingPhotoFile = null
+                    val name = photoFileName
+                    if (!vm.jobs.start(DataJob.PHOTO_FILE, DataStep.COPY)) { vm.photoFile.discard(info); vm.work.say(busyText); return@TextButton }
                     vm.run {
-                        runCatching { vm.photoFile.add(info) }
+                        runCatching { vm.photoFile.add(info, vm.jobs::report) }
                             .onSuccess { r ->
+                                vm.jobs.finish(DataResult(DataJob.PHOTO_FILE, true, System.currentTimeMillis(), photos = r.added, file = name))
                                 vm.work.say(photoFileDone.format(r.added, r.newItems, r.alreadyThere) + if (r.failed > 0) " " + photoFileSomeFailed.format(r.failed) else "")
                             }
                             .onFailure {
                                 vm.log.e("PhotoFile", "Adding a photo file failed", it)
+                                photoFileFailedAt(name)
                                 vm.work.say(photoFileFailed)
                             }
                     }
@@ -449,15 +490,19 @@ fun MoreScreen(
     )
     val noServerBackups = stringResource(R.string.restore_server_none)
     fun restoreFromServer() {
+        if (!vm.jobs.start(DataJob.RESTORE, DataStep.READING)) { vm.work.say(busyText); return }
+        restoreName = null
         vm.run {
             runCatching {
                 val newest = vm.auto.serverBackups().firstOrNull()
-                if (newest == null) { vm.work.say(noServerBackups); return@run }
+                if (newest == null) { vm.jobs.pause(); vm.work.say(noServerBackups); return@run }
+                restoreName = newest.name
                 val uri = vm.auto.downloadFromServer(newest.name)
                 val info = try { vm.restore.inspect(uri) } finally { vm.auto.clearServerDownload() }
                 PendingRestore(info, vm.restore.currentCounts())
-            }.onSuccess { pendingRestore = it }.onFailure {
+            }.onSuccess { vm.jobs.pause(); pendingRestore = it }.onFailure {
                 vm.log.w("Restore", "Server restore refused: ${it.javaClass.simpleName}")
+                restoreFailedAt(restoreName)
                 vm.work.say(if (it is BackupError) notBackup else restoreFailed)
             }
         }
@@ -681,18 +726,19 @@ fun MoreScreen(
                 // Owner, 2026-11-09: weekly backup as a row with its own switch; its details one tap in. Photos grouped.
                 SectionTitle(stringResource(R.string.backup_section))
                 // Its own choice each time, not the weekly backup's "Include photos" (finding 31)
-                MoreRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub)) { askBackup = true }
+                // Each says how its last run went until the next one, and how far it is while it runs (#217)
+                JobRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub), DataJob.BACKUP, running, jobResults) { askBackup = true }
                 SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
                     if (on) askWhere = true else { vm.auto.disable(); autoTick++ }
                 }
-                MoreRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub)) {
+                JobRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub), DataJob.RESTORE, running, jobResults) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
-                MoreRow(stringResource(R.string.photo_file), stringResource(R.string.photo_file_sub)) {
+                JobRow(stringResource(R.string.photo_file), stringResource(R.string.photo_file_sub), DataJob.PHOTO_FILE, running, jobResults) {
                     openPhotoFile.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
                 if (remember(autoTick) { vm.auto.server.address } != null) {
-                    MoreRow(stringResource(R.string.restore_server), stringResource(R.string.restore_server_sub)) { restoreFromServer() }
+                    MoreRow(stringResource(R.string.restore_server), stringResource(R.string.restore_server_sub), enabled = running == null) { restoreFromServer() }
                 }
                 if (relinkPending) {
                     MoreRow(stringResource(R.string.more_relink), stringResource(R.string.more_relink_sub)) {
@@ -852,7 +898,7 @@ fun MoreScreen(
                     if (on) scope.launch { updates.checkIfDue(app) }
                 }
                 UpdateNote()
-                MoreRow(stringResource(R.string.more_logs), stringResource(R.string.help_logs_sub), onLogs)
+                MoreRow(stringResource(R.string.more_logs), stringResource(R.string.help_logs_sub), onClick = onLogs)
                 MoreRow(stringResource(R.string.more_about), stringResource(R.string.help_about_sub)) { section = S_ABOUT }
             }
             S_ABOUT -> {
@@ -1058,10 +1104,67 @@ private fun InfoRow(title: String, sub: String) {
 }
 
 @Composable
-private fun MoreRow(title: String, sub: String?, onClick: () -> Unit) {
-    Column(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 14.dp)) {
+private fun MoreRow(title: String, sub: String?, enabled: Boolean = true, onClick: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick)
+            .then(if (enabled) Modifier else Modifier.alpha(DISABLED_ALPHA))
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+    ) {
         Text(title, style = MaterialTheme.typography.bodyLarge)
         if (sub != null) Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+}
+
+private const val DISABLED_ALPHA = 0.38f
+
+/**
+ * Back up now, Restore or Add photos from a file (#217). While it runs: the step and its count ("Backing up… 45 of
+ * 120 photos") over a bar, and nothing to tap. After: how it went, until the next run ("Last backup: today 8:46 ·
+ * 90 finds, 120 photos · meguri-backup.zip"); a failure in the error colour, with a Try again button. Waits, faded,
+ * while one of the others runs.
+ */
+@Composable
+private fun JobRow(
+    title: String, idleSub: String, job: DataJob, running: DataRun?, results: Map<DataJob, DataResult>, onClick: () -> Unit,
+) {
+    val res = LocalContext.current.resources
+    val mine = running?.takeIf { it.job == job }
+    val result = results[job]
+    val enabled = running == null
+    Row(
+        Modifier.fillMaxWidth().clickable(enabled = enabled, onClick = onClick)
+            .then(if (enabled || mine != null) Modifier else Modifier.alpha(DISABLED_ALPHA))
+            .heightIn(min = 64.dp),
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f).padding(horizontal = 16.dp, vertical = 14.dp)) {
+            Text(title, style = MaterialTheme.typography.bodyLarge)
+            when {
+                mine != null -> {
+                    Text(DataJobText.progressText(res, mine), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                    val f = DataJobText.fraction(mine)
+                    val bar = Modifier.fillMaxWidth().padding(top = 6.dp)
+                    if (f != null) androidx.compose.material3.LinearProgressIndicator(progress = { f }, modifier = bar)
+                    else androidx.compose.material3.LinearProgressIndicator(modifier = bar)
+                }
+                result != null -> Text(
+                    DataJobText.resultText(res, result),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (result.ok) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+                )
+                else -> Text(idleSub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
+        if (mine == null && result?.ok == false) {
+            androidx.compose.material3.IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.padding(end = 4.dp)) {
+                androidx.compose.material3.Icon(
+                    androidx.compose.material.icons.Icons.Filled.Refresh,
+                    contentDescription = stringResource(R.string.job_try_again),
+                    tint = MaterialTheme.colorScheme.error,
+                )
+            }
+        }
     }
     HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 }
