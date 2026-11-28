@@ -1,0 +1,2 @@
+Roadside stations, manhole and dam cards alert from 1 km. Location updates: Low power or High priority. Stamp photos crop to their shape (circle or square). Photo editor with Circle, Square and Free frames, and an Edit button on the photo. Update from inside the app.
+Fixes: Travelling alerts no longer crash without location access, your best backup is never replaced by a much smaller one, place search sends only a rounded position.

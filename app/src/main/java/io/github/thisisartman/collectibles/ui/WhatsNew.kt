@@ -34,22 +34,21 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in 0.7.1", "0.7.1の新機能",
+            "New in 0.7.2", "0.7.2の新機能",
             listOf(
-                "Places on Nearby: one page per station or shrine, with a ring that fills as you collect" to "近くに「場所」：駅や神社ごとに1ページ、集めるほど埋まるリング",
-                "Edit a photo: crop, rotate, straighten" to "写真の編集：切り抜き、回転、傾き補正",
-                "Add photos from a file, without replacing anything" to "ファイルから写真を追加（何も置き換えません）",
-                "Cover directions, read off the manhole card" to "マンホールカードから蓋の場所へ道案内",
-                "Long-press the icon for Add, My book and Trip" to "アイコンの長押しで追加・コレクション・トリップ",
+                "Roadside stations, manhole and dam cards alert from 1 km" to "道の駅・マンホールカード・ダムカードは1km手前から通知",
+                "Location updates: Low power or High priority (Settings, Alerts)" to "位置の更新：省電力または高精度（設定 › 通知）",
+                "Stamp photos crop to their shape: circle or square" to "スタンプの写真は形に合わせて切り抜き：円または四角",
+                "Photo editor: Circle, Square or Free, and an Edit button on the photo" to "写真の編集：円・四角・自由、写真の上に編集ボタン",
+                "Update from inside the app (Help and about)" to "アプリ内でアップデート（ヘルプと情報）",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "Every find has the date it was added" to "すべての記録に追加した日付が入ります",
-                "Photos sort themselves: cards to the card, screenshots to the Ekitag" to "写真は自動で振り分け：カードはカードへ、スクリーンショットはエキタグへ",
-                "Alert distances: each category's distance in one list" to "通知の距離：カテゴリーごとの距離を1つの一覧に",
-                "Backups show their progress and when they finished" to "バックアップの進み具合と完了がわかります",
+                "Travelling alerts no longer crash without location access" to "位置情報の許可がなくても移動中の通知が落ちなくなりました",
+                "Your best backup is never replaced by a much smaller one" to "いちばん良いバックアップが小さなものに置き換わりません",
+                "Place search sends only a rounded position" to "場所の検索はおおよその位置だけを送ります",
             ),
         ),
     )
