@@ -211,11 +211,18 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     var target by remember { mutableStateOf<ItemType?>(null) }
     val own = remember(tick, target) { target?.let { s.ownRadius(it) } }
     val owns = remember(tick) { ALERT_TYPES.mapNotNull { (t, label) -> s.ownRadius(t)?.let { Triple(t, label, it) } } }
+    // Every category that alerts, with its distance and the default marked: one list instead of the default and the
+    // custom ones apart (#164). The same categories as Alert categories, less the ones switched off
+    val present by androidx.compose.runtime.produceState<Set<ItemType>?>(null) { value = runCatching { vm.typesPresent() }.getOrNull() }
+    val distances = remember(tick, present) {
+        AlertSettings.categoryDistances(ALERT_TYPES.map { it.first }, s.types, present, s.radiusM) { s.ownRadius(it) }
+    }
     DistanceSlider(
         value = own ?: main,
         target = target,
         targetIsOwn = own != null,
         owns = owns,
+        distances = distances,
         onTarget = { target = it },
         onReset = { target?.let { s.setRadiusFor(it, null) }; vm.geofences.refreshInBackground(); tick++ },
     ) { r ->
@@ -330,6 +337,7 @@ fun radiusText(m: Int): String = if (m % 1000 == 0) "${m / 1000} km" else "$m m"
 @Composable
 private fun DistanceSlider(
     value: Int, target: ItemType?, targetIsOwn: Boolean, owns: List<Triple<ItemType, Int, Int>>,
+    distances: List<io.github.thisisartman.collectibles.alerts.CategoryDistance>,
     onTarget: (ItemType?) -> Unit, onReset: () -> Unit, onPick: (Int) -> Unit,
 ) {
     val choices = AlertSettings.RADIUS_CHOICES
@@ -374,36 +382,41 @@ private fun DistanceSlider(
             )
             if (targetIsOwn) TextButton(onClick = onReset, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.alerts_use_main)) }
         }
-        // Owner, 2026-11-09: the categories with their own distance, one per line under the slider, folding away
-        if (owns.isNotEmpty()) {
+        // Each category's distance in one place, the default ones marked (#164); a tap picks it for the slider.
+        // Folding away as before (owner, 2026-11-09)
+        if (distances.isNotEmpty()) {
             var open by rememberSaveable { mutableStateOf(true) }
             Row(
                 Modifier.fillMaxWidth().clickable { open = !open }.heightIn(min = 48.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
-                    stringResource(R.string.alerts_own_list, owns.size),
+                    stringResource(R.string.alerts_distances),
                     Modifier.weight(1f), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Icon(
                     if (open) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
-                    contentDescription = stringResource(if (open) R.string.alerts_own_hide else R.string.alerts_own_show),
+                    contentDescription = stringResource(if (open) R.string.alerts_distances_hide else R.string.alerts_distances_show),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             AnimatedVisibility(open) {
                 Column {
-                    owns.forEach { (t, label, m) ->
+                    distances.forEach { d ->
                         Row(
-                            Modifier.fillMaxWidth().clickable { onTarget(t) }.heightIn(min = 40.dp).padding(start = 4.dp),
+                            Modifier.fillMaxWidth().clickable { onTarget(d.type) }.heightIn(min = 40.dp).padding(start = 4.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
-                            TypeDot(t)
+                            TypeDot(d.type)
                             Spacer(Modifier.width(10.dp))
-                            Text(stringResource(label), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(stringResource(ALERT_TYPES.first { it.first == d.type }.second), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            if (d.isDefault) {
+                                Text(stringResource(R.string.alerts_default_mark), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.width(8.dp))
+                            }
                             Text(
-                                radiusText(m), style = MaterialTheme.typography.bodyMedium,
-                                color = if (t == target) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                                radiusText(d.meters), style = MaterialTheme.typography.bodyMedium,
+                                color = if (d.type == target) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                             )
                         }
                     }

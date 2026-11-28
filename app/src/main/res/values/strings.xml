@@ -607,9 +607,10 @@
     <string name="about_dev_mode">Developer mode</string>
     <string name="about_dev_mode_sub">Logs every tap, page, import, backup and scan, so a problem can be traced. Open them in Help and about, then Logs.</string>
     <string name="about_dev_mode_dev">Always on in the dev build: every tap, page, import, backup and scan is logged.</string>
-    <string name="alerts_own_list">Custom distances (%1$d)</string>
-    <string name="alerts_own_hide">Hide custom distances</string>
-    <string name="alerts_own_show">Show custom distances</string>
+    <string name="alerts_distances">Distance by category</string>
+    <string name="alerts_distances_hide">Hide distances</string>
+    <string name="alerts_distances_show">Show distances</string>
+    <string name="alerts_default_mark">Default</string>
     <string name="cat_yours">Your categories</string>
     <string name="alerts_line_trip">Travelling</string>
     <plurals name="alerts_line_categories">

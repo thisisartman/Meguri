@@ -8,6 +8,9 @@ import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** One line of the alert distance list (#164): a category, the distance it alerts at, and whether that is the default. */
+data class CategoryDistance(val type: ItemType, val meters: Int, val isDefault: Boolean)
+
 /**
  * Alert settings and the per-item cooldown (FR-13 to FR-15a). Kept in preferences, not the database, so the
  * schema stays at v1 and backups are unchanged; a restore simply starts with no cooldowns.
@@ -118,6 +121,14 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
             saved != null -> snap(saved)
             else -> STARTING_OWN[type]
         }
+        /**
+         * The one list of alert distances (#164): each category that alerts and has something on the phone, in
+         * [order], with its distance and whether that is the default. [present] null (not read yet) shows every one on.
+         */
+        fun categoryDistances(order: List<ItemType>, on: Set<ItemType>, present: Set<ItemType>?, main: Int, own: (ItemType) -> Int?): List<CategoryDistance> =
+            order.filter { it in on && (present == null || it in present) }
+                .map { t -> own(t)?.let { CategoryDistance(t, it, isDefault = false) } ?: CategoryDistance(t, main, isDefault = true) }
+
         private const val KEY_RADIUS_PREFIX = "radius_"
         val NEW_IN_V2 = setOf(ItemType.DAM_CARD, ItemType.MUSEUM_STAMP, ItemType.ROADSIDE_STATION)
         /** Ekitag alert from 0.7 (#138), once for sets saved before it, like [NEW_IN_V2]. */
