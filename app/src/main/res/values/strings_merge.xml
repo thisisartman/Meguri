@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Add from a backup (#209): adds what a backup has, and asks where it and this phone differ -->
+<resources>
+    <string name="merge_backup">Add from a backup</string>
+    <string name="merge_backup_sub">Adds what a backup has and this phone doesn\'t. Nothing here is removed.</string>
+    <plurals name="merge_fills">
+        <item quantity="one">Fills in what\'s missing on %d of your items and finds.</item>
+        <item quantity="other">Fills in what\'s missing on %d of your items and finds.</item>
+    </plurals>
+    <string name="merge_title">Add from this backup?</string>
+    <string name="merge_new_line">New from the backup: %1$s</string>
+    <plurals name="merge_differ">
+        <item quantity="one">%d item differs between this phone and the backup. Next, pick which to keep.</item>
+        <item quantity="other">%d items differ between this phone and the backup. Next, pick which to keep.</item>
+    </plurals>
+    <string name="merge_copy_note">A copy of the current data is saved to Downloads first.</string>
+    <string name="merge_nothing">Everything in this backup is already on this phone.</string>
+    <string name="merge_next">Next</string>
+    <string name="merge_add">Add</string>
+    <string name="merge_pick_title">Pick what to keep</string>
+    <string name="merge_keep_all_phone">Keep all from this phone</string>
+    <string name="merge_keep_all_backup">Keep all from the backup</string>
+    <string name="merge_this_phone">This phone</string>
+    <string name="merge_the_backup">Backup</string>
+    <string name="merge_kept">Kept</string>
+    <string name="merge_field_cover">Display picture</string>
+    <string name="merge_field_position">Cover position</string>
+    <string name="merge_field_notes">Notes</string>
+    <string name="merge_field_hours">Hours</string>
+    <string name="merge_field_found">Found</string>
+    <string name="merge_found_on">Found %1$s</string>
+    <string name="merge_no_picture">Not in the backup</string>
+    <string name="merge_done">Added: %1$s</string>
+    <string name="merge_failed">Couldn\'t add from the backup. Your data is unchanged.</string>
+</resources>

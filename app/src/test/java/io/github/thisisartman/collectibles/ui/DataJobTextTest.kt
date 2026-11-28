@@ -23,6 +23,7 @@ class DataJobTextTest {
         assertEquals(R.string.job_backing_up, DataJobText.progress(DataRun(DataJob.BACKUP, DataStep.WORKING)).step)
         assertEquals(R.string.job_restoring, DataJobText.progress(DataRun(DataJob.RESTORE, DataStep.WORKING)).step)
         assertEquals(R.string.job_adding, DataJobText.progress(DataRun(DataJob.PHOTO_FILE, DataStep.PHOTOS, 3, 10)).step)
+        assertEquals(R.string.job_merging, DataJobText.progress(DataRun(DataJob.MERGE, DataStep.PHOTOS, 3, 10)).step)
         // Reading the chosen file and the copy of what is here come first, the same words for each job
         assertEquals(R.string.job_reading, DataJobText.progress(DataRun(DataJob.RESTORE, DataStep.READING)).step)
         assertEquals(R.string.job_copy, DataJobText.progress(DataRun(DataJob.PHOTO_FILE, DataStep.COPY, 1, 4)).step)

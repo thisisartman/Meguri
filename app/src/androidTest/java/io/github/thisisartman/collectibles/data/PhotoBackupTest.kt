@@ -43,7 +43,7 @@ class PhotoBackupTest {
         db = Room.databaseBuilder(context, CollectiblesDb::class.java, name).addMigrations(*CollectiblesDb.MIGRATIONS).build()
         val log = FileLog(work)
         io = CatalogAndBackup(context, db, log)
-        restore = BackupRestore(context, db, io, log)
+        restore = BackupRestore(context, db, io, RegionPacks(context, db, io, log), log)
     }
 
     @After fun tearDown() {

@@ -31,4 +31,27 @@ class BackupCsvTest {
         val t = table(CatalogAndBackup.findsCsv(listOf(find), mapOf("i1" to item)))
         assertEquals("3", t[1][t[0].indexOf("quantity")])
     }
+
+    // #209: no "had before Meguri" column, and the line's operator
+    @Test fun findsHaveNoBeforeApp() = assertTrue("before_app" !in table(CatalogAndBackup.findsCsv(listOf(find), mapOf("i1" to item)))[0])
+
+    @Test fun linesCarryTheOperator() {
+        val csv = CatalogAndBackup.linesCsv(listOf(Line("L1", "越後線", "Echigo Line", "JR東日本")), listOf(LineStation("L1", "i1", 3)))
+        assertComplete(csv, "line_id", "operator", "station_item_id", "seq")
+        val t = table(csv)
+        assertEquals("JR東日本", t[1][t[0].indexOf("operator")])
+    }
+
+    @Test fun regionsWithoutTheirItemsAreNoLongerInstalled() {
+        fun pack(id: String, type: ItemType?, kind: String = "catalogue", items: Int = 10) =
+            Pack(id, kind, type, true, "JP-15", "新潟県", "Niigata", items, "$id.gz", 1, "sha")
+        val index = PackIndex("1", listOf(
+            pack("JP-15/EKI_STAMP", ItemType.EKI_STAMP), pack("JP-15/MANHOLE_CARD", ItemType.MANHOLE_CARD),
+            pack("JP-15/map", null, kind = "map"), pack("JP-15/DAM_CARD", ItemType.DAM_CARD, items = 0),
+        ))
+        val installed = index.packs.map { it.id }.toSet()
+        // The backup had the stations, not the cards: the card pack goes; the map and an empty pack stay
+        assertEquals(listOf("JP-15/MANHOLE_CARD"), RegionPacks.emptyPacks(index, installed, setOf("新潟県" to ItemType.EKI_STAMP)))
+        assertTrue(RegionPacks.emptyPacks(index, emptySet(), emptySet()).isEmpty())
+    }
 }

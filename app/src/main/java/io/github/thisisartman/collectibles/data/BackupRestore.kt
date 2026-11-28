@@ -50,6 +50,11 @@ data class RestoreResult(val items: Int, val finds: Int, val photos: Int, val sa
 
 data class RelinkResult(val found: Int, val missing: Int)
 
+/** What "Add from a backup" did (#209). */
+data class MergeResult(
+    val items: Int, val finds: Int, val photos: Int, val filled: Int, val safetyCopy: String?, val photosLeftToFind: Boolean,
+)
+
 /** Everything in the database, for moving between the backup and the live database. */
 class AllRows(
     val items: List<Item>,
@@ -71,6 +76,7 @@ class BackupRestore @Inject constructor(
     @ApplicationContext private val context: Context,
     private val db: CollectiblesDb,
     private val backup: CatalogAndBackup,
+    private val packs: RegionPacks,
     private val log: FileLog,
 ) {
     private val dao = db.dao()
@@ -184,6 +190,8 @@ class BackupRestore @Inject constructor(
                 onProgress(DataStep.WORKING, 0, 0)
                 replaceAll(rows)
                 prefs.edit().putBoolean(KEY_RELINK, rows.photos.isNotEmpty()).commit()
+                // Regions whose items the backup didn't carry no longer show as installed, so they can be downloaded again
+                runCatching { packs.forgetEmpty(dao.catalogueRegions()) }.onFailure { log.w("Restore", "Could not check the installed regions: $it") }
                 copy
             }
             log.i("Restore", "Restored ${rows.finds.size} finds, ${rows.items.size} items, ${rows.photos.size} photos; safety copy $safety")
@@ -246,6 +254,102 @@ class BackupRestore @Inject constructor(
             }
             db.query(SimpleSQLiteQuery("PRAGMA foreign_key_check")).use { check(!it.moveToFirst()) { "Broken links after copying" } }
         }
+    }
+
+    private suspend fun phoneRows() =
+        AllRows(dao.allItems(), dao.allFinds(), dao.allPhotos(), dao.allLines(), dao.allLineStations(), dao.allCollectionTypes())
+
+    /**
+     * Add from a backup (#209): reads a checked backup and works out what it adds and where it differs from this phone.
+     * Nothing is written; [info] stays until [merge] or [discard], as the conflict screen shows its pictures.
+     */
+    suspend fun planMerge(info: BackupInfo): BackupMerge.Plan = withContext(Dispatchers.IO) {
+        val rows = readBackup(info)
+        BackupMerge.plan(phoneRows(), rows).also {
+            log.i("Merge", "Plan: ${it.newItems} new items, ${it.newFinds} new finds, ${it.newPhotos} new photos, ${it.matchedItems} items here already, ${it.photosAlreadyHere} photos here already, ${it.conflicts.size} items differ")
+        }
+    }
+
+    /** The picture a backup carries for one of its photos, for the conflict screen; null in a backup without photos. */
+    fun backupPicture(info: BackupInfo, photoId: String): File? =
+        File(File(info.dir, "photos"), photoId).takeIf { io.github.thisisartman.collectibles.photo.PhotoNames.parseBackup("photos/$photoId") != null && it.isFile }
+
+    /**
+     * Adds what the backup has and this phone doesn't, with [picks] (by this phone's item id) where the two differ.
+     * The same checks as a restore; a safety copy goes to Downloads first; one transaction, so on any failure nothing
+     * here changes. Removes nothing.
+     */
+    suspend fun merge(info: BackupInfo, picks: Map<String, MergePick>, onProgress: OnProgress = NO_PROGRESS): MergeResult = withContext(Dispatchers.IO) {
+        val t0 = System.currentTimeMillis()
+        try {
+            onProgress(DataStep.WORKING, 0, 0)
+            val rows = readBackup(info)
+            val (ops, safety) = backup.lock.withLock {
+                onProgress(DataStep.COPY, 0, 0)
+                val copy = saveSafetyCopy("meguri-pre-add") { done, total -> onProgress(DataStep.COPY, done, total) }
+                onProgress(DataStep.WORKING, 0, 0)
+                // Worked out again under the lock, so anything added on the phone since the screen opened is counted
+                val ops = BackupMerge.plan(phoneRows(), rows).resolve(picks, System.currentTimeMillis())
+                writeMerge(ops)
+                ops to copy
+            }
+            val placed = placeMergedPhotos(File(info.dir, "photos"), File(info.dir, "originals"), ops.newPhotos) { done, total -> onProgress(DataStep.PHOTOS, done, total) }
+            val left = ops.newPhotos.size - placed
+            if (left > 0) prefs.edit().putBoolean(KEY_RELINK, true).commit()
+            log.i("Merge", "Added in ${System.currentTimeMillis() - t0} ms: ${ops.newItems.size} items, ${ops.newFinds.size} finds, ${ops.newPhotos.size} photos ($left without a picture), ${ops.itemUpdates.size} items and ${ops.findUpdates.size} finds filled in, ${picks.count { it.value == MergePick.BACKUP }} kept from the backup; safety copy $safety")
+            MergeResult(ops.newItems.size, ops.newFinds.size, ops.newPhotos.size, ops.itemUpdates.size + ops.findUpdates.size, safety, left > 0)
+        } catch (e: Exception) {
+            log.d("Merge", "Add from a backup failed after ${System.currentTimeMillis() - t0} ms: $e")
+            throw e
+        } finally {
+            discard(info)
+        }
+    }
+
+    /** One transaction: adds and fills, then the same checks as a restore; any failure leaves the phone as it was. */
+    internal suspend fun writeMerge(ops: MergeOps) {
+        db.withTransaction {
+            val items = dao.itemCount(); val finds = dao.findTotal(); val photos = dao.photoTotal()
+            dao.insertCollectionTypes(ops.newCategories)
+            dao.insertItems(ops.newItems)
+            check(dao.updateItems(ops.itemUpdates) == ops.itemUpdates.size) { "An item to fill in is gone" }
+            dao.insertLines(ops.newLines)
+            dao.insertLineStations(ops.newLineStations)
+            dao.insertFinds(ops.newFinds)
+            check(dao.updateFinds(ops.findUpdates) == ops.findUpdates.size) { "A find to fill in is gone" }
+            dao.insertPhotos(ops.newPhotos)
+            check(
+                dao.itemCount() == items + ops.newItems.size && dao.findTotal() == finds + ops.newFinds.size &&
+                    dao.photoTotal() == photos + ops.newPhotos.size,
+            ) { "Row counts differ after adding" }
+            db.query(SimpleSQLiteQuery("PRAGMA foreign_key_check")).use { check(!it.moveToFirst()) { "Broken links after adding" } }
+        }
+    }
+
+    /**
+     * Pictures for the photos a merge added: the one at the stored address if it is this photo, else Meguri's copy
+     * from the backup (already cut on the phone that made it), and its original where the backup has one. Only these
+     * photos: the phone's own are never touched. Returns how many have a picture.
+     */
+    private suspend fun placeMergedPhotos(dir: File, originals: File, photos: List<Photo>, onPhoto: (done: Int, total: Int) -> Unit): Int {
+        val store = io.github.thisisartman.collectibles.photo.PhotoStore
+        var ok = 0
+        photos.forEachIndexed { i, p ->
+            onPhoto(i, photos.size)
+            val file = File(dir, p.id).takeIf { it.isFile }
+            if (samePicture(p)) ok++
+            else if (file != null) {
+                val uri = runCatching { store.importCopy(context, file, p.id) }.getOrNull()
+                if (uri != null) { dao.setPhotoUri(p.id, uri); ok++ }
+            }
+            val o = p.originalUri
+            if (o != null && !store.exists(context, o)) {
+                val uri = File(originals, p.id).takeIf { it.isFile }?.let { f -> runCatching { store.importOriginal(context, f, p.id) }.getOrNull() }
+                dao.setPhotoOriginal(p.id, uri)
+            }
+        }
+        onPhoto(photos.size, photos.size)
+        return ok
     }
 
     /** Null when there is nothing to protect. Caller holds [CatalogAndBackup.lock]. Also before a photo file (#188). */

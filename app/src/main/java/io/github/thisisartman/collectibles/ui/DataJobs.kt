@@ -137,6 +137,7 @@ class DataJobs @Inject constructor(
         DataJob.BACKUP -> R.string.more_backup
         DataJob.RESTORE -> R.string.more_restore
         DataJob.PHOTO_FILE -> R.string.photo_file
+        DataJob.MERGE -> R.string.merge_backup
     }
 
     private fun read(job: DataJob): DataResult? {

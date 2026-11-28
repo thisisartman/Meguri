@@ -207,6 +207,9 @@ object PhotoStore {
         return write(context, PhotoNames.original(photoId), bmp)
     }
 
+    /** A small bitmap of a picture in a backup being read (#209: the conflict screen); null if it can't be read. */
+    fun thumbnail(file: File, px: Int): Bitmap? = runCatching { decode(ImageDecoder.createSource(file), px) }.getOrNull()
+
     /** A picture from the app's files at most [px] on its long side, for the edit screen; null if it can't be read. */
     fun load(context: Context, uri: String, px: Int): Bitmap? =
         if (!isApp(uri)) null else runCatching { decode(ImageDecoder.createSource(file(context, uri)), px) }.getOrNull()

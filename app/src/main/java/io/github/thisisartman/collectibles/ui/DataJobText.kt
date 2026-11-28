@@ -46,6 +46,7 @@ object DataJobText {
                 DataJob.BACKUP -> R.string.job_backing_up
                 DataJob.RESTORE -> R.string.job_restoring
                 DataJob.PHOTO_FILE -> R.string.job_adding
+                DataJob.MERGE -> R.string.job_merging
             }
         },
         done = run.done.takeIf { run.total > 0 },
@@ -63,7 +64,7 @@ object DataJobText {
             head = when (r.job) {
                 DataJob.BACKUP -> R.string.job_last_backup
                 DataJob.RESTORE -> R.string.job_last_restore
-                DataJob.PHOTO_FILE -> R.string.job_last_added
+                DataJob.PHOTO_FILE, DataJob.MERGE -> R.string.job_last_added
             },
             day = day,
             // A backup without photos says so by leaving the photos out; a photo file has no finds of its own
