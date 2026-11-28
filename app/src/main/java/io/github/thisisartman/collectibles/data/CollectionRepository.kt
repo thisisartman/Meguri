@@ -328,6 +328,53 @@ class CollectionRepository @Inject constructor(
             ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null }
     }.getOrNull()
 
+    /** Whether a picture is a phone screenshot ([PhotoSort.isScreenshot]), for a text suggestion (#206); [width] and [height] as read. */
+    private suspend fun isScreenshot(uri: android.net.Uri, width: Int, height: Int): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val name = pickedInfo(uri).displayName ?: uri.lastPathSegment
+        io.github.thisisartman.collectibles.photo.PhotoSort.isScreenshot(name, pickedFolder(uri), width, height, hasCameraExif(uri))
+    }
+
+    /**
+     * Many photos coming in at once (#206): reads the text on each on the phone and suggests where it goes
+     * ([PhotoSuggest]), by photo address. A photo with nothing to go on is left out. [onRead] hears each photo done.
+     */
+    suspend fun suggestFromText(
+        uris: List<android.net.Uri>, known: List<PhotoSuggest.Known>, onRead: (done: Int) -> Unit = {},
+    ): Map<String, PhotoSuggest.Suggestion> {
+        val out = LinkedHashMap<String, PhotoSuggest.Suggestion>()
+        readAndSuggest(uris, known) { i, _, s -> s?.let { out[uris[i].toString()] = it }; onRead(i + 1) }
+        return out
+    }
+
+    /** [suggestFromText] photo by photo, with the text read: also what the dev build's bulk-suggest page shows. */
+    suspend fun readAndSuggest(
+        uris: List<android.net.Uri>, known: List<PhotoSuggest.Known>,
+        each: (index: Int, text: String, suggestion: PhotoSuggest.Suggestion?) -> Unit,
+    ) {
+        val t0 = now()
+        val rules = mutableListOf<PhotoSuggest.Rule>()
+        io.github.thisisartman.collectibles.photo.PhotoText.open(context).use { reader ->
+            uris.forEachIndexed { i, uri ->
+                val read = reader.read(context, uri)
+                val shot = read.width > 0 && isScreenshot(uri, read.width, read.height)
+                val s = PhotoSuggest.suggest(read.text, shot, known)
+                s?.let { rules += it.rule }
+                each(i, read.text, s)
+            }
+        }
+        log.i("Share", "Read the text on ${uris.size} photos in ${now() - t0} ms: ${rules.size} suggested (" +
+            rules.groupingBy { it }.eachCount().entries.joinToString { "${it.key} ${it.value}" } + ")")
+    }
+
+    /** Every item on the phone, as the suggestion rules see them (#206). */
+    suspend fun suggestKnown(): List<PhotoSuggest.Known> = PhotoSuggest.known(dao.allItems())
+
+    /** Catalogue key (empty for your own) and name of these items, for the dev build's bulk-suggest page. */
+    suspend fun itemsById(ids: Collection<String>): Map<String, Pair<String, String>> {
+        val want = ids.toSet()
+        return dao.allItems().filter { it.id in want }.associate { it.id to ((it.catalogKey ?: "") to it.nameJa) }
+    }
+
     suspend fun readShared(uri: android.net.Uri): SharedPhoto =
         kotlinx.coroutines.withContext(Dispatchers.IO) { SharedPhotoReader.read(context, uri) }
 

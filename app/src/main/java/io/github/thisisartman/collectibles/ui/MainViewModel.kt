@@ -314,13 +314,19 @@ class MainViewModel @Inject constructor(
     fun openShare(
         uris: List<android.net.Uri>, cardKind: String = io.github.thisisartman.collectibles.data.PhotoKind.OTHER,
         originals: Map<String, android.net.Uri> = emptyMap(),
+        /** Read the text even on one photo: a photo file's photos that its list doesn't name (#206). */
+        readText: Boolean = false,
     ) {
         log.d("Share", "${uris.size} photos shared into Meguri")
         sharedUris.value = uris
         _shared.value = null
+        stopShareText()
         shareCardKind = cardKind
         shareOriginals = originals
+        shareReadText = readText
     }
+
+    private var shareReadText = false
 
     /** The new-photo hint's "Attach" (M7): the photo onto the item, collected on the day it was taken if not yet. */
     /** Notebook stamps: each (item, picture), found on [atMs] or today unless already collected; [onDone] gets how many. */
@@ -369,6 +375,63 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch { _shared.value = uris.map { repo.readShared(it) } }
     }
 
+    /** Where each shared photo may go from the text on it (#206), by address; null while it is being read, or not read. */
+    private val _suggested = MutableStateFlow<Map<String, io.github.thisisartman.collectibles.data.PhotoSuggest.Suggestion>?>(null)
+    val suggested: StateFlow<Map<String, io.github.thisisartman.collectibles.data.PhotoSuggest.Suggestion>?> = _suggested.asStateFlow()
+    private val _textRead = MutableStateFlow(0)
+    /** Photos read so far, for "Reading the photos… 12 of 47". */
+    val textRead: StateFlow<Int> = _textRead.asStateFlow()
+    private var textJob: kotlinx.coroutines.Job? = null
+
+    /** Whether the shared photos get read for text: many at once (#206), not a card scan passed on with its kind. */
+    val readsShareText: Boolean
+        get() = (sharedUris.value.size >= io.github.thisisartman.collectibles.data.PhotoSuggest.READ_FROM || shareReadText) &&
+            shareCardKind == io.github.thisisartman.collectibles.data.PhotoKind.OTHER
+
+    /** Reads the text on the shared photos, once per share, and suggests where each goes; suggestions only. */
+    fun readShareText() {
+        if (textJob != null || !readsShareText) return
+        val uris = sharedUris.value
+        val known = io.github.thisisartman.collectibles.data.PhotoSuggest.known(rows.value.map { it.item })
+        _textRead.value = 0
+        textJob = viewModelScope.launch {
+            val found = runCatching { repo.suggestFromText(uris, known) { _textRead.value = it } }
+                .onFailure { log.w("Share", "Could not read the text on the shared photos: $it") }.getOrDefault(emptyMap())
+            if (sharedUris.value == uris) _suggested.value = found
+        }
+    }
+
+    private fun stopShareText() {
+        textJob?.cancel()
+        textJob = null
+        _suggested.value = null
+        _textRead.value = 0
+    }
+
+    /**
+     * Adds photos to where their text said, as confirmed (#206): a new item of your own is made once, or found again
+     * by type and name; a card's printed cover position goes on the card unless it has one. Returns photos and items.
+     */
+    suspend fun addSuggested(groups: List<Pair<io.github.thisisartman.collectibles.data.PhotoSuggest.Suggestion, List<io.github.thisisartman.collectibles.data.SharedPhoto>>>): Pair<Int, Int> {
+        var photos = 0
+        val own = rows.value.filter { it.item.origin == io.github.thisisartman.collectibles.data.Origin.USER }
+            .associate { (it.item.type to it.item.nameJa) to it.item.id }.toMutableMap()
+        val items = mutableSetOf<String>()
+        for ((s, ps) in groups) {
+            val itemId = when (val t = s.target) {
+                is io.github.thisisartman.collectibles.data.PhotoSuggest.Target.Existing -> t.id
+                is io.github.thisisartman.collectibles.data.PhotoSuggest.Target.New -> own.getOrPut(t.type to t.name) { repo.addItem(t.type, t.name, null) }
+            }
+            val placed = ps.filter { it.hasPlace }
+            val centre = if (placed.isEmpty()) null else placed.map { it.lat!! }.average() to placed.map { it.lng!! }.average()
+            photos += repo.addShared(itemId, ps, centre, s.kind, shareOriginals)
+            s.cover?.let { repo.setScannedCover(itemId, it.lat, it.lng) }
+            items += itemId
+        }
+        log.i("Share", "Added ${groups.size} confirmed suggestions: $photos photos on ${items.size} items")
+        return photos to items.size
+    }
+
     /** Adds each group's photos to the item chosen for it. Returns photos copied and items they went to. */
     suspend fun addShared(choices: List<Pair<String, io.github.thisisartman.collectibles.data.PhotoGroup>>): Pair<Int, Int> {
         var photos = 0
@@ -378,6 +441,7 @@ class MainViewModel @Inject constructor(
         }
         sharedUris.value = emptyList()
         _shared.value = null
+        stopShareText()
         shareCardKind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER
         shareOriginals = emptyMap()
         return photos to choices.map { it.first }.distinct().size

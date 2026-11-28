@@ -269,6 +269,8 @@ class MoreViewModel @Inject constructor(
 @Composable
 fun MoreScreen(
     snackbar: SnackbarHostState, onLogs: () -> Unit, onBack: () -> Unit = {},
+    /** Photos to sort on the share page (#206): a photo file's photos that its list doesn't name. */
+    onReview: (List<android.net.Uri>) -> Unit = {},
     vm: MoreViewModel = hiltViewModel(),
 ) {
     val context = LocalContext.current
@@ -432,21 +434,26 @@ fun MoreScreen(
             title = { Text(stringResource(R.string.photo_file_title)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.photo_file_body, p.photos, p.toItems, p.newItems))
+                    if (info.rows.isNotEmpty()) Text(stringResource(R.string.photo_file_body, p.photos, p.toItems, p.newItems))
                     if (p.missing.isNotEmpty()) Text(stringResource(R.string.photo_file_missing, p.missing.size))
                     if (info.problems.isNotEmpty()) Text(stringResource(R.string.photo_file_problems, info.problems.size))
+                    // Photos the list doesn't name (#206): read on the phone next, on the same page as photos shared at once
+                    if (info.unlisted.isNotEmpty()) Text(pluralStringResource(R.plurals.photo_file_unlisted, info.unlisted.size, info.unlisted.size))
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     pendingPhotoFile = null
                     val name = photoFileName
+                    val later = vm.photoFile.keepUnlisted(info)
+                    if (info.rows.isEmpty()) { vm.photoFile.discard(info); onReview(later); return@TextButton }
                     if (!vm.jobs.start(DataJob.PHOTO_FILE, DataStep.COPY)) { vm.photoFile.discard(info); vm.work.say(busyText); return@TextButton }
                     vm.run {
                         runCatching { vm.photoFile.add(info, vm.jobs::report) }
                             .onSuccess { r ->
                                 vm.jobs.finish(DataResult(DataJob.PHOTO_FILE, true, System.currentTimeMillis(), photos = r.added, file = name))
                                 vm.work.say(photoFileDone.format(r.added, r.newItems, r.alreadyThere) + if (r.failed > 0) " " + photoFileSomeFailed.format(r.failed) else "")
+                                if (later.isNotEmpty()) onReview(later)
                             }
                             .onFailure {
                                 vm.log.e("PhotoFile", "Adding a photo file failed", it)
@@ -454,7 +461,7 @@ fun MoreScreen(
                                 vm.work.say(photoFileFailed)
                             }
                     }
-                }) { Text(stringResource(R.string.photo_file_add)) }
+                }) { Text(stringResource(if (info.rows.isEmpty()) R.string.photo_file_next else R.string.photo_file_add)) }
             },
             dismissButton = { TextButton(onClick = { pendingPhotoFile = null; vm.photoFile.discard(info) }) { Text(stringResource(R.string.cancel)) } },
         )

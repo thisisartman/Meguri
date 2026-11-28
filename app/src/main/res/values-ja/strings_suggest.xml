@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="share_reading">写真を読み取り中… %1$d / %2$d枚</string>
+    <string name="share_from_text">写真から読み取り</string>
+    <string name="share_unsorted">未分類</string>
+    <string name="share_new">新規</string>
+    <string name="share_use">%1$s に追加</string>
+    <plurals name="photo_file_unlisted">
+        <item quantity="other">リストにない写真が%d枚あります。次にMeguriが読み取り、追加先を提案します。</item>
+    </plurals>
+    <string name="photo_file_next">次へ</string>
+</resources>

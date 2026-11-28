@@ -324,6 +324,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                         Page {
                             MoreScreen(
                                 snackbar, onLogs = { nav.navigate("logs") }, onBack = { nav.popBackStack() },
+                                onReview = { uris -> if (uris.isNotEmpty()) { vm.openShare(uris, readText = true); nav.navigate("share") } },
                             )
                         }
                     }

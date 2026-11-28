@@ -87,6 +87,18 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // Page-by-page mockups in dev builds only (src/mockup, opened with adb ... --es page <name>); release has none
+    sourceSets {
+        getByName("debug") { kotlin.directories.add("src/mockup/java") }
+        getByName("devRelease") { kotlin.directories.add("src/mockup/java") }
+    }
+}
+
+// Test build for the bulk-suggest page (#206) only: above the Poco's dev copy (18), so it installs over it.
+// Drop this before merging.
+androidComponents {
+    onVariants(selector().withBuildType("devRelease")) { v -> v.outputs.forEach { it.versionCode.set(19) } }
 }
 
 room {

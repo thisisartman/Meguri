@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dev builds only: page-by-page mockups, opened with adb (am start ... - -es page <name>). Exported, as adb cannot start a non-exported activity in a non-debuggable build (devRelease); dev builds only, no intent filter -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <activity
+            android:name="io.github.thisisartman.collectibles.mockup.MockupActivity"
+            android:exported="true"
+            android:theme="@style/Theme.Collectibles" />
+    </application>
+</manifest>
