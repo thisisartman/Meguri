@@ -40,6 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -502,6 +504,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                 // A station's stamp and its Ekitag are one tile (owner, 2026-11-09); an Ekitag shows on its own
                 // only when its station isn't in the list (the Ekitag filter, or no stamp for it)
                 val ekitags = remember(rows) { ekitagByStation(rows) }
+                // A quick Collect from a held tile (#227): the usual find and "Collected · Undo"
+                val quickCollect = rememberQuickCollect(vm)
                 val firstRow = Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } }
                 // Measured against the sheet, not a page, so the resting height counts the tabs above the pages
                 Box(Modifier.fillMaxWidth().onGloballyPositioned { gridTopPx = it.positionInParent().y.toInt() }) {
@@ -530,6 +534,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                             if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
                                             onOpen = { tick(); nav.openItem(r.item.id) },
                                             ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
+                                            onCollect = quickCollect,
                                         )
                                     }
                                 }
@@ -560,6 +565,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                             if (p.noneHere) stringResource(noneHereLabel(p.anchor.item.type)) else distanceText(placeDist(p)),
                                             // One page per place, with the first thing still to get open (owner, 2026-11-26)
                                             onOpen = { tick(); nav.openPlace(p.id, open = Places.toOpen(p)) },
+                                            onCollect = quickCollect,
                                         )
                                     }
                                 }
@@ -575,6 +581,7 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
                                     ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
+                                    onCollect = quickCollect,
                                 )
                             }
                         }
@@ -802,8 +809,14 @@ private fun EmptyNote() = Text(
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable
-internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit, ekitag: ItemRow? = null) {
-    TileFrame(size, name, distance, faded = row.noneHere, onOpen = onOpen) {
+internal fun RoundTile(
+    row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit, ekitag: ItemRow? = null,
+    onCollect: ((QuickItem) -> Unit)? = null,
+) {
+    val ja = isJapanese()
+    // Press and hold (#227): a station's Stamp and Ekitag, else Collect
+    val quick = if (onCollect == null) emptyList() else quickItems(listOfNotNull(row, ekitag)) { it.item.displayName(ja) }
+    TileFrame(size, name, distance, faded = row.noneHere, onOpen = onOpen, quick = quick, onCollect = onCollect) {
         // A station's stamp and its Ekitag: the sector ring in two halves (#192, owner approved round 3, 2026-11-26)
         if (ekitag != null) SectorRing(listOf(row, ekitag), size)
         // An Ekitag on its own sits on its station's spot with the same name: a small badge says which tile is the Ekitag
@@ -830,12 +843,31 @@ internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, 
 
 /** A round tile's frame, shared by items and places: the mark, then the name on two lines and the distance. */
 @Composable
-internal fun TileFrame(size: Dp, name: String, distance: String?, faded: Boolean, onOpen: () -> Unit, mark: @Composable () -> Unit) {
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+internal fun TileFrame(
+    size: Dp, name: String, distance: String?, faded: Boolean, onOpen: () -> Unit,
+    quick: List<QuickItem> = emptyList(), onCollect: ((QuickItem) -> Unit)? = null,
+    mark: @Composable () -> Unit,
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var quickOpen by remember { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // The same Collect buttons as TalkBack custom actions on the tile (#227)
+    val actions = if (onCollect == null) emptyList() else quick.filter { !it.row.collected }.map { q ->
+        androidx.compose.ui.semantics.CustomAccessibilityAction(ctx.getString(R.string.quick_collect_action, ctx.getString(q.label).let { if (quick.size == 1) q.name else it })) { onCollect(q); true }
+    }
     Column(
         // Faded when you found nothing there
-        Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (faded) 0.45f else 1f),
+        Modifier
+            .combinedClickable(
+                onClick = onOpen,
+                onLongClick = if (quick.isEmpty() || onCollect == null) null else ({ haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); quickOpen = true }),
+            )
+            .semantics { if (actions.isNotEmpty()) customActions = actions }
+            .padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (faded) 0.45f else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        if (quickOpen && onCollect != null) QuickCollectPopup(quick, onCollect = { quickOpen = false; onCollect(it) }, onDismiss = { quickOpen = false })
         mark()
         Spacer(Modifier.height(4.dp))
         Text(

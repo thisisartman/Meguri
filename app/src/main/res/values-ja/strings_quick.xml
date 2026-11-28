@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- タイルの長押しで「集める」ボタン（#227） -->
+<resources>
+    <string name="quick_stamp">スタンプ</string>
+    <string name="quick_collect">集める</string>
+    <string name="quick_collected">%1$s：集めました</string>
+    <string name="quick_collect_action">%1$sを集める</string>
+</resources>

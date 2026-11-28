@@ -283,6 +283,9 @@ fun MoreTile(size: Dp, hidden: Int, onOpen: () -> Unit) {
 
 /** A place's tile on the Places view: its ring, name and the distance to its nearest thing. */
 @Composable
-fun PlaceTile(place: Place, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
-    TileFrame(size, name, distance, faded = place.noneHere, onOpen = onOpen) { SectorRing(place.things, size) }
+fun PlaceTile(place: Place, size: Dp, name: String, distance: String?, onOpen: () -> Unit, onCollect: ((QuickItem) -> Unit)? = null) {
+    val ja = isJapanese()
+    // Press and hold (#227): the place's things, a station's Stamp and Ekitag, else Collect
+    val quick = if (onCollect == null) emptyList() else quickItems(place.things) { it.item.displayName(ja) }
+    TileFrame(size, name, distance, faded = place.noneHere, onOpen = onOpen, quick = quick, onCollect = onCollect) { SectorRing(place.things, size) }
 }
