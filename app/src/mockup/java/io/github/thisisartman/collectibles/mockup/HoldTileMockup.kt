@@ -91,6 +91,10 @@ private val TILES = listOf(
     MockTile("Okutadami Dam", listOf(row("d", ItemType.DAM_CARD, "奥只見ダム", "Okutadami Dam", collected = true))),
 )
 
+/** B: which button the finger is over, by the buttons' bounds in root coordinates; -1 for none. Pure, so it is unit tested. */
+internal fun hoveredIndex(finger: Offset, bounds: Map<Int, Rect>): Int =
+    bounds.entries.filter { it.value.contains(finger) }.minOfOrNull { it.key } ?: -1
+
 private fun actionsOf(t: MockTile): List<MockAction> = t.things.map { r ->
     when (r.item.type) {
         ItemType.EKI_STAMP -> MockAction(t, r, "Stamp", R.drawable.ic_type_stamp)
@@ -112,21 +116,21 @@ fun HoldTileMockup() {
     var held by remember { mutableStateOf<MockTile?>(null) }
     var wide by remember { mutableStateOf(false) }
     var replay by remember { mutableIntStateOf(0) }
-    var hovered by remember { mutableStateOf<MockAction?>(null) }
+    var hovered by remember { mutableIntStateOf(-1) }
     var chose by remember { mutableStateOf("Nothing chosen yet") }
     val tileBounds = remember { mutableStateMapOf<String, Rect>() }
-    val buttonBounds = remember { mutableStateMapOf<MockAction, Rect>() }
+    val buttonBounds = remember { mutableStateMapOf<Int, Rect>() }
     var rootSize by remember { mutableStateOf(IntSize.Zero) }
     var panelSize by remember { mutableStateOf(IntSize.Zero) }
     val haptic = LocalHapticFeedback.current
 
     fun choose(a: MockAction) {
         chose = if (a.row.collected) "${a.label} at ${a.tile.name} is already collected" else "Chose: ${a.label} at ${a.tile.name}"
-        held = null; hovered = null
+        held = null; hovered = -1
     }
     fun open(t: MockTile) {
         haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-        buttonBounds.clear(); panelSize = IntSize.Zero; hovered = null
+        buttonBounds.clear(); panelSize = IntSize.Zero; hovered = -1
         held = t; wide = variant == "A"; replay++
     }
     // A: wide with labels, then icons after about 1.5 s
@@ -163,11 +167,16 @@ fun HoldTileMockup() {
                                     onDrag = { change, _ ->
                                         if (variant != "B") return@detectDragGesturesAfterLongPress
                                         val at = origin + change.position
-                                        val now = buttonBounds.entries.firstOrNull { it.value.contains(at) }?.key
-                                        if (now != hovered) { hovered = now; if (now != null) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
+                                        val now = hoveredIndex(at, buttonBounds)
+                                        if (now != hovered) { hovered = now; if (now >= 0) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
                                     },
-                                    onDragEnd = { if (variant == "B") { hovered?.let { choose(it) } ?: run { held = null; chose = "Cancelled" } } },
-                                    onDragCancel = { if (variant == "B") { held = null; hovered = null } },
+                                    onDragEnd = {
+                                        if (variant == "B") {
+                                            val a = actionsOf(t).getOrNull(hovered)
+                                            if (a != null) choose(a) else { held = null; hovered = -1; chose = "Cancelled" }
+                                        }
+                                    },
+                                    onDragCancel = { if (variant == "B") { held = null; hovered = -1 } },
                                 )
                             }
                             .padding(vertical = 6.dp, horizontal = 2.dp)
@@ -200,10 +209,10 @@ fun HoldTileMockup() {
                 modifier = Modifier.offset { place }.onSizeChanged { panelSize = it }.alpha(if (panelSize == IntSize.Zero) 0f else 1f),
             ) {
                 Column(Modifier.padding(8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    actionsOf(t).forEach { a ->
-                        val showLabel = if (variant == "A") wide else hovered == a
-                        MockButton(a, showLabel, highlighted = hovered == a,
-                            modifier = Modifier.onGloballyPositioned { buttonBounds[a] = it.boundsInRoot() },
+                    actionsOf(t).forEachIndexed { i, a ->
+                        val showLabel = if (variant == "A") wide else hovered == i
+                        MockButton(a, showLabel, highlighted = hovered == i,
+                            modifier = Modifier.onGloballyPositioned { buttonBounds[i] = it.boundsInRoot() },
                             onClick = if (variant == "A") ({ choose(a) }) else null)
                     }
                 }
