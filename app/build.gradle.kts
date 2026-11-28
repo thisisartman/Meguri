@@ -78,6 +78,12 @@ android {
         }
     }
 
+    // Page-by-page mockups in dev builds only (src/mockup, opened with adb ... --es page <name>); release has none
+    sourceSets {
+        getByName("debug") { kotlin.directories.add("src/mockup/java") }
+        getByName("devRelease") { kotlin.directories.add("src/mockup/java") }
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
