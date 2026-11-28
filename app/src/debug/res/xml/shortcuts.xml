@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- App shortcuts on a long press of the icon (#205). The dev builds (debug, devRelease) have their own copy with the
+     ".dev" package: a static shortcut names its package outright. Keep the three copies the same otherwise. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="add"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_add"
+        android:shortcutShortLabel="@string/shortcut_add"
+        android:shortcutLongLabel="@string/shortcut_add_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.thisisartman.collectibles.dev"
+            android:targetClass="io.github.thisisartman.collectibles.MainActivity">
+            <extra android:name="shortcut" android:value="add" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="book"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_book"
+        android:shortcutShortLabel="@string/shortcut_book"
+        android:shortcutLongLabel="@string/shortcut_book_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.thisisartman.collectibles.dev"
+            android:targetClass="io.github.thisisartman.collectibles.MainActivity">
+            <extra android:name="shortcut" android:value="book" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="trip"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_trip"
+        android:shortcutShortLabel="@string/shortcut_trip"
+        android:shortcutLongLabel="@string/shortcut_trip_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="io.github.thisisartman.collectibles.dev"
+            android:targetClass="io.github.thisisartman.collectibles.MainActivity">
+            <extra android:name="shortcut" android:value="trip" />
+        </intent>
+    </shortcut>
+</shortcuts>
