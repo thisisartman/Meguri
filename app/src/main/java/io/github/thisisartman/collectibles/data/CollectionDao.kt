@@ -5,8 +5,12 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
+import androidx.room.Update
 import androidx.room.Upsert
 import kotlinx.coroutines.flow.Flow
+
+/** A prefecture and a type with catalogue items on the phone. */
+data class CatalogueRegion(val prefecture: String, val type: ItemType)
 
 private const val ITEM_ROW = """
     SELECT i.*,
@@ -224,6 +228,17 @@ interface CollectionDao {
 
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertItems(items: List<Item>)
+
+    // Add from a backup (#209): what was empty here, filled, and the side the person kept
+    @Update
+    suspend fun updateItems(items: List<Item>): Int
+
+    @Update
+    suspend fun updateFinds(finds: List<Acquisition>): Int
+
+    /** The prefectures and types the phone has catalogue items of, to square the installed packs after a restore. */
+    @Query("SELECT DISTINCT prefecture, type FROM item WHERE catalog_key IS NOT NULL AND prefecture IS NOT NULL")
+    suspend fun catalogueRegions(): List<CatalogueRegion>
 
     // Your own collections (#64, schema v2)
     @Query("SELECT * FROM collection_type ORDER BY created_at")

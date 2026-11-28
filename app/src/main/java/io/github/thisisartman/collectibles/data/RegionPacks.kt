@@ -136,6 +136,21 @@ class RegionPacks @Inject constructor(
     }
 
     /**
+     * After a restore (#209): a catalogue pack marked as installed whose items the backup didn't carry is no longer
+     * on the phone, so it stops showing as installed and Regions offers it again. Returns the packs let go.
+     */
+    fun forgetEmpty(present: Collection<CatalogueRegion>): List<String> {
+        val index = cachedIndex() ?: return emptyList()
+        val gone = emptyPacks(index, installed.value.keys, present.map { it.prefecture to it.type }.toSet())
+        if (gone.isEmpty()) return gone
+        // commit: the app restarts straight after a restore
+        prefs.edit().apply { gone.forEach { remove(it) } }.commit()
+        _installed.value = readInstalled()
+        log.i("Packs", "After the restore, no items for ${gone.joinToString()}: shown as not installed")
+        return gone
+    }
+
+    /**
      * The map that came inside 0.4 and earlier (Niigata, Saitama and Tokyo in one ~100 MB file, copied to app storage)
      * keeps working after the update. Once all three have their own map download it is no longer used, so it goes.
      */
@@ -203,6 +218,11 @@ class RegionPacks @Inject constructor(
             return index.packs.filter { it.isMap && it.id in installed }
                 .mapNotNull { p -> SafeFiles.child(dir, p.file)?.takeIf { it.exists() }?.let { it to p.rings } }
         }
+
+        /** Installed catalogue packs with items in the index but none of their prefecture and type on the phone. */
+        fun emptyPacks(index: PackIndex, installed: Set<String>, present: Set<Pair<String, ItemType>>): List<String> =
+            index.packs.filter { p -> !p.isMap && p.type != null && p.items > 0 && p.id in installed && (p.prefecture to p.type) !in present }
+                .map { it.id }
 
         /** Changes whenever packs are installed or removed. */
         fun installedStamp(context: Context): Long =

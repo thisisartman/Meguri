@@ -262,11 +262,7 @@ class CatalogAndBackup @Inject constructor(
                 text("photos.csv", photosCsv(photos))
                 // Your own categories, which items.csv points at by custom_type_id (#170)
                 text("categories.csv", categoriesCsv(categories))
-                text("lines.csv", buildString {
-                    append(Csv.line("line_id", "name_ja", "name_romaji", "station_item_id", "seq"))
-                    val byLine = lines.associateBy { it.id }
-                    ls.forEach { s -> append(Csv.line(s.lineId, byLine[s.lineId]?.nameJa, byLine[s.lineId]?.nameRomaji, s.itemId, s.seq)) }
-                })
+                text("lines.csv", linesCsv(lines, ls))
                 var files = 0
                 if (withPhotos) onPhoto(0, photos.size)
                 if (withPhotos) photos.forEachIndexed { i, p ->
@@ -339,13 +335,21 @@ class CatalogAndBackup @Inject constructor(
         }
 
         fun findsCsv(finds: List<Acquisition>, items: Map<String, Item>) = buildString {
-            append(Csv.line("id", "item_id", "item_name_ja", "item_code", "acquired_at_iso", "before_app", "lat", "lng", "accuracy_m", "cost_yen", "notes", "via", "acquired_at", "created_at", "quantity"))
+            // No before_app: every find has had a date since schema v5 (#194), so the column was always false (#209)
+            append(Csv.line("id", "item_id", "item_name_ja", "item_code", "acquired_at_iso", "lat", "lng", "accuracy_m", "cost_yen", "notes", "via", "acquired_at", "created_at", "quantity"))
             val iso = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX", java.util.Locale.US)
             finds.forEach { a ->
                 val it = items[a.itemId]
-                append(Csv.line(a.id, a.itemId, it?.nameJa, it?.code, a.acquiredAt?.let { t -> iso.format(java.util.Date(t)) }, a.beforeApp,
+                append(Csv.line(a.id, a.itemId, it?.nameJa, it?.code, a.acquiredAt?.let { t -> iso.format(java.util.Date(t)) },
                     a.lat, a.lng, a.accuracyM, a.costYen, a.notes, a.via, a.acquiredAt, a.createdAt, a.quantity))
             }
+        }
+
+        /** Each station's place on a line, with the line's name and operator (#209: the operator was left out). */
+        fun linesCsv(lines: List<Line>, stations: List<LineStation>) = buildString {
+            append(Csv.line("line_id", "name_ja", "name_romaji", "operator", "station_item_id", "seq"))
+            val byLine = lines.associateBy { it.id }
+            stations.forEach { s -> append(Csv.line(s.lineId, byLine[s.lineId]?.nameJa, byLine[s.lineId]?.nameRomaji, byLine[s.lineId]?.operator, s.itemId, s.seq)) }
         }
 
         fun photosCsv(photos: List<Photo>) = buildString {

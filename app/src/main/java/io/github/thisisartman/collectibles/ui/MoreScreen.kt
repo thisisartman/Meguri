@@ -401,6 +401,75 @@ fun MoreScreen(
                 }
         }
     }
+    // Add from a backup (#209): the same file and checks as Restore; adds, and asks where the two differ
+    var pendingMerge by remember { mutableStateOf<PendingMerge?>(null) }
+    var mergePicking by remember { mutableStateOf(false) }
+    var mergeName by rememberSaveable { mutableStateOf<String?>(null) }
+    val mergeDone = stringResource(R.string.merge_done)
+    val mergeFailed = stringResource(R.string.merge_failed)
+    fun mergeFailedAt(name: String?) = vm.jobs.finish(DataResult(DataJob.MERGE, false, System.currentTimeMillis(), file = name))
+    fun cancelMerge() {
+        pendingMerge?.let { vm.restore.discard(it.info) }
+        pendingMerge = null
+        mergePicking = false
+    }
+    fun runMerge(p: PendingMerge, picks: Map<String, io.github.thisisartman.collectibles.data.MergePick>) {
+        pendingMerge = null
+        mergePicking = false
+        val name = mergeName
+        if (!vm.jobs.start(DataJob.MERGE, DataStep.COPY)) { vm.restore.discard(p.info); vm.work.say(busyText); return }
+        vm.run {
+            runCatching { vm.restore.merge(p.info, picks, vm.jobs::report) }
+                .onSuccess {
+                    vm.jobs.finish(DataResult(DataJob.MERGE, true, System.currentTimeMillis(), it.finds, it.photos, name))
+                    if (it.photosLeftToFind) relinkPending = vm.restore.relinkPending
+                    vm.work.say(mergeDone.format(countsText(app.resources, it.finds, it.items, it.photos)))
+                }
+                .onFailure {
+                    vm.log.e("Merge", "Add from a backup failed", it)
+                    mergeFailedAt(name)
+                    vm.work.say(mergeFailed)
+                }
+        }
+    }
+    val openMerge = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        if (!vm.jobs.start(DataJob.MERGE, DataStep.READING)) { vm.work.say(busyText); return@rememberLauncherForActivityResult }
+        val name = fileName(uri)
+        mergeName = name
+        vm.run {
+            runCatching {
+                val info = vm.restore.inspect(uri)
+                try { PendingMerge(info, vm.restore.planMerge(info)) } catch (e: Exception) { vm.restore.discard(info); throw e }
+            }
+                .onSuccess { vm.jobs.pause(); pendingMerge = it }
+                .onFailure {
+                    vm.log.w("Merge", "Backup refused: ${it.message}", it)
+                    mergeFailedAt(name)
+                    vm.work.say(
+                        when (it) {
+                            is BackupError.NewerVersion -> newer
+                            is BackupError.NotABackup -> notBackup
+                            is BackupError.Damaged -> damaged
+                            else -> mergeFailed
+                        },
+                    )
+                }
+        }
+    }
+    pendingMerge?.let { p ->
+        if (mergePicking) MergeConflictScreen(
+            p.plan.conflicts,
+            backupPicture = { id -> vm.restore.backupPicture(p.info, id) },
+            onCancel = { cancelMerge() },
+            onAdd = { picks -> runMerge(p, picks) },
+        ) else MergeDialog(
+            p.plan,
+            onCancel = { cancelMerge() },
+            onNext = { mergePicking = true },
+            onAdd = { runMerge(p, emptyMap()) },
+        )
+    }
     // A photo file (#188): read and shown first, then added on "Add"; nothing is replaced
     var pendingPhotoFile by remember { mutableStateOf<io.github.thisisartman.collectibles.data.PhotoFileInfo?>(null) }
     val photoFileNot = stringResource(R.string.photo_file_not)
@@ -736,6 +805,9 @@ fun MoreScreen(
                 JobRow(stringResource(R.string.more_restore), stringResource(R.string.more_restore_sub), DataJob.RESTORE, running, jobResults) {
                     openBackup.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
+                JobRow(stringResource(R.string.merge_backup), stringResource(R.string.merge_backup_sub), DataJob.MERGE, running, jobResults) {
+                    openMerge.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
+                }
                 JobRow(stringResource(R.string.photo_file), stringResource(R.string.photo_file_sub), DataJob.PHOTO_FILE, running, jobResults) {
                     openPhotoFile.launch(arrayOf("application/zip", "application/octet-stream", "*/*"))
                 }
@@ -1034,6 +1106,8 @@ internal val CATALOGUE_TYPES = arrayOf("text/csv", "text/comma-separated-values"
 private val STARTING_FOLDER = DocumentsContract.buildDocumentUri("com.android.externalstorage.documents", "primary:Documents")
 
 private class PendingRestore(val info: BackupInfo, val now: CurrentCounts)
+
+private class PendingMerge(val info: BackupInfo, val plan: io.github.thisisartman.collectibles.data.BackupMerge.Plan)
 
 @Composable
 private fun RestoreDialog(p: PendingRestore, onCancel: () -> Unit, onConfirm: () -> Unit) {

@@ -5,6 +5,7 @@
     <string name="job_backing_up">バックアップ中…</string>
     <string name="job_restoring">復元中…</string>
     <string name="job_adding">写真を追加中…</string>
+    <string name="job_merging">バックアップから追加中…</string>
     <plurals name="job_photos_of">
         <item quantity="other">写真 %1$d / %2$d枚</item>
     </plurals>

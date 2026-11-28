@@ -1,7 +1,7 @@
 package io.github.thisisartman.collectibles.data
 
 /** The long jobs started from Settings, Backup and data (#217): one runs at a time, as they share the backup lock. */
-enum class DataJob { BACKUP, RESTORE, PHOTO_FILE }
+enum class DataJob { BACKUP, RESTORE, PHOTO_FILE, MERGE }
 
 /** Where a [DataJob] is: reading the chosen file, saving a copy of what is here first, the job itself, its photos. */
 enum class DataStep { READING, COPY, WORKING, PHOTOS }

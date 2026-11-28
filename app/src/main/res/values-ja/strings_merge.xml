@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="merge_backup">バックアップから追加</string>
+    <string name="merge_backup_sub">バックアップにあってこの端末にないものを追加します。今あるデータは置き換えも削除もされません。</string>
+    <string name="merge_title">このバックアップから追加しますか？</string>
+    <string name="merge_new_line">バックアップから新しく追加：%1$s</string>
+    <plurals name="merge_differ">
+        <item quantity="other">この端末とバックアップで内容が違う項目が%d件あります。次の画面で残す方を選びます。</item>
+    </plurals>
+    <string name="merge_copy_note">現在のデータのコピーを先に「ダウンロード」へ保存します。</string>
+    <string name="merge_nothing">このバックアップの内容はすべてこの端末にあります。</string>
+    <string name="merge_next">次へ</string>
+    <string name="merge_add">追加</string>
+    <string name="merge_pick_title">残す方を選ぶ</string>
+    <string name="merge_keep_all_phone">すべてこの端末の方を残す</string>
+    <string name="merge_keep_all_backup">すべてバックアップの方を残す</string>
+    <string name="merge_this_phone">この端末</string>
+    <string name="merge_the_backup">バックアップ</string>
+    <string name="merge_kept">残す</string>
+    <string name="merge_field_cover">表示画像</string>
+    <string name="merge_field_position">マンホールの位置</string>
+    <string name="merge_field_notes">メモ</string>
+    <string name="merge_field_hours">時間</string>
+    <string name="merge_field_found">記録</string>
+    <string name="merge_found_on">%1$s に記録</string>
+    <string name="merge_no_picture">バックアップにありません</string>
+    <string name="merge_done">追加しました：%1$s</string>
+    <string name="merge_failed">バックアップから追加できませんでした。データは変更されていません。</string>
+</resources>
