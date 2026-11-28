@@ -6,7 +6,9 @@ All notable changes to Meguri are listed here, newest first. Versions follow [Se
 
 What if you're doing 60 on a country road and Meguri politely mentions the roadside station you passed a minute ago? Thanks, buddy. After much RnD, places you drive to now speak up a whole kilometre early, and a new High priority mode keeps pace with the car.
 
-Meanwhile, I visited my first roadside station and added its stamp. Of course, brother. But the stamp showed up as a tiny circle in the middle of an ocean of white paper, because Meguri kept the whole photo. Not anymore. Stamps now crop themselves by shape: round ones fill a circle, square ones get a neat white border. Oh, and Meguri can update itself now. The public beta starts here. (Be gentle with it.)
+Meanwhile, I visited my first roadside station and added its stamp. But the stamp showed up as a tiny circle in the middle of an ocean of white paper, because Meguri kept the whole photo. Not anymore. Stamps now crop themselves by shape: round ones fill a circle, square ones get a neat white border. Oh, and Meguri can update itself now.
+
+Meguri is now available for public testing. The era of suffering begins.
 
 ### Highlights
 - Roadside stations, manhole cards and dam cards now alert from 1 km away. Early enough to actually take the exit.
