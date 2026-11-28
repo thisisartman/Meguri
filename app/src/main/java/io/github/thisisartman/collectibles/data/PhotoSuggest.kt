@@ -30,6 +30,11 @@ object PhotoSuggest {
     /** An item on this phone, as the rules need it. */
     data class Known(val id: String, val type: ItemType, val nameJa: String, val nameRomaji: String? = null, val code: String? = null)
 
+    fun known(items: List<Item>): List<Known> = items.map { Known(it.id, it.type, it.nameJa, it.nameRomaji, it.code) }
+
+    /** How many photos coming in at once get read: 1, so a single shared photo is read too (owner question open; 2 turns it off). */
+    const val READ_FROM = 1
+
     sealed interface Target {
         data class Existing(val id: String) : Target
         /** A new item of your own, made when the person confirms. */

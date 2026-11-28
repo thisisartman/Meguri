@@ -385,13 +385,14 @@ class MainViewModel @Inject constructor(
 
     /** Whether the shared photos get read for text: many at once (#206), not a card scan passed on with its kind. */
     val readsShareText: Boolean
-        get() = (sharedUris.value.size >= 2 || shareReadText) && shareCardKind == io.github.thisisartman.collectibles.data.PhotoKind.OTHER
+        get() = (sharedUris.value.size >= io.github.thisisartman.collectibles.data.PhotoSuggest.READ_FROM || shareReadText) &&
+            shareCardKind == io.github.thisisartman.collectibles.data.PhotoKind.OTHER
 
     /** Reads the text on the shared photos, once per share, and suggests where each goes; suggestions only. */
     fun readShareText() {
         if (textJob != null || !readsShareText) return
         val uris = sharedUris.value
-        val known = rows.value.map { r -> io.github.thisisartman.collectibles.data.PhotoSuggest.Known(r.item.id, r.item.type, r.item.nameJa, r.item.nameRomaji, r.item.code) }
+        val known = io.github.thisisartman.collectibles.data.PhotoSuggest.known(rows.value.map { it.item })
         _textRead.value = 0
         textJob = viewModelScope.launch {
             val found = runCatching { repo.suggestFromText(uris, known) { _textRead.value = it } }
