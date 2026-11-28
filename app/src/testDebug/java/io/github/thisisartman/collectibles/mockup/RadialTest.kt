@@ -54,4 +54,45 @@ class RadialTest {
         // Up and to the left is -135 degrees, the same as the third button's 225
         assertEquals(2, Radial.hit(540f - 170f, 1200f - 170f, 540f, 1200f, angles, r, 100f))
     }
+
+    @Test fun `the fan centres on the ring, not on the tile with its name`() {
+        // A tile 96 x 140 px whose ring is its top 64 x 64 (plus padding): the centre is the ring's
+        val ring = androidx.compose.ui.geometry.Rect(135f, 1668f, 199f, 1732f)
+        assertEquals(androidx.compose.ui.geometry.Offset(167f, 1700f), Radial.centreOf(ring))
+    }
+
+    @Test fun `every button sits at the same distance, symmetric about the open direction`() {
+        for (f in Fan.entries) {
+            val angles = Radial.angles(f, 3)
+            val dists = angles.map { a ->
+                val (x, y) = Radial.position(540f, 1200f, r, a, 72f, w, 2400f)
+                kotlin.math.hypot((x - 540f).toDouble(), (y - 1200f).toDouble())
+            }
+            dists.forEach { assertEquals(r.toDouble(), it, 0.5) }
+            // The middle one points straight along the fan, the outer two the same step either side
+            assertEquals(angles[1] - angles[0], angles[2] - angles[1], 1e-9)
+        }
+    }
+
+    @Test fun `labels go outward when they fit`() {
+        val screen = androidx.compose.ui.geometry.Size(w, 2400f)
+        val tl = Radial.labelTopLeft(androidx.compose.ui.geometry.Offset(400f, 1200f), 72f, 0.0, androidx.compose.ui.geometry.Size(200f, 60f), 18f, emptyList(), screen)
+        // Right of the button, centred on its height
+        assertEquals(400f + 72f + 18f, tl.x, 0.01f)
+        assertEquals(1170f, tl.y, 0.01f)
+    }
+
+    @Test fun `a label that would leave the screen or cover a neighbour moves across, and never leaves the screen`() {
+        val screen = androidx.compose.ui.geometry.Size(w, 2400f)
+        val size = androidx.compose.ui.geometry.Size(260f, 60f)
+        // A button near the right edge pointing right, its neighbour above it
+        val button = androidx.compose.ui.geometry.Offset(980f, 1200f)
+        val neighbour = androidx.compose.ui.geometry.Offset(940f, 1000f)
+        val tl = Radial.labelTopLeft(button, 72f, 0.0, size, 18f, listOf(neighbour), screen)
+        val rect = androidx.compose.ui.geometry.Rect(tl, size)
+        assert(rect.left >= 0f && rect.right <= w && rect.top >= 0f && rect.bottom <= 2400f) { "off screen: $rect" }
+        assert(!rect.overlaps(androidx.compose.ui.geometry.Rect(neighbour, 72f))) { "over the neighbour: $rect" }
+        // Moved below the button, away from the neighbour
+        assert(rect.top > button.y) { "not below: $rect" }
+    }
 }

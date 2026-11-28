@@ -1,5 +1,8 @@
 package io.github.thisisartman.collectibles.mockup
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
@@ -55,5 +58,35 @@ object Radial {
             if (diff < bestDiff) { best = i; bestDiff = diff }
         }
         return if (bestDiff <= STEP_DEG / 2) best else -1
+    }
+
+    /** The arc's centre: the centre of the tile's ring (its picture), never the tile with its name under it. */
+    fun centreOf(ring: Rect): Offset = ring.center
+
+    /**
+     * Where a button's label pill goes, its top-left corner: outward along the button's own radius; if that would
+     * leave the screen or cover a button, across the radius on the side away from the neighbours. Always pulled
+     * inside the screen, and never over the button itself or another one. Pure, so it is unit tested.
+     */
+    fun labelTopLeft(button: Offset, buttonR: Float, deg: Double, label: Size, gap: Float, others: List<Offset>, screen: Size): Offset {
+        val r = Math.toRadians(deg)
+        val out = Offset(cos(r).toFloat(), sin(r).toFloat())
+        // Placed so the edge facing the button sits [gap] past the button's rim, along [d], then pulled on screen
+        fun placed(d: Offset): Rect {
+            val a = button + d * (buttonR + gap)
+            val x = (a.x - label.width / 2 + d.x * label.width / 2).coerceIn(0f, (screen.width - label.width).coerceAtLeast(0f))
+            val y = (a.y - label.height / 2 + d.y * label.height / 2).coerceIn(0f, (screen.height - label.height).coerceAtLeast(0f))
+            return Rect(Offset(x, y), label)
+        }
+        val buttons = (others + button).map { Rect(it, buttonR + gap / 2) }
+        fun ok(rc: Rect): Boolean = buttons.none { rc.overlaps(it) }
+        val first = placed(out)
+        if (ok(first)) return first.topLeft
+        // Across the radius, on the side away from the neighbours first
+        val tangent = Offset(-out.y, out.x)
+        val lean = others.sumOf { ((it - button).x * tangent.x + (it - button).y * tangent.y).toDouble() }
+        val away = if (lean > 0) tangent * -1f else tangent
+        for (d in listOf(away, away * -1f)) placed(d).let { if (ok(it)) return it.topLeft }
+        return first.topLeft
     }
 }

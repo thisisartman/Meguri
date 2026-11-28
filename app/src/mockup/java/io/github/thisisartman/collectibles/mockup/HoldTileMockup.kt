@@ -10,6 +10,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -49,6 +50,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
@@ -98,6 +101,15 @@ private val ROW_ONE = listOf(
     MockTile("okutadami", "Okutadami Dam", listOf(row("d", ItemType.DAM_CARD, "奥只見ダム", "Okutadami Dam", collected = true))),
 )
 
+/** A tile at the top of the screen, whose fan opens downward. */
+private val TOP = station("nagaoka", "長岡", "Nagaoka")
+
+/** A tile's ring or picture, 64 dp. */
+@Composable
+private fun TileMark(t: MockTile) {
+    if (t.things.size > 1) SectorRing(t.things, 64.dp) else Mark(t.things.first(), 64.dp)
+}
+
 /** One station per placement: left edge (fans right), middle (fans up), right edge (fans left). */
 private val ROW_TWO = listOf(station("muika", "六日町", "Muikamachi"), station("echigo", "越後湯沢", "Echigo-Yuzawa"), station("koide", "小出", "Koide"))
 
@@ -124,13 +136,15 @@ fun HoldTileMockup() {
     var hovered by remember { mutableIntStateOf(-1) }
     var chose by remember { mutableStateOf("Nothing chosen yet") }
     val tileBounds = remember { mutableStateMapOf<String, Rect>() }
+    // The ring (the tile's picture) of each tile: the fan's centre
+    val ringBounds = remember { mutableStateMapOf<String, Rect>() }
     var rootSize by remember { mutableStateOf(IntSize.Zero) }
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val tileDp = 64.dp
     val buttonDp = 48.dp
-    // The ring clears the tile and the finger: tile size + 16 dp from the centre to the buttons' inner edge
-    val radius = with(density) { (tileDp + 16.dp + buttonDp / 2).toPx() }
+    // One radius for every button, a true circle round the ring: the ring's own radius, 20 dp clear, then the button
+    val radius = with(density) { (tileDp / 2 + 20.dp + buttonDp / 2).toPx() }
     val buttonPx = with(density) { buttonDp.toPx() }
     val band = with(density) { 44.dp.toPx() }
     // Each button's way out from the tile's centre, 0 at the centre and 1 on the arc
@@ -138,8 +152,7 @@ fun HoldTileMockup() {
     val scope = rememberCoroutineScope()
 
     fun geometry(t: MockTile): Pair<Offset, List<Double>>? {
-        val b = tileBounds[t.id] ?: return null
-        val c = b.center
+        val c = Radial.centreOf(ringBounds[t.id] ?: return null)
         val f = Radial.fan(c.x, c.y, rootSize.width.toFloat(), radius, buttonPx)
         return c to Radial.angles(f, actionsOf(t).size)
     }
@@ -195,18 +208,19 @@ fun HoldTileMockup() {
                         onDragCancel = { if (variant == "B") close() },
                     )
                 }
-                .padding(vertical = 6.dp, horizontal = 2.dp)
-                .alpha(if (held == t) 0.6f else 1f),
+                .padding(vertical = 6.dp, horizontal = 2.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (t.things.size > 1) SectorRing(t.things, tileDp) else Mark(t.things.first(), tileDp)
+            Box(Modifier.onGloballyPositioned { ringBounds[t.id] = it.boundsInRoot() }) { TileMark(t) }
             Spacer(Modifier.height(4.dp))
             Text(t.name, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2)
         }
     }
 
     Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
-        Column(Modifier.fillMaxSize().padding(16.dp)) {
+        Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            // A tile at the very top: its fan opens downward
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Tile(TOP, Modifier.width(96.dp)) }
             Text("Hold a tile (#227 prototype, radial)", style = MaterialTheme.typography.titleLarge)
             Row(Modifier.padding(vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = variant == "A", onClick = { variant = "A"; held = null }, label = { Text("A: tap") })
@@ -221,11 +235,11 @@ fun HoldTileMockup() {
                 else "Hold a tile and keep your finger down. Drag round the arc; lift on a button to choose it, elsewhere to cancel.",
                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-            Spacer(Modifier.height(120.dp))
+            Spacer(Modifier.height(96.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 ROW_ONE.forEach { t -> Tile(t, Modifier.weight(1f)) }
             }
-            Spacer(Modifier.height(160.dp))
+            Spacer(Modifier.height(140.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 ROW_TWO.forEach { t -> Tile(t, Modifier.width(96.dp)) }
             }
@@ -237,18 +251,25 @@ fun HoldTileMockup() {
         val g = t?.let { geometry(it) }
         if (t != null && g != null) {
             val (c, angles) = g
-            // A tap outside closes (A); in B the finger is still down, so lifting decides instead
-            if (variant == "A") Box(
-                Modifier.fillMaxSize().clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { close() },
+            // The rest of the screen dims while the fan is open (40 %); a tap on it closes (A). In B the finger is still
+            // down, so lifting decides instead
+            val dim = progress.first().value.coerceIn(0f, 1f)
+            Box(
+                Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f * dim))
+                    .then(if (variant == "A") Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { close() } else Modifier),
             )
+            // The held tile's ring stays bright, over the dim
+            Box(Modifier.placedAt(c.x, c.y, Offset.Zero)) { TileMark(t) }
+            val screenW = rootSize.width.toFloat()
+            val screenH = rootSize.height.toFloat()
+            val spots = angles.map { Radial.position(c.x, c.y, radius, it, buttonPx / 2, screenW, screenH) }
             actionsOf(t).forEachIndexed { i, a ->
-                val deg = angles[i]
-                val (tx, ty) = Radial.position(c.x, c.y, radius, deg, buttonPx / 2, rootSize.width.toFloat(), rootSize.height.toFloat())
+                val (tx, ty) = spots[i]
                 val p = progress.getOrNull(i)?.value ?: 1f
-                val dir = Offset(cos(Math.toRadians(deg)).toFloat(), sin(Math.toRadians(deg)).toFloat())
+                val others = spots.filterIndexed { j, _ -> j != i }.map { (x, y) -> Offset(x, y) }
                 val showLabel = if (variant == "A") wide else hovered == i
                 RadialButton(
-                    a, c.x + (tx - c.x) * p, c.y + (ty - c.y) * p, dir, p, showLabel, highlighted = hovered == i,
+                    a, c.x + (tx - c.x) * p, c.y + (ty - c.y) * p, angles[i], others, Size(screenW, screenH), p, showLabel, highlighted = hovered == i,
                     onClick = if (variant == "A") ({ choose(a) }) else null,
                 )
             }
@@ -258,7 +279,10 @@ fun HoldTileMockup() {
 
 /** A round icon button centred on ([x], [y]), its label as a pill just outside the arc, pointing along [dir]. */
 @Composable
-private fun RadialButton(a: MockAction, x: Float, y: Float, dir: Offset, progress: Float, showLabel: Boolean, highlighted: Boolean, onClick: (() -> Unit)?) {
+private fun RadialButton(
+    a: MockAction, x: Float, y: Float, deg: Double, others: List<Offset>, screen: Size, progress: Float,
+    showLabel: Boolean, highlighted: Boolean, onClick: (() -> Unit)?,
+) {
     val done = a.row.collected
     val scale by animateFloatAsState(if (highlighted) 1.25f else 1f, spring(stiffness = Spring.StiffnessMedium), label = "hover")
     val bg = when {
@@ -271,7 +295,8 @@ private fun RadialButton(a: MockAction, x: Float, y: Float, dir: Offset, progres
         highlighted -> MaterialTheme.colorScheme.onPrimary
         else -> MaterialTheme.colorScheme.onSecondaryContainer
     }
-    val gap = with(LocalDensity.current) { (24.dp * scale + 8.dp).toPx() }
+    val buttonR = with(LocalDensity.current) { (24.dp * scale).toPx() }
+    val gap = with(LocalDensity.current) { 6.dp.toPx() }
     Box(Modifier.placedAt(x, y, Offset.Zero)) {
         Surface(
             shape = CircleShape, color = bg, contentColor = ink, shadowElevation = 4.dp,
@@ -285,13 +310,23 @@ private fun RadialButton(a: MockAction, x: Float, y: Float, dir: Offset, progres
             }
         }
     }
-    // The label's near edge touches a point just past the button, along the arc's outward direction
-    Box(Modifier.placedAt(x + dir.x * gap, y + dir.y * gap, dir)) {
+    // The label: outward along the button's radius, else across it on the side away from the neighbours; always on
+    // screen and never over another button
+    Box(Modifier.labelAt(Offset(x, y), buttonR, deg, gap, others, screen)) {
         AnimatedVisibility(showLabel && progress > 0.5f, enter = fadeIn() + scaleIn(initialScale = 0.6f), exit = fadeOut() + scaleOut(targetScale = 0.6f)) {
             Surface(shape = RoundedCornerShape(12.dp), color = MaterialTheme.colorScheme.inverseSurface, contentColor = MaterialTheme.colorScheme.inverseOnSurface) {
                 Text(if (done) "${a.label}: collected" else a.label, Modifier.padding(horizontal = 10.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge, maxLines = 1)
             }
         }
+    }
+}
+
+/** Takes the whole parent and places the label where [Radial.labelTopLeft] says, by its measured size. */
+private fun Modifier.labelAt(button: Offset, buttonR: Float, deg: Double, gap: Float, others: List<Offset>, screen: Size) = this.layout { m, c ->
+    val p = m.measure(c.copy(minWidth = 0, minHeight = 0))
+    layout(c.maxWidth, c.maxHeight) {
+        val tl = Radial.labelTopLeft(button, buttonR, deg, Size(p.width.toFloat(), p.height.toFloat()), gap, others, screen)
+        p.place(tl.x.toInt(), tl.y.toInt())
     }
 }
 
