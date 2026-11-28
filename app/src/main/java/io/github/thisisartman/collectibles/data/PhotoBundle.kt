@@ -41,7 +41,17 @@ object PhotoBundle {
     fun coverToSet(row: Row, current: Double?): CoverCoords.LatLng? = if (current == null) row.cover else null
 
     /** The list, read and checked. Bad lines are skipped and counted, never guessed. */
-    data class Parsed(val rows: List<Row>, val skipped: Int, val bad: List<String>)
+    /** [named]: every photo the list names, on any line (a skipped one too), so the photos it doesn't name are known (#206). */
+    data class Parsed(val rows: List<Row>, val skipped: Int, val bad: List<String>, val named: Set<String> = emptySet())
+
+    /**
+     * The photos in the file that its list doesn't name at all (#206): read on the phone and suggested, like photos
+     * shared at once. Only pictures (by their ending), never the list itself.
+     */
+    fun unlisted(files: List<String>, named: Set<String>): List<String> =
+        files.filter { it !in named && it.substringAfterLast('.', "").lowercase() in PICTURES }.sorted()
+
+    private val PICTURES = setOf("jpg", "jpeg", "png", "webp", "heic", "heif")
 
     /**
      * A photo of the card itself, on a manhole or dam card (owner, 2026-11-27): it goes to the Card slot
@@ -57,10 +67,12 @@ object PhotoBundle {
         val bad = mutableListOf<String>()
         var skipped = 0
         var last: Target? = null
+        val named = mutableSetOf<String>()
         for ((n, m) in Csv.parseWithHeader(text.removePrefix("﻿")).withIndex()) {
             fun v(k: String) = m[k]?.trim().orEmpty()
             val line = "line ${n + 2}"
             val photo = v("photo")
+            if (photo.isNotEmpty()) named += photo
             when (val match = v("match").lowercase()) {
                 "skip" -> { skipped++; continue }
                 "catalogue", "own", "extra" -> {
@@ -88,7 +100,7 @@ object PhotoBundle {
                 else -> bad += "$line: match '$match' is not catalogue, own, extra or skip"
             }
         }
-        return Parsed(rows, skipped, bad)
+        return Parsed(rows, skipped, bad, named)
     }
 
     /**

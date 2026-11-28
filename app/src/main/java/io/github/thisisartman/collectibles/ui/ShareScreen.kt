@@ -24,6 +24,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -53,13 +54,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import io.github.thisisartman.collectibles.R
 import io.github.thisisartman.collectibles.data.ItemRow
 import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.data.PhotoGroup
+import io.github.thisisartman.collectibles.data.PhotoSuggest
 import io.github.thisisartman.collectibles.data.ShareGrouping
+import io.github.thisisartman.collectibles.data.SharedPhoto
 import io.github.thisisartman.collectibles.location.distanceM
 import kotlinx.coroutines.launch
 
@@ -83,7 +89,20 @@ fun ShareScreen(vm: MainViewModel, onClose: () -> Unit, onAdded: (photos: Int, i
     val allowPlaces = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { vm.readShare() }
     val hidden = photos?.count { it.placeHidden } ?: 0
 
-    val groups = remember(photos) { photos?.let { ShareGrouping.byPlace(it) }.orEmpty() }
+    // Many photos at once (#206): the text on each is read on the phone and suggests where it goes. A suggestion is
+    // never chosen for you: one tap on its check confirms it. Photos with nothing to go on stay in the groups below
+    val suggested by vm.suggested.collectAsState()
+    val textRead by vm.textRead.collectAsState()
+    val readsText = vm.readsShareText
+    LaunchedEffect(rows.isNotEmpty()) { if (rows.isNotEmpty()) vm.readShareText() }
+    val reading = readsText && suggested == null
+    val textGroups = remember(photos, suggested, rows) { textGroups(photos.orEmpty(), suggested.orEmpty(), rows) }
+    val confirmed = remember(textGroups) { mutableStateMapOf<Int, Boolean>() }
+    // "Change" on a suggestion: the item picked instead, by group
+    val instead = remember(textGroups) { mutableStateMapOf<Int, String>() }
+    var changingText by remember { mutableStateOf<Int?>(null) }
+    val rest = remember(photos, textGroups) { photos?.let { p -> val read = textGroups.flatMap { it.photos }.toSet(); p.filter { it !in read } } }
+    val groups = remember(rest) { rest?.let { ShareGrouping.byPlace(it) }.orEmpty() }
     // The item chosen for each group, by index; seeded with the nearest suggestion once rows and groups are in
     val chosen = remember(groups) { mutableStateMapOf<Int, String?>() }
     LaunchedEffect(groups, rows.isNotEmpty()) {
@@ -95,6 +114,11 @@ fun ShareScreen(vm: MainViewModel, onClose: () -> Unit, onAdded: (photos: Int, i
     var changing by remember { mutableStateOf<Int?>(null) }
     var adding by remember { mutableStateOf(false) }
     val picked = groups.indices.mapNotNull { i -> chosen[i]?.let { it to groups[i] } }
+    val pickedText = textGroups.indices.filter { confirmed[it] == true }.map { i ->
+        val g = textGroups[i]
+        val s = instead[i]?.let { id -> g.suggestion.copy(target = PhotoSuggest.Target.Existing(id), kind = io.github.thisisartman.collectibles.data.PhotoKind.OTHER, cover = null) } ?: g.suggestion
+        s to g.photos
+    }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -121,28 +145,66 @@ fun ShareScreen(vm: MainViewModel, onClose: () -> Unit, onAdded: (photos: Int, i
                     }
                 }
             }
+            if (reading) item {
+                Column(Modifier.fillMaxWidth().padding(4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(stringResource(R.string.share_reading, textRead, shareCount), style = MaterialTheme.typography.bodyMedium)
+                    androidx.compose.material3.LinearProgressIndicator(
+                        progress = { if (shareCount > 0) textRead.toFloat() / shareCount else 0f }, modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            }
+            if (textGroups.isNotEmpty()) item {
+                Text(
+                    stringResource(R.string.share_from_text), Modifier.padding(horizontal = 4.dp, vertical = 4.dp).semantics { heading() },
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
+            itemsIndexed(textGroups) { i, g ->
+                val row = (instead[i] ?: (g.suggestion.target as? PhotoSuggest.Target.Existing)?.id)?.let { id -> rows.firstOrNull { it.item.id == id } }
+                SuggestionCard(
+                    g, row, if (instead[i] != null) null else (g.suggestion.target as? PhotoSuggest.Target.New), ja, confirmed[i] == true,
+                    onConfirm = { confirmed[i] = it }, onChange = { changingText = i },
+                )
+            }
+            if (textGroups.isNotEmpty() && groups.isNotEmpty()) item {
+                Text(
+                    stringResource(R.string.share_unsorted), Modifier.padding(horizontal = 4.dp, vertical = 4.dp).semantics { heading() },
+                    style = MaterialTheme.typography.titleSmall,
+                )
+            }
             itemsIndexed(groups) { i, g ->
                 val row = chosen[i]?.let { id -> rows.firstOrNull { it.item.id == id } }
                 GroupCard(g, row, ja, onChange = { changing = i })
             }
         }
+        val count = picked.size + pickedText.size
         Button(
-            enabled = picked.isNotEmpty() && !adding,
+            enabled = count > 0 && !adding,
             onClick = {
                 adding = true
                 scope.launch {
+                    val (n1, items1) = vm.addSuggested(pickedText)
                     val (n, items) = vm.addShared(picked)
                     // Leave first; the message is shown by the app, so it outlives this page
                     onClose()
-                    onAdded(n, items)
+                    onAdded(n + n1, items + items1)
                 }
             },
             modifier = Modifier.fillMaxWidth().padding(12.dp).navigationBarsPadding().heightIn(min = 52.dp),
         ) {
             // Copying full-size photos takes a few seconds; show it is working
             if (adding) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            else Text(pluralStringResource(R.plurals.share_add_all, picked.size, picked.size))
+            else Text(pluralStringResource(R.plurals.share_add_all, count, count))
         }
+    }
+
+    changingText?.let { i ->
+        PickSheet(
+            group = PhotoGroup(textGroups[i].photos, null), rows = rows, here = here, ja = ja,
+            onPick = { id -> instead[i] = id; confirmed[i] = true; changingText = null },
+            onLeaveOut = { instead.remove(i); confirmed[i] = false; changingText = null },
+            onDismiss = { changingText = null },
+        )
     }
 
     changing?.let { i ->
@@ -252,6 +314,61 @@ private fun PickSheet(
             }
             TextButton(onClick = onLeaveOut, modifier = Modifier.padding(vertical = 8.dp)) { Text(stringResource(R.string.share_leave_out)) }
             Spacer(Modifier.size(8.dp))
+        }
+    }
+}
+
+/** Shared photos whose text points at one thing (#206), and that suggestion. */
+internal data class TextGroup(val suggestion: PhotoSuggest.Suggestion, val photos: List<SharedPhoto>)
+
+/**
+ * The read photos grouped by where their text points, in place order: a station stamp sits beside its Ekitag, as
+ * both carry the station's name.
+ */
+internal fun textGroups(photos: List<SharedPhoto>, suggested: Map<String, PhotoSuggest.Suggestion>, rows: List<ItemRow>): List<TextGroup> {
+    val byId = rows.associateBy { it.item.id }
+    fun place(s: PhotoSuggest.Suggestion): String = when (val t = s.target) {
+        is PhotoSuggest.Target.Existing -> byId[t.id]?.item?.nameJa ?: t.id
+        is PhotoSuggest.Target.New -> t.name
+    }.removeSuffix("駅")
+    return photos.mapNotNull { p -> suggested[p.uri]?.let { it to p } }
+        .groupBy({ it.first.target }, { it })
+        .map { (_, list) -> TextGroup(list.first().first, list.map { it.second }) }
+        .sortedWith(compareBy({ place(it.suggestion) }, { it.suggestion.type.ordinal }))
+}
+
+/**
+ * One suggestion read off the photos: what it is and its photos, unconfirmed until its check is tapped (#206).
+ * [new] is set when it would make a new item of your own. "Change" picks another item.
+ */
+@Composable
+private fun SuggestionCard(
+    g: TextGroup, row: ItemRow?, new: PhotoSuggest.Target.New?, ja: Boolean, confirmed: Boolean,
+    onConfirm: (Boolean) -> Unit, onChange: () -> Unit,
+) {
+    val name = row?.item?.displayName(ja) ?: new?.name.orEmpty()
+    val type = stringResource((row?.item?.type ?: g.suggestion.type).label())
+    val use = stringResource(R.string.share_use, name)
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            LazyRow(Modifier.padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                items(g.photos) { PhotoThumb(it.uri, 56.dp) }
+            }
+            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (row != null) Mark(row, 32.dp) else TypeIcon(g.suggestion.type, 32.dp)
+                Column(Modifier.weight(1f).padding(horizontal = 10.dp)) {
+                    Text(name, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text(
+                        listOfNotNull(type, if (new != null) stringResource(R.string.share_new) else null, pluralStringResource(R.plurals.share_photos, g.photos.size, g.photos.size)).joinToString(" · "),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                TextButton(onClick = onChange) { Text(stringResource(R.string.share_change)) }
+                androidx.compose.material3.FilledTonalIconToggleButton(
+                    checked = confirmed, onCheckedChange = onConfirm,
+                    modifier = Modifier.semantics { contentDescription = use },
+                ) { Icon(Icons.Default.Check, contentDescription = null) }
+            }
         }
     }
 }

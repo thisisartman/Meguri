@@ -56,6 +56,10 @@ object PhotoStore {
     /** A small bitmap for a tile or grid; null if the picture can't be read. */
     fun thumbnail(context: Context, uri: String, px: Int): Bitmap? = runCatching {
         if (isApp(uri)) decode(ImageDecoder.createSource(file(context, uri)), px)
+        // A photo file's photo waiting to be sorted (#206): only a file in the app's own cache
+        else if (uri.startsWith("file://")) Uri.parse(uri).path?.let(::File)
+            ?.takeIf { io.github.thisisartman.collectibles.data.SafeFiles.inside(context.cacheDir, it) }
+            ?.let { decode(ImageDecoder.createSource(it), px) }
         else context.contentResolver.loadThumbnail(Uri.parse(uri), Size(px, px), null)
     }.getOrNull()
 

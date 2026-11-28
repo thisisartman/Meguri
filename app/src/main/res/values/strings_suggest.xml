@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Many photos at once (#206): the text on each is read on the phone and suggests where it goes -->
+<resources>
+    <string name="share_reading">Reading the photos… %1$d of %2$d</string>
+    <string name="share_from_text">Read from the photos</string>
+    <string name="share_unsorted">Not sorted</string>
+    <string name="share_new">New</string>
+    <string name="share_use">Use for %1$s</string>
+    <plurals name="photo_file_unlisted">
+        <item quantity="one">%d photo isn\'t on the list. Meguri reads it next and suggests where it goes.</item>
+        <item quantity="other">%d photos aren\'t on the list. Meguri reads them next and suggests where each goes.</item>
+    </plurals>
+    <string name="photo_file_next">Next</string>
+</resources>

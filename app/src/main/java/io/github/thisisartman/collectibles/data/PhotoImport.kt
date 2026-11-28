@@ -19,6 +19,8 @@ class PhotoFileInfo internal constructor(
     val plan: PhotoBundle.Plan,
     /** Lines of the list that couldn't be used, and photos the list names that aren't in the file. */
     val problems: List<String>,
+    /** Photos in `photos/` that the list doesn't name at all (#206): read on the phone and suggested next. */
+    val unlisted: List<String> = emptyList(),
 )
 
 data class PhotoFileResult(val added: Int, val newItems: Int, val alreadyThere: Int, val failed: Int, val safetyCopy: String?)
@@ -50,17 +52,21 @@ class PhotoImport @Inject constructor(
         val dir = File(context.cacheDir, "photo-file").apply { deleteRecursively(); mkdirs() }
         try {
             unzip(uri, dir)
-            val manifest = File(dir, PhotoBundle.MANIFEST).takeIf { it.isFile } ?: throw PhotoFileError.NotAPhotoFile()
-            val parsed = PhotoBundle.parse(manifest.readText())
+            val manifest = File(dir, PhotoBundle.MANIFEST).takeIf { it.isFile }
+            val files = File(dir, PhotoBundle.PHOTOS).listFiles()?.filter { it.isFile }?.map { it.name }.orEmpty()
+            // Without a list, a file of photos only: every photo is read on the phone and suggested (#206)
+            if (manifest == null && files.isEmpty()) throw PhotoFileError.NotAPhotoFile()
+            val parsed = manifest?.let { PhotoBundle.parse(it.readText()) } ?: PhotoBundle.Parsed(emptyList(), 0, emptyList())
+            val unlisted = PhotoBundle.unlisted(files, parsed.named)
             val absent = parsed.rows.filter { !File(dir, PhotoBundle.PHOTOS + it.photo).isFile }
             val rows = parsed.rows - absent.toSet()
-            if (rows.isEmpty()) throw PhotoFileError.Empty()
+            if (rows.isEmpty() && unlisted.isEmpty()) throw if (manifest == null) PhotoFileError.NotAPhotoFile() else PhotoFileError.Empty()
             val keys = rows.mapNotNull { (it.target as? PhotoBundle.Target.Catalogue)?.key }.distinct()
             val onPhone = keys.chunked(500).flatMap { dao.itemsByCatalogKeys(it) }.mapNotNull { it.catalogKey }.toSet()
             val own = dao.ownItems().map { it.type to it.nameJa }.toSet()
             val plan = PhotoBundle.plan(rows, onPhone, own)
-            log.i("PhotoFile", "Read: ${rows.size} photos, plan $plan, ${parsed.bad.size} bad lines, ${absent.size} photos not in the file")
-            PhotoFileInfo(dir, rows, plan, parsed.bad + absent.map { "${it.photo}: not in the file" })
+            log.i("PhotoFile", "Read: ${rows.size} photos, plan $plan, ${parsed.bad.size} bad lines, ${absent.size} photos not in the file, ${unlisted.size} not on the list")
+            PhotoFileInfo(dir, rows, plan, parsed.bad + absent.map { "${it.photo}: not in the file" }, unlisted)
         } catch (e: Exception) {
             dir.deleteRecursively()
             throw e
@@ -69,6 +75,19 @@ class PhotoImport @Inject constructor(
 
     fun discard(info: PhotoFileInfo) {
         info.dir.deleteRecursively()
+    }
+
+    /**
+     * The photos the list doesn't name, moved out of the file's folder before it is cleared (#206), for the same
+     * page as photos shared at once. Kept in the cache until the next photo file.
+     */
+    fun keepUnlisted(info: PhotoFileInfo): List<Uri> {
+        val keep = File(context.cacheDir, UNLISTED).apply { deleteRecursively(); mkdirs() }
+        return info.unlisted.mapNotNull { name ->
+            val from = File(info.dir, PhotoBundle.PHOTOS + name)
+            val to = File(keep, name)
+            if (from.renameTo(to) || runCatching { from.copyTo(to, overwrite = true) }.isSuccess) Uri.fromFile(to) else null
+        }
     }
 
     suspend fun add(info: PhotoFileInfo, onProgress: OnProgress = NO_PROGRESS): PhotoFileResult = withContext(Dispatchers.IO) {
@@ -137,10 +156,12 @@ class PhotoImport @Inject constructor(
         }
     }
 
-    private companion object {
-        const val MAX_ENTRIES = 20_000
-        const val MAX_ENTRY = 64L * 1024 * 1024
-        const val MAX_TOTAL = 4L * 1024 * 1024 * 1024
-        const val FREE_MARGIN = 200L * 1024 * 1024
+    companion object {
+        /** Where a photo file's unlisted photos wait for the suggestion page (#206), under the cache. */
+        const val UNLISTED = "photo-file-unlisted"
+        private const val MAX_ENTRIES = 20_000
+        private const val MAX_ENTRY = 64L * 1024 * 1024
+        private const val MAX_TOTAL = 4L * 1024 * 1024 * 1024
+        private const val FREE_MARGIN = 200L * 1024 * 1024
     }
 }

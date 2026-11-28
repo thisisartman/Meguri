@@ -328,6 +328,34 @@ class CollectionRepository @Inject constructor(
             ?.use { c -> if (c.moveToFirst() && !c.isNull(0)) c.getString(0) else null }
     }.getOrNull()
 
+    /** Whether a picture is a phone screenshot ([PhotoSort.isScreenshot]), for a text suggestion (#206); [width] and [height] as read. */
+    private suspend fun isScreenshot(uri: android.net.Uri, width: Int, height: Int): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val name = pickedInfo(uri).displayName ?: uri.lastPathSegment
+        io.github.thisisartman.collectibles.photo.PhotoSort.isScreenshot(name, pickedFolder(uri), width, height, hasCameraExif(uri))
+    }
+
+    /**
+     * Many photos coming in at once (#206): reads the text on each on the phone and suggests where it goes
+     * ([PhotoSuggest]), by photo address. A photo with nothing to go on is left out. [onRead] hears each photo done.
+     */
+    suspend fun suggestFromText(
+        uris: List<android.net.Uri>, known: List<PhotoSuggest.Known>, onRead: (done: Int) -> Unit = {},
+    ): Map<String, PhotoSuggest.Suggestion> {
+        val t0 = now()
+        val out = LinkedHashMap<String, PhotoSuggest.Suggestion>()
+        io.github.thisisartman.collectibles.photo.PhotoText.open(context).use { reader ->
+            uris.forEachIndexed { i, uri ->
+                val read = reader.read(context, uri)
+                val shot = read.width > 0 && isScreenshot(uri, read.width, read.height)
+                PhotoSuggest.suggest(read.text, shot, known)?.let { out[uri.toString()] = it }
+                onRead(i + 1)
+            }
+        }
+        log.i("Share", "Read the text on ${uris.size} photos in ${now() - t0} ms: ${out.size} suggested (" +
+            out.values.groupingBy { it.rule }.eachCount().entries.joinToString { "${it.key} ${it.value}" } + ")")
+        return out
+    }
+
     suspend fun readShared(uri: android.net.Uri): SharedPhoto =
         kotlinx.coroutines.withContext(Dispatchers.IO) { SharedPhotoReader.read(context, uri) }
 
