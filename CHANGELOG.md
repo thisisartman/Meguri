@@ -2,9 +2,7 @@
 
 All notable changes to Meguri are listed here, newest first. Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html). Each big release opens with the story behind it, then its highlights, then everything in it.
 
-## [Unreleased]
-
-Merged into `testing` and heading toward 0.7.1.
+## [0.7.1] - 2026-11-28
 
 ### Highlights
 - Nearby now splits into Places and Collectibles. Every station, city office or shrine gets a ring that fills as you collect there, a tiny progress bar of joy. A help bubble explains both.
@@ -23,6 +21,12 @@ Merged into `testing` and heading toward 0.7.1.
 - Added a page for each place, with a tile for each thing you can get there; tap one to open its card with its picture, `Directions` and `Collect`, and see the photos from the whole place below (#192)
 - Added `Add photos from a file` in `Settings › Backup and data`, which brings in a batch of your own photos without replacing anything and crops stamp photos to the stamp (#188)
 - Added a `Cover` button beside `Directions` on manhole cards (`Dam` on dam cards) that shows how far the cover is and opens directions to it; Meguri reads the position printed on the card when you scan it, and you can type it in `Edit details` (#203)
+- Added `Edit` to the full-screen photo view: crop, rotate a quarter turn, straighten and reset, from the photo as it came in (#208)
+- Added app shortcuts: long-press the Meguri icon for `Add`, `My book` and `Trip` (#205)
+- Changed added photos to sort by what they show: card photos go to the card, station screenshots to the Ekitag, and only a real cover photo is cut to a circle (#207)
+- Changed the alert distances to one list, `Distance by category`, with each category's distance and the default ones marked (#164)
+- Removed `Collect again` from the place page (#211)
+- Changed `Back up now`, `Restore` and `Add photos from a file` to show their progress on their row and keep `Last backup: …` with the time, counts and file name once done; a failed weekly backup now says it was the weekly one (#217)
 - Changed every way of marking something you already have (first open, Collection check, My book and notebook pages) to save a find with the date it was added, so "had before Meguri" is gone (#194)
 - Changed station stamps to red, so they stand apart from teal Ekitags (#192)
 - Changed `Add photo` and `Collect` to stay pinned at the bottom of a place page
