@@ -178,20 +178,23 @@ class BackupRestore @Inject constructor(
      * Replaces everything with the backup. First saves the current data to Downloads and checks that
      * copy; if it can't be saved, nothing is replaced. Throws on failure, with the current data intact.
      */
-    suspend fun restore(info: BackupInfo): RestoreResult = withContext(Dispatchers.IO) {
+    suspend fun restore(info: BackupInfo, onProgress: OnProgress = NO_PROGRESS): RestoreResult = withContext(Dispatchers.IO) {
         val t0 = System.currentTimeMillis()
         log.d("Restore", "Restore: start, ${info.items} items, ${info.finds} finds, ${info.photos} photos")
         try {
+            onProgress(DataStep.WORKING, 0, 0)
             val rows = readBackup(info)
             val safety = backup.lock.withLock {
-                val copy = saveSafetyCopy()
+                onProgress(DataStep.COPY, 0, 0)
+                val copy = saveSafetyCopy { done, total -> onProgress(DataStep.COPY, done, total) }
+                onProgress(DataStep.WORKING, 0, 0)
                 replaceAll(rows)
                 prefs.edit().putBoolean(KEY_RELINK, rows.photos.isNotEmpty()).commit()
                 copy
             }
             log.i("Restore", "Restored ${rows.finds.size} finds, ${rows.items.size} items, ${rows.photos.size} photos; safety copy $safety")
             // A "with photos" backup (#66): pictures this phone can't open are put back in its gallery first
-            val placed = restoreBundledPhotos(File(info.dir, "photos"))
+            val placed = restoreBundledPhotos(File(info.dir, "photos")) { done, total -> onProgress(DataStep.PHOTOS, done, total) }
             restoreOriginals(File(info.dir, "originals"))
             val relink = if (rows.photos.isEmpty() || placed == rows.photos.size) null else relinkPhotos()
             // Every photo already has its picture: nothing left to find, so a later start mustn't relink them
@@ -252,7 +255,9 @@ class BackupRestore @Inject constructor(
     }
 
     /** Null when there is nothing to protect. Caller holds [CatalogAndBackup.lock]. Also before a photo file (#188). */
-    internal suspend fun saveSafetyCopy(prefix: String = "meguri-pre-restore"): String? {
+    internal suspend fun saveSafetyCopy(
+        prefix: String = "meguri-pre-restore", onPhoto: (done: Int, total: Int) -> Unit = { _, _ -> },
+    ): String? {
         if (dao.itemCount() == 0 && dao.findTotal() == 0 && dao.lineCount() == 0) return null
         val stamp = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
         val name = "$prefix-$stamp.zip"
@@ -266,7 +271,7 @@ class BackupRestore @Inject constructor(
         ) ?: error("Could not create the safety copy in Downloads")
         try {
             // With photos: a restore replaces the photo rows, and their old copies are cleared once nothing points at them
-            resolver.openOutputStream(uri, "wt")!!.use { backup.writeBackup(it, withPhotos = true) }
+            resolver.openOutputStream(uri, "wt")!!.use { backup.writeBackup(it, withPhotos = true, onPhoto = onPhoto) }
             discard(inspect(uri))
         } catch (e: Exception) {
             runCatching { resolver.delete(uri, null, null) }
@@ -318,16 +323,19 @@ class BackupRestore @Inject constructor(
      * so a restore on the same phone adds nothing. Backups from before 0.3.0-beta.6 carry the gallery originals,
      * which are resized to the app's WebP copy on the way in. Returns how many photos now have a working picture.
      */
-    private suspend fun restoreBundledPhotos(dir: File): Int {
+    private suspend fun restoreBundledPhotos(dir: File, onPhoto: (done: Int, total: Int) -> Unit): Int {
         if (!dir.isDirectory) return 0
         var ok = 0
-        for (p in dao.allPhotos()) {
+        val all = dao.allPhotos()
+        all.forEachIndexed { i, p ->
+            onPhoto(i, all.size)
             // On a new phone the same address can be someone else's picture: keep it only if it is this photo
-            if (samePicture(p)) { ok++; continue }
-            val file = File(dir, p.id).takeIf { it.isFile } ?: continue
+            if (samePicture(p)) { ok++; return@forEachIndexed }
+            val file = File(dir, p.id).takeIf { it.isFile } ?: return@forEachIndexed
             val uri = runCatching { io.github.thisisartman.collectibles.photo.PhotoStore.importCopy(context, file, p.id) }.getOrNull()
             if (uri != null) { dao.setPhotoUri(p.id, uri); ok++ }
         }
+        onPhoto(all.size, all.size)
         log.i("Restore", "Photos from the backup: $ok of ${dao.photoTotal()} now open")
         return ok
     }

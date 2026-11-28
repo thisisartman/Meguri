@@ -222,12 +222,15 @@ class CatalogAndBackup @Inject constructor(
      * Writes a zip: the database file (the restore source) plus readable CSVs of everything.
      * Photos are not included; they stay in the gallery and are relinked by their fingerprint.
      */
-    suspend fun exportBackup(uri: Uri, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun exportBackup(uri: Uri, withPhotos: Boolean = false, onProgress: OnProgress = NO_PROGRESS): BackupResult = withContext(Dispatchers.IO) {
         val t0 = System.currentTimeMillis()
         log.d("Backup", "Export: start${if (withPhotos) ", with photos" else ""}")
+        onProgress(DataStep.WORKING, 0, 0)
         // A failure here is logged as an error by the screen that started it
         val result = runCatching {
-            context.contentResolver.openOutputStream(uri, "wt")!!.use { out -> lock.withLock { writeBackup(out, withPhotos) } }
+            context.contentResolver.openOutputStream(uri, "wt")!!.use { out ->
+                lock.withLock { writeBackup(out, withPhotos) { done, total -> onProgress(DataStep.PHOTOS, done, total) } }
+            }
         }.onFailure { log.d("Backup", "Export failed after ${System.currentTimeMillis() - t0} ms: $it") }.getOrThrow()
         log.i("Backup", "Exported ${result.finds} finds, ${result.items} items, ${result.photos} photos (${result.photoFiles} files) to $uri in ${System.currentTimeMillis() - t0} ms")
         result
@@ -238,9 +241,12 @@ class CatalogAndBackup @Inject constructor(
     /**
      * Caller holds [lock]. [withPhotos] (#66, moving to a new phone): each photo's picture goes into the zip as
      * `photos/<photo id>`, so a phone that doesn't have it can put it back in its gallery on restore. A photo's kept
-     * original (#208) goes in as `originals/<photo id>`, so it can still be edited after a move.
+     * original (#208) goes in as `originals/<photo id>`, so it can still be edited after a move. [onPhoto] hears each
+     * photo done, of all of them (#217).
      */
-    suspend fun writeBackup(out: OutputStream, withPhotos: Boolean = false): BackupResult = withContext(Dispatchers.IO) {
+    suspend fun writeBackup(
+        out: OutputStream, withPhotos: Boolean = false, onPhoto: (done: Int, total: Int) -> Unit = { _, _ -> },
+    ): BackupResult = withContext(Dispatchers.IO) {
         val snapshot = File(context.noBackupFilesDir, "export-${UUID.randomUUID()}.db")
         try {
             val rows = snapshotDatabase(snapshot)
@@ -262,7 +268,8 @@ class CatalogAndBackup @Inject constructor(
                     ls.forEach { s -> append(Csv.line(s.lineId, byLine[s.lineId]?.nameJa, byLine[s.lineId]?.nameRomaji, s.itemId, s.seq)) }
                 })
                 var files = 0
-                if (withPhotos) photos.forEach { p ->
+                if (withPhotos) onPhoto(0, photos.size)
+                if (withPhotos) photos.forEachIndexed { i, p ->
                     // A picture that can't be read (deleted from the gallery) is left out; the row still travels
                     runCatching {
                         io.github.thisisartman.collectibles.photo.PhotoStore.open(context, p.contentUri)!!.use { input ->
@@ -278,6 +285,7 @@ class CatalogAndBackup @Inject constructor(
                             }
                         }.onFailure { log.w("Backup", "Original of photo ${p.id} could not be read, left out") }
                     }
+                    onPhoto(i + 1, photos.size)
                 }
                 text("backup.json", """{"app":"${BuildConfig.APPLICATION_ID}","version":"${BuildConfig.VERSION_NAME}","schema":${CollectiblesDb.VERSION},"created_ms":${System.currentTimeMillis()},"items":${items.size},"finds":${finds.size},"photos":${photos.size},"photo_files":$files}""")
                 zip.finish()

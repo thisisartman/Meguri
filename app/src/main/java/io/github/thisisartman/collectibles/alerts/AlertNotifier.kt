@@ -41,6 +41,10 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             NotificationChannel(CH_TRIP, context.getString(R.string.trip_channel), NotificationManager.IMPORTANCE_LOW)
                 .apply { description = context.getString(R.string.trip_channel_sub); setShowBadge(false) },
         )
+        m.createNotificationChannel(
+            NotificationChannel(CH_DATA, context.getString(R.string.job_channel), NotificationManager.IMPORTANCE_LOW)
+                .apply { description = context.getString(R.string.job_channel_sub); setShowBadge(false) },
+        )
     }
 
     fun canPost(): Boolean = nm.areNotificationsEnabled() &&
@@ -186,6 +190,8 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
         const val CH_ALERTS = "alerts"
         const val CH_TRIP = "trip"
         const val CH_PHOTOS = "photo_hints"
+        /** Back up now, Restore and Add photos from a file while they run (#217). */
+        const val CH_DATA = "backup_restore"
         const val TRIP_ID = 1
         const val UNDO_WINDOW_MS = 30_000L
 

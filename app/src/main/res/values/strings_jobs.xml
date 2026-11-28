@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Back up now, Restore and Add photos from a file while they run, and how the last one went (#217) -->
+<resources>
+    <string name="job_reading">Reading the file…</string>
+    <string name="job_copy">Saving a copy of what\'s here…</string>
+    <string name="job_backing_up">Backing up…</string>
+    <string name="job_restoring">Restoring…</string>
+    <string name="job_adding">Adding photos…</string>
+    <plurals name="job_photos_of">
+        <item quantity="one">%1$d of %2$d photo</item>
+        <item quantity="other">%1$d of %2$d photos</item>
+    </plurals>
+    <string name="job_last_backup">Last backup: %1$s</string>
+    <string name="job_last_restore">Last restore: %1$s</string>
+    <string name="job_last_added">Last added: %1$s</string>
+    <string name="job_failed">Failed %1$s</string>
+    <string name="job_today">today %1$s</string>
+    <string name="job_yesterday">yesterday %1$s</string>
+    <string name="job_try_again">Try again</string>
+    <string name="job_busy">Wait for the backup or restore that\'s running</string>
+    <string name="job_channel">Backup and restore</string>
+    <string name="job_channel_sub">Shown while a backup, restore or photo file takes a while</string>
+</resources>

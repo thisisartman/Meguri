@@ -71,9 +71,12 @@ class PhotoImport @Inject constructor(
         info.dir.deleteRecursively()
     }
 
-    suspend fun add(info: PhotoFileInfo): PhotoFileResult = withContext(Dispatchers.IO) {
+    suspend fun add(info: PhotoFileInfo, onProgress: OnProgress = NO_PROGRESS): PhotoFileResult = withContext(Dispatchers.IO) {
         try {
-            val safety = backup.lock.withLock { restore.saveSafetyCopy("meguri-pre-photos") }
+            onProgress(DataStep.COPY, 0, 0)
+            val safety = backup.lock.withLock {
+                restore.saveSafetyCopy("meguri-pre-photos") { done, total -> onProgress(DataStep.COPY, done, total) }
+            }
             val keys = info.rows.mapNotNull { (it.target as? PhotoBundle.Target.Catalogue)?.key }.distinct()
             val byKey = keys.chunked(500).flatMap { dao.itemsByCatalogKeys(it) }.associate { it.catalogKey to (it.id to it.type) }
             val own = dao.ownItems().associate { (it.type to it.nameJa) to it.id }.toMutableMap()
@@ -81,7 +84,8 @@ class PhotoImport @Inject constructor(
             // "just assign it the date it was added"; never "had before Meguri")
             val now = System.currentTimeMillis()
             var added = 0; var newItems = 0; var already = 0; var failed = 0; var covers = 0
-            for (row in info.rows) {
+            for ((i, row) in info.rows.withIndex()) {
+                onProgress(DataStep.PHOTOS, i, info.rows.size)
                 val (itemId, _) = when (val t = row.target) {
                     is PhotoBundle.Target.Catalogue -> byKey[t.key] ?: continue // region not on this phone: in the plan's "missing"
                     is PhotoBundle.Target.Own -> own.getOrPut(t.type to t.name) { newItems++; repo.addItem(t.type, t.name, null) } to t.type
@@ -104,6 +108,7 @@ class PhotoImport @Inject constructor(
                 )
                 if (ok) added++ else failed++
             }
+            onProgress(DataStep.PHOTOS, info.rows.size, info.rows.size)
             log.i("PhotoFile", "Added $added photos, $newItems new items, $already already there, $failed failed, $covers cover positions given; safety copy $safety")
             PhotoFileResult(added, newItems, already, failed, safety)
         } finally {
