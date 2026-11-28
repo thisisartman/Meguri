@@ -80,6 +80,8 @@ object BackupMerge {
         val newFinds get() = base.newFinds.size + heldFinds.values.sumOf { it.size }
         val newPhotos get() = base.newPhotos.size + heldPhotos.values.sumOf { it.size }
         val nothingNew get() = base.isEmpty && conflicts.isEmpty()
+        /** Items and finds here that get what they were missing (a display picture, a cost...). */
+        val filled get() = base.itemUpdates.size + base.findUpdates.size
 
         /** The rows to write with [picks] (by phone item id; an item left out keeps this phone). */
         fun resolve(picks: Map<String, MergePick>, now: Long): MergeOps {

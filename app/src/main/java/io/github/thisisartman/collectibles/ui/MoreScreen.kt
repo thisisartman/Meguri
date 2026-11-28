@@ -423,7 +423,10 @@ fun MoreScreen(
                 .onSuccess {
                     vm.jobs.finish(DataResult(DataJob.MERGE, true, System.currentTimeMillis(), it.finds, it.photos, name))
                     if (it.photosLeftToFind) relinkPending = vm.restore.relinkPending
-                    vm.work.say(mergeDone.format(countsText(app.resources, it.finds, it.items, it.photos)))
+                    vm.work.say(
+                        if (it.finds + it.items + it.photos == 0) app.resources.getQuantityString(R.plurals.merge_fills, it.filled, it.filled)
+                        else mergeDone.format(countsText(app.resources, it.finds, it.items, it.photos)),
+                    )
                 }
                 .onFailure {
                     vm.log.e("Merge", "Add from a backup failed", it)

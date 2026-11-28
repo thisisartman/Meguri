@@ -297,7 +297,7 @@ class BackupRestore @Inject constructor(
             val left = ops.newPhotos.size - placed
             if (left > 0) prefs.edit().putBoolean(KEY_RELINK, true).commit()
             log.i("Merge", "Added in ${System.currentTimeMillis() - t0} ms: ${ops.newItems.size} items, ${ops.newFinds.size} finds, ${ops.newPhotos.size} photos ($left without a picture), ${ops.itemUpdates.size} items and ${ops.findUpdates.size} finds filled in, ${picks.count { it.value == MergePick.BACKUP }} kept from the backup; safety copy $safety")
-            MergeResult(ops.newItems.size, ops.newFinds.size, ops.newPhotos.size, ops.itemUpdates.size, safety, left > 0)
+            MergeResult(ops.newItems.size, ops.newFinds.size, ops.newPhotos.size, ops.itemUpdates.size + ops.findUpdates.size, safety, left > 0)
         } catch (e: Exception) {
             log.d("Merge", "Add from a backup failed after ${System.currentTimeMillis() - t0} ms: $e")
             throw e

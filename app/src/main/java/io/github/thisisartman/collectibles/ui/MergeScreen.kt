@@ -85,7 +85,10 @@ fun MergeDialog(plan: BackupMerge.Plan, onCancel: () -> Unit, onNext: () -> Unit
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (plan.nothingNew) Text(stringResource(R.string.merge_nothing))
                 else {
-                    Text(stringResource(R.string.merge_new_line, countsText(res, plan.newFinds, plan.newItems, plan.newPhotos)))
+                    if (plan.newFinds + plan.newItems + plan.newPhotos > 0) {
+                        Text(stringResource(R.string.merge_new_line, countsText(res, plan.newFinds, plan.newItems, plan.newPhotos)))
+                    }
+                    if (plan.filled > 0) Text(pluralStringResource(R.plurals.merge_fills, plan.filled, plan.filled))
                     if (differ > 0) Text(pluralStringResource(R.plurals.merge_differ, differ, differ))
                     Text(stringResource(R.string.merge_copy_note))
                 }
@@ -212,7 +215,7 @@ private fun Side(
                             style = MaterialTheme.typography.bodyMedium, maxLines = 6, overflow = TextOverflow.Ellipsis,
                         )
                         MergeField.NONE_HERE -> Text(
-                            if (side == MergePick.PHONE) stringResource(R.string.none_here_stamp)
+                            if (side == MergePick.PHONE) stringResource(noneHereLabel(item.type))
                             else c.backupFirstFind?.let { stringResource(R.string.merge_found_on, dateText(it.acquiredAt ?: it.createdAt)) }.orEmpty(),
                             style = MaterialTheme.typography.bodyMedium,
                         )

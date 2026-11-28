@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="merge_backup">バックアップから追加</string>
-    <string name="merge_backup_sub">バックアップにあってこの端末にないものを追加します。今あるデータは置き換えも削除もされません。</string>
+    <string name="merge_backup_sub">バックアップにあってこの端末にないものを追加します。今あるデータは削除されません。</string>
+    <plurals name="merge_fills">
+        <item quantity="other">この端末の項目と記録%d件の空欄を埋めます。</item>
+    </plurals>
     <string name="merge_title">このバックアップから追加しますか？</string>
     <string name="merge_new_line">バックアップから新しく追加：%1$s</string>
     <plurals name="merge_differ">
