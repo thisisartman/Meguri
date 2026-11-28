@@ -143,6 +143,13 @@
     <string name="trip_title">Travelling alerts</string>
     <string name="trip_sub_on">On until %1$s. Turn it off here or from its notification.</string>
     <string name="trip_needs_location">Travelling alerts need location access.</string>
+    <string name="trip_stopped_no_location">Travelling alerts turned off: Meguri no longer has location access.</string>
+    <!-- Location updates (#218) -->
+    <string name="alerts_location_updates">Location updates</string>
+    <string name="alerts_location_battery">Battery saver</string>
+    <string name="alerts_location_realtime">Real time</string>
+    <string name="alerts_location_battery_sub">Every 20 s to 2 min while travelling.</string>
+    <string name="alerts_location_realtime_sub">Every 5 to 10 s while travelling, for driving. Uses more battery.</string>
     <string name="bg_sub_on">Tells you when you are near something you have not collected, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
@@ -671,7 +678,9 @@
     <string name="privacy_online">Online services</string>
     <string name="privacy_online_sub">Meguri connects to these services only when you use the feature listed. Tap a name to open the service, or the button for its privacy policy.</string>
     <string name="privacy_tiles">Map tiles outside the offline pack: the area you look at</string>
-    <string name="privacy_places">Place search, when adding or editing an item and for places in a pasted Google Maps link: the name, and the area around your position (about 50 km) so nearby places come first</string>
+    <string name="privacy_places">Place search, when adding or editing an item and for places in a pasted Google Maps link: the name, and the area around your position (about 50 km, from a position rounded to about 1 km) so nearby places come first</string>
+    <string name="privacy_feedback">Send feedback, when you use it: your note, screenshots you add, the app version and phone model, and the app log if you tick it, mailed to the developer from your mail app</string>
+    <string name="privacy_exact">Backups, the safety copies Meguri keeps before a restore or import, and the Trip report CSV hold exact positions and times. Share them with care.</string>
     <string name="privacy_cards">Card pictures, when you tap Download: the card codes</string>
     <string name="privacy_directions">Directions open Google Maps with the place. A Google Maps link pasted into Trip is opened once to see where it leads</string>
     <string name="privacy_play">Position for alerts and the card scanner run through Google Play services on this phone</string>

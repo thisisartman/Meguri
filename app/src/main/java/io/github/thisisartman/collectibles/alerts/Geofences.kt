@@ -21,11 +21,14 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.thisisartman.collectibles.debug.FileLog
 import io.github.thisisartman.collectibles.location.Fix
 import io.github.thisisartman.collectibles.location.LocationSource
+import io.github.thisisartman.collectibles.location.coarseText
 import io.github.thisisartman.collectibles.location.distanceM
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.coroutines.resume
@@ -65,9 +68,14 @@ class Geofences @Inject constructor(
         )
     }
 
+    /** One refresh at a time (D4): two overlapping ones each add up to 100 fences and pass Android's limit. */
+    private val lock = Mutex()
+
     /** Registers fences around [around], or the last known position; removes them all when alerts are off. */
+    suspend fun refresh(around: Fix? = null) = lock.withLock { refreshNow(around) }
+
     @SuppressLint("MissingPermission")
-    suspend fun refresh(around: Fix? = null) {
+    private suspend fun refreshNow(around: Fix?) {
         if (!playServicesOk()) return
         if (!settings.geofenceOn || !ready()) {
             runCatching { client.removeGeofences(pendingIntent).await() }
@@ -84,7 +92,7 @@ class Geofences @Inject constructor(
                 .setCircularRegion(it.lat!!, it.lng!!, settings.radiusFor(it.type).toFloat())
                 .setExpirationDuration(Geofence.NEVER_EXPIRE)
                 .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER)
-                .setNotificationResponsiveness(RESPONSIVENESS_MS)
+                .setNotificationResponsiveness(AlertRules.responsivenessMs(it.type))
                 .build()
         }.toMutableList()
         if (here != null && chosen.size == MAX_ITEMS) {
@@ -107,7 +115,7 @@ class Geofences @Inject constructor(
             .onSuccess {
                 settings.geofenceError = 0
                 log.i("Geofence", "Registered ${fences.size} fences, a distance per category")
-                log.d("Geofence", "Fences: ${chosen.size} items" + (if (fences.size > chosen.size) " and the refresh area" else "") + (here?.let { " around %.3f, %.3f".format(java.util.Locale.US, it.lat, it.lng) } ?: ", no position"))
+                log.d("Geofence", "Fences: ${chosen.size} items" + (if (fences.size > chosen.size) " and the refresh area" else "") + (here?.let { " around " + coarseText(it.lat, it.lng) } ?: ", no position"))
             }
             .onFailure {
                 // 1000 means Google Location Accuracy is off; More says how to fix it
@@ -124,7 +132,6 @@ class Geofences @Inject constructor(
         /** Android allows 100 fences per app; one is the refresh fence. */
         const val MAX_ITEMS = 99
         const val REFRESH_ID = "refresh"
-        const val RESPONSIVENESS_MS = 60_000
     }
 }
 

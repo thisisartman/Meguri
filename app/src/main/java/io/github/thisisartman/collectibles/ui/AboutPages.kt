@@ -148,6 +148,11 @@ fun PrivacyPage() {
         stringResource(R.string.privacy_intro), Modifier.padding(16.dp),
         style = MaterialTheme.typography.bodyMedium,
     )
+    // B3: what the files you save hold
+    Text(
+        stringResource(R.string.privacy_exact), Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+        style = MaterialTheme.typography.bodyMedium,
+    )
     Text(
         stringResource(R.string.privacy_online), Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
         style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
@@ -169,6 +174,8 @@ fun PrivacyPage() {
         // Backup places added in 0.6.0 (#137)
         Credit("Google Drive", R.string.privacy_drive, "Privacy", "https://drive.google.com", "https://policies.google.com/privacy"),
         Credit("WebDAV", R.string.privacy_webdav, null, null, null),
+        // B2: Send feedback mails the developer
+        Credit(stringResource(R.string.feedback_title), R.string.privacy_feedback, null, null, null),
         Credit("Google Play services", R.string.privacy_play, "Privacy", "https://developers.google.com/ml-kit", "https://policies.google.com/privacy"),
     ).forEach { CreditRow(it) }
 }
