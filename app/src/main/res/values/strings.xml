@@ -146,10 +146,10 @@
     <string name="trip_stopped_no_location">Travelling alerts turned off: Meguri no longer has location access.</string>
     <!-- Location updates (#218) -->
     <string name="alerts_location_updates">Location updates</string>
-    <string name="alerts_location_battery">Battery saver</string>
-    <string name="alerts_location_realtime">Real time</string>
-    <string name="alerts_location_battery_sub">Every 20 s to 2 min while travelling.</string>
-    <string name="alerts_location_realtime_sub">Every 5 s while travelling, for driving. Uses more battery.</string>
+    <string name="alerts_location_battery">Low power</string>
+    <string name="alerts_location_realtime">High priority</string>
+    <string name="alerts_location_battery_sub">Saves battery, but alerts may arrive late. Recommended for every day.</string>
+    <string name="alerts_location_realtime_sub">Battery life may be mildly affected, but your location updates every 5 s, so alerts arrive in time. Recommended only while on a trip.</string>
     <string name="bg_sub_on">Tells you when you are near something you have not collected, even with Meguri closed.</string>
     <string name="bg_sub_accuracy">Not working: Google Location Accuracy is off. Tap to open Location settings, then turn on Location services › Location Accuracy.</string>
     <string name="bg_sub_failed">Not working right now. Tap to try again.</string>
