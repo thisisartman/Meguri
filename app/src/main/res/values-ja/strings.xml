@@ -149,7 +149,7 @@
     <string name="alerts_location_battery">省電力</string>
     <string name="alerts_location_realtime">リアルタイム</string>
     <string name="alerts_location_battery_sub">移動中は20秒〜2分ごと。</string>
-    <string name="alerts_location_realtime_sub">移動中は5〜10秒ごと。車での移動向け。電池を多く使います。</string>
+    <string name="alerts_location_realtime_sub">移動中は5秒ごと。車での移動向け。電池を多く使います。</string>
     <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>

@@ -90,8 +90,8 @@ object AlertRules {
     const val REALTIME_MAX_MS = 10_000L
 
     /**
-     * The one provider Trip mode asks (#218; it used to ask GPS and network at once). Real time wants GPS; Battery
-     * saver wants the fused provider (Android 12+), which mixes Wi-Fi, cell and GPS at lower cost. [enabled] is the
+     * The one provider Trip mode asks (#218; it used to ask GPS and network at once): GPS with precise location, else
+     * the fused provider (Android 12+, blurred for approximate location), else network. [enabled] is the
      * set of providers switched on; GPS needs precise location ([fine]). Null when none is usable.
      */
     fun provider(mode: LocationMode, fine: Boolean, enabled: Set<String>): String? {
@@ -99,8 +99,8 @@ object AlertRules {
         val fused = "fused".takeIf { it in enabled }
         val network = "network".takeIf { it in enabled }
         return when (mode) {
-            LocationMode.REAL_TIME -> gps ?: fused ?: network
-            LocationMode.BATTERY -> fused ?: network ?: gps
+            // Both keep GPS when precise location is allowed (as 0.7.1); they differ in how often and how hard they ask
+            LocationMode.REAL_TIME, LocationMode.BATTERY -> gps ?: fused ?: network
         }
     }
 

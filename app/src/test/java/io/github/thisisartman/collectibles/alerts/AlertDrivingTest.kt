@@ -63,11 +63,13 @@ class AlertDrivingTest {
     @Test fun oneProviderPerMode() {
         val all = setOf("gps", "network", "fused")
         assertEquals("gps", AlertRules.provider(LocationMode.REAL_TIME, fine = true, enabled = all))
-        assertEquals("fused", AlertRules.provider(LocationMode.BATTERY, fine = true, enabled = all))
+        // Battery saver keeps GPS too (as 0.7.1), it just asks less often
+        assertEquals("gps", AlertRules.provider(LocationMode.BATTERY, fine = true, enabled = all))
         // Approximate location only: never GPS
         assertEquals("fused", AlertRules.provider(LocationMode.REAL_TIME, fine = false, enabled = all))
         // Before Android 12 there is no fused provider
-        assertEquals("network", AlertRules.provider(LocationMode.BATTERY, fine = true, enabled = setOf("gps", "network")))
+        assertEquals("network", AlertRules.provider(LocationMode.BATTERY, fine = false, enabled = setOf("gps", "network")))
+        assertEquals("fused", AlertRules.provider(LocationMode.BATTERY, fine = true, enabled = setOf("fused", "network")))
         assertEquals("gps", AlertRules.provider(LocationMode.BATTERY, fine = true, enabled = setOf("gps")))
         assertNull(AlertRules.provider(LocationMode.BATTERY, fine = false, enabled = setOf("gps")))
     }
