@@ -67,6 +67,7 @@ import com.google.android.gms.location.GeofenceStatusCodes
 import io.github.thisisartman.collectibles.alerts.AlertNotifier
 import io.github.thisisartman.collectibles.alerts.AlertSettings
 import io.github.thisisartman.collectibles.alerts.Geofences
+import io.github.thisisartman.collectibles.alerts.LocationMode
 import io.github.thisisartman.collectibles.alerts.TripModeService
 import io.github.thisisartman.collectibles.data.ItemType
 import io.github.thisisartman.collectibles.location.LocationSource
@@ -96,8 +97,7 @@ fun foregroundAlertPermissions(): Array<String> = buildList {
 
 fun startTrip(context: Context, vm: AlertsViewModel): Boolean {
     if (!vm.location.hasPermission()) return false
-    TripModeService.start(context, vm.settings)
-    return true
+    return TripModeService.start(context, vm.settings)
 }
 
 /** Alerts in Settings: when (Off, Travelling, Always), how close, which categories, quiet hours, phone setup. */
@@ -145,6 +145,7 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     val notificationsOk = remember(tick) { vm.notifier.canPost() }
     val geoError = remember(tick) { s.geofenceError }
     val until = remember(tick) { Dates.time(s.tripUntilMs) }
+    val stoppedNoLocation = remember(tick) { s.tripStoppedNoLocation }
 
     // Design C (owner, 2026-11-09): one mode, one distance, categories one tap in
     val mode = when { geoOn -> 2; tripOn -> 1; else -> 0 }
@@ -153,6 +154,8 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
         listOf(stringResource(R.string.alerts_mode_off), stringResource(R.string.alerts_mode_trip), stringResource(R.string.alerts_mode_always)),
         mode,
     ) { pick ->
+        // Any choice answers the "turned off: no location access" note
+        s.tripStoppedNoLocation = false
         when (pick) {
             0 -> {
                 TripModeService.stop(context)
@@ -177,6 +180,8 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     // What the chosen mode is doing now, or what to fix (tap opens the place to fix it)
     val status: Pair<String, (() -> Unit)?> = when {
         tripRefused && !vm.location.hasPermission() -> stringResource(R.string.trip_needs_location) to { tripPerms.launch(foregroundAlertPermissions()) }
+        // Trip mode went off on its own because location access was taken away (A1)
+        mode == 0 && stoppedNoLocation -> stringResource(R.string.trip_stopped_no_location) to { tripPerms.launch(foregroundAlertPermissions()) }
         mode == 2 && !geoReady -> stringResource(R.string.bg_sub_needs) to { askBackground = true }
         mode == 2 && geoError == GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE -> stringResource(R.string.bg_sub_accuracy) to { openLocationSettings(context); vm.geofences.refreshInBackground() }
         mode == 2 && geoError != 0 -> stringResource(R.string.bg_sub_failed) to { vm.geofences.refreshInBackground(); tick++ }
@@ -230,6 +235,24 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
         if (t == null) s.radiusM = r else s.setRadiusFor(t, r)
         vm.geofences.refreshInBackground(); tick++
     }
+
+    // How often Travelling reads the position (#218): Real time for driving, at a battery cost
+    val locMode = remember(tick) { s.locationMode }
+    Text(
+        stringResource(R.string.alerts_location_updates),
+        Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp),
+        style = MaterialTheme.typography.bodyLarge,
+    )
+    Choice3(
+        listOf(stringResource(R.string.alerts_location_battery), stringResource(R.string.alerts_location_realtime)),
+        if (locMode == LocationMode.REAL_TIME) 1 else 0,
+    ) { pick -> s.locationMode = if (pick == 1) LocationMode.REAL_TIME else LocationMode.BATTERY; tick++ }
+    Text(
+        stringResource(if (locMode == LocationMode.REAL_TIME) R.string.alerts_location_realtime_sub else R.string.alerts_location_battery_sub),
+        Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+    )
+    HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
 
     val types = remember(tick) { s.types }
     val on = ALERT_TYPES.filter { it.first in types }

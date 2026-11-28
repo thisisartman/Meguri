@@ -108,6 +108,15 @@ class LocationSource @Inject constructor(@ApplicationContext private val context
     private fun Location.toFix() = Fix(latitude, longitude, if (hasAccuracy()) accuracy else null, time)
 }
 
+/**
+ * A coordinate rounded to 2 decimals, about 1 km (B1, B4): what leaves the phone for place search and what logs
+ * record, so neither gives away the exact position.
+ */
+fun coarse(deg: Double): Double = Math.round(deg * 100) / 100.0
+
+/** "37.67, 138.88": a rounded position as text, the same in every locale. */
+fun coarseText(lat: Double, lng: Double): String = String.format(java.util.Locale.US, "%.2f, %.2f", coarse(lat), coarse(lng))
+
 /** Great-circle distance in metres. */
 fun distanceM(aLat: Double, aLng: Double, bLat: Double, bLng: Double): Double {
     val r = 6_371_000.0

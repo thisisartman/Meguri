@@ -11,7 +11,8 @@ class AlertDistanceTest {
 
     @Test fun stationsStartAt200OthersUseTheMain() {
         assertEquals(200, AlertSettings.resolveOwn(null, io.github.thisisartman.collectibles.data.ItemType.EKI_STAMP))
-        assertEquals(null, AlertSettings.resolveOwn(null, io.github.thisisartman.collectibles.data.ItemType.MANHOLE_CARD))
+        // #218: manhole cards now start at 1 km (see AlertDrivingTest); goshuin still use the main distance
+        assertEquals(null, AlertSettings.resolveOwn(null, io.github.thisisartman.collectibles.data.ItemType.GOSHUIN))
     }
 
     @Test fun sameOverridesTheStartingDistance() {

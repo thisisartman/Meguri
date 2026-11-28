@@ -6,8 +6,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
+import androidx.core.location.LocationListenerCompat
+import androidx.core.location.LocationManagerCompat
+import androidx.core.location.LocationRequestCompat
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -56,7 +58,9 @@ class TripModeService : Service() {
     private var prev: Fix? = null
     private val stopAtEnd = Runnable { log.i("Trip", "End of the trip time"); stopSelfAndClear() }
 
-    private val listener = LocationListener { loc -> onLocation(loc) }
+    private val listener = LocationListenerCompat { loc -> onLocation(loc) }
+    private var mode = LocationMode.BATTERY
+    private var prefsListener: android.content.SharedPreferences.OnSharedPreferenceChangeListener? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
@@ -67,6 +71,7 @@ class TripModeService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         if (!settings.tripOn || !location.hasPermission()) {
+            if (settings.tripOn) settings.tripStoppedNoLocation = true
             stopSelfAndClear()
             return START_NOT_STICKY
         }
@@ -80,23 +85,36 @@ class TripModeService : Service() {
         }
         main.removeCallbacks(stopAtEnd)
         main.postDelayed(stopAtEnd, (settings.tripUntilMs - System.currentTimeMillis()).coerceAtLeast(0))
-        request(AlertRules.MIN_INTERVAL_MS)
+        mode = settings.locationMode
+        request(firstInterval())
+        if (prefsListener == null) prefsListener = settings.listen {
+            // Location updates changed in Settings while the trip runs: ask again in the new way
+            main.post { if (settings.tripOn && settings.locationMode != mode) { mode = settings.locationMode; request(firstInterval()) } }
+        }
         log.i("Trip", "On until ${time(settings.tripUntilMs)}")
         return START_STICKY
     }
 
+    private fun firstInterval() = if (mode == LocationMode.REAL_TIME) AlertRules.REALTIME_MIN_MS else AlertRules.MIN_INTERVAL_MS
+
+    /** One provider, one request (#218): GPS and network at once used to mix a coarse fix into the speed. */
     @SuppressLint("MissingPermission")
     private fun request(ms: Long) {
         val m = lm ?: return
         intervalMs = ms
-        m.removeUpdates(listener)
-        val fine = androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
-        val candidates = if (fine) listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-        else listOfNotNull(if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) LocationManager.FUSED_PROVIDER else null, LocationManager.NETWORK_PROVIDER)
-        val providers = candidates.filter { runCatching { m.isProviderEnabled(it) }.getOrDefault(false) }.take(if (fine) 2 else 1)
-        providers.forEach { runCatching { m.requestLocationUpdates(it, ms, 0f, listener, Looper.getMainLooper()) } }
-        if (providers.isEmpty()) log.w("Trip", "No location provider is on")
-        else log.d("Trip", "A position every ${ms / 1000} s from ${providers.joinToString()}")
+        LocationManagerCompat.removeUpdates(m, listener)
+        val fine = ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+        val enabled = m.allProviders.filter { runCatching { m.isProviderEnabled(it) }.getOrDefault(false) }.toSet()
+        val provider = AlertRules.provider(mode, fine, enabled)
+        if (provider == null) { log.w("Trip", "No location provider is on"); return }
+        val realTime = mode == LocationMode.REAL_TIME
+        val req = LocationRequestCompat.Builder(ms)
+            .setQuality(if (realTime) LocationRequestCompat.QUALITY_HIGH_ACCURACY else LocationRequestCompat.QUALITY_BALANCED_POWER_ACCURACY)
+            .setMinUpdateIntervalMillis(if (realTime) REALTIME_FASTEST_MS else ms)
+            .build()
+        runCatching { LocationManagerCompat.requestLocationUpdates(m, provider, req, listener, Looper.getMainLooper()) }
+            .onSuccess { log.d("Trip", "A position every ${ms / 1000} s from $provider (${mode.name.lowercase()})") }
+            .onFailure { log.e("Trip", "Asking for positions failed", it) }
     }
 
     private fun onLocation(loc: Location) {
@@ -108,7 +126,7 @@ class TripModeService : Service() {
         scope.launch {
             val nearest = handler.onPosition(fix, "trip")
             val edge = nearest?.let { it.second - settings.radiusFor(it.first.type) }
-            val next = AlertRules.nextIntervalMs(edge, speed)
+            val next = AlertRules.nextIntervalMs(edge, speed, mode)
             val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
             val quiet = settings.quietOn && AlertRules.inQuietHours(hour, AlertSettings.QUIET_FROM, AlertSettings.QUIET_TO)
             // In quiet hours Trip mode still runs, so say why nothing is alerting
@@ -143,7 +161,7 @@ class TripModeService : Service() {
 
     private fun stopSelfAndClear() {
         settings.tripUntilMs = 0L
-        lm?.removeUpdates(listener)
+        lm?.let { LocationManagerCompat.removeUpdates(it, listener) }
         main.removeCallbacks(stopAtEnd)
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
         stopSelf()
@@ -151,7 +169,9 @@ class TripModeService : Service() {
 
     override fun onDestroy() {
         running = false
-        lm?.removeUpdates(listener)
+        lm?.let { LocationManagerCompat.removeUpdates(it, listener) }
+        prefsListener?.let { settings.stopListening(it) }
+        prefsListener = null
         main.removeCallbacks(stopAtEnd)
         scope.cancel()
         super.onDestroy()
@@ -164,18 +184,40 @@ class TripModeService : Service() {
         @Volatile var running = false
             private set
 
-        /** Call from the app while it is on screen: Android only allows a location service started from the foreground. */
-        fun start(context: Context, settings: AlertSettings) {
+        /** Faster than this, Real time takes no new position (#218). */
+        const val REALTIME_FASTEST_MS = 2_000L
+
+        private fun hasLocation(context: Context): Boolean =
+            ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_FINE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, android.Manifest.permission.ACCESS_COARSE_LOCATION) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+        /**
+         * Call from the app while it is on screen: Android only allows a location service started from the foreground.
+         * False, and nothing started, without location access: a location service that can't go to the foreground
+         * crashes the app (A1).
+         */
+        fun start(context: Context, settings: AlertSettings): Boolean {
+            if (!hasLocation(context)) return false
+            settings.tripStoppedNoLocation = false
             settings.tripUntilMs = AlertSettings.endOfDay()
             ContextCompat.startForegroundService(context, Intent(context, TripModeService::class.java))
+            return true
         }
 
         /**
          * Trip mode still switched on but its service gone (the app was updated, or Android stopped it): start it
-         * again now that the app is on screen.
+         * again now that the app is on screen. If location access was taken away meanwhile, Trip mode goes off
+         * instead, and the Alerts page says why (A1: starting it anyway crashed the app on Android 12 and later).
          */
         fun resumeIfOn(context: Context, settings: AlertSettings) {
-            if (settings.tripOn && !running) ContextCompat.startForegroundService(context, Intent(context, TripModeService::class.java))
+            if (!settings.tripOn || running) return
+            if (!hasLocation(context)) {
+                settings.tripUntilMs = 0L
+                settings.tripStoppedNoLocation = true
+                android.widget.Toast.makeText(context, io.github.thisisartman.collectibles.R.string.trip_stopped_no_location, android.widget.Toast.LENGTH_LONG).show()
+                return
+            }
+            ContextCompat.startForegroundService(context, Intent(context, TripModeService::class.java))
         }
 
         fun stop(context: Context) {

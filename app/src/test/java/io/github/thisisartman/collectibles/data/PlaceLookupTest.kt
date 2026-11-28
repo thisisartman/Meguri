@@ -18,4 +18,20 @@ class PlaceLookupTest {
         assertEquals("彌彦神社", hits[1].name)
         assertNull(hits[1].osmUrl)
     }
+
+    // B1: the box is built around a position rounded to about 1 km, never the exact one
+    @Test fun viewboxIsAroundARoundedPosition() {
+        assertEquals("&viewbox=138.38,38.17,139.38,37.17", PlaceLookup.viewbox(37.670349, 138.879449))
+        assertEquals(PlaceLookup.viewbox(37.6712, 138.8788), PlaceLookup.viewbox(37.6698, 138.8803))
+    }
+
+    @Test fun viewboxIsTheSameInEveryLocale() {
+        val before = java.util.Locale.getDefault()
+        try {
+            java.util.Locale.setDefault(java.util.Locale.GERMANY)
+            assertEquals("&viewbox=138.38,38.17,139.38,37.17", PlaceLookup.viewbox(37.670349, 138.879449))
+        } finally {
+            java.util.Locale.setDefault(before)
+        }
+    }
 }

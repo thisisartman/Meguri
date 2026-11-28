@@ -8,6 +8,9 @@ import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/** Location updates in Trip mode (#218). Battery saver is how 0.7.1 worked. */
+enum class LocationMode { BATTERY, REAL_TIME }
+
 /** One line of the alert distance list (#164): a category, the distance it alerts at, and whether that is the default. */
 data class CategoryDistance(val type: ItemType, val meters: Int, val isDefault: Boolean)
 
@@ -66,6 +69,16 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getBoolean(KEY_QUIET, true)
         set(v) = prefs.edit().putBoolean(KEY_QUIET, v).apply()
 
+    /** How often Trip mode reads the position (#218): Battery saver, as before, or Real time. */
+    var locationMode: LocationMode
+        get() = LocationMode.entries.firstOrNull { it.name == prefs.getString(KEY_LOCATION_MODE, null) } ?: LocationMode.BATTERY
+        set(v) = prefs.edit().putString(KEY_LOCATION_MODE, v.name).apply()
+
+    /** Set when Trip mode was switched off because location access was gone; the Alerts page says so. */
+    var tripStoppedNoLocation: Boolean
+        get() = prefs.getBoolean(KEY_TRIP_NO_LOCATION, false)
+        set(v) = prefs.edit().putBoolean(KEY_TRIP_NO_LOCATION, v).apply()
+
     /** A category's own distance, or null when it uses the main one ("Same"). */
     fun ownRadius(type: ItemType): Int? =
         resolveOwn(if (prefs.contains(KEY_RADIUS_PREFIX + type.name)) prefs.getInt(KEY_RADIUS_PREFIX + type.name, SAME) else null, type)
@@ -110,8 +123,18 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         val RADIUS_CHOICES = listOf(200, 500, 1000)
         fun snap(m: Int): Int = RADIUS_CHOICES.minBy { kotlin.math.abs(it - m) }
 
-        /** Owner, 2026-11-09: station stamps start at 200 m (stations sit close together on a line). */
-        val STARTING_OWN = mapOf(ItemType.EKI_STAMP to 200)
+        /**
+         * Owner, 2026-11-09: station stamps start at 200 m (stations sit close together on a line). Owner, 2026-11-28
+         * (#218): places you drive to start at 1 km, since on the road you can't turn off at short notice.
+         */
+        val STARTING_OWN = mapOf(
+            ItemType.EKI_STAMP to 200,
+            ItemType.ROADSIDE_STATION to 1000,
+            ItemType.MANHOLE_CARD to 1000,
+            ItemType.DAM_CARD to 1000,
+        )
+        /** Categories you usually reach by car (#218): their fences report an entry sooner. */
+        val DRIVE_TO = setOf(ItemType.ROADSIDE_STATION, ItemType.MANHOLE_CARD, ItemType.DAM_CARD)
         /** Saved for a category that was set back to the main distance. */
         const val SAME = -1
 
@@ -145,6 +168,8 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
         private const val KEY_GEO_ERROR = "geofence_error"
         private const val KEY_TYPES = "types"
         private const val KEY_QUIET = "quiet_on"
+        private const val KEY_LOCATION_MODE = "location_mode"
+        private const val KEY_TRIP_NO_LOCATION = "trip_no_location"
         private const val COOL = "cool:"
 
         /** Trip mode switches itself off at the end of the day (FR-12b). */

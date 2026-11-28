@@ -74,10 +74,38 @@ object AlertRules {
      * the nearest alert edge at the current speed, kept between 20 s and 2 min. [edgeM] is the distance to the
      * nearest item minus the radius; null when nothing is left to get.
      */
-    fun nextIntervalMs(edgeM: Double?, speedMps: Float?): Long {
-        if (edgeM == null) return MAX_INTERVAL_MS
+    fun nextIntervalMs(edgeM: Double?, speedMps: Float?, mode: LocationMode = LocationMode.BATTERY): Long {
+        val (lo, hi) = when (mode) {
+            LocationMode.BATTERY -> MIN_INTERVAL_MS to MAX_INTERVAL_MS
+            LocationMode.REAL_TIME -> REALTIME_MIN_MS to REALTIME_MAX_MS
+        }
+        if (edgeM == null) return hi
         val speed = maxOf(speedMps ?: 0f, WALKING_MPS)
         val halfway = (edgeM.coerceAtLeast(0.0) / speed / 2 * 1000).toLong()
-        return halfway.coerceIn(MIN_INTERVAL_MS, MAX_INTERVAL_MS)
+        return halfway.coerceIn(lo, hi)
     }
+
+    /** Real time (#218): a position every 5 to 10 s, for driving. */
+    const val REALTIME_MIN_MS = 5_000L
+    const val REALTIME_MAX_MS = 10_000L
+
+    /**
+     * The one provider Trip mode asks (#218; it used to ask GPS and network at once): GPS with precise location, else
+     * the fused provider (Android 12+, blurred for approximate location), else network. [enabled] is the
+     * set of providers switched on; GPS needs precise location ([fine]). Null when none is usable.
+     */
+    fun provider(mode: LocationMode, fine: Boolean, enabled: Set<String>): String? {
+        val gps = "gps".takeIf { fine && it in enabled }
+        val fused = "fused".takeIf { it in enabled }
+        val network = "network".takeIf { it in enabled }
+        return when (mode) {
+            // Both keep GPS when precise location is allowed (as 0.7.1); they differ in how often and how hard they ask
+            LocationMode.REAL_TIME, LocationMode.BATTERY -> gps ?: fused ?: network
+        }
+    }
+
+    /** How soon Play Services reports a fence entry: drive-to places within seconds, so 1 km is not used up at speed. */
+    fun responsivenessMs(type: ItemType): Int = if (type in AlertSettings.DRIVE_TO) FAST_RESPONSIVENESS_MS else RESPONSIVENESS_MS
+    const val RESPONSIVENESS_MS = 60_000
+    const val FAST_RESPONSIVENESS_MS = 5_000
 }

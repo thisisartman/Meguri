@@ -30,10 +30,7 @@ object PlaceLookup {
     suspend fun search(query: String, nearLat: Double?, nearLng: Double?, japanese: Boolean): List<PlaceHit> = withContext(Dispatchers.IO) {
         runCatching {
             val q = URLEncoder.encode(query.trim(), "UTF-8")
-            val near = if (nearLat != null && nearLng != null) {
-                val d = 0.5
-                "&viewbox=${nearLng - d},${nearLat + d},${nearLng + d},${nearLat - d}"
-            } else ""
+            val near = if (nearLat != null && nearLng != null) viewbox(nearLat, nearLng) else ""
             val url = URL("$ENDPOINT?q=$q&format=jsonv2&limit=8&countrycodes=jp&addressdetails=0&namedetails=1$near")
             val c = (url.openConnection() as HttpURLConnection).apply {
                 connectTimeout = 8_000; readTimeout = 8_000
@@ -42,6 +39,17 @@ object PlaceLookup {
             }
             c.inputStream.bufferedReader().use { r -> parse(r.readText()) }
         }.getOrDefault(emptyList())
+    }
+
+    /**
+     * The area that ranks nearby places first: about 50 km around the position rounded to about 1 km (B1), so the
+     * box's centre is not your exact position.
+     */
+    internal fun viewbox(lat: Double, lng: Double): String {
+        val la = io.github.thisisartman.collectibles.location.coarse(lat)
+        val ln = io.github.thisisartman.collectibles.location.coarse(lng)
+        val d = 0.5
+        return String.format(java.util.Locale.US, "&viewbox=%.2f,%.2f,%.2f,%.2f", ln - d, la + d, ln + d, la - d)
     }
 
     internal fun parse(json: String): List<PlaceHit> {

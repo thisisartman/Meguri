@@ -143,6 +143,13 @@
     <string name="trip_title">移動中の通知</string>
     <string name="trip_sub_on">%1$sまでオン。ここか通知からオフにできます。</string>
     <string name="trip_needs_location">移動中の通知には位置情報の許可が必要です。</string>
+    <string name="trip_stopped_no_location">位置情報の許可がないため、移動中の通知をオフにしました。</string>
+    <!-- Location updates (#218) -->
+    <string name="alerts_location_updates">位置の更新</string>
+    <string name="alerts_location_battery">省電力</string>
+    <string name="alerts_location_realtime">高精度</string>
+    <string name="alerts_location_battery_sub">電池を節約しますが、通知が遅れることがあります。普段はこちらがおすすめです。</string>
+    <string name="alerts_location_realtime_sub">電池の持ちに少し影響しますが、位置を5秒ごとに更新するので通知が間に合います。旅行中だけ使うのがおすすめです。</string>
     <string name="bg_sub_on">Meguriを閉じていても、未取得のものの近くに来るとお知らせします。</string>
     <string name="bg_sub_accuracy">動作していません：Googleの位置情報の精度がオフです。タップして位置情報の設定を開き、位置情報サービス › 位置情報の精度をオンにしてください。</string>
     <string name="bg_sub_failed">今は動作していません。タップしてもう一度試してください。</string>
@@ -653,7 +660,9 @@
     <string name="privacy_online">オンラインサービス</string>
     <string name="privacy_online_sub">Meguriがこれらのサービスに接続するのは、書かれている機能を使ったときだけです。名前をタップするとサービスが、ボタンでプライバシーポリシーが開きます。</string>
     <string name="privacy_tiles">オフライン地図の外の地図タイル：見ている範囲</string>
-    <string name="privacy_places">場所検索（アイテムの追加・編集時と、貼ったGoogleマップのリンクの場所）：名前と、近くの場所を先に出すための現在地周辺の範囲（約50 km）</string>
+    <string name="privacy_places">場所検索（アイテムの追加・編集時と、貼ったGoogleマップのリンクの場所）：名前と、近くの場所を先に出すための現在地周辺の範囲（約50 km。現在地は約1 km単位に丸めて送ります）</string>
+    <string name="privacy_feedback">フィードバックを送る（使ったとき）：メモ、追加したスクリーンショット、アプリのバージョンと端末名、選んだ場合はアプリのログを、メールアプリから開発者へ送ります</string>
+    <string name="privacy_exact">バックアップ、復元や読み込みの前にMeguriが残す控え、トリップレポートのCSVには、正確な位置と日時が入っています。共有するときはご注意ください。</string>
     <string name="privacy_cards">「ダウンロード」を押したときのカード画像：カード番号</string>
     <string name="privacy_directions">経路はGoogleマップで場所を開きます。旅に貼ったGoogleマップのリンクは、行き先を調べるために一度開きます</string>
     <string name="privacy_play">通知のための現在地とカードスキャンは、スマホのGoogle Playサービスを使います</string>
