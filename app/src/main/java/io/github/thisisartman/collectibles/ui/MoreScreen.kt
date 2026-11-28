@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.Backup
 import io.github.thisisartman.collectibles.photo.CardPictures
 import io.github.thisisartman.collectibles.data.CollectiblesDb
 import io.github.thisisartman.collectibles.data.ItemType
@@ -549,6 +550,7 @@ fun MoreScreen(
     val titles = mapOf(
         S_COLLECTIONS to stringResource(R.string.cat_yours),
         S_ALERTS to stringResource(R.string.settings_alerts),
+        S_NOTIFY to stringResource(R.string.notify_title),
         S_DATA to stringResource(R.string.settings_data),
         S_LOOK to stringResource(R.string.settings_look),
         S_CATALOGUE to stringResource(R.string.settings_catalogue),
@@ -616,6 +618,13 @@ fun MoreScreen(
                     ).joinToString(" · "),
                     R.drawable.ic_settings_alerts,
                 ) { section = S_ALERTS }
+                // The four kinds of notification, each a switch (#228)
+                val notifyOn = io.github.thisisartman.collectibles.alerts.NotifyCategory.entries.count { io.github.thisisartman.collectibles.alerts.NotifyPrefs.on(context, it) }
+                SectionLine(
+                    titles.getValue(S_NOTIFY),
+                    if (notifyOn == 4) stringResource(R.string.notify_sub_all) else stringResource(R.string.notify_sub_some, notifyOn),
+                    R.drawable.ic_notification,
+                ) { section = S_NOTIFY }
                 val findsText = pluralStringResource(R.plurals.data_finds, findCount, findCount)
                 val dataLine = when {
                     !autoOn -> stringResource(R.string.data_line_off, findsText)
@@ -691,6 +700,43 @@ fun MoreScreen(
                 }
             }
             S_ALERTS -> AlertsSection(onCategories = { section = S_ALERT_CATS })
+            S_NOTIFY -> {
+                val alerts: AlertsViewModel = hiltViewModel()
+                val suggestionPerms = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) {
+                    if (alerts.settings.photoHintsOn) {
+                        alerts.settings.photoHintsSeenSec = System.currentTimeMillis() / 1000
+                        io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context)
+                    }
+                }
+                // Each its own Android channel too (#228); off here stops that kind everywhere in the app
+                val prefs = io.github.thisisartman.collectibles.alerts.NotifyPrefs
+                if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                    Note(stringResource(R.string.notify_off_in_phone))
+                    MoreRow(stringResource(R.string.notify_open_phone), null) {
+                        context.startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                }
+                listOf(
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.ALERTS, R.string.notify_alerts, R.string.notify_alerts_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.SUGGESTIONS, R.string.notify_suggestions, R.string.notify_suggestions_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.BACKUPS, R.string.notify_backups, R.string.notify_backups_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.UPDATES, R.string.notify_updates, R.string.notify_updates_sub),
+                ).forEach { (c, title, sub) ->
+                    ToggleRow(stringResource(title), stringResource(sub), prefs.on(context, c)) { on ->
+                        prefs.set(context, c, on)
+                        // Suggestions carries the new-photo hint too (one switch, owner 2026-11-28): on asks for
+                        // gallery access, which the hint needs; the after-collect suggestion works without it
+                        if (c == io.github.thisisartman.collectibles.alerts.NotifyCategory.SUGGESTIONS) {
+                            if (on) suggestionPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
+                            else io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context)
+                        }
+                    }
+                }
+            }
             S_ALERT_CATS -> AlertCategoriesSection()
             S_LOOK -> {
                 // Theme (owner, 2026-11-09): the phone's dark mode, or always light, or always dark; the map follows
@@ -727,7 +773,10 @@ fun MoreScreen(
                 SectionTitle(stringResource(R.string.backup_section))
                 // Its own choice each time, not the weekly backup's "Include photos" (finding 31)
                 // Each says how its last run went until the next one, and how far it is while it runs (#217)
-                JobRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub), DataJob.BACKUP, running, jobResults) { askBackup = true }
+                // The first time Backup and data opens: Back up now and Weekly backup (#224)
+                FirstTip(TipId.BACKUP, listOf(TipLine(androidx.compose.material.icons.Icons.Outlined.Backup, stringResource(R.string.more_backup), stringResource(R.string.tip_backup)))) {
+                    JobRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub), DataJob.BACKUP, running, jobResults) { askBackup = true }
+                }
                 SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
                     if (on) askWhere = true else { vm.auto.disable(); autoTick++ }
                 }
@@ -752,7 +801,6 @@ fun MoreScreen(
                     if (customNames.isEmpty()) stringResource(R.string.settings_collections_sub) else customNames.joinToString(", "),
                 ) { section = S_COLLECTIONS }
                 SectionTitle(stringResource(R.string.photos_section))
-                PhotoHintRow()
                 val photoSummary by vm.photos.collectAsState()
                 LaunchedEffect(Unit) { vm.loadPhotos(context) }
                 MoreRow(
@@ -891,6 +939,13 @@ fun MoreScreen(
                 // Feedback by mail to the owner, with screenshots (2026-11-15)
                 MoreRow(stringResource(R.string.feedback_title), stringResource(R.string.feedback_row_sub)) { feedback = true }
                 MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
+                // The bottom bar's shortcuts, in one line (#223)
+                InfoRow(stringResource(R.string.help_shortcuts), stringResource(R.string.help_shortcuts_sub))
+                // Every first-time tip once more (#224)
+                val tipsDone = stringResource(R.string.tips_again_done)
+                MoreRow(stringResource(R.string.tips_again), stringResource(R.string.tips_again_sub)) {
+                    Tips.reset(context); scope.launch { snackbar.showSnackbar(tipsDone) }
+                }
                 // Check for updates (#131), off by default; the note sits right under it when there is one
                 val updates = io.github.thisisartman.collectibles.data.UpdateCheck
                 ToggleRow(stringResource(R.string.update_check), stringResource(R.string.update_check_sub), updates.on(context)) { on ->
@@ -975,6 +1030,7 @@ private fun Note(text: String) = Text(
 
 private const val S_COLLECTIONS = "collections"
 private const val S_ALERTS = "alerts"
+private const val S_NOTIFY = "notifications"
 private const val S_DATA = "data"
 private const val S_LOOK = "look"
 private const val S_CATALOGUE = "catalogue"

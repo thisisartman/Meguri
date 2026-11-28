@@ -29,20 +29,28 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
 
     fun createChannels() {
         val m = context.getSystemService(NotificationManager::class.java) ?: return
+        // The four categories (#228), named as in Settings › Notifications; the ids stay, so earlier choices in the
+        // phone's settings are kept
         m.createNotificationChannel(
-            NotificationChannel(CH_ALERTS, context.getString(R.string.alerts_channel), NotificationManager.IMPORTANCE_HIGH)
+            NotificationChannel(CH_ALERTS, context.getString(R.string.channel_alerts), NotificationManager.IMPORTANCE_HIGH)
                 .apply { description = context.getString(R.string.alerts_channel_sub) },
         )
+        // A fresh id, so phones that had the quiet photo-hint channel get this one's importance; the old one goes
+        m.deleteNotificationChannel(OLD_CH_PHOTOS)
         m.createNotificationChannel(
-            NotificationChannel(CH_PHOTOS, context.getString(R.string.photo_hint_channel), NotificationManager.IMPORTANCE_LOW)
-                .apply { description = context.getString(R.string.photo_hint_channel_sub); setShowBadge(false) },
+            NotificationChannel(CH_PHOTOS, context.getString(R.string.channel_suggestions), NotificationManager.IMPORTANCE_DEFAULT)
+                .apply { description = context.getString(R.string.channel_suggestions_sub); setShowBadge(false) },
+        )
+        m.createNotificationChannel(
+            NotificationChannel(CH_UPDATES, context.getString(R.string.channel_updates), NotificationManager.IMPORTANCE_LOW)
+                .apply { description = context.getString(R.string.channel_updates_sub) },
         )
         m.createNotificationChannel(
             NotificationChannel(CH_TRIP, context.getString(R.string.trip_channel), NotificationManager.IMPORTANCE_LOW)
                 .apply { description = context.getString(R.string.trip_channel_sub); setShowBadge(false) },
         )
         m.createNotificationChannel(
-            NotificationChannel(CH_DATA, context.getString(R.string.job_channel), NotificationManager.IMPORTANCE_LOW)
+            NotificationChannel(CH_DATA, context.getString(R.string.channel_backups), NotificationManager.IMPORTANCE_LOW)
                 .apply { description = context.getString(R.string.job_channel_sub); setShowBadge(false) },
         )
     }
@@ -50,8 +58,11 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
     fun canPost(): Boolean = nm.areNotificationsEnabled() &&
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
 
+    /** Allowed by the phone and by its category's switch in Settings › Notifications (#228). */
+    fun canPost(category: NotifyCategory): Boolean = canPost() && NotifyPrefs.on(context, category)
+
     /** Names follow the app's own language (English mode shows romaji, as everywhere else). */
-    private fun nameOf(item: Item): String {
+    internal fun nameOf(item: Item): String {
         val ja = context.resources.configuration.locales[0]?.language == "ja"
         return if (ja) item.nameJa else item.nameRomaji ?: item.nameJa
     }
@@ -74,7 +85,7 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
     private fun distance(m: Double): String = formatDistance(m).let { (res, v) -> context.getString(res, v) }
 
     fun notifyNear(item: Item, meters: Double, fix: Fix?) {
-        if (!canPost()) return
+        if (!canPost(NotifyCategory.ALERTS)) return
         val id = notificationId(item.id)
         val open = PendingIntent.getActivity(
             context, id, MainActivity.openItemIntent(context, item.id), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
@@ -107,7 +118,7 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
      * the share screen with it. Quiet, on its own channel, so it can be turned off separately from alerts.
      */
     fun notifyPhoto(item: Item, photo: android.net.Uri, meters: Double) {
-        if (!canPost()) return
+        if (!canPost(NotifyCategory.SUGGESTIONS)) return
         val id = notificationId("photo:" + photo)
         val attach = PendingIntent.getActivity(
             context, id + 1, MainActivity.attachIntent(context, item.id, photo), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
@@ -150,6 +161,54 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
 
     fun cancel(itemId: String) = nm.cancel(notificationId(itemId))
 
+    /**
+     * After a collect (#228): "Collected <name>. Take a photo of the place, or a selfie with it?", with Take photo
+     * (the camera, the picture going on the newest find as its place photo) and Not now. One notification for a
+     * whole [Nudge], updated as it grows; quiet after the first.
+     */
+    fun notifyNudge(n: Nudge) {
+        if (!canPost(NotifyCategory.SUGGESTIONS)) return
+        val take = PendingIntent.getActivity(
+            context, NUDGE_ID + 1, MainActivity.placePhotoIntent(context, n.findId), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notNow = broadcast(AlertReceiver.ACTION_NUDGE_DISMISS, NUDGE_ID + 2) {}
+        val names = n.names.joinToString(context.getString(R.string.nudge_names_sep))
+        val text = context.getString(R.string.nudge_text)
+        val built = NotificationCompat.Builder(context, CH_PHOTOS)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.nudge_title, names))
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setCategory(NotificationCompat.CATEGORY_RECOMMENDATION)
+            .setOnlyAlertOnce(true)
+            .setContentIntent(take)
+            .setAutoCancel(true)
+            .setTimeoutAfter(NUDGE_TIMEOUT_MS)
+            .addAction(0, context.getString(R.string.nudge_take), take)
+            .addAction(0, context.getString(R.string.nudge_not_now), notNow)
+            .build()
+        post(NUDGE_ID, built)
+    }
+
+    fun cancelNudge() = nm.cancel(NUDGE_ID)
+
+    /** A newer Meguri (#228, Updates): opens the release page. Only when Check for updates found one. */
+    fun notifyUpdate(tag: String, url: String) {
+        if (!canPost(NotifyCategory.UPDATES)) return
+        val open = PendingIntent.getActivity(
+            context, UPDATE_ID, Intent(Intent.ACTION_VIEW, android.net.Uri.parse(url)), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val n = NotificationCompat.Builder(context, CH_UPDATES)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.update_notify_title, tag.removePrefix("v")))
+            .setContentText(context.getString(R.string.update_notify_text))
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setContentIntent(open)
+            .setAutoCancel(true)
+            .build()
+        post(UPDATE_ID, n)
+    }
+
     /** "浦佐 → 新潟 until 23:59" when a route is planned for today. */
     fun tripRouteTitle(from: Item, to: Item, untilText: String): String = context.getString(R.string.trip_route_until, nameOf(from), nameOf(to), untilText)
 
@@ -189,10 +248,19 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
     companion object {
         const val CH_ALERTS = "alerts"
         const val CH_TRIP = "trip"
-        const val CH_PHOTOS = "photo_hints"
+        const val CH_PHOTOS = "suggestions"
+        /** The photo hints' channel before Suggestions (deleted at start). */
+        const val OLD_CH_PHOTOS = "photo_hints"
         /** Back up now, Restore and Add photos from a file while they run (#217). */
         const val CH_DATA = "backup_restore"
+        /** A newer release (#228). */
+        const val CH_UPDATES = "updates"
         const val TRIP_ID = 1
+        /** The photo suggestion after a collect (#228), and its two buttons' codes; below every item's id (16 and up). */
+        const val NUDGE_ID = 4
+        const val UPDATE_ID = 8
+        /** A suggestion not acted on goes by itself after an hour: you have left the place by then. */
+        const val NUDGE_TIMEOUT_MS = 60 * 60_000L
         const val UNDO_WINDOW_MS = 30_000L
 
         /** One notification per item; even numbers step by 8 so each item's PendingIntent codes stay apart. */

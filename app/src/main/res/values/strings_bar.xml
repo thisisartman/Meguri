@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bottom bar shortcuts (#223): tap again and press and hold -->
+<resources>
+    <string name="bar_action_search">Search</string>
+    <string name="bar_action_expand">Expand list</string>
+    <string name="bar_action_scan">Scan</string>
+    <string name="bar_action_settings">Settings</string>
+    <string name="a11y_plus_card">Scan or add</string>
+    <string name="help_shortcuts">Shortcuts</string>
+    <string name="help_shortcuts_sub">Tap Nearby again to search, hold it to expand the list. Hold + to scan. Hold My book for Settings.</string>
+</resources>

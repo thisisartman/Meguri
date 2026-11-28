@@ -129,6 +129,10 @@ interface CollectionDao {
     @Query("DELETE FROM line WHERE id NOT IN (SELECT line_id FROM line_station)")
     suspend fun deleteEmptyLines(): Int
 
+    /** How many place photos the item has, on any find: the photo suggestion after a collect skips it when there is one (#228). */
+    @Query("SELECT COUNT(*) FROM photo p JOIN acquisition a ON p.acquisition_id = a.id WHERE a.item_id = :itemId AND p.role = 'place'")
+    suspend fun placePhotoCount(itemId: String): Int
+
     /** The item's most recent find, where shared photos go (#80). */
     @Query("SELECT id FROM acquisition WHERE item_id = :itemId ORDER BY COALESCE(acquired_at, created_at) DESC LIMIT 1")
     suspend fun latestFindId(itemId: String): String?

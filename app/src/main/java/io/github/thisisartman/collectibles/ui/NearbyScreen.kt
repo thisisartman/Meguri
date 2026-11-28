@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.BottomSheetScaffold
@@ -38,6 +40,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -111,7 +115,7 @@ import io.github.thisisartman.collectibles.data.Origin
 /** Nearby, layout B (owner's pick, 2026-11-06): the map fills the screen and a sheet of tiles sits over it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, focusSearch: Int = 0, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, focusSearch: Int = 0, expandSheet: Int = 0, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
@@ -133,9 +137,9 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     var tab by rememberSaveable { mutableStateOf(MapSection.STAMPS) }
     var kind by rememberSaveable { mutableStateOf<ItemType?>(null) }
     var byName by rememberSaveable { mutableStateOf(false) }
-    var tileStep by rememberSaveable { mutableIntStateOf(1) }
+    // Tiles per row, 3 to 6, from − and + in the sort menu; kept between opens (#225)
+    val columns = NearbyPrefs.columns(ctx)
     var sortOpen by remember { mutableStateOf(false) }
-    var sizeOpen by rememberSaveable { mutableStateOf(false) }
     val sizeLabel = stringResource(R.string.nearby_tile_size)
     var picked by rememberSaveable { mutableStateOf<String?>(null) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -143,8 +147,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
     val searching = query.isNotBlank()
     // + → Search (owner, 2026-11-09): focus the bar so the keyboard comes up; the wait lets the sheet close first
+    // Each tick acts once: coming back to Nearby later must not bring the keyboard up again
+    var searchDone by rememberSaveable { mutableIntStateOf(focusSearch) }
     androidx.compose.runtime.LaunchedEffect(focusSearch) {
-        if (focusSearch > 0) { kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
+        if (focusSearch > searchDone) { searchDone = focusSearch; kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
     }
 
     val custom = LocalCustomTypes.current
@@ -234,7 +240,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val onbMax = onboardingPeek(onboarding)
     var onbContentPx by remember(onboarding.step) { mutableIntStateOf(0) }
     val onbPeek = if (onbContentPx > 0 && onboarding.step != OnboardingStep.HAVE) with(density) { (handlePx + onbContentPx).toDp() } + 16.dp else onbMax
-    val peek = if (dropdownShown && !inOnboarding) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingPeek.coerceIn(220.dp, 480.dp)
+    // The resting height eases to its new size, so the sheet no longer jumps when the Stamps / Cards tabs come and
+    // go with Places and Collectibles (#225)
+    val restingEased by androidx.compose.animation.core.animateDpAsState(restingPeek.coerceIn(220.dp, 480.dp), Motion.sheetSpec, label = "peek")
+    val peek = if (dropdownShown && !inOnboarding) 0.dp else if (inOnboarding) onbPeek.coerceAtMost(onbMax) else restingEased
     // The picker (#81 O3) opens expanded; pulled down, the map shows what it lists and frames it (idle while covered)
     val picking = onboarding.step == OnboardingStep.HAVE
     // Back closes a tapped pin's card first (seen on the Poco, 2026-11-09: Back left the app with the card open)
@@ -249,6 +258,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         }
     }
     LaunchedEffect(picking) { if (picking) runCatching { sheet.bottomSheetState.expand() } }
+    // A hold on Nearby in the bottom bar opens the list to full screen (#223), once per hold
+    var expandDone by rememberSaveable { mutableIntStateOf(expandSheet) }
+    LaunchedEffect(expandSheet) {
+        if (expandSheet > expandDone) { expandDone = expandSheet; focus.clearFocus(); runCatching { sheet.bottomSheetState.expand() } }
+    }
     // When the onboarding ends the sheet settles to its resting height, so the map shows (owner's S23 run, 2026-11-10:
     // it stayed fully up from the picker)
     var wasOnboarding by remember { mutableStateOf(inOnboarding) }
@@ -370,8 +384,8 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                     }
                     Box {
                         IconButton(onClick = { sortOpen = true }, modifier = Modifier.size(48.dp)) {
-                            // The button shows the order in use: nearest, or A over Z
-                            Icon(painterResource(if (byName) R.drawable.ic_sort_by_alpha else R.drawable.ic_near_me), contentDescription = stringResource(R.string.nearby_sort))
+                            // The standard Sort icon (#225: the navigation arrow did not say sort); the menu shows the order in use
+                            Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.nearby_sort))
                         }
                         DropdownMenu(expanded = sortOpen, onDismissRequest = { sortOpen = false }) {
                             listOf(false to R.string.nearby_sort_near, true to R.string.nearby_sort_az).forEach { (az, label) ->
@@ -394,16 +408,29 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                                     modifier = Modifier.semantics { toggleableState = androidx.compose.ui.state.ToggleableState(grouped); role = androidx.compose.ui.semantics.Role.Switch },
                                 )
                             }
-                            // Tile size lives in this menu (owner, 2026-11-26: a separate icon on the row confused);
-                            // it shows or hides the size slider under the bar. Both views
+                            // Tile size lives in this menu (owner, 2026-11-26: a separate icon on the row confused):
+                            // − and + change the tiles per row at once, 3 to 6, and the menu stays open (#225). Both views
                             HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            DropdownMenuItem(
-                                text = { Text(sizeLabel) },
-                                onClick = { sizeOpen = !sizeOpen; sortOpen = false },
-                                leadingIcon = { Icon(Icons.Outlined.PhotoSizeSelectLarge, contentDescription = null) },
-                                trailingIcon = { androidx.compose.material3.Switch(checked = sizeOpen, onCheckedChange = null) },
-                                modifier = Modifier.semantics { toggleableState = androidx.compose.ui.state.ToggleableState(sizeOpen); role = androidx.compose.ui.semantics.Role.Switch },
-                            )
+                            Row(
+                                Modifier.padding(start = 12.dp, end = 4.dp).heightIn(min = 48.dp)
+                                    .semantics(mergeDescendants = false) { contentDescription = sizeLabel },
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Outlined.PhotoSizeSelectLarge, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Spacer(Modifier.width(12.dp))
+                                Text(sizeLabel, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(end = 8.dp))
+                                // − makes the tiles bigger (fewer per row), + smaller (more per row)
+                                IconButton(onClick = { NearbyPrefs.setColumns(ctx, SheetLayout.step(columns, -1)) }, enabled = columns > SheetLayout.MIN_COLUMNS) {
+                                    Icon(Icons.Filled.Remove, contentDescription = stringResource(R.string.nearby_tiles_fewer))
+                                }
+                                Text(
+                                    columns.toString(), style = MaterialTheme.typography.titleMedium.copy(fontFeatureSettings = "tnum"),
+                                    modifier = Modifier.semantics { contentDescription = ctx.getString(R.string.nearby_tiles_per_row, columns) },
+                                )
+                                IconButton(onClick = { NearbyPrefs.setColumns(ctx, SheetLayout.step(columns, 1)) }, enabled = columns < SheetLayout.MAX_COLUMNS) {
+                                    Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.nearby_tiles_more))
+                                }
+                            }
                         }
                     }
                     // ? shows the help bubble again (#192)
@@ -411,31 +438,56 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = stringResource(R.string.nearby_help))
                     }
                 }
-                // While searching, the tabs give way to the number found, on the row with sort and ? (above)
-                if (!searching && view == NearbyView.COLLECTIBLES) SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-                    // Your own kinds sit under Stamps or Cards; a third tab, Other, only for kinds that are neither
-                    val tabs = listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { r -> MapSection.MINE.has(r.item, custom) } })
-                    tabs.forEachIndexed { i, t ->
-                        val all = rows.filter { t.has(it.item, custom) }
-                        SegmentedButton(
-                            selected = tab == t,
-                            onClick = { tab = t; kind = null },
-                            shape = SegmentedButtonDefaults.itemShape(i, tabs.size),
-                        ) {
-                            // Name and count on two lines, so neither is cut at large text
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(stringResource(when (t) { MapSection.STAMPS -> R.string.nearby_tab_stamps; MapSection.CARDS -> R.string.nearby_tab_cards; else -> R.string.nearby_tab_mine }), maxLines = 1)
-                                Text(
-                                    // Blank until the list has loaded, never a false 0 / 0 (owner, 2026-11-08)
-                                    if (loadedRows == null) " " else stringResource(R.string.count, all.count { it.findCount > 0 }, all.size),
-                                    style = MaterialTheme.typography.labelSmall, maxLines = 1,
-                                )
+                val folded = NearbyPrefs.folded(ctx)
+                // A section opened with its more tile stays open while Nearby is up
+                var openSections by rememberSaveable { mutableStateOf(listOf<String>()) }
+                val searchStations = remember(shown) { shown.filter { it.item.type == ItemType.EKI_STAMP }.map { stationKey(it) }.toSet() }
+                val searchTiles = remember(shown, searchStations) { shown.filter { it.item.type != ItemType.EKITAG || stationKey(it) !in searchStations } }
+                // While searching, the tabs give way to the number found, on the row with sort and ? (above).
+                // Stamps and Cards are tabs with centred titles over pages you can swipe between (#225); they slide in
+                // and out with Collectibles, and the sheet's height eases with them
+                // Your own types sit under Stamps or Cards; a third tab, Other, only for types that are neither
+                val tabs = remember(rows, custom) { listOfNotNull(MapSection.STAMPS, MapSection.CARDS, MapSection.MINE.takeIf { rows.any { r -> MapSection.MINE.has(r.item, custom) } }) }
+                val pager = androidx.compose.foundation.pager.rememberPagerState(initialPage = tabs.indexOf(tab).coerceAtLeast(0)) { tabs.size }
+                val pagerScope = androidx.compose.runtime.rememberCoroutineScope()
+                // A swipe picks the tab; the type filter belongs to the tab it was set on
+                LaunchedEffect(pager, tabs) {
+                    androidx.compose.runtime.snapshotFlow { pager.settledPage }.collect { p ->
+                        tabs.getOrNull(p)?.let { if (it != tab) { tab = it; kind = null } }
+                    }
+                }
+                val collectiblesShown = !searching && view == NearbyView.COLLECTIBLES
+                AnimatedVisibility(visible = collectiblesShown, enter = Motion.expandIn, exit = Motion.shrinkOut) {
+                    androidx.compose.material3.PrimaryTabRow(
+                        selectedTabIndex = pager.currentPage.coerceIn(0, tabs.lastIndex),
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        tabs.forEachIndexed { i, t ->
+                            val all = remember(rows, t, custom) { rows.filter { t.has(it.item, custom) } }
+                            val title = stringResource(when (t) { MapSection.STAMPS -> R.string.nearby_tab_stamps; MapSection.CARDS -> R.string.nearby_tab_cards; else -> R.string.nearby_tab_mine })
+                            val got = all.count { it.findCount > 0 }
+                            val spoken = if (loadedRows == null) title else stringResource(R.string.nearby_tab_count, title, got, all.size)
+                            androidx.compose.material3.Tab(
+                                selected = pager.currentPage == i,
+                                onClick = { pagerScope.launch { pager.animateScrollToPage(i) } },
+                                modifier = Modifier.heightIn(min = 56.dp).semantics(mergeDescendants = true) { contentDescription = spoken },
+                            ) {
+                                // Name and count on two lines, centred, so neither is cut at large text
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(vertical = 6.dp)) {
+                                    Text(title, style = MaterialTheme.typography.titleSmall, maxLines = 1, textAlign = TextAlign.Center)
+                                    Text(
+                                        // Blank until the list has loaded, never a false 0 / 0 (owner, 2026-11-08)
+                                        if (loadedRows == null) " " else stringResource(R.string.count, got, all.size),
+                                        style = MaterialTheme.typography.labelSmall, maxLines = 1, textAlign = TextAlign.Center,
+                                    )
+                                }
                             }
                         }
                     }
                 }
                 // The category filter only applies to a tab, not to a search across everything
-                if (!searching && view == NearbyView.COLLECTIBLES && kinds.size > 1) {
+                AnimatedVisibility(visible = collectiblesShown && kinds.size > 1, enter = Motion.expandIn, exit = Motion.shrinkOut) {
                     Row(Modifier.fillMaxWidth().padding(start = 12.dp, top = 4.dp).heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
                         CategoryPill(
                             selected = kind, types = kinds,
@@ -444,79 +496,92 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
                         )
                     }
                 }
-                // Tile size in the sort menu shows a slider: small circle on the left, large on the right
-                AnimatedVisibility(visible = sizeOpen) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(10.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
-                        Slider(
-                            value = tileStep.toFloat(),
-                            onValueChange = { tileStep = it.roundToInt().coerceIn(0, TILE_SIZES.lastIndex) },
-                            valueRange = 0f..TILE_SIZES.lastIndex.toFloat(),
-                            steps = TILE_SIZES.size - 2,
-                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
-                                .semantics { contentDescription = sizeLabel },
-                        )
-                        Box(Modifier.size(20.dp).border(1.5.dp, MaterialTheme.colorScheme.onSurfaceVariant, CircleShape).clearAndSetSemantics { })
-                    }
-                }
-                if ((if (placesShown) placeList.isEmpty() else shown.isEmpty()) && loadedRows != null) {
-                    Text(
-                        stringResource(R.string.nearby_empty_kind),
-                        Modifier.padding(16.dp),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                } else {
-                    val tile = TILE_SIZES[tileStep]
-                    // Wider cells with large text, so names wrap between words instead of inside them
-                    val cell = (tile + 24.dp) * LocalDensity.current.fontScale.coerceIn(1f, 2f)
-                    // A new sort, tab or filter starts from the top (keys would otherwise hold the old place)
-                    val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
-                    LaunchedEffect(byName, tab, kind, query, view, grouped) { grid.scrollToItem(0) }
-                    // A station's stamp and its Ekitag are one tile (owner, 2026-11-09); an Ekitag shows on its own
-                    // only when its station isn't in the list (the Ekitag filter, or no stamp for it)
-                    val ekitags = remember(rows) { ekitagByStation(rows) }
-                    val stationIds = remember(shown) { shown.filter { it.item.type == ItemType.EKI_STAMP }.map { stationKey(it) }.toSet() }
-                    val tiles = remember(shown, stationIds) { shown.filter { it.item.type != ItemType.EKITAG || stationKey(it) !in stationIds } }
-                    LazyVerticalGrid(
-                        state = grid,
-                        columns = GridCells.Adaptive(cell),
-                        // A gap between columns, so two one-line names never read as one
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 96.dp),
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp)
-                            .onGloballyPositioned { gridTopPx = it.positionInParent().y.toInt() },
-                    ) {
-                        // Places (#192): one tile per place; Group by kind puts them under a heading per kind
-                        if (placesShown) {
-                            val sections = if (grouped) Places.byKind(placeList) else listOf(null to placeList)
-                            val firstPlace = sections.firstOrNull()?.second?.firstOrNull()
-                            sections.forEachIndexed { si, (k, list) ->
-                                if (k != null) item(key = "h-" + k.name, span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
-                                    KindHeading(k, list.size, if (si == 0) Modifier.onSizeChanged { headPx = it.height } else Modifier)
-                                }
-                                items(list, key = { "p-" + it.id }, contentType = { "place" }) { p ->
-                                    val m = if (p === firstPlace) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
-                                    Box(m) {
-                                        PlaceTile(
-                                            p, tile, Places.name(p, ja),
-                                            if (p.noneHere) stringResource(noneHereLabel(p.anchor.item.type)) else distanceText(placeDist(p)),
-                                            // One page per place, with the first thing still to get open (owner, 2026-11-26)
-                                            onOpen = { tick(); nav.openPlace(p.id, open = Places.toOpen(p)) },
+                // Tiles per row from − and + (#225): the tile fills its cell, less the gaps and the name's side room
+                val sheetWidth = minOf(androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp, 640).dp
+                val tile = ((sheetWidth - 16.dp - 10.dp * (columns - 1)) / columns - 20.dp).coerceIn(36.dp, 120.dp)
+                // Each Group by type section shows the nearest few, about half the screen, so the next title stays in view
+                val budgetPx = with(density) { (androidx.compose.ui.platform.LocalConfiguration.current.screenHeightDp.dp * 0.5f).roundToPx() }
+                // A station's stamp and its Ekitag are one tile (owner, 2026-11-09); an Ekitag shows on its own
+                // only when its station isn't in the list (the Ekitag filter, or no stamp for it)
+                val ekitags = remember(rows) { ekitagByStation(rows) }
+                // A quick Collect from a held tile (#227): the usual find and "Collected · Undo"
+                val quickCollect = rememberQuickCollect(vm)
+                val firstRow = Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } }
+                // Measured against the sheet, not a page, so the resting height counts the tabs above the pages
+                Box(Modifier.fillMaxWidth().onGloballyPositioned { gridTopPx = it.positionInParent().y.toInt() }) {
+                    if (collectiblesShown) {
+                        androidx.compose.foundation.pager.HorizontalPager(
+                            state = pager, modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp),
+                            verticalAlignment = Alignment.Top, key = { tabs.getOrNull(it)?.name ?: it },
+                        ) { page ->
+                            val t = tabs.getOrNull(page) ?: return@HorizontalPager
+                            val k = if (t == tab) kind else null
+                            // The page's own list, nearest first (or A to Z), places where you found nothing last
+                            val list = remember(rows, t, k, byName, here, ja, custom) {
+                                val l = rows.filter { t.has(it.item, custom) && (k == null || it.item.type == k) }
+                                if (byName) l.sortedWith(compareBy<ItemRow> { it.noneHere }.thenBy { it.item.displayName(ja).lowercase() })
+                                else l.sortedWith(compareBy<ItemRow> { it.noneHere }.thenBy { vm.distanceTo(it) ?: Double.MAX_VALUE }.thenBy { it.item.displayName(ja) })
+                            }
+                            val stationIds = remember(list) { list.filter { it.item.type == ItemType.EKI_STAMP }.map { stationKey(it) }.toSet() }
+                            val tiles = remember(list, stationIds) { list.filter { it.item.type != ItemType.EKITAG || stationKey(it) !in stationIds } }
+                            if (tiles.isEmpty() && loadedRows != null) EmptyNote()
+                            else SheetGrid(columns, listOf(byName, k, columns)) {
+                                itemsIndexed(tiles, key = { _, r -> r.item.id }) { i, r ->
+                                    // The first row's tallest tile sets the resting height; top padding 4 dp
+                                    Box(if (i == 0 && page == pager.currentPage) firstRow else Modifier) {
+                                        RoundTile(
+                                            r, tile, r.item.tileLabel(ja),
+                                            if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
+                                            onOpen = { tick(); nav.openItem(r.item.id) },
+                                            ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
+                                            onCollect = quickCollect,
                                         )
                                     }
                                 }
                             }
                         }
-                        if (!placesShown) itemsIndexed(tiles, key = { _, r -> r.item.id }) { i, r ->
-                            // The first row's tallest tile sets the resting height; top padding 4 dp
-                            val m = if (i == 0) Modifier.onSizeChanged { rowPx = it.height + with(density) { 4.dp.roundToPx() } } else Modifier
-                            Box(m) {
+                    } else if ((if (placesShown) placeList.isEmpty() else shown.isEmpty()) && loadedRows != null) {
+                        EmptyNote()
+                    } else SheetGrid(columns, listOf(byName, query, view, grouped, columns)) {
+                        // Places (#192): one tile per place; Group by type puts them under a heading per type, each
+                        // folding on a tap and showing its nearest few, then a more tile (#225)
+                        if (placesShown) {
+                            val sections = if (grouped) Places.byKind(placeList) else listOf(null to placeList)
+                            val firstPlace = sections.firstOrNull { it.first == null || it.first!!.name !in folded }?.second?.firstOrNull()
+                            sections.forEachIndexed { si, (k, list) ->
+                                val shut = k != null && k.name in folded
+                                if (k != null) item(key = "h-" + k.name, span = { GridItemSpan(maxLineSpan) }, contentType = "heading") {
+                                    KindHeading(
+                                        k, list.size, folded = shut, onToggle = { NearbyPrefs.toggleFolded(ctx, k.name) },
+                                        modifier = if (si == 0) Modifier.onSizeChanged { headPx = it.height } else Modifier,
+                                    )
+                                }
+                                if (shut) return@forEachIndexed
+                                val cap = if (k == null || k.name in openSections) list.size else SheetLayout.sectionCap(list.size, columns, rowPx, budgetPx)
+                                items(list.take(cap), key = { "p-" + it.id }, contentType = { "place" }) { p ->
+                                    Box(if (p === firstPlace) firstRow else Modifier) {
+                                        PlaceTile(
+                                            p, tile, Places.name(p, ja),
+                                            if (p.noneHere) stringResource(noneHereLabel(p.anchor.item.type)) else distanceText(placeDist(p)),
+                                            // One page per place, with the first thing still to get open (owner, 2026-11-26)
+                                            onOpen = { tick(); nav.openPlace(p.id, open = Places.toOpen(p)) },
+                                            onCollect = quickCollect,
+                                        )
+                                    }
+                                }
+                                if (k != null && cap < list.size) item(key = "m-" + k.name, contentType = "more") {
+                                    MoreTile(tile, list.size - cap) { tick(); openSections = openSections + k.name }
+                                }
+                            }
+                        } else itemsIndexed(searchTiles, key = { _, r -> r.item.id }) { i, r ->
+                            // Search results: the first row's tallest tile sets the resting height; top padding 4 dp
+                            Box(if (i == 0) firstRow else Modifier) {
                                 RoundTile(
                                     r, tile, r.item.tileLabel(ja),
                                     if (r.noneHere) stringResource(noneHereLabel(r.item.type)) else distanceText(distTo(r)),
                                     onOpen = { tick(); nav.openItem(r.item.id) },
                                     ekitag = if (r.item.type == ItemType.EKI_STAMP) ekitags[stationKey(r)] else null,
+                                    onCollect = quickCollect,
                                 )
                             }
                         }
@@ -718,12 +783,40 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     }
 }
 
-private val TILE_SIZES = listOf(48.dp, 64.dp, 84.dp)
+/** The sheet's tile grid, [columns] per row; a change in [resetKeys] (sort, filter, tile size) starts from the top. */
+@Composable
+private fun SheetGrid(columns: Int, resetKeys: List<Any?>, content: androidx.compose.foundation.lazy.grid.LazyGridScope.() -> Unit) {
+    val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
+    LaunchedEffect(resetKeys) { grid.scrollToItem(0) }
+    LazyVerticalGrid(
+        state = grid,
+        columns = GridCells.Fixed(columns),
+        // A gap between columns, so two one-line names never read as one
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        contentPadding = PaddingValues(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 96.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(max = 2000.dp),
+        content = content,
+    )
+}
+
+@Composable
+private fun EmptyNote() = Text(
+    stringResource(R.string.nearby_empty_kind),
+    Modifier.padding(16.dp),
+    style = MaterialTheme.typography.bodyMedium,
+    color = MaterialTheme.colorScheme.onSurfaceVariant,
+)
 
 /** One item in the Nearby grid: your mark (photo, seal or an empty dashed ring), name and distance. */
 @Composable
-internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit, ekitag: ItemRow? = null) {
-    TileFrame(size, name, distance, faded = row.noneHere, onOpen = onOpen) {
+internal fun RoundTile(
+    row: ItemRow, size: Dp, name: String, distance: String?, onOpen: () -> Unit, ekitag: ItemRow? = null,
+    onCollect: ((QuickItem) -> Unit)? = null,
+) {
+    val ja = isJapanese()
+    // Press and hold (#227): a station's Stamp and Ekitag, else Collect
+    val quick = if (onCollect == null) emptyList() else quickItems(listOfNotNull(row, ekitag)) { it.item.displayName(ja) }
+    TileFrame(size, name, distance, faded = row.noneHere, onOpen = onOpen, quick = quick, onCollect = onCollect) {
         // A station's stamp and its Ekitag: the sector ring in two halves (#192, owner approved round 3, 2026-11-26)
         if (ekitag != null) SectorRing(listOf(row, ekitag), size)
         // An Ekitag on its own sits on its station's spot with the same name: a small badge says which tile is the Ekitag
@@ -750,12 +843,31 @@ internal fun RoundTile(row: ItemRow, size: Dp, name: String, distance: String?, 
 
 /** A round tile's frame, shared by items and places: the mark, then the name on two lines and the distance. */
 @Composable
-internal fun TileFrame(size: Dp, name: String, distance: String?, faded: Boolean, onOpen: () -> Unit, mark: @Composable () -> Unit) {
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+internal fun TileFrame(
+    size: Dp, name: String, distance: String?, faded: Boolean, onOpen: () -> Unit,
+    quick: List<QuickItem> = emptyList(), onCollect: ((QuickItem) -> Unit)? = null,
+    mark: @Composable () -> Unit,
+) {
+    val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
+    var quickOpen by remember { mutableStateOf(false) }
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    // The same Collect buttons as TalkBack custom actions on the tile (#227)
+    val actions = if (onCollect == null) emptyList() else quick.filter { !it.row.collected }.map { q ->
+        androidx.compose.ui.semantics.CustomAccessibilityAction(ctx.getString(R.string.quick_collect_action, ctx.getString(q.label).let { if (quick.size == 1) q.name else it })) { onCollect(q); true }
+    }
     Column(
         // Faded when you found nothing there
-        Modifier.clickable(onClick = onOpen).padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (faded) 0.45f else 1f),
+        Modifier
+            .combinedClickable(
+                onClick = onOpen,
+                onLongClick = if (quick.isEmpty() || onCollect == null) null else ({ haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); quickOpen = true }),
+            )
+            .semantics { if (actions.isNotEmpty()) customActions = actions }
+            .padding(vertical = 6.dp, horizontal = 2.dp).alpha(if (faded) 0.45f else 1f),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        if (quickOpen && onCollect != null) QuickCollectPopup(quick, onCollect = { quickOpen = false; onCollect(it) }, onDismiss = { quickOpen = false })
         mark()
         Spacer(Modifier.height(4.dp))
         Text(

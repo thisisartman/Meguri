@@ -13,6 +13,8 @@ sealed interface AppRequest {
     data class Attach(val itemId: String, val uri: android.net.Uri) : AppRequest
     /** An app shortcut on the launcher icon (#205). */
     data class Shortcut(val target: ShortcutTarget) : AppRequest
+    /** Take photo on the suggestion after a collect (#228): the camera, for that find's place photo. */
+    data class PlacePhoto(val findId: String) : AppRequest
 
     companion object {
         fun from(intent: Intent?): AppRequest? {
@@ -29,6 +31,7 @@ sealed interface AppRequest {
                 intent.getStringExtra(MainActivity.EXTRA_ATTACH_URI)?.let { return Attach(id, android.net.Uri.parse(it)) }
             }
             intent.getStringExtra(MainActivity.EXTRA_SHARE_URI)?.let { return Share(listOf(android.net.Uri.parse(it))) }
+            intent.getStringExtra(MainActivity.EXTRA_PLACE_PHOTO_FIND)?.let { return PlacePhoto(it) }
             intent.getStringExtra(MainActivity.EXTRA_COLLECT_ITEM)?.let { id ->
                 val fix = if (intent.hasExtra(MainActivity.EXTRA_FIX_LAT)) Fix(
                     intent.getDoubleExtra(MainActivity.EXTRA_FIX_LAT, 0.0), intent.getDoubleExtra(MainActivity.EXTRA_FIX_LNG, 0.0),

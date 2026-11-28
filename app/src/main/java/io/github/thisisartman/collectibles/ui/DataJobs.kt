@@ -88,7 +88,7 @@ class DataJobs @Inject constructor(
         write(result)
         _results.value = _results.value + (result.job to result)
         // A long run told about in a notification ends in one too, as the person may be in another app by now
-        if (wasShown && notifier.canPost()) {
+        if (wasShown && notifier.canPost(io.github.thisisartman.collectibles.alerts.NotifyCategory.BACKUPS)) {
             NotificationManagerCompat.from(context).notify(
                 NOTIFICATION_ID,
                 base().setContentTitle(context.getString(titleOf(result.job)))
@@ -109,7 +109,7 @@ class DataJobs @Inject constructor(
 
     private fun post() {
         val run = _running.value ?: return
-        if (!notifier.canPost()) return
+        if (!notifier.canPost(io.github.thisisartman.collectibles.alerts.NotifyCategory.BACKUPS)) return
         lastShownMs = System.currentTimeMillis()
         val fraction = DataJobText.fraction(run)
         NotificationManagerCompat.from(context).notify(

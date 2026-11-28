@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.Route
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -145,7 +146,8 @@ fun TripScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-            title = { Text(stringResource(R.string.trip_screen)) },
+            // The first Trip (#224)
+            title = { FirstTip(TipId.TRIP, listOf(TipLine(androidx.compose.material.icons.Icons.Outlined.Route, null, stringResource(R.string.tip_trip)))) { Text(stringResource(R.string.trip_screen)) } },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             actions = {
                 if (from != null || to != null) IconButton(onClick = { setEnds(null, null); localOnly = false; vm.clearTrip(); alerts.geofences.refreshInBackground() }) {

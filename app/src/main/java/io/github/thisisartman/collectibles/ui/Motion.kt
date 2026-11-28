@@ -24,6 +24,12 @@ object Motion {
     const val STEP_MS = 240
     const val PAGE_MS = 280
 
+    /** A sheet's height easing to a new size (#225: Places and Collectibles), in step with the content's own change. */
+    val sheetSpec = tween<androidx.compose.ui.unit.Dp>(STEP_MS, easing = FastOutSlowInEasing)
+    /** A row of a sheet coming in or going: it grows or shrinks in height and fades, with the sheet's own easing. */
+    val expandIn: EnterTransition = androidx.compose.animation.expandVertically(tween(STEP_MS, easing = FastOutSlowInEasing)) + fadeIn(tween(STEP_MS))
+    val shrinkOut: ExitTransition = androidx.compose.animation.shrinkVertically(tween(STEP_MS, easing = FastOutSlowInEasing)) + fadeOut(tween(STEP_MS))
+
     /**
      * A new page slides in from the side over the one before, opaque: no fade, as a fade let the map's own surface
      * show through (owner, 2026-11-07). Back slides it away again.

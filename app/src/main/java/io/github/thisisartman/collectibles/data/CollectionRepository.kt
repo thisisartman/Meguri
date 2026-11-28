@@ -20,6 +20,8 @@ class CollectionRepository @Inject constructor(
     private val location: LocationSource,
     private val log: FileLog,
     private val backup: CatalogAndBackup,
+    /** The photo suggestion after a collect (#228). */
+    private val nudge: io.github.thisisartman.collectibles.alerts.CollectNudge,
 ) {
     private val dao = db.dao()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -45,6 +47,7 @@ class CollectionRepository @Inject constructor(
         val id = newId()
         dao.insertFind(Acquisition(id = id, itemId = itemId, acquiredAt = now(), via = via, createdAt = now()))
         log.i("Log", "Find $id for item $itemId")
+        if (via != Via.BULK) scope.launch { nudge.collected(itemId, id) }
         scope.launch {
             val fix = location.currentOrRecent()
             if (fix != null) {
@@ -70,6 +73,7 @@ class CollectionRepository @Inject constructor(
             ),
         )
         log.i("Log", "Find $id for item $itemId from an alert")
+        scope.launch { nudge.collected(itemId, id) }
         return id
     }
 
@@ -89,10 +93,14 @@ class CollectionRepository @Inject constructor(
         }
     }
 
+    /** Whether a find is still there (a notification can outlive its find's Undo). */
+    suspend fun findExists(findId: String): Boolean = dao.itemOfFind(findId) != null
+
     /** Undo: removes the find (and its photo links; the photos stay in the gallery). */
     suspend fun undoFind(findId: String) {
         dao.deleteFind(findId)
         log.i("Log", "Undo find $findId")
+        nudge.undone(findId)
     }
 
     /**
@@ -120,6 +128,7 @@ class CollectionRepository @Inject constructor(
             dao.insertFind(Acquisition(id = findId, itemId = itemId, acquiredAt = now(), via = Via.MANUAL, createdAt = now(), costYen = costYen))
         }
         log.i("Log", "New item $itemId ($type) with find $findId")
+        scope.launch { nudge.collected(itemId, findId) }
         scope.launch {
             val f = location.currentOrRecent() ?: return@launch
             dao.setFindLocation(findId, f.lat, f.lng, f.accuracyM)
@@ -211,12 +220,14 @@ class CollectionRepository @Inject constructor(
             if (alsoItem) dao.deleteItem(itemId)
         }
         photos.forEach { io.github.thisisartman.collectibles.photo.PhotoStore.delete(context, it.contentUri, it.originalUri) }
+        findIds.forEach { nudge.undone(it) }
         log.i("Log", if (alsoItem) "Removed item $itemId with ${findIds.size} finds and ${photos.size} photos" else "Took $itemId out of the collection: ${findIds.size} finds, ${photos.size} photos")
     }
 
     suspend fun removeFinds(findIds: Collection<String>) {
         db.withTransaction { findIds.forEach { dao.deleteFind(it) }; dao.clearMissingCovers() }
         log.i("Log", "Removed ${findIds.size} finds")
+        findIds.forEach { nudge.undone(it) }
     }
 
     /** The photo that stands for the item in lists, on tiles and on the map (null: the latest one). */
@@ -370,6 +381,8 @@ class CollectionRepository @Inject constructor(
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             // A day without a time (a date given is stored at noon): BULK, like "Already went", so no time shows
             dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt ?: now(), via = Via.BULK, createdAt = now()))
+            // A notebook page collects too (#228); its stamps have no position of their own, so one page asks once
+            if (tag == "Notebook") scope.launch { nudge.collected(itemId, f, withPosition = false) }
         }
         val ok = attachFromGallery(context, findId, picture, kind, name, size, cutStamps)
         log.i(tag, "Old $kind photo for item $itemId (photo copied: $ok)")
@@ -461,15 +474,17 @@ class CollectionRepository @Inject constructor(
     }
 
     private suspend fun insertPhoto(id: String, findId: String, photo: PhotoInfo, originalUri: String? = null) {
+        val role = nextKind.remove(findId) ?: PhotoKind.OTHER
         dao.insertPhoto(
             Photo(
                 id = id, acquisitionId = findId, contentUri = photo.uri, takenAt = photo.takenAt,
-                role = nextKind.remove(findId) ?: PhotoKind.OTHER,
+                role = role,
                 mediastoreId = photo.mediastoreId, displayName = photo.displayName, relativePath = photo.relativePath,
                 sizeBytes = photo.sizeBytes, createdAt = now(), originalUri = originalUri,
             ),
         )
         log.i("Photo", "Attached ${photo.displayName} to find $findId")
+        if (role == PhotoKind.PLACE) nudge.placePhotoAdded(findId)
         autoCover(id, findId)
     }
 

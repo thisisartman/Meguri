@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Press and hold a tile for quick Collect buttons (#227) -->
+<resources>
+    <string name="quick_stamp">Stamp</string>
+    <string name="quick_collect">Collect</string>
+    <string name="quick_collected">%1$s: collected</string>
+    <string name="quick_collect_action">Collect %1$s</string>
+</resources>

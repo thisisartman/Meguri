@@ -1,5 +1,7 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.DonutLarge
+import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.foundation.border
 import androidx.compose.foundation.background
@@ -84,7 +86,14 @@ fun BookScreen(vm: MainViewModel, nav: NavHostController, snackbar: SnackbarHost
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false)
+            // The first open of My book: the rings, and that a hold on My book opens Settings (#224)
+            FirstTip(
+                TipId.BOOK,
+                listOf(
+                    TipLine(androidx.compose.material.icons.Icons.Outlined.DonutLarge, null, stringResource(R.string.tip_book_rings)),
+                    TipLine(androidx.compose.material.icons.Icons.Filled.TouchApp, null, stringResource(R.string.tip_book_hold)),
+                ),
+            ) { Text(stringResource(R.string.book_title), style = MaterialTheme.typography.headlineMedium, maxLines = 1, softWrap = false) }
             Spacer(Modifier.width(8.dp))
             val action = if (marking) R.string.cancel else R.string.book_mark_owned
             // Only catalogue items still to get can be marked; things added by hand already have their find

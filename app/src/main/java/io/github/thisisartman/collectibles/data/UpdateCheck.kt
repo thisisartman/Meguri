@@ -41,6 +41,8 @@ object UpdateCheck {
     private const val KEY_LAST = "last_check"
     private const val KEY_TAG = "latest_tag"
     private const val KEY_URL = "latest_url"
+    /** The last release a notification told about. */
+    private const val KEY_TOLD = "told_tag"
     private const val DAY_MS = 24L * 60 * 60 * 1000
     private const val API = "https://api.github.com/repos/thisisartman/Meguri/releases/latest"
 
@@ -82,6 +84,11 @@ object UpdateCheck {
         val release = withContext(Dispatchers.IO) { runCatching { fetch() }.getOrNull() } ?: return
         p.edit().putString(KEY_TAG, release.tag).putString(KEY_URL, release.url).apply()
         refreshNote(context)
+        // Each newer release told about once in a notification too, under Updates (#228)
+        if (Versions.isNewer(release.tag, BuildConfig.VERSION_NAME) && p.getString(KEY_TOLD, null) != release.tag) {
+            p.edit().putString(KEY_TOLD, release.tag).apply()
+            io.github.thisisartman.collectibles.alerts.AlertNotifier(context.applicationContext).notifyUpdate(release.tag, release.url)
+        }
     }
 
     private fun fetch(): Release? {

@@ -1,7 +1,17 @@
 package io.github.thisisartman.collectibles.ui
 
 import android.content.Context
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -81,10 +91,31 @@ object NearbyPrefs {
 
     fun setNamesOnSwitch(context: Context, on: Boolean) { prefs(context).edit().putBoolean("switch_names", on).apply(); namesState.value = on }
 
+    private val columnsState = mutableStateOf<Int?>(null)
+    private val foldedState = mutableStateOf<Set<String>?>(null)
+
+    /** Tiles per row, 3 to 6 (#225: − and + in the sort menu, in place of the size slider). */
+    fun columns(context: Context): Int = columnsState.value
+        ?: prefs(context).getInt("columns", SheetLayout.DEFAULT_COLUMNS).coerceIn(SheetLayout.MIN_COLUMNS, SheetLayout.MAX_COLUMNS).also { columnsState.value = it }
+
+    fun setColumns(context: Context, n: Int) { prefs(context).edit().putInt("columns", n).apply(); columnsState.value = n }
+
+    /** The Group by type sections folded shut (#225), by type name; kept between opens. */
+    fun folded(context: Context): Set<String> = foldedState.value
+        ?: (prefs(context).getStringSet("folded", emptySet())?.toSet() ?: emptySet()).also { foldedState.value = it }
+
+    fun toggleFolded(context: Context, kind: String) {
+        val now = folded(context).let { if (kind in it) it - kind else it + kind }
+        prefs(context).edit().putStringSet("folded", now).apply(); foldedState.value = now
+    }
+
     /** The help bubble shows once after this update, then only when ? is tapped. */
     fun helpSeen(context: Context): Boolean = prefs(context).getBoolean("help_seen", false)
 
     fun setHelpSeen(context: Context) = prefs(context).edit().putBoolean("help_seen", true).apply()
+
+    /** Show tips again (#224): the bubble shows on the next open of Nearby. */
+    fun resetHelp(context: Context) = prefs(context).edit().putBoolean("help_seen", false).apply()
 }
 
 /** A place kind's icon: standard Material icons (owner, round 3: no emojis). */
@@ -153,37 +184,24 @@ fun ViewSwitch(view: NearbyView, names: Boolean, places: Int?, collectibles: Int
  * whenever ? is tapped; Got it or a tap outside closes it.
  */
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun HelpBubble(anchorHeight: Int, onDismiss: () -> Unit) {
-    val ink = MaterialTheme.colorScheme.inverseOnSurface
-    val bg = MaterialTheme.colorScheme.inverseSurface
-    Popup(
-        alignment = Alignment.TopStart,
-        offset = androidx.compose.ui.unit.IntOffset(0, anchorHeight),
-        onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true),
-    ) {
-        Column(Modifier.padding(horizontal = 4.dp).widthIn(max = 320.dp)) {
-            // The caret, under the Places icon
-            Canvas(Modifier.padding(start = 20.dp).size(16.dp, 8.dp)) {
-                drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, bg)
-            }
-            Surface(color = bg, contentColor = ink, shape = RoundedCornerShape(16.dp), shadowElevation = 6.dp) {
-                Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 14.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    HelpLine(Icons.Outlined.LocationOn, stringResource(R.string.nearby_view_places), stringResource(R.string.nearby_help_places))
-                    HelpLine(Icons.Outlined.GridView, stringResource(R.string.nearby_view_collectibles), stringResource(R.string.nearby_help_collectibles))
-                    HelpLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again))
-                    TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End).heightIn(min = 48.dp)) {
-                        Text(stringResource(R.string.nearby_help_got_it), color = MaterialTheme.colorScheme.inversePrimary, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-    }
+    // The shared tip bubble (#224), so every first-time tip looks the same; the caret sits under the Places icon.
+    // Got it sits on the last line's row, so the bubble ends with the text (S23, 2026-11-28)
+    TipBubble(
+        listOf(
+            TipLine(Icons.Outlined.LocationOn, stringResource(R.string.nearby_view_places), stringResource(R.string.nearby_help_places)),
+            TipLine(Icons.Outlined.GridView, stringResource(R.string.nearby_view_collectibles), stringResource(R.string.nearby_help_collectibles)),
+            TipLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again)),
+        ),
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
-private fun HelpLine(icon: ImageVector, title: String?, text: String) {
-    Row(Modifier.fillMaxWidth().padding(end = 8.dp)) {
+internal fun HelpLine(icon: ImageVector, title: String?, text: String, onGotIt: (() -> Unit)? = null) {
+    // With Got it, the text takes what is left of the row and wraps, so the button never leaves the bubble at 200 % text
+    Row(Modifier.fillMaxWidth().padding(end = if (onGotIt == null) 8.dp else 0.dp), verticalAlignment = if (onGotIt == null) Alignment.Top else Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(18.dp).padding(top = 1.dp))
         Spacer(Modifier.width(10.dp))
         Text(
@@ -192,25 +210,72 @@ private fun HelpLine(icon: ImageVector, title: String?, text: String) {
                 append(text)
             },
             style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1f),
         )
+        if (onGotIt != null) TextButton(onClick = onGotIt, modifier = Modifier.heightIn(min = 48.dp)) {
+            Text(stringResource(R.string.nearby_help_got_it), color = MaterialTheme.colorScheme.inversePrimary, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
     }
 }
 
-/** A heading under Group by kind: the kind's icon, its name and how many places. */
+/**
+ * A heading under Group by type: the type's icon, its name and how many places (the full count, #225). A tap folds
+ * or unfolds the section; the arrow on the right shows which.
+ */
 @Composable
-fun KindHeading(kind: PlaceKind, count: Int, modifier: Modifier = Modifier) {
-    Row(modifier.padding(start = 8.dp, top = 12.dp, bottom = 4.dp).semantics(mergeDescendants = true) { heading() }, verticalAlignment = Alignment.CenterVertically) {
+fun KindHeading(kind: PlaceKind, count: Int, folded: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
+    val state = stringResource(if (folded) R.string.nearby_section_folded else R.string.nearby_section_open)
+    val action = stringResource(if (folded) R.string.nearby_section_unfold else R.string.nearby_section_fold)
+    Row(
+        modifier.fillMaxWidth().heightIn(min = 48.dp)
+            .clickable(onClickLabel = action, onClick = onToggle)
+            .padding(start = 8.dp, end = 8.dp, top = 4.dp)
+            .semantics(mergeDescendants = true) { heading(); stateDescription = state },
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Icon(kind.icon(), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
         Spacer(Modifier.width(6.dp))
         Text(
             stringResource(R.string.place_kind_heading, stringResource(kind.plural()), count),
             style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.weight(1f),
         )
+        val turn by animateFloatAsState(if (folded) -90f else 0f, label = "fold")
+        Icon(
+            Icons.Filled.KeyboardArrowDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.size(20.dp).rotate(turn),
+        )
+    }
+}
+
+/**
+ * The tile after a section's nearest few (#225): the same round shape with a down arrow, "N more" under it; a tap
+ * shows the whole section.
+ */
+@Composable
+fun MoreTile(size: Dp, hidden: Int, onOpen: () -> Unit) {
+    val label = stringResource(R.string.nearby_more_tile, hidden)
+    Column(
+        Modifier.clickable(onClickLabel = stringResource(R.string.nearby_more_tile_action), onClick = onOpen)
+            .padding(vertical = 6.dp, horizontal = 2.dp)
+            .semantics(mergeDescendants = true) { contentDescription = label },
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Surface(shape = CircleShape, color = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(size)) {
+            androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
+                Icon(Icons.Filled.ArrowDownward, contentDescription = null, modifier = Modifier.size(size * 0.42f))
+            }
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(label, style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, minLines = 2, maxLines = 2)
     }
 }
 
 /** A place's tile on the Places view: its ring, name and the distance to its nearest thing. */
 @Composable
-fun PlaceTile(place: Place, size: Dp, name: String, distance: String?, onOpen: () -> Unit) {
-    TileFrame(size, name, distance, faded = place.noneHere, onOpen = onOpen) { SectorRing(place.things, size) }
+fun PlaceTile(place: Place, size: Dp, name: String, distance: String?, onOpen: () -> Unit, onCollect: ((QuickItem) -> Unit)? = null) {
+    val ja = isJapanese()
+    // Press and hold (#227): the place's things, a station's Stamp and Ekitag, else Collect
+    val quick = if (onCollect == null) emptyList() else quickItems(place.things) { it.item.displayName(ja) }
+    TileFrame(size, name, distance, faded = place.noneHere, onOpen = onOpen, quick = quick, onCollect = onCollect) { SectorRing(place.things, size) }
 }

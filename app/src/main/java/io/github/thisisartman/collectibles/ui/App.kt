@@ -120,6 +120,8 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
     ScanCardHost(vm, nav, scanTrigger)
     // + → Search: each tap focuses Nearby's search bar once
     var searchTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    // A hold on Nearby: the sheet opens to full screen (#223)
+    var expandTick by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     // First open after an update: what changed (#77)
     val appContext = androidx.compose.ui.platform.LocalContext.current
     // Not during the onboarding (#81): a phone with no catalogue yet has nothing "new" to read
@@ -219,6 +221,11 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
             is AppRequest.Share -> { vm.openShare(r.uris); nav.navigate("share") }
             is AppRequest.Attach -> vm.attachPhoto(r.itemId, r.uri) { nav.openItem(r.itemId) }
+            // Take photo on the suggestion after a collect (#228): the camera, the picture as the find's place photo
+            is AppRequest.PlacePhoto -> {
+                androidx.core.app.NotificationManagerCompat.from(context).cancel(io.github.thisisartman.collectibles.alerts.AlertNotifier.NUDGE_ID)
+                vm.placePhoto(r.findId) { photo.capture(r.findId) }
+            }
             // App shortcuts (#205): each page sits straight on Nearby, so Back goes to Nearby
             is AppRequest.Shortcut -> when (r.target) {
                 ShortcutTarget.ADD -> { nav.popBackStack(NEARBY, inclusive = false); showLog = true }
@@ -254,51 +261,33 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                 if (topLevel && !(route == BOOK && bookMarking)) {
                     NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                         // Owner, 2026-11-06: the app is used from the bottom, so Log a find is the middle button
-                        // (one + for the whole app, replacing the header + and the My book floating button)
-                        val items = listOf(
-                            Triple(NEARBY, R.string.nav_nearby, Icons.Filled.Place),
-                            Triple("log", R.string.nav_log, Icons.Filled.Add),
-                            Triple(BOOK, R.string.nav_book, Icons.AutoMirrored.Filled.List),
+                        // (one + for the whole app, replacing the header + and the My book floating button).
+                        // Shortcuts (#223): Nearby again searches, a hold expands the list; a hold on + scans; a hold
+                        // on My book opens Settings. The holds act on the page you are on, else they are a tap
+                        val here = route ?: NEARBY
+                        val search: () -> Unit = { showLog = false; if (here != NEARBY) nav.openTab(NEARBY); searchTick++ }
+                        val expand: () -> Unit = { showLog = false; if (here != NEARBY) nav.openTab(NEARBY); expandTick++ }
+                        val scan: () -> Unit = { showLog = false; scanTrigger++ }
+                        val settings: () -> Unit = { showLog = false; nav.openMore() }
+                        BarItem(
+                            selected = here == NEARBY, icon = Icons.Filled.Place, label = stringResource(R.string.nav_nearby),
+                            onClick = { if (here == NEARBY && !showLog) search() else { showLog = false; nav.openTab(NEARBY) } },
+                            onHold = { if (here == NEARBY) expand() else { showLog = false; nav.openTab(NEARBY) } },
+                            actions = listOf(HoldAction(stringResource(R.string.bar_action_search), search), HoldAction(stringResource(R.string.bar_action_expand), expand)),
                         )
-                        items.forEach { (r, label, icon) ->
-                            if (r == "log") {
-                                // A 56 dp gold circle centred in the bar, with no label of its own: a raised circle
-                                // was cut off at the bar's top edge and touched "Log" at large text (2026-11-06 review)
-                                androidx.compose.foundation.layout.Box(
-                                    // Not fillMaxHeight: in the bar's row that made the bar take the whole screen
-                                    Modifier.weight(1f).align(androidx.compose.ui.Alignment.CenterVertically),
-                                    contentAlignment = androidx.compose.ui.Alignment.Center,
-                                ) {
-                                    androidx.compose.material3.Surface(
-                                        // + opens the card, and closes it again
-                                        onClick = { showLog = !showLog },
-                                        shape = androidx.compose.foundation.shape.CircleShape,
-                                        color = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                                        shadowElevation = 2.dp,
-                                        modifier = Modifier.size(56.dp),
-                                    ) {
-                                        androidx.compose.foundation.layout.Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                                            Icon(icon, contentDescription = stringResource(R.string.a11y_plus), modifier = Modifier.size(30.dp))
-                                        }
-                                    }
-                                }
-                                return@forEach
-                            }
-                            NavigationBarItem(
-                                selected = (route ?: NEARBY) == r,
-                                onClick = { showLog = false; nav.openTab(r) },
-                                icon = { Icon(icon, contentDescription = null) },
-                                label = { Text(stringResource(label)) },
-                                colors = NavigationBarItemDefaults.colors(
-                                    selectedIconColor = MaterialTheme.colorScheme.onSurface,
-                                    selectedTextColor = MaterialTheme.colorScheme.onSurface,
-                                    indicatorColor = MaterialTheme.colorScheme.primaryContainer,
-                                    unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                ),
-                            )
-                        }
+                        // A 56 dp gold circle centred in the bar, with no label of its own: a raised circle was cut
+                        // off at the bar's top edge and touched "Log" at large text (2026-11-06 review). A tap opens
+                        // the card and closes it again
+                        PlusItem(
+                            label = stringResource(R.string.a11y_plus_card), icon = Icons.Filled.Add,
+                            onClick = { showLog = !showLog }, onHold = scan, holdLabel = stringResource(R.string.bar_action_scan),
+                        )
+                        BarItem(
+                            selected = here == BOOK, icon = Icons.AutoMirrored.Filled.List, label = stringResource(R.string.nav_book),
+                            onClick = { showLog = false; nav.openTab(BOOK) },
+                            onHold = { if (here == BOOK) settings() else { showLog = false; nav.openTab(BOOK) } },
+                            actions = listOf(HoldAction(stringResource(R.string.bar_action_settings), settings)),
+                        )
                     }
                 }
             },
@@ -315,7 +304,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     popEnterTransition = { Motion.pagePopEnter },
                     popExitTransition = { Motion.pagePopExit },
                 ) {
-                    composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, focusSearch = searchTick, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
+                    composable(NEARBY) { NearbyScreen(vm, nav, onLog = { showLog = true }, focusSearch = searchTick, expandSheet = expandTick, locationBlocked = locationBlocked && !LocationAccess.has(context), onAllowLocation = onAllowLocation) }
                     // Every page but the maps sits on a solid background: the item page had none, so for a moment
                     // after a tap the Nearby map showed through it (screen recording on the Poco, 2026-11-07)
                     composable(BOOK) { Page { BookScreen(vm, nav, snackbar, onMarkingChange = { bookMarking = it }) } }
@@ -412,12 +401,7 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
                     open = showLog && topLevel,
                     onDismiss = { showLog = false },
                     onScan = { showLog = false; scanTrigger++ },
-                    // Search: the search bar on Nearby, focused, so typing starts at once
-                    onSearch = {
-                        showLog = false
-                        if (nav.currentDestination?.route != NEARBY) nav.popBackStack(NEARBY, inclusive = false)
-                        searchTick++
-                    },
+                    // No Search here any more (#223): the search bar on Nearby does it, and Nearby tapped again
                     onAdd = { showLog = false; nav.navigate("new") },
                 )
             }

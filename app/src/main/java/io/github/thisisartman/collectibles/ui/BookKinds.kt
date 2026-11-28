@@ -326,6 +326,7 @@ fun GroupScreen(vm: MainViewModel, kindKey: String, groupKey: String, nav: NavHo
                 label = { Text(stringResource(R.string.filter_to_get)) }, modifier = Modifier.heightIn(min = 48.dp),
                 leadingIcon = { if (showToGet) androidx.compose.material3.Icon(androidx.compose.material.icons.Icons.Filled.Check, contentDescription = null, Modifier.size(18.dp)) },)
         }
+        val quickCollect = rememberQuickCollect(vm)
         val list = group?.rows.orEmpty()
             .filter { r -> (r.collected && showHave) || (!r.collected && showToGet) }
             .sortedWith(compareBy<ItemRow> { it.item.code ?: it.item.displayName(ja) })
@@ -342,7 +343,8 @@ fun GroupScreen(vm: MainViewModel, kindKey: String, groupKey: String, nav: NavHo
         ) {
             items(list.size, key = { list[it].item.id }) { i ->
                 val r = list[i]
-                RoundTile(r, 64.dp, r.item.shortName(ja), if (r.noneHere) null else distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) })
+                // Press and hold for Collect, as on Nearby (#227)
+                RoundTile(r, 64.dp, r.item.shortName(ja), if (r.noneHere) null else distanceText(vm.distanceTo(r)), onOpen = { nav.openItem(r.item.id) }, onCollect = quickCollect)
             }
         }
     }

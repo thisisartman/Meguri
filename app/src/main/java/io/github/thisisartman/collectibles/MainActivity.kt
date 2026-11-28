@@ -67,6 +67,9 @@ class MainActivity : ComponentActivity() {
             launchIntent(context).putExtra(EXTRA_ATTACH_ITEM, itemId).putExtra(EXTRA_ATTACH_URI, photo.toString())
         /** The new-photo hint's "Pick another": the share screen with that one photo. */
         fun shareOneIntent(context: Context, photo: android.net.Uri) = launchIntent(context).putExtra(EXTRA_SHARE_URI, photo.toString())
+        /** Take photo on the suggestion after a collect (#228): the camera for that find's place photo. */
+        fun placePhotoIntent(context: Context, findId: String) = launchIntent(context).putExtra(EXTRA_PLACE_PHOTO_FIND, findId)
+        const val EXTRA_PLACE_PHOTO_FIND = "place_photo_find"
         const val EXTRA_ATTACH_ITEM = "attach_item"
         const val EXTRA_ATTACH_URI = "attach_uri"
         const val EXTRA_SHARE_URI = "share_uri"

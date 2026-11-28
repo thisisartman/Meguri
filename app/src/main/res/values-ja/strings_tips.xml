@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- はじめてのヒント（#224）：それぞれ最初に開いたときに1回だけ -->
+<resources>
+    <string name="tip_plus_scan">カードやスタンプをカメラで読み取ります。</string>
+    <string name="tip_plus_add">Meguriにまだないものを追加します。</string>
+    <string name="tip_plus_hold">＋を長押しするとすぐにスキャンできます。</string>
+    <string name="tip_place_tiles">タイルはここで集められるものです。タップで開き、長押しで集めます。</string>
+    <string name="tip_place_collect">「集める」で今日、今いる場所で集めたことになります。</string>
+    <string name="tip_place_cover">「マンホール」でカードのマンホール蓋まで道案内します。</string>
+    <string name="tip_photo_edit">編集で写真の切り抜き、回転、傾き補正ができます。</string>
+    <string name="tip_book_rings">リングはそのセットを集めるほど埋まります。</string>
+    <string name="tip_book_hold">下のバーの「コレクション」を長押しすると設定が開きます。</string>
+    <string name="tip_trip">ルートを決めると、途中の駅を知らせます。</string>
+    <string name="tip_check">持っているものにチェックすると、場所なしでコレクションに入ります。</string>
+    <string name="tip_backup">「今すぐバックアップ」ですぐにコピーを保存します。毎週のバックアップは自動です。</string>
+    <string name="tips_again">ヒントをもう一度表示</string>
+    <string name="tips_again_sub">それぞれのページを次に開いたときに、ヒントをもう一度表示します。</string>
+    <string name="tips_again_done">ヒントをもう一度表示します。</string>
+</resources>

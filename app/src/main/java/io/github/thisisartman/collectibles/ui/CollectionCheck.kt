@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.CheckBox
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -134,7 +135,12 @@ fun CollectionCheckScreen(
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-            title = { Text(stringResource(if (tripDay) R.string.trip_already_title else R.string.check_title)) },
+            // The first Collection check (#224)
+            title = {
+                FirstTip(TipId.CHECK, listOf(TipLine(androidx.compose.material.icons.Icons.Outlined.CheckBox, null, stringResource(R.string.tip_check))), enabled = !tripDay) {
+                    Text(stringResource(if (tripDay) R.string.trip_already_title else R.string.check_title))
+                }
+            },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
             actions = {
                 if (tripDay) androidx.compose.material3.AssistChip(
