@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知のカテゴリーと、集めたあとの写真の提案（#228） -->
+<resources>
+    <string name="notify_title">通知の種類</string>
+    <string name="notify_sub_all">すべてオン</string>
+    <string name="notify_sub_some">4つ中%1$dつがオン</string>
+    <string name="notify_alerts">近くの通知</string>
+    <string name="notify_alerts_sub">まだ持っていないものの近くに来たとき</string>
+    <string name="notify_suggestions">提案</string>
+    <string name="notify_suggestions_sub">集めたあとの場所の写真など</string>
+    <string name="notify_backups">バックアップ</string>
+    <string name="notify_backups_sub">バックアップ、復元、写真ファイルの進み具合と結果</string>
+    <string name="notify_updates">アップデート</string>
+    <string name="notify_updates_sub">新しいバージョン（「アップデートを確認」がオンのとき）</string>
+    <string name="notify_off_in_phone">スマートフォンの設定でMeguriの通知がオフになっています。</string>
+    <string name="notify_open_phone">スマートフォンの設定を開く</string>
+    <string name="channel_alerts">近くの通知</string>
+    <string name="channel_suggestions">提案</string>
+    <string name="channel_suggestions_sub">集めたあとの場所の写真や、未取得のものの近くで撮った写真</string>
+    <string name="channel_backups">バックアップ</string>
+    <string name="channel_updates">アップデート</string>
+    <string name="channel_updates_sub">Meguriの新しいバージョン</string>
+    <string name="nudge_title">%1$sを集めました</string>
+    <string name="nudge_text">場所の写真や、一緒に自撮りを撮りますか？</string>
+    <string name="nudge_names_sep">"、"</string>
+    <string name="nudge_take">写真を撮る</string>
+    <string name="nudge_not_now">今はしない</string>
+    <string name="update_notify_title">Meguri %1$sが出ました</string>
+    <string name="update_notify_text">タップして新機能を見て、アップデートします。</string>
+</resources>

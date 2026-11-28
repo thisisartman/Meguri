@@ -22,6 +22,7 @@ class AlertReceiver : BroadcastReceiver() {
     @Inject lateinit var notifier: AlertNotifier
     @Inject lateinit var geofences: Geofences
     @Inject lateinit var log: FileLog
+    @Inject lateinit var nudge: CollectNudge
 
     override fun onReceive(context: Context, intent: Intent) {
         val pending = goAsync()
@@ -60,6 +61,8 @@ class AlertReceiver : BroadcastReceiver() {
                 log.i("Alert", "Undo from the notification for $itemId")
             }
             ACTION_DISMISS -> { log.d("Alert", "Dismissed from the notification: $itemId"); itemId?.let { notifier.cancel(it) } }
+            // Not now on the photo suggestion after a collect (#228)
+            ACTION_NUDGE_DISMISS -> { log.d("Nudge", "Not now on the photo suggestion"); nudge.dismiss() }
             ACTION_STOP_TRIP -> { log.i("Trip", "Stopped from the notification"); TripModeService.stop(context) }
         }
     }
@@ -69,6 +72,7 @@ class AlertReceiver : BroadcastReceiver() {
         const val ACTION_UNDO = "io.github.thisisartman.collectibles.alert.UNDO"
         const val ACTION_DISMISS = "io.github.thisisartman.collectibles.alert.DISMISS"
         const val ACTION_STOP_TRIP = "io.github.thisisartman.collectibles.alert.STOP_TRIP"
+        const val ACTION_NUDGE_DISMISS = "io.github.thisisartman.collectibles.alert.NUDGE_DISMISS"
         const val EXTRA_ITEM = "item"
         const val EXTRA_FIND = "find"
         const val EXTRA_LAT = "lat"

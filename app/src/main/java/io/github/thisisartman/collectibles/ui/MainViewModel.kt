@@ -237,6 +237,14 @@ class MainViewModel @Inject constructor(
         log.d("Photo", "Camera for find $findId, kind $kind")
         repo.setNextPhotoKind(findId, kind)
     }
+    /** Take photo on the suggestion after a collect (#228): [open] runs with the camera's kind set, if the find is still there. */
+    fun placePhoto(findId: String, open: () -> Unit) {
+        viewModelScope.launch {
+            if (!repo.findExists(findId)) return@launch log.w("Nudge", "Take photo for find $findId, which is gone")
+            nextPhotoKind(findId, io.github.thisisartman.collectibles.data.PhotoKind.PLACE)
+            open()
+        }
+    }
     fun addGalleryPhoto(context: android.content.Context, findId: String, uri: android.net.Uri, kind: String) {
         log.d("Photo", "Gallery photo picked for find $findId, kind $kind")
         viewModelScope.launch { repo.attachFromGallery(context, findId, uri, kind) }

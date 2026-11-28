@@ -221,6 +221,11 @@ fun App(request: AppRequest? = null, onRequestHandled: () -> Unit = {}) {
             AppRequest.StartTrip -> if (!startTrip(context, alertsVm)) tripPerms.launch(foregroundAlertPermissions())
             is AppRequest.Share -> { vm.openShare(r.uris); nav.navigate("share") }
             is AppRequest.Attach -> vm.attachPhoto(r.itemId, r.uri) { nav.openItem(r.itemId) }
+            // Take photo on the suggestion after a collect (#228): the camera, the picture as the find's place photo
+            is AppRequest.PlacePhoto -> {
+                androidx.core.app.NotificationManagerCompat.from(context).cancel(io.github.thisisartman.collectibles.alerts.AlertNotifier.NUDGE_ID)
+                vm.placePhoto(r.findId) { photo.capture(r.findId) }
+            }
             // App shortcuts (#205): each page sits straight on Nearby, so Back goes to Nearby
             is AppRequest.Shortcut -> when (r.target) {
                 ShortcutTarget.ADD -> { nav.popBackStack(NEARBY, inclusive = false); showLog = true }

@@ -550,6 +550,7 @@ fun MoreScreen(
     val titles = mapOf(
         S_COLLECTIONS to stringResource(R.string.cat_yours),
         S_ALERTS to stringResource(R.string.settings_alerts),
+        S_NOTIFY to stringResource(R.string.notify_title),
         S_DATA to stringResource(R.string.settings_data),
         S_LOOK to stringResource(R.string.settings_look),
         S_CATALOGUE to stringResource(R.string.settings_catalogue),
@@ -617,6 +618,13 @@ fun MoreScreen(
                     ).joinToString(" · "),
                     R.drawable.ic_settings_alerts,
                 ) { section = S_ALERTS }
+                // The four kinds of notification, each a switch (#228)
+                val notifyOn = io.github.thisisartman.collectibles.alerts.NotifyCategory.entries.count { io.github.thisisartman.collectibles.alerts.NotifyPrefs.on(context, it) }
+                SectionLine(
+                    titles.getValue(S_NOTIFY),
+                    if (notifyOn == 4) stringResource(R.string.notify_sub_all) else stringResource(R.string.notify_sub_some, notifyOn),
+                    R.drawable.ic_notification,
+                ) { section = S_NOTIFY }
                 val findsText = pluralStringResource(R.plurals.data_finds, findCount, findCount)
                 val dataLine = when {
                     !autoOn -> stringResource(R.string.data_line_off, findsText)
@@ -692,6 +700,28 @@ fun MoreScreen(
                 }
             }
             S_ALERTS -> AlertsSection(onCategories = { section = S_ALERT_CATS })
+            S_NOTIFY -> {
+                // Each its own Android channel too (#228); off here stops that kind everywhere in the app
+                val prefs = io.github.thisisartman.collectibles.alerts.NotifyPrefs
+                if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
+                    Note(stringResource(R.string.notify_off_in_phone))
+                    MoreRow(stringResource(R.string.notify_open_phone), null) {
+                        context.startActivity(
+                            android.content.Intent(android.provider.Settings.ACTION_APP_NOTIFICATION_SETTINGS)
+                                .putExtra(android.provider.Settings.EXTRA_APP_PACKAGE, context.packageName)
+                                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK),
+                        )
+                    }
+                }
+                listOf(
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.ALERTS, R.string.notify_alerts, R.string.notify_alerts_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.SUGGESTIONS, R.string.notify_suggestions, R.string.notify_suggestions_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.BACKUPS, R.string.notify_backups, R.string.notify_backups_sub),
+                    Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.UPDATES, R.string.notify_updates, R.string.notify_updates_sub),
+                ).forEach { (c, title, sub) ->
+                    ToggleRow(stringResource(title), stringResource(sub), prefs.on(context, c)) { prefs.set(context, c, it) }
+                }
+            }
             S_ALERT_CATS -> AlertCategoriesSection()
             S_LOOK -> {
                 // Theme (owner, 2026-11-09): the phone's dark mode, or always light, or always dark; the map follows
@@ -986,6 +1016,7 @@ private fun Note(text: String) = Text(
 
 private const val S_COLLECTIONS = "collections"
 private const val S_ALERTS = "alerts"
+private const val S_NOTIFY = "notifications"
 private const val S_DATA = "data"
 private const val S_LOOK = "look"
 private const val S_CATALOGUE = "catalogue"

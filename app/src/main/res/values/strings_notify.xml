@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Notification categories and the photo suggestion after a collect (#228) -->
+<resources>
+    <string name="notify_title">Notifications</string>
+    <string name="notify_sub_all">All on</string>
+    <string name="notify_sub_some">%1$d of 4 on</string>
+    <string name="notify_alerts">Alerts</string>
+    <string name="notify_alerts_sub">When you are near something you still need</string>
+    <string name="notify_suggestions">Suggestions</string>
+    <string name="notify_suggestions_sub">A photo of the place after you collect, and other ideas</string>
+    <string name="notify_backups">Backups</string>
+    <string name="notify_backups_sub">Back up, restore and photo files while they run, and how they went</string>
+    <string name="notify_updates">Updates</string>
+    <string name="notify_updates_sub">A new version of Meguri, when Check for updates is on</string>
+    <string name="notify_off_in_phone">Notifications are off for Meguri in your phone\'s settings.</string>
+    <string name="notify_open_phone">Open phone settings</string>
+    <string name="channel_alerts">Alerts</string>
+    <string name="channel_suggestions">Suggestions</string>
+    <string name="channel_suggestions_sub">A photo of the place after you collect, and photos taken near something to get</string>
+    <string name="channel_backups">Backups</string>
+    <string name="channel_updates">Updates</string>
+    <string name="channel_updates_sub">A new version of Meguri</string>
+    <string name="nudge_title">Collected %1$s</string>
+    <string name="nudge_text">Take a photo of the place, or a selfie with it?</string>
+    <string name="nudge_names_sep">", "</string>
+    <string name="nudge_take">Take photo</string>
+    <string name="nudge_not_now">Not now</string>
+    <string name="update_notify_title">Meguri %1$s is out</string>
+    <string name="update_notify_text">Tap to see what\'s new and update.</string>
+</resources>
