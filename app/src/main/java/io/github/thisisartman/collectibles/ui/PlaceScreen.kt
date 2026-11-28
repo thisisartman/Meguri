@@ -1,5 +1,8 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.GridView
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.Directions
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -103,7 +106,18 @@ fun PlaceScreen(vm: MainViewModel, id: String, openArg: String?, onBack: () -> U
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             windowInsets = androidx.compose.foundation.layout.WindowInsets(0, 0, 0, 0),
-            title = { Text(place?.let { stringResource(it.kind.one()) } ?: "") },
+            title = {
+                // The first place page: the tiles, Collect and Cover directions (#224)
+                FirstTip(
+                    TipId.PLACE,
+                    listOf(
+                        TipLine(androidx.compose.material.icons.Icons.Outlined.GridView, null, stringResource(R.string.tip_place_tiles)),
+                        TipLine(androidx.compose.material.icons.Icons.Filled.Check, stringResource(R.string.got_it), stringResource(R.string.tip_place_collect)),
+                        TipLine(androidx.compose.material.icons.Icons.Outlined.Directions, stringResource(R.string.item_cover_directions_plain), stringResource(R.string.tip_place_cover)),
+                    ),
+                    enabled = place != null,
+                ) { Text(place?.let { stringResource(it.kind.one()) } ?: "") }
+            },
             navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } },
         )
         if (place == null) return@Column

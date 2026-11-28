@@ -125,8 +125,11 @@ fun FullscreenPhoto(uri: String, onClose: () -> Unit, onEdit: (() -> Unit)? = nu
             }
             androidx.compose.foundation.layout.Row(Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp)) {
                 val colors = IconButtonDefaults.iconButtonColors(containerColor = Color.Black.copy(alpha = 0.5f), contentColor = Color.White)
-                if (onEdit != null && bmp != null) IconButton(onClick = onEdit, modifier = Modifier.size(48.dp), colors = colors) {
-                    Icon(Icons.Outlined.Crop, contentDescription = stringResource(R.string.photo_edit))
+                // The first photo opened: what Edit does (#224)
+                if (onEdit != null && bmp != null) FirstTip(TipId.PHOTO, listOf(TipLine(Icons.Outlined.Crop, stringResource(R.string.photo_edit), stringResource(R.string.tip_photo_edit)))) {
+                    IconButton(onClick = onEdit, modifier = Modifier.size(48.dp), colors = colors) {
+                        Icon(Icons.Outlined.Crop, contentDescription = stringResource(R.string.photo_edit))
+                    }
                 }
                 IconButton(onClick = onClose, modifier = Modifier.size(48.dp), colors = colors) {
                     Icon(Icons.Filled.Close, contentDescription = stringResource(R.string.photo_view_close))

@@ -37,6 +37,8 @@ object WhatsNew {
             "New in 0.7.3", "0.7.3の新機能",
             listOf(
                 "Shortcuts: tap Nearby again to search, hold + to scan, hold My book for Settings" to "ショートカット：「近く」をもう一度タップで検索、＋の長押しでスキャン、「コレクション」の長押しで設定",
+                "Hold a tile to collect it, with Stamp and Ekitag for a station" to "タイルの長押しで集める（駅はスタンプとエキタグ）",
+                "Tips the first time you open each page; Show tips again in Help and about" to "各ページを初めて開いたときにヒント。「ヘルプと情報」でもう一度表示",
             ),
         ),
         Section(

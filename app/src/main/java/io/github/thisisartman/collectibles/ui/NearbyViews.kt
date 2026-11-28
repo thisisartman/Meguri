@@ -113,6 +113,9 @@ object NearbyPrefs {
     fun helpSeen(context: Context): Boolean = prefs(context).getBoolean("help_seen", false)
 
     fun setHelpSeen(context: Context) = prefs(context).edit().putBoolean("help_seen", true).apply()
+
+    /** Show tips again (#224): the bubble shows on the next open of Nearby. */
+    fun resetHelp(context: Context) = prefs(context).edit().putBoolean("help_seen", false).apply()
 }
 
 /** A place kind's icon: standard Material icons (owner, round 3: no emojis). */
@@ -181,31 +184,18 @@ fun ViewSwitch(view: NearbyView, names: Boolean, places: Int?, collectibles: Int
  * whenever ? is tapped; Got it or a tap outside closes it.
  */
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun HelpBubble(anchorHeight: Int, onDismiss: () -> Unit) {
-    val ink = MaterialTheme.colorScheme.inverseOnSurface
-    val bg = MaterialTheme.colorScheme.inverseSurface
-    Popup(
-        alignment = Alignment.TopStart,
-        offset = androidx.compose.ui.unit.IntOffset(0, anchorHeight),
-        onDismissRequest = onDismiss,
-        properties = PopupProperties(focusable = true),
-    ) {
-        Column(Modifier.padding(horizontal = 4.dp).widthIn(max = 320.dp)) {
-            // The caret, under the Places icon
-            Canvas(Modifier.padding(start = 20.dp).size(16.dp, 8.dp)) {
-                drawPath(Path().apply { moveTo(0f, size.height); lineTo(size.width / 2, 0f); lineTo(size.width, size.height); close() }, bg)
-            }
-            Surface(color = bg, contentColor = ink, shape = RoundedCornerShape(16.dp), shadowElevation = 6.dp) {
-                // Got it sits on the last line's row, so the bubble ends with the text (S23, 2026-11-28: it had a row
-                // of its own and left an empty band)
-                Column(Modifier.padding(start = 16.dp, end = 4.dp, top = 12.dp, bottom = 2.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    HelpLine(Icons.Outlined.LocationOn, stringResource(R.string.nearby_view_places), stringResource(R.string.nearby_help_places))
-                    HelpLine(Icons.Outlined.GridView, stringResource(R.string.nearby_view_collectibles), stringResource(R.string.nearby_help_collectibles))
-                    HelpLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again), onGotIt = onDismiss)
-                }
-            }
-        }
-    }
+    // The shared tip bubble (#224), so every first-time tip looks the same; the caret sits under the Places icon.
+    // Got it sits on the last line's row, so the bubble ends with the text (S23, 2026-11-28)
+    TipBubble(
+        listOf(
+            TipLine(Icons.Outlined.LocationOn, stringResource(R.string.nearby_view_places), stringResource(R.string.nearby_help_places)),
+            TipLine(Icons.Outlined.GridView, stringResource(R.string.nearby_view_collectibles), stringResource(R.string.nearby_help_collectibles)),
+            TipLine(Icons.AutoMirrored.Outlined.HelpOutline, null, stringResource(R.string.nearby_help_again)),
+        ),
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable

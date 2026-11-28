@@ -1,5 +1,6 @@
 package io.github.thisisartman.collectibles.ui
 
+import androidx.compose.material.icons.outlined.Backup
 import io.github.thisisartman.collectibles.photo.CardPictures
 import io.github.thisisartman.collectibles.data.CollectiblesDb
 import io.github.thisisartman.collectibles.data.ItemType
@@ -727,7 +728,10 @@ fun MoreScreen(
                 SectionTitle(stringResource(R.string.backup_section))
                 // Its own choice each time, not the weekly backup's "Include photos" (finding 31)
                 // Each says how its last run went until the next one, and how far it is while it runs (#217)
-                JobRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub), DataJob.BACKUP, running, jobResults) { askBackup = true }
+                // The first time Backup and data opens: Back up now and Weekly backup (#224)
+                FirstTip(TipId.BACKUP, listOf(TipLine(androidx.compose.material.icons.Icons.Outlined.Backup, stringResource(R.string.more_backup), stringResource(R.string.tip_backup)))) {
+                    JobRow(stringResource(R.string.more_backup), stringResource(R.string.backup_now_sub), DataJob.BACKUP, running, jobResults) { askBackup = true }
+                }
                 SplitSwitchRow(stringResource(R.string.more_auto), autoSub, autoOn, onOpen = { section = S_WEEKLY }) { on ->
                     if (on) askWhere = true else { vm.auto.disable(); autoTick++ }
                 }
@@ -893,6 +897,11 @@ fun MoreScreen(
                 MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
                 // The bottom bar's shortcuts, in one line (#223)
                 InfoRow(stringResource(R.string.help_shortcuts), stringResource(R.string.help_shortcuts_sub))
+                // Every first-time tip once more (#224)
+                val tipsDone = stringResource(R.string.tips_again_done)
+                MoreRow(stringResource(R.string.tips_again), stringResource(R.string.tips_again_sub)) {
+                    Tips.reset(context); scope.launch { snackbar.showSnackbar(tipsDone) }
+                }
                 // Check for updates (#131), off by default; the note sits right under it when there is one
                 val updates = io.github.thisisartman.collectibles.data.UpdateCheck
                 ToggleRow(stringResource(R.string.update_check), stringResource(R.string.update_check_sub), updates.on(context)) { on ->

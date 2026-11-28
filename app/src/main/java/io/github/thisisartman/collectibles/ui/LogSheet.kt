@@ -37,6 +37,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.thisisartman.collectibles.R
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.TouchApp
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.vectorResource
 
 /**
  * The + card (owner, 2026-11-09): square buttons, Scan and Add (#223: Search went, the search bar does it), in a small card that rises from just
@@ -59,10 +63,18 @@ fun BoxScope.LogSheet(open: Boolean, onDismiss: () -> Unit, onScan: () -> Unit, 
         exit = fadeOut() + slideOutVertically { it / 2 },
         modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp),
     ) {
-        Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 6.dp) {
-            Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                SquareAction(R.drawable.ic_scan, stringResource(R.string.add_scan), onScan)
-                SquareAction(R.drawable.ic_collect, stringResource(R.string.add_new), onAdd)
+        // The first time the card opens: what Scan and Add do, and that a hold on + scans (#224)
+        val tip = listOf(
+            TipLine(ImageVector.vectorResource(R.drawable.ic_scan), stringResource(R.string.add_scan), stringResource(R.string.tip_plus_scan)),
+            TipLine(ImageVector.vectorResource(R.drawable.ic_collect), stringResource(R.string.add_new), stringResource(R.string.tip_plus_add)),
+            TipLine(Icons.Filled.TouchApp, null, stringResource(R.string.tip_plus_hold)),
+        )
+        FirstTip(TipId.PLUS, tip, above = true, enabled = open) {
+            Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 6.dp) {
+                Row(Modifier.padding(12.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    SquareAction(R.drawable.ic_scan, stringResource(R.string.add_scan), onScan)
+                    SquareAction(R.drawable.ic_collect, stringResource(R.string.add_new), onAdd)
+                }
             }
         }
     }

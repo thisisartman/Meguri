@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- First-time tips (#224): each shows once, the first time its flow opens -->
+<resources>
+    <string name="tip_plus_scan">read a card or a stamp with the camera.</string>
+    <string name="tip_plus_add">something that isn\'t in Meguri yet.</string>
+    <string name="tip_plus_hold">Hold + to go straight to Scan.</string>
+    <string name="tip_place_tiles">Each tile is a thing you can get here. Tap one to open it, hold it to collect.</string>
+    <string name="tip_place_collect">Collect marks it as yours, today, where you are.</string>
+    <string name="tip_place_cover">Cover gives directions to the manhole cover on the card.</string>
+    <string name="tip_photo_edit">Edit crops, turns or straightens this photo.</string>
+    <string name="tip_book_rings">Each ring fills as you collect that set.</string>
+    <string name="tip_book_hold">Hold My book in the bar to open Settings.</string>
+    <string name="tip_trip">Plan a route, and Meguri tells you about stations on the way.</string>
+    <string name="tip_check">Tick what you already have; it goes into My book without a place.</string>
+    <string name="tip_backup">Back up now saves a copy straight away. Weekly backup does it for you.</string>
+    <string name="tips_again">Show tips again</string>
+    <string name="tips_again_sub">Each tip shows once more, the next time you open its page.</string>
+    <string name="tips_again_done">Tips will show again.</string>
+</resources>
