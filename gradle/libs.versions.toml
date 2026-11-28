@@ -18,7 +18,7 @@ work = "2.11.0"
 maplibre = "11.13.5"
 okhttp = "4.12.0"
 documentfile = "1.1.0"
-playServicesLocation = "21.3.0"
+playServicesLocation = "21.4.0"
 mlkitDocScanner = "16.0.0"
 mlkitTextJa = "16.0.2"
 
