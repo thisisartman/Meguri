@@ -24,7 +24,17 @@ object NotifyPrefs {
     private fun prefs(context: Context) = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
     private fun all(context: Context): Map<NotifyCategory, Boolean> = state.value
-        ?: NotifyCategory.entries.associateWith { prefs(context).getBoolean(it.key, true) }.also { state.value = it }
+        ?: NotifyCategory.entries.associateWith { prefs(context).getBoolean(it.key, startsOn(context, it)) }.also { state.value = it }
+
+    /**
+     * Before its switch was first set: on, except Suggestions where the old Photo hints switch (now folded into it)
+     * was switched off.
+     */
+    private fun startsOn(context: Context, c: NotifyCategory): Boolean {
+        if (c != NotifyCategory.SUGGESTIONS) return true
+        val old = context.applicationContext.getSharedPreferences("alerts", Context.MODE_PRIVATE)
+        return SuggestionsMigration.startsOn(old.contains("photo_hints"), old.getBoolean("photo_hints", false))
+    }
 
     fun on(context: Context, c: NotifyCategory): Boolean = all(context).getValue(c)
 
@@ -32,6 +42,12 @@ object NotifyPrefs {
         prefs(context).edit().putBoolean(c.key, on).apply()
         state.value = all(context) + (c to on)
     }
+}
+
+/** Photo hints folded into Suggestions (owner, 2026-11-28). Pure, so it is unit tested. */
+object SuggestionsMigration {
+    /** Off only when Photo hints had been switched off; never set (the old default) starts on. */
+    fun startsOn(photoHintsSet: Boolean, photoHintsOn: Boolean): Boolean = !photoHintsSet || photoHintsOn
 }
 
 /**

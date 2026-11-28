@@ -35,6 +35,8 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
             NotificationChannel(CH_ALERTS, context.getString(R.string.channel_alerts), NotificationManager.IMPORTANCE_HIGH)
                 .apply { description = context.getString(R.string.alerts_channel_sub) },
         )
+        // A fresh id, so phones that had the quiet photo-hint channel get this one's importance; the old one goes
+        m.deleteNotificationChannel(OLD_CH_PHOTOS)
         m.createNotificationChannel(
             NotificationChannel(CH_PHOTOS, context.getString(R.string.channel_suggestions), NotificationManager.IMPORTANCE_DEFAULT)
                 .apply { description = context.getString(R.string.channel_suggestions_sub); setShowBadge(false) },
@@ -246,7 +248,9 @@ class AlertNotifier @Inject constructor(@ApplicationContext private val context:
     companion object {
         const val CH_ALERTS = "alerts"
         const val CH_TRIP = "trip"
-        const val CH_PHOTOS = "photo_hints"
+        const val CH_PHOTOS = "suggestions"
+        /** The photo hints' channel before Suggestions (deleted at start). */
+        const val OLD_CH_PHOTOS = "photo_hints"
         /** Back up now, Restore and Add photos from a file while they run (#217). */
         const val CH_DATA = "backup_restore"
         /** A newer release (#228). */

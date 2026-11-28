@@ -701,6 +701,13 @@ fun MoreScreen(
             }
             S_ALERTS -> AlertsSection(onCategories = { section = S_ALERT_CATS })
             S_NOTIFY -> {
+                val alerts: AlertsViewModel = hiltViewModel()
+                val suggestionPerms = androidx.activity.compose.rememberLauncherForActivityResult(androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()) {
+                    if (alerts.settings.photoHintsOn) {
+                        alerts.settings.photoHintsSeenSec = System.currentTimeMillis() / 1000
+                        io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context)
+                    }
+                }
                 // Each its own Android channel too (#228); off here stops that kind everywhere in the app
                 val prefs = io.github.thisisartman.collectibles.alerts.NotifyPrefs
                 if (!androidx.core.app.NotificationManagerCompat.from(context).areNotificationsEnabled()) {
@@ -719,7 +726,15 @@ fun MoreScreen(
                     Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.BACKUPS, R.string.notify_backups, R.string.notify_backups_sub),
                     Triple(io.github.thisisartman.collectibles.alerts.NotifyCategory.UPDATES, R.string.notify_updates, R.string.notify_updates_sub),
                 ).forEach { (c, title, sub) ->
-                    ToggleRow(stringResource(title), stringResource(sub), prefs.on(context, c)) { prefs.set(context, c, it) }
+                    ToggleRow(stringResource(title), stringResource(sub), prefs.on(context, c)) { on ->
+                        prefs.set(context, c, on)
+                        // Suggestions carries the new-photo hint too (one switch, owner 2026-11-28): on asks for
+                        // gallery access, which the hint needs; the after-collect suggestion works without it
+                        if (c == io.github.thisisartman.collectibles.alerts.NotifyCategory.SUGGESTIONS) {
+                            if (on) suggestionPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
+                            else io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context)
+                        }
+                    }
                 }
             }
             S_ALERT_CATS -> AlertCategoriesSection()
@@ -786,7 +801,6 @@ fun MoreScreen(
                     if (customNames.isEmpty()) stringResource(R.string.settings_collections_sub) else customNames.joinToString(", "),
                 ) { section = S_COLLECTIONS }
                 SectionTitle(stringResource(R.string.photos_section))
-                PhotoHintRow()
                 val photoSummary by vm.photos.collectAsState()
                 LaunchedEffect(Unit) { vm.loadPhotos(context) }
                 MoreRow(

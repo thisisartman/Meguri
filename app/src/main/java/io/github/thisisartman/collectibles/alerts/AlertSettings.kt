@@ -16,7 +16,7 @@ data class CategoryDistance(val type: ItemType, val meters: Int, val isDefault: 
  * schema stays at v1 and backups are unchanged; a restore simply starts with no cooldowns.
  */
 @Singleton
-class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
+class AlertSettings @Inject constructor(@ApplicationContext private val context: Context) {
     private val prefs = context.getSharedPreferences("alerts", Context.MODE_PRIVATE)
 
     var geofenceOn: Boolean
@@ -30,10 +30,15 @@ class AlertSettings @Inject constructor(@ApplicationContext context: Context) {
 
     val tripOn: Boolean get() = tripUntilMs > System.currentTimeMillis()
 
-    /** The new-photo hint (M7): off until switched on in Settings, which also asks for gallery access. */
-    var photoHintsOn: Boolean
-        get() = prefs.getBoolean("photo_hints", false)
-        set(v) = prefs.edit().putBoolean("photo_hints", v).apply()
+    /**
+     * The new-photo hint (M7): part of Suggestions now (owner, 2026-11-28: one switch), and only with gallery
+     * access, which Settings asks for when Suggestions is switched on.
+     */
+    val photoHintsOn: Boolean
+        get() = NotifyPrefs.on(context, NotifyCategory.SUGGESTIONS) &&
+            io.github.thisisartman.collectibles.data.SharedPhotoReader.placePermissions().all {
+                context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            }
 
     /** Gallery photos added before this time (seconds) have been looked at. 0: not started; the first run only marks now. */
     var photoHintsSeenSec: Long

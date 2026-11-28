@@ -265,26 +265,6 @@ fun AlertsSection(onCategories: () -> Unit, vm: AlertsViewModel = hiltViewModel(
     }
 }
 
-/** "Suggest new photos" (M7). Lives under Backup and data with the other photo settings (owner, 2026-11-09). */
-@Composable
-fun PhotoHintRow(vm: AlertsViewModel = hiltViewModel()) {
-    val context = LocalContext.current
-    val s = vm.settings
-    var tick by remember { mutableIntStateOf(0) }
-    val photoPerms = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { granted ->
-        val ok = io.github.thisisartman.collectibles.data.SharedPhotoReader.placePermissions().all { granted[it] == true || context.checkSelfPermission(it) == android.content.pm.PackageManager.PERMISSION_GRANTED }
-        s.photoHintsOn = ok
-        if (ok) { s.photoHintsSeenSec = System.currentTimeMillis() / 1000; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.schedule(context) }
-        tick++
-    }
-    val photoHints = remember(tick) { s.photoHintsOn }
-    SwitchRow(stringResource(R.string.photo_hint_setting), stringResource(R.string.photo_hint_setting_sub), photoHints, onChange = { on ->
-        if (on) photoPerms.launch(io.github.thisisartman.collectibles.photo.NewPhotoWatcher.permissions())
-        else { s.photoHintsOn = false; io.github.thisisartman.collectibles.photo.NewPhotoWatcher.cancel(context) }
-        tick++
-    })
-}
-
 /** The categories that can alert, in the order they show. */
 val ALERT_TYPES = listOf(
     ItemType.EKI_STAMP to R.string.type_eki_plural, ItemType.EKITAG to R.string.type_ekitag, ItemType.MANHOLE_CARD to R.string.type_manhole_plural, ItemType.GOSHUIN to R.string.type_goshuin,
