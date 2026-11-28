@@ -29,6 +29,7 @@
     <string name="auto_failed_login">前回の毎週のバックアップに失敗：ユーザー名かパスワードが違います。</string>
     <string name="auto_failed_certificate">前回の毎週のバックアップに失敗：サーバーの証明書が変わりました。</string>
     <string name="auto_failed_offline">サーバーに接続できません。あとでもう一度試します。</string>
+    <string name="auto_kept_fewer">前回のバックアップを残しました。新しいものは記録がかなり少なかったためです。「毎週のバックアップを今すぐ実行」で置き換えます。</string>
     <string name="restore_server">サーバーから復元</string>
     <string name="restore_server_sub">サーバーにある最新のバックアップ</string>
     <string name="restore_server_none">サーバーにはまだバックアップがありません。</string>

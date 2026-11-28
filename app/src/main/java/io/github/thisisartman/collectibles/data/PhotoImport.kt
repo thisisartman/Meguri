@@ -116,19 +116,31 @@ class PhotoImport @Inject constructor(
         }
     }
 
-    /** Unpacks [uri] into [dir]; only plain names, so nothing can land outside it. */
+    /**
+     * Unpacks [uri] into [dir]; only plain names, so nothing can land outside it. Capped (A6): so many files, so
+     * many bytes each and in all, and never more than the phone has free less a margin, so a zip bomb can't fill it.
+     */
     private fun unzip(uri: Uri, dir: File) {
         val root = dir.canonicalPath + File.separator
         val input = context.contentResolver.openInputStream(uri) ?: throw PhotoFileError.NotAPhotoFile()
+        val budget = SafeFiles.Budget(minOf(MAX_TOTAL, dir.usableSpace - FREE_MARGIN), MAX_ENTRIES)
         ZipInputStream(input.buffered()).use { zip ->
             while (true) {
                 val e = zip.nextEntry ?: break
                 if (e.isDirectory) continue
+                budget.entry()
                 val out = File(dir, e.name)
                 if (!out.canonicalPath.startsWith(root)) continue
                 out.parentFile?.mkdirs()
-                out.outputStream().use { zip.copyTo(it) }
+                out.outputStream().use { budget.copy(zip, it, MAX_ENTRY) }
             }
         }
+    }
+
+    private companion object {
+        const val MAX_ENTRIES = 20_000
+        const val MAX_ENTRY = 64L * 1024 * 1024
+        const val MAX_TOTAL = 4L * 1024 * 1024 * 1024
+        const val FREE_MARGIN = 200L * 1024 * 1024
     }
 }

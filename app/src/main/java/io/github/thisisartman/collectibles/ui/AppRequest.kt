@@ -15,7 +15,18 @@ sealed interface AppRequest {
     data class Shortcut(val target: ShortcutTarget) : AppRequest
 
     companion object {
-        fun from(intent: Intent?): AppRequest? {
+        /**
+         * Whether an intent's internal extras are the app's own (A8): its notifications, the Trip tile and the
+         * new-photo hint carry this install's token ([InternalToken]); another app can't know it, so what it sends
+         * in those extras is ignored. The launcher shortcuts carry no token and only open a page.
+         */
+        fun trusted(sent: String?, ours: String?): Boolean = sent != null && ours != null && sent == ours
+
+        /** A picture's address from the app's own hint: only a content address, never a file in the app's folders. */
+        fun contentOnly(uri: String?): android.net.Uri? =
+            uri?.takeIf { it.startsWith("content://") }?.let { android.net.Uri.parse(it) }
+
+        fun from(intent: Intent?, token: String?): AppRequest? {
             intent ?: return null
             // Photos shared from the gallery (#80): one, or several at once
             when (intent.action) {
@@ -24,11 +35,15 @@ sealed interface AppRequest {
                 Intent.ACTION_SEND_MULTIPLE -> androidx.core.content.IntentCompat.getParcelableArrayListExtra(intent, Intent.EXTRA_STREAM, android.net.Uri::class.java)
                     ?.takeIf { it.isNotEmpty() }?.let { return Share(it.toList()) }
             }
+            // Only a launcher shortcut from anyone; everything below only from the app itself (A8)
+            if (!trusted(intent.getStringExtra(MainActivity.EXTRA_TOKEN), token)) {
+                return ShortcutTarget.from(intent.getStringExtra(MainActivity.EXTRA_SHORTCUT))?.let { Shortcut(it) }
+            }
             // The new-photo hint (M7)
             intent.getStringExtra(MainActivity.EXTRA_ATTACH_ITEM)?.let { id ->
-                intent.getStringExtra(MainActivity.EXTRA_ATTACH_URI)?.let { return Attach(id, android.net.Uri.parse(it)) }
+                contentOnly(intent.getStringExtra(MainActivity.EXTRA_ATTACH_URI))?.let { return Attach(id, it) }
             }
-            intent.getStringExtra(MainActivity.EXTRA_SHARE_URI)?.let { return Share(listOf(android.net.Uri.parse(it))) }
+            contentOnly(intent.getStringExtra(MainActivity.EXTRA_SHARE_URI))?.let { return Share(listOf(it)) }
             intent.getStringExtra(MainActivity.EXTRA_COLLECT_ITEM)?.let { id ->
                 val fix = if (intent.hasExtra(MainActivity.EXTRA_FIX_LAT)) Fix(
                     intent.getDoubleExtra(MainActivity.EXTRA_FIX_LAT, 0.0), intent.getDoubleExtra(MainActivity.EXTRA_FIX_LNG, 0.0),

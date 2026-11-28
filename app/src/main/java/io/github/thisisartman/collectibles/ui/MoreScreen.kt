@@ -539,6 +539,7 @@ fun MoreScreen(
     val autoProblem = remember(autoTick) { vm.auto.lastProblem }
     val autoSub = when {
         !autoOn -> stringResource(R.string.more_auto_sub_off)
+        autoFailed && autoProblem == "fewer" -> stringResource(R.string.auto_kept_fewer)
         autoFailed && autoProblem == "login" -> stringResource(R.string.auto_failed_login)
         autoFailed && autoProblem == "certificate" -> stringResource(R.string.auto_failed_certificate)
         autoFailed && autoProblem == "offline" -> stringResource(R.string.auto_failed_offline)
@@ -798,7 +799,8 @@ fun MoreScreen(
                     }
                     val startedText = stringResource(R.string.weekly_started)
                     MoreRow(stringResource(R.string.more_auto_now), autoSub) {
-                        vm.auto.runNow()
+                        // Told the last backup was kept (A2): this tap replaces it
+                        vm.auto.runNow(force = autoFailed && autoProblem == "fewer")
                         scope.launch { snackbar.showSnackbar(startedText) }
                     }
                 }
