@@ -891,6 +891,8 @@ fun MoreScreen(
                 // Feedback by mail to the owner, with screenshots (2026-11-15)
                 MoreRow(stringResource(R.string.feedback_title), stringResource(R.string.feedback_row_sub)) { feedback = true }
                 MoreRow(stringResource(R.string.help_whats_new), BuildConfig.VERSION_NAME) { whatsNew = true }
+                // The bottom bar's shortcuts, in one line (#223)
+                InfoRow(stringResource(R.string.help_shortcuts), stringResource(R.string.help_shortcuts_sub))
                 // Check for updates (#131), off by default; the note sits right under it when there is one
                 val updates = io.github.thisisartman.collectibles.data.UpdateCheck
                 ToggleRow(stringResource(R.string.update_check), stringResource(R.string.update_check_sub), updates.on(context)) { on ->

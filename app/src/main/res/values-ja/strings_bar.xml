@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 下のバーのショートカット（#223）：もう一度タップ、長押し -->
+<resources>
+    <string name="bar_action_search">検索</string>
+    <string name="bar_action_expand">一覧を広げる</string>
+    <string name="bar_action_scan">スキャン</string>
+    <string name="bar_action_settings">設定</string>
+    <string name="a11y_plus_card">スキャン、追加</string>
+    <string name="help_shortcuts">ショートカット</string>
+    <string name="help_shortcuts_sub">「近く」をもう一度タップで検索、長押しで一覧を広げます。＋の長押しでスキャン。「コレクション」の長押しで設定。</string>
+</resources>

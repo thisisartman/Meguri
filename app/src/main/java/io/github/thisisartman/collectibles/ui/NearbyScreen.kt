@@ -113,7 +113,7 @@ import io.github.thisisartman.collectibles.data.Origin
 /** Nearby, layout B (owner's pick, 2026-11-06): the map fills the screen and a sheet of tiles sits over it. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, focusSearch: Int = 0, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
+fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = {}, focusSearch: Int = 0, expandSheet: Int = 0, locationBlocked: Boolean = false, onAllowLocation: () -> Unit) {
     val ja = isJapanese()
     val here by vm.here.collectAsStateWithLifecycle()
     val rows by vm.rows.collectAsStateWithLifecycle()
@@ -145,8 +145,10 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
     val focusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
     val searching = query.isNotBlank()
     // + → Search (owner, 2026-11-09): focus the bar so the keyboard comes up; the wait lets the sheet close first
+    // Each tick acts once: coming back to Nearby later must not bring the keyboard up again
+    var searchDone by rememberSaveable { mutableIntStateOf(focusSearch) }
     androidx.compose.runtime.LaunchedEffect(focusSearch) {
-        if (focusSearch > 0) { kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
+        if (focusSearch > searchDone) { searchDone = focusSearch; kotlinx.coroutines.delay(250); runCatching { focusRequester.requestFocus() } }
     }
 
     val custom = LocalCustomTypes.current
@@ -254,6 +256,11 @@ fun NearbyScreen(vm: MainViewModel, nav: NavHostController, onLog: () -> Unit = 
         }
     }
     LaunchedEffect(picking) { if (picking) runCatching { sheet.bottomSheetState.expand() } }
+    // A hold on Nearby in the bottom bar opens the list to full screen (#223), once per hold
+    var expandDone by rememberSaveable { mutableIntStateOf(expandSheet) }
+    LaunchedEffect(expandSheet) {
+        if (expandSheet > expandDone) { expandDone = expandSheet; focus.clearFocus(); runCatching { sheet.bottomSheetState.expand() } }
+    }
     // When the onboarding ends the sheet settles to its resting height, so the map shows (owner's S23 run, 2026-11-10:
     // it stayed fully up from the picker)
     var wasOnboarding by remember { mutableStateOf(inOnboarding) }

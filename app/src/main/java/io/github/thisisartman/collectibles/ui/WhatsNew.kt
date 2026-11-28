@@ -34,6 +34,12 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
+            "New in 0.7.3", "0.7.3の新機能",
+            listOf(
+                "Shortcuts: tap Nearby again to search, hold + to scan, hold My book for Settings" to "ショートカット：「近く」をもう一度タップで検索、＋の長押しでスキャン、「コレクション」の長押しで設定",
+            ),
+        ),
+        Section(
             "New in 0.7.1", "0.7.1の新機能",
             listOf(
                 "Places on Nearby: one page per station or shrine, with a ring that fills as you collect" to "近くに「場所」：駅や神社ごとに1ページ、集めるほど埋まるリング",
