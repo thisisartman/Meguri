@@ -539,6 +539,7 @@ fun MoreScreen(
     val autoProblem = remember(autoTick) { vm.auto.lastProblem }
     val autoSub = when {
         !autoOn -> stringResource(R.string.more_auto_sub_off)
+        autoFailed && autoProblem == "fewer" -> stringResource(R.string.auto_kept_fewer)
         autoFailed && autoProblem == "login" -> stringResource(R.string.auto_failed_login)
         autoFailed && autoProblem == "certificate" -> stringResource(R.string.auto_failed_certificate)
         autoFailed && autoProblem == "offline" -> stringResource(R.string.auto_failed_offline)
@@ -559,6 +560,7 @@ fun MoreScreen(
         S_ALERT_CATS to stringResource(R.string.alerts_categories),
         S_SOURCES to stringResource(R.string.about_sources),
         S_ART to stringResource(R.string.about_art),
+        S_INSPIRED to stringResource(R.string.about_inspired),
         S_LICENCES to stringResource(R.string.about_licences),
         S_PRIVACY to stringResource(R.string.about_privacy),
         S_WEEKLY to stringResource(R.string.more_auto),
@@ -797,7 +799,8 @@ fun MoreScreen(
                     }
                     val startedText = stringResource(R.string.weekly_started)
                     MoreRow(stringResource(R.string.more_auto_now), autoSub) {
-                        vm.auto.runNow()
+                        // Told the last backup was kept (A2): this tap replaces it
+                        vm.auto.runNow(force = autoFailed && autoProblem == "fewer")
                         scope.launch { snackbar.showSnackbar(startedText) }
                     }
                 }
@@ -907,6 +910,7 @@ fun MoreScreen(
                 SectionTitle(stringResource(R.string.about_credits))
                 MoreRow(stringResource(R.string.about_sources), SOURCES.joinToString(", ") { it.name }) { section = S_SOURCES }
                 MoreRow(stringResource(R.string.about_art), ART.joinToString(", ") { it.name }) { section = S_ART }
+                MoreRow(stringResource(R.string.about_inspired), INSPIRATION.joinToString(", ") { it.name }) { section = S_INSPIRED }
                 SectionTitle(stringResource(R.string.about_legal))
                 MoreRow(stringResource(R.string.about_licences), stringResource(R.string.about_licences_sub, LIBRARIES.size)) { section = S_LICENCES }
                 MoreRow(stringResource(R.string.about_privacy), stringResource(R.string.about_privacy_sub)) { section = S_PRIVACY }
@@ -936,6 +940,7 @@ fun MoreScreen(
             }
             S_SOURCES -> CreditList(stringResource(R.string.about_sources_intro), SOURCES)
             S_ART -> CreditList(null, ART)
+            S_INSPIRED -> CreditList(stringResource(R.string.about_inspired_intro), INSPIRATION)
             S_LICENCES -> CreditList(stringResource(R.string.about_licences_intro), LIBRARIES)
             S_PRIVACY -> PrivacyPage()
         }
@@ -948,7 +953,7 @@ private fun parentOf(section: String?): String? = when (section) {
     S_INSTALLED, S_REGIONS -> S_CATALOGUE
     S_ABOUT -> S_HELP
     S_ALERT_CATS -> S_ALERTS
-    S_SOURCES, S_ART, S_LICENCES, S_PRIVACY -> S_ABOUT
+    S_SOURCES, S_ART, S_INSPIRED, S_LICENCES, S_PRIVACY -> S_ABOUT
     S_WEEKLY, S_PHOTOS, S_COLLECTIONS -> S_DATA
     else -> null
 }
@@ -985,6 +990,7 @@ private const val S_ABOUT = "about"
 private const val S_ALERT_CATS = "alert_categories"
 private const val S_SOURCES = "sources"
 private const val S_ART = "art"
+private const val S_INSPIRED = "inspired"
 private const val S_LICENCES = "licences"
 private const val S_PRIVACY = "privacy"
 private const val S_WEEKLY = "weekly"

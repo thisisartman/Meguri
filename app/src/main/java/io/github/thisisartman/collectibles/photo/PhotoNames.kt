@@ -29,6 +29,15 @@ object PhotoNames {
         else -> null
     }
 
+    /**
+     * Whether an address is one of the app's own photo files: `app:photos/` and a plain file name (A5), never a
+     * path into another folder ("/", "\" or "..").
+     */
+    fun inPhotos(uri: String): Boolean {
+        val prefix = "$SCHEME$DIR/"
+        return uri.startsWith(prefix) && io.github.thisisartman.collectibles.data.SafeFiles.plainName(uri.removePrefix(prefix))
+    }
+
     /** The file names in the photos folder that some photo still points at, its copy or its original. */
     fun wanted(uris: List<String?>): Set<String> =
         uris.filterNotNull().filter { it.startsWith(SCHEME) }.map { it.removePrefix(SCHEME).substringAfterLast('/') }.toSet()

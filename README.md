@@ -75,6 +75,9 @@ Meguri isn't on Google Play.
 
 **Updating:** new versions install over the old one and keep all your data. It's still a good idea to back up first (Settings › Backup and data › Back up now).
 
+- **In the app:** with "Check for updates" on (Settings › Help and about; on for new installs), Meguri looks once a day for a newer release. Tap **Update** and it downloads the new version, checks its size, its SHA-256 and that it's signed with the same key as your app, then hands it to Android's installer. The first time, Android asks you to allow Meguri to install apps. Nothing installs without your tap.
+- **With Obtainium:** add `https://github.com/thisisartman/Meguri` (or use the badge above). Each release is tagged `vX.Y.Z` and carries exactly one APK, `Meguri-X.Y.Z.apk`, so Obtainium's default GitHub settings pick it up with no filters. Obtainium checks the signature on every update too.
+
 **Is it the real one?** Every release is signed with the same key. Its signing certificate's SHA-256 is:
 
 ```

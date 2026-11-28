@@ -4,6 +4,10 @@ import android.graphics.Bitmap
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +22,8 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Circle
+import androidx.compose.material.icons.outlined.CropFree
+import androidx.compose.material.icons.outlined.CropSquare
 import androidx.compose.material.icons.outlined.RestartAlt
 import androidx.compose.material.icons.outlined.Rotate90DegreesCw
 import androidx.compose.material.icons.outlined.Straighten
@@ -68,6 +74,8 @@ import io.github.thisisartman.collectibles.photo.EditRect
 import io.github.thisisartman.collectibles.photo.Handle
 import io.github.thisisartman.collectibles.photo.PhotoEdit
 import io.github.thisisartman.collectibles.photo.PhotoStore
+import io.github.thisisartman.collectibles.photo.StampCrop
+import io.github.thisisartman.collectibles.photo.StampShape
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlin.math.max
@@ -77,9 +85,78 @@ import kotlin.math.roundToInt
 /** The preview's long side: enough to place a crop by finger, small enough for memory. Save cuts from the full picture. */
 private const val PREVIEW_PX = 1600
 
+/** The edit frame: a circle or a square fixed in the middle with the photo moving under it, or a free box. */
+private enum class Frame { CIRCLE, SQUARE, FREE }
+
+/**
+ * Circle and Square: the frame fixed in the middle, the turned and straightened picture under it placed so [crop]
+ * fills the frame. Drag moves the picture, pinch zooms it ([onPanZoom] gets the box's move in frame pixels and the
+ * zoom); a screen reader gets move and zoom actions ([onNudge]).
+ */
+@Composable
+private fun FixedFrameCanvas(
+    bmp: Bitmap, turns: Int, degrees: Float, crop: EditRect, circle: Boolean,
+    onPanZoom: (Float, Float, Float) -> Unit, onNudge: (EditGeometry.Nudge) -> Unit,
+) {
+    val paint = remember { android.graphics.Paint(android.graphics.Paint.FILTER_BITMAP_FLAG or android.graphics.Paint.ANTI_ALIAS_FLAG) }
+    val latest = androidx.compose.runtime.rememberUpdatedState(crop)
+    val move = androidx.compose.runtime.rememberUpdatedState(onPanZoom)
+    val label = stringResource(R.string.photo_edit_frame)
+    val actions = listOf(
+        R.string.photo_edit_move_left to EditGeometry.Nudge.LEFT,
+        R.string.photo_edit_move_right to EditGeometry.Nudge.RIGHT,
+        R.string.photo_edit_move_up to EditGeometry.Nudge.UP,
+        R.string.photo_edit_move_down to EditGeometry.Nudge.DOWN,
+        R.string.photo_edit_zoom_in to EditGeometry.Nudge.ZOOM_IN,
+        R.string.photo_edit_zoom_out to EditGeometry.Nudge.ZOOM_OUT,
+    ).map { (res, n) -> androidx.compose.ui.semantics.CustomAccessibilityAction(stringResource(res)) { onNudge(n); true } }
+    Canvas(
+        Modifier.fillMaxSize()
+            .semantics { contentDescription = label; customActions = actions }
+            .pointerInput(bmp, turns, degrees) {
+                detectTransformGestures { _, pan, zoom, _ ->
+                    val side = frameSide(size.width.toFloat(), size.height.toFloat())
+                    val s = side / max(1e-3f, latest.value.width)
+                    // The picture follows the finger, so the box moves the other way
+                    move.value(-pan.x / s, -pan.y / s, zoom)
+                }
+            },
+    ) {
+        val side = frameSide(size.width, size.height)
+        val (s, ox, oy) = EditGeometry.under(crop, size.width, size.height, side)
+        val m = EditGeometry.affine(bmp.width.toFloat(), bmp.height.toFloat(), turns, degrees)
+        val matrix = android.graphics.Matrix().apply {
+            setValues(floatArrayOf(m[0], m[1], m[2], m[3], m[4], m[5], 0f, 0f, 1f))
+            postScale(s, s)
+            postTranslate(ox, oy)
+        }
+        drawIntoCanvas { it.nativeCanvas.drawBitmap(bmp, matrix, paint) }
+        val r = Rect(Offset((size.width - side) / 2, (size.height - side) / 2), Size(side, side))
+        val dim = Path().apply {
+            fillType = PathFillType.EvenOdd
+            addRect(Rect(Offset.Zero, size))
+            if (circle) addOval(r) else addRect(r)
+        }
+        drawPath(dim, Color.Black.copy(alpha = 0.6f))
+        val line = 1.5.dp.toPx()
+        if (circle) drawOval(Color.White, r.topLeft, r.size, style = Stroke(line)) else drawRect(Color.White, r.topLeft, r.size, style = Stroke(line))
+        for (i in 1..2) {
+            val x = r.left + r.width * i / 3; val y = r.top + r.height * i / 3
+            drawLine(Color.White.copy(alpha = 0.35f), Offset(x, r.top), Offset(x, r.bottom), 1f)
+            drawLine(Color.White.copy(alpha = 0.35f), Offset(r.left, y), Offset(r.right, y), 1f)
+        }
+    }
+}
+
+/** The fixed frame's side: most of the view's shorter side. */
+private fun frameSide(w: Float, h: Float) = min(w, h) * 0.86f
+
 /**
  * Edit a photo (#208; owner, 2026-11-28: "some cards are not properly cropped"): a crop box with corners and edges
- * to drag, rotate a quarter turn, straighten up to 15 degrees, Reset, and for a manhole cover a circle. It starts
+ * to drag, rotate a quarter turn, straighten up to 15 degrees, Reset. Three frames (owner, 2026-11-28): Free (the
+ * box), and Circle and Square, where the frame stays fixed in the middle and the photo moves under it: drag to
+ * move, pinch to zoom, never past the photo's edge; a screen reader gets move and zoom actions. A photo the app cut
+ * as a circle or a square (a cover, a stamp, a goshuin page) opens in that frame, placed where the cut was. It starts
  * from the kept original when there is one; Reset goes back to that whole original. Without one it edits the photo
  * as it is, and saving keeps that as the original ([EditOriginal]), so the next edit can widen or reset. Only a photo
  * the app cut before originals were kept says its full photo is gone. The straighten slider, Cancel and Save stay
@@ -95,7 +172,7 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
         var turns by remember(photo.id) { mutableIntStateOf(0) }
         var degrees by remember(photo.id) { mutableFloatStateOf(0f) }
         var crop by remember(photo.id) { mutableStateOf(EditRect(0f, 0f, 1f, 1f)) }
-        var circle by remember(photo.id) { mutableStateOf(false) }
+        var frame by remember(photo.id) { mutableStateOf(Frame.FREE) }
         var saving by remember(photo.id) { mutableStateOf(false) }
         var failed by remember(photo.id) { mutableStateOf(false) }
         val cover = photo.role == PhotoKind.MANHOLE
@@ -104,23 +181,40 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
             withContext(Dispatchers.IO) {
                 val orig = photo.originalUri?.takeIf { PhotoStore.exists(context, it) }
                 val b = (orig ?: photo.contentUri).let { PhotoStore.load(context, it, PREVIEW_PX) }
-                // A cover cut as a circle opens as a circle, placed on the cover found in the original
-                val wasCircle = cover && PhotoStore.load(context, photo.contentUri, 64)?.let { s ->
-                    (s.hasAlpha() && android.graphics.Color.alpha(s.getPixel(0, 0)) == 0).also { s.recycle() }
-                } == true
+                // How the app cut it: a circle leaves the corners clear; a square stamp or page is square
+                val shown = PhotoStore.load(context, photo.contentUri, 64)
+                val wasCircle = shown?.let { s -> s.hasAlpha() && android.graphics.Color.alpha(s.getPixel(0, 0)) == 0 } == true
+                val wasSquare = !wasCircle && shown != null && kotlin.math.abs(shown.width - shown.height) <= 1
+                shown?.recycle()
                 var start = b?.let { EditRect.of(it.width.toFloat(), it.height.toFloat()) }
-                if (b != null && wasCircle && orig != null) {
-                    val c = runCatching { CoverCrop.find(b) }.getOrNull()
+                var startFrame = Frame.FREE
+                if (b != null && orig != null) {
                     val whole = EditRect.of(b.width.toFloat(), b.height.toFloat())
-                    start = if (c != null) {
-                        val r = c.r * 1.03f
-                        EditGeometry.square(EditGeometry.clamp(EditRect(c.cx - r, c.cy - r, c.cx + r, c.cy + r), whole, 32f))
-                    } else EditGeometry.square(whole)
+                    val stampy = photo.role == PhotoKind.STAMP || photo.role == PhotoKind.GOSHUIN
+                    if (cover && wasCircle) {
+                        // A cover opens as a circle, placed on the cover found in the original
+                        val c = runCatching { CoverCrop.find(b) }.getOrNull()
+                        start = if (c != null) {
+                            val r = c.r * 1.03f
+                            EditGeometry.square(EditGeometry.clamp(EditRect(c.cx - r, c.cy - r, c.cx + r, c.cy + r), whole, 32f))
+                        } else EditGeometry.square(whole)
+                        startFrame = Frame.CIRCLE
+                    } else if (stampy && (wasCircle || wasSquare)) {
+                        // A stamp or goshuin page opens in the shape it was cut to, where the cut put it (#221)
+                        val plan = StampCrop.plan(b) ?: StampCrop.plan(b, page = true)
+                        if (plan != null) {
+                            val q = plan.square
+                            start = EditGeometry.toShape(EditRect(q.left * b.width, q.top * b.height, q.right * b.width, q.bottom * b.height), whole, 32f)
+                            startFrame = if (plan.shape == StampShape.Shape.ROUND) Frame.CIRCLE else Frame.SQUARE
+                        } else if (wasCircle) {
+                            start = EditGeometry.toShape(whole, whole, 32f); startFrame = Frame.CIRCLE
+                        }
+                    }
                 }
                 withContext(Dispatchers.Main) {
                     bmp = b
                     fromOriginal = orig != null
-                    circle = wasCircle && orig != null
+                    frame = startFrame
                     start?.let { crop = it }
                     loaded = true
                 }
@@ -131,18 +225,25 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
         val (fw, fh) = if (b != null) EditGeometry.turnedSize(b.width.toFloat(), b.height.toFloat(), turns) else (1f to 1f)
         val minSide = max(32f, min(fw, fh) * 0.05f)
         val bounds = EditGeometry.allowed(fw, fh, degrees)
+        val shaped = frame != Frame.FREE
+        val circle = frame == Frame.CIRCLE
 
         fun reset() {
             val s = b ?: return
-            turns = 0; degrees = 0f; circle = false
+            turns = 0; degrees = 0f; frame = Frame.FREE
             crop = EditRect.of(s.width.toFloat(), s.height.toFloat())
         }
 
         Column(Modifier.fillMaxSize().background(Color.Black)) {
             Box(Modifier.weight(1f).fillMaxWidth().statusBarsPadding().padding(16.dp).clipToBounds(), contentAlignment = Alignment.Center) {
                 when {
-                    b != null -> CropCanvas(b, turns, degrees, crop, circle) { handle, dx, dy ->
-                        crop = EditGeometry.drag(crop, handle, dx, dy, bounds, minSide, circle)
+                    b != null && shaped -> FixedFrameCanvas(
+                        b, turns, degrees, crop, circle,
+                        onPanZoom = { dx, dy, zoom -> crop = EditGeometry.panZoom(crop, dx, dy, zoom, bounds, minSide) },
+                        onNudge = { n -> crop = EditGeometry.nudge(crop, n, bounds, minSide) },
+                    )
+                    b != null -> CropCanvas(b, turns, degrees, crop, false) { handle, dx, dy ->
+                        crop = EditGeometry.drag(crop, handle, dx, dy, bounds, minSide, false)
                     }
                     loaded -> Text(stringResource(R.string.photo_edit_failed), color = Color.White)
                     else -> CircularProgressIndicator(color = Color.White)
@@ -157,16 +258,25 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                     turns = (turns + 1) % 4
                     val (nw, nh) = EditGeometry.turnedSize(b.width.toFloat(), b.height.toFloat(), turns)
                     crop = EditGeometry.fitAfterStraighten(turned, nw, nh, degrees, minSide)
+                    if (shaped) crop = EditGeometry.toShape(crop, EditGeometry.allowed(nw, nh, degrees), minSide)
                 }, enabled = b != null && !saving, colors = toolColors) {
                     Icon(Icons.Outlined.Rotate90DegreesCw, contentDescription = stringResource(R.string.photo_edit_rotate))
                 }
-                // A cover can be cut as a circle again, or kept as the full photo (needs the original)
-                if (cover) IconToggleButton(
-                    checked = circle,
-                    onCheckedChange = { on -> circle = on; if (on) crop = EditGeometry.square(crop) },
+                // The frame: Circle, Square or Free; one is always on
+                val frameColors = IconButtonDefaults.iconToggleButtonColors(contentColor = Color.Gray, checkedContentColor = MaterialTheme.colorScheme.primary)
+                for ((f, icon, label) in listOf(
+                    Triple(Frame.CIRCLE, Icons.Outlined.Circle, R.string.photo_edit_circle),
+                    Triple(Frame.SQUARE, Icons.Outlined.CropSquare, R.string.photo_edit_square),
+                    Triple(Frame.FREE, Icons.Outlined.CropFree, R.string.photo_edit_free),
+                )) IconToggleButton(
+                    checked = frame == f,
+                    onCheckedChange = {
+                        frame = f
+                        if (f != Frame.FREE) crop = EditGeometry.toShape(crop, bounds, minSide)
+                    },
                     enabled = b != null && !saving,
-                    colors = IconButtonDefaults.iconToggleButtonColors(contentColor = Color.Gray, checkedContentColor = MaterialTheme.colorScheme.primary),
-                ) { Icon(Icons.Outlined.Circle, contentDescription = stringResource(R.string.photo_edit_circle)) }
+                    colors = frameColors,
+                ) { Icon(icon, contentDescription = stringResource(label)) }
                 IconButton(onClick = { reset() }, enabled = b != null && !saving, colors = toolColors) {
                     Icon(Icons.Outlined.RestartAlt, contentDescription = stringResource(R.string.photo_edit_reset))
                 }
@@ -181,7 +291,7 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                         // Steps of a tenth of a degree; the box shrinks only as much as the turned picture needs
                         degrees = (v * 10).roundToInt() / 10f
                         crop = EditGeometry.fitAfterStraighten(crop, fw, fh, degrees, minSide)
-                        if (circle) crop = EditGeometry.square(crop)
+                        if (shaped) crop = EditGeometry.toShape(crop, EditGeometry.allowed(fw, fh, degrees), minSide)
                     },
                     valueRange = -EditGeometry.MAX_DEGREES..EditGeometry.MAX_DEGREES,
                     enabled = b != null && !saving,
@@ -207,7 +317,7 @@ fun PhotoEditScreen(photo: Photo, onCancel: () -> Unit, onSave: (PhotoEdit, (Boo
                 Button(
                     onClick = {
                         saving = true; failed = false
-                        val c = if (circle) EditGeometry.square(crop) else crop
+                        val c = if (shaped) EditGeometry.square(crop) else crop
                         onSave(PhotoEdit(turns, degrees, EditGeometry.toShares(c, fw, fh), circle, fromOriginal)) { ok ->
                             saving = false
                             if (ok) onCancel() else failed = true

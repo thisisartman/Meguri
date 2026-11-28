@@ -110,12 +110,20 @@ object PhotoBundle {
         row.date?.let { dayMs(it, zone) } ?: now
 
     /**
-     * Whether the photo is cut to the stamp on it, as a notebook page is: a stamp photo of a station, roadside
-     * station, museum or place. A goshuin stays whole (no page crop for it yet); cards and Ekitag screenshots
-     * have their own crops when saved.
+     * Whether the photo is cut to the stamp on it by its shape (#221): a stamp photo of a station, an Ekitag (a
+     * photo of its stamp; a screenshot has its own cut), a roadside station, a museum, a place or your own type.
+     * Cards have their own cut; a goshuin is cut to its page ([cutsPage]); place and other photos stay whole.
      */
     fun cropsStamp(type: ItemType, kind: String): Boolean =
-        kind == PhotoKind.STAMP && type in setOf(ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP, ItemType.PLACE)
+        kind == PhotoKind.STAMP && type in STAMP_TYPES
+
+    private val STAMP_TYPES = setOf(
+        ItemType.EKI_STAMP, ItemType.EKITAG, ItemType.ROADSIDE_STATION, ItemType.MUSEUM_STAMP, ItemType.PLACE, ItemType.CUSTOM,
+    )
+
+    /** Whether the photo is a goshuin, cut to its page (#221): a goshuin item's stamp photo, or a goshuin photo of any item. */
+    fun cutsPage(type: ItemType, kind: String): Boolean =
+        kind == PhotoKind.GOSHUIN || (type == ItemType.GOSHUIN && kind == PhotoKind.STAMP)
 
     /** A date given is a day, kept at noon so it reads the same in any time zone the phone is set to. */
     fun dayMs(date: LocalDate, zone: java.time.ZoneId = java.time.ZoneId.systemDefault()): Long =

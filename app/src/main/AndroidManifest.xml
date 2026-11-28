@@ -26,6 +26,9 @@
         android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
 
+    <!-- Update from inside the app (#222): Android asks once to allow it, and the user confirms each install -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
     <!-- Mail apps, for Send feedback (Android 11+ only lists apps the manifest names) -->
     <queries>
         <intent>

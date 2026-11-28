@@ -84,20 +84,23 @@ class BackupRestore @Inject constructor(
         try {
             val dbFile = File(dir, CollectiblesDb.NAME)
             var createdMs: Long? = null
+            // So many files and bytes in all, never more than the phone has free less a margin (A6)
+            val budget = SafeFiles.Budget(minOf(MAX_TOTAL_BYTES, dir.usableSpace - FREE_MARGIN), MAX_ENTRIES)
             try {
                 context.contentResolver.openInputStream(uri)!!.use { input ->
                     ZipInputStream(input).use { zip ->
                         var entry = zip.nextEntry
                         while (entry != null) {
+                            budget.entry()
                             when {
-                                entry.name == CollectiblesDb.NAME -> dbFile.outputStream().use { copyCapped(zip, it) }
+                                entry.name == CollectiblesDb.NAME -> dbFile.outputStream().use { budget.copy(zip, it, MAX_DB_BYTES) }
                                 // Pictures carried by a "with photos" backup (#66), and their originals (#208); the name is a photo id only
                                 io.github.thisisartman.collectibles.photo.PhotoNames.parseBackup(entry.name) != null -> {
                                     val (id, original) = io.github.thisisartman.collectibles.photo.PhotoNames.parseBackup(entry.name)!!
                                     val dirP = File(dir, if (original) "originals" else "photos").apply { mkdirs() }
-                                    File(dirP, id).outputStream().use { copyCapped(zip, it, MAX_PHOTO_BYTES) }
+                                    File(dirP, id).outputStream().use { budget.copy(zip, it, MAX_PHOTO_BYTES) }
                                 }
-                                entry.name == "backup.json" -> createdMs = CREATED_MS.find(zip.readBytes().toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
+                                entry.name == "backup.json" -> createdMs = CREATED_MS.find(SafeFiles.readCapped(zip, MAX_JSON_BYTES).toString(Charsets.UTF_8))?.groupValues?.get(1)?.toLongOrNull()
                             }
                             entry = zip.nextEntry
                         }
@@ -105,6 +108,8 @@ class BackupRestore @Inject constructor(
                 }
             } catch (e: BackupError) {
                 throw e
+            } catch (e: SafeFiles.TooBig) {
+                throw BackupError.Damaged("too large: ${e.message}")
             } catch (e: Exception) {
                 throw BackupError.NotABackup()
             }
@@ -119,17 +124,6 @@ class BackupRestore @Inject constructor(
         }
     }
 
-    private fun copyCapped(input: ZipInputStream, out: java.io.OutputStream, cap: Long = MAX_DB_BYTES) {
-        val buffer = ByteArray(64 * 1024)
-        var total = 0L
-        while (true) {
-            val n = input.read(buffer)
-            if (n < 0) return
-            total += n
-            if (total > cap) throw BackupError.Damaged("file too large")
-            out.write(buffer, 0, n)
-        }
-    }
 
     private fun checkDatabase(file: File, createdMs: Long?, dir: File): BackupInfo {
         clearWalFlag(file)
@@ -402,6 +396,11 @@ class BackupRestore @Inject constructor(
         private const val KEY_RELINK = "relink_pending"
         private const val MAX_DB_BYTES = 256L * 1024 * 1024
         private const val MAX_PHOTO_BYTES = 64L * 1024 * 1024
+        /** A6: a whole backup unzipped, its number of files, and backup.json (a few hundred bytes today). */
+        private const val MAX_TOTAL_BYTES = 8L * 1024 * 1024 * 1024
+        private const val MAX_ENTRIES = 50_000
+        private const val MAX_JSON_BYTES = 64L * 1024
+        private const val FREE_MARGIN = 200L * 1024 * 1024
         private val CREATED_MS = Regex("\"created_ms\":(\\d+)")
 
         fun photoPermission(): String =

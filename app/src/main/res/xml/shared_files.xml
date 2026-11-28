@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Only the cache folder the trip report writes to is shared -->
+<!-- Only the cache folders the trip report and a checked update (#222) are written to are shared -->
 <paths>
     <cache-path name="shared" path="shared/" />
+    <cache-path name="updates" path="updates/" />
 </paths>

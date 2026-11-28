@@ -78,7 +78,8 @@ class RegionPacks @Inject constructor(
     /** Packs on this phone whose file has changed on the server. */
     fun updates(index: PackIndex): List<Pack> = index.packs.filter { p -> installed.value[p.id]?.let { it != p.sha256 } == true }
 
-    private fun mapFile(p: Pack) = File(dir, p.file)
+    /** A pack's file in the packs folder (A5: the index's name is checked, so it never lands outside it). */
+    private fun mapFile(p: Pack): File = SafeFiles.child(dir, p.file) ?: error("bad pack file name")
 
     /**
      * Downloads and installs [packs] one by one; [onProgress] gets bytes done and bytes in all. Stops at the first
@@ -90,14 +91,15 @@ class RegionPacks @Inject constructor(
         var installedNow = 0
         for (p in packs) {
             val ok = runCatching {
-                val tmp = File(dir, p.file + ".part")
-                download(BuildConfig.PACKS_URL + p.file, tmp) { n -> onProgress(done + n, total) }
+                val tmp = SafeFiles.child(dir, p.file + ".part") ?: error("bad pack file name")
+                // No more than the index says the file is (A6): an endless answer can't fill the phone
+                download(BuildConfig.PACKS_URL + p.file, tmp, p.bytes) { n -> onProgress(done + n, total) }
                 val sha = sha256(tmp)
                 check(sha == p.sha256) { "checksum differs for ${p.file}" }
                 if (p.isMap) {
                     check(tmp.renameTo(mapFile(p)) || (mapFile(p).delete() && tmp.renameTo(mapFile(p)))) { "could not keep ${p.file}" }
                 } else {
-                    val text = GZIPInputStream(tmp.inputStream()).use { it.readBytes() }.toString(Charsets.UTF_8)
+                    val text = GZIPInputStream(tmp.inputStream()).use { SafeFiles.readCapped(it, MAX_CATALOGUE) }.toString(Charsets.UTF_8)
                     catalogue.importCatalogText(text)
                     tmp.delete()
                 }
@@ -123,7 +125,7 @@ class RegionPacks @Inject constructor(
     suspend fun remove(prefecture: String, index: PackIndex): Int = withContext(Dispatchers.IO) {
         var removed = 0
         for (p in index.of(prefecture).filter { it.id in installed.value }) {
-            if (p.isMap) mapFile(p).delete()
+            if (p.isMap) SafeFiles.child(dir, p.file)?.delete()
             else if (p.type != null) removed += catalogue.removeUntouched(prefecture, p.type)
             prefs.edit().remove(p.id).apply()
         }
@@ -161,7 +163,7 @@ class RegionPacks @Inject constructor(
         return c.inputStream
     }
 
-    private fun download(url: String, to: File, onBytes: (Long) -> Unit) {
+    private fun download(url: String, to: File, limit: Long, onBytes: (Long) -> Unit) {
         get(url).use { input ->
             to.outputStream().use { out ->
                 val buf = ByteArray(64 * 1024)
@@ -170,8 +172,9 @@ class RegionPacks @Inject constructor(
                 while (true) {
                     val r = input.read(buf)
                     if (r < 0) break
-                    out.write(buf, 0, r)
                     n += r
+                    if (n > limit) throw SafeFiles.TooBig("more than the $limit bytes the index gives")
+                    out.write(buf, 0, r)
                     if (n - last > 256 * 1024) { onBytes(n); last = n }
                 }
                 onBytes(n)
@@ -189,13 +192,16 @@ class RegionPacks @Inject constructor(
         /** Prefectures the old built-in map covered: Saitama, Tokyo, Niigata. */
         val LEGACY_MAP_CODES = listOf("JP-11", "JP-13", "JP-15")
 
+        /** The most a catalogue pack may unzip to (A6); today's biggest is a few MB. */
+        private const val MAX_CATALOGUE = 64L * 1024 * 1024
+
         /** Map files on this phone with their outlines (read without the app's graph, for the map). */
         fun installedMaps(context: Context): List<Pair<File, List<DoubleArray>>> {
             val dir = File(context.filesDir, "packs")
             val installed = context.getSharedPreferences("packs", Context.MODE_PRIVATE).all.keys
             val index = runCatching { parse(File(dir, "index.json").readText()) }.getOrNull() ?: return emptyList()
             return index.packs.filter { it.isMap && it.id in installed }
-                .mapNotNull { p -> File(dir, p.file).takeIf { it.exists() }?.let { it to p.rings } }
+                .mapNotNull { p -> SafeFiles.child(dir, p.file)?.takeIf { it.exists() }?.let { it to p.rings } }
         }
 
         /** Changes whenever packs are installed or removed. */
@@ -219,7 +225,8 @@ class RegionPacks @Inject constructor(
                     bytes = p.getLong("bytes"), sha256 = p.getString("sha256"), rings = rings,
                 )
             }
-            return PackIndex(o.getString("version"), packs)
+            // Only plain file names (A5): a name with "/" or ".." could reach the app's database
+            return PackIndex(o.getString("version"), packs.filter { SafeFiles.plainName(it.file) })
         }
     }
 }

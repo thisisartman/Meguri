@@ -26,6 +26,7 @@ import java.util.Locale
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.sync.withLock
 
 /**
  * Weekly backup (PRD FR-20) to one of three places (0.6): a folder the user picks; one file the user picks, which is
@@ -58,7 +59,10 @@ class AutoBackup @Inject constructor(
     val folder: Uri? get() = prefs.getString(KEY_FOLDER, null)?.let(Uri::parse)
     val file: Uri? get() = prefs.getString(KEY_FILE, null)?.let(Uri::parse)
 
-    /** What went wrong last time, for the status line: "login", "certificate", "offline", "folder" or null. */
+    /**
+     * What went wrong last time, for the status line: "login", "certificate", "offline", "folder", or "fewer" (the
+     * one file was kept because the new backup had far fewer finds; Back up now then replaces it), or null.
+     */
     val lastProblem: String? get() = prefs.getString(KEY_PROBLEM, null)
     val lastSuccessMs: Long? get() = prefs.getLong(KEY_LAST, 0L).takeIf { it > 0 }
     val lastFailed: Boolean get() = prefs.getBoolean(KEY_FAILED, false)
@@ -135,12 +139,15 @@ class AutoBackup @Inject constructor(
         work.cancelUniqueWork(WORK_WEEKLY)
     }
 
-    fun runNow() {
-        log.d("AutoBackup", "Backup now queued")
+    /** [force]: you tapped Back up now after being told the last one was kept (A2), so it is replaced this time. */
+    fun runNow(force: Boolean = false) {
+        log.d("AutoBackup", "Backup now queued" + if (force) ", replacing the kept one" else "")
         val net = if (where == Where.SERVER) androidx.work.NetworkType.CONNECTED else androidx.work.NetworkType.NOT_REQUIRED
         work.enqueueUniqueWork(
-            WORK_NOW, ExistingWorkPolicy.KEEP,
-            OneTimeWorkRequestBuilder<AutoBackupWorker>().setConstraints(androidx.work.Constraints.Builder().setRequiredNetworkType(net).build()).build(),
+            WORK_NOW, if (force) ExistingWorkPolicy.REPLACE else ExistingWorkPolicy.KEEP,
+            OneTimeWorkRequestBuilder<AutoBackupWorker>()
+                .setInputData(androidx.work.workDataOf(FORCE to force))
+                .setConstraints(androidx.work.Constraints.Builder().setRequiredNetworkType(net).build()).build(),
         )
     }
 
@@ -150,21 +157,42 @@ class AutoBackup @Inject constructor(
         if (last == null || now - last > TimeUnit.DAYS.toMillis(7)) runNow()
     }
 
-    /** Writes one backup, checks it by reading it back, then removes old ones. False if it failed. */
-    suspend fun runOnce(now: Long = System.currentTimeMillis()): Outcome = when (where) {
-        null -> Outcome.NoFolder.also { log.d("AutoBackup", "Weekly backup is off: nothing to do") }
-        Where.FOLDER -> runToFolder(now)
-        Where.FILE, Where.SERVER -> runViaCache(now)
+    /**
+     * Writes one backup, checks it by reading it back, then removes old ones. One run at a time (A3): the weekly
+     * job and Back up now can both be queued, and each waits for the other.
+     */
+    suspend fun runOnce(now: Long = System.currentTimeMillis(), force: Boolean = false): Outcome = runLock.withLock {
+        when (where) {
+            null -> Outcome.NoFolder.also { log.d("AutoBackup", "Weekly backup is off: nothing to do") }
+            Where.FOLDER -> runToFolder(now)
+            Where.FILE, Where.SERVER -> runViaCache(now, force)
+        }
+    }
+
+    /** The most finds a saved backup has had, and that backup's date and time (A4): it is never pruned. */
+    private val bestFinds: Int get() = prefs.getInt(KEY_BEST_FINDS, prefs.getInt(KEY_FINDS, 0))
+    private val bestStamp: String? get() = prefs.getString(KEY_BEST_STAMP, null)
+
+    /** Records a saved backup: the last finds, and the best one when it has at least as many ([reset]: replace it). */
+    private fun saved(now: Long, finds: Int, stamp: String?, reset: Boolean = false) {
+        val e = prefs.edit().putLong(KEY_LAST, now).putInt(KEY_FINDS, finds).putBoolean(KEY_FAILED, false).remove(KEY_PROBLEM)
+        if (reset || finds >= bestFinds) {
+            e.putInt(KEY_BEST_FINDS, finds)
+            if (stamp != null) e.putString(KEY_BEST_STAMP, stamp) else e.remove(KEY_BEST_STAMP)
+        }
+        e.apply()
     }
 
     /**
      * One file or the server: the backup is written to the app's own storage and checked there first, so a backup
      * that fails never replaces the good copy in the file, and the server only ever receives checked files.
      */
-    private suspend fun runViaCache(now: Long): Outcome {
+    private suspend fun runViaCache(now: Long, force: Boolean): Outcome {
         val t0 = System.currentTimeMillis()
         val target = where
-        val tmp = File(context.cacheDir, "weekly-backup.zip")
+        // A file of its own for each run (A3), so two runs never share a half-written file
+        val tmp = File(context.cacheDir, "weekly-backup-${java.util.UUID.randomUUID()}.zip")
+        var stamp: String? = null
         try {
             tmp.outputStream().use { backup.writeBackupLocked(it, withPhotos = includePhotos) }
             val info = restore.inspect(Uri.fromFile(tmp))
@@ -172,26 +200,35 @@ class AutoBackup @Inject constructor(
             when (target) {
                 Where.FILE -> {
                     val doc = file!!
-                    val out = try { context.contentResolver.openOutputStream(doc, "wt") } catch (e: SecurityException) { null }
-                    if (out == null) return lost("No access to the backup file any more")
-                    out.use { o -> tmp.inputStream().use { it.copyTo(o) } }
+                    // The one file is the only copy (A2): never replace it with one that has far fewer finds
+                    // unless you asked to, after being told
+                    val best = bestFinds
+                    if (!force && SafeFiles.farFewer(info.finds, best)) {
+                        log.w("AutoBackup", "Finds fell from $best to ${info.finds}; kept the backup file as it was")
+                        prefs.edit().putBoolean(KEY_FAILED, true).putString(KEY_PROBLEM, "fewer").apply()
+                        return Outcome.Kept
+                    }
+                    writeChecked(doc, tmp, info.finds)?.let { return it }
                 }
                 Where.SERVER -> {
                     val dav = server.login?.client() ?: return lost("No server saved")
                     dav.ensureFolder()
                     val name = "$PREFIX${SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date(now))}.zip"
+                    stamp = stampOf(name)
                     dav.upload(name, tmp)
                     val files = dav.list()
                     val sent = files.firstOrNull { it.name == name }
                     if (sent == null || (sent.size >= 0 && sent.size != tmp.length())) throw java.io.IOException("upload check failed")
                     val previousFinds = prefs.getInt(KEY_FINDS, 0)
                     if (info.finds >= previousFinds) {
-                        files.filter { OWN_FILE.matches(it.name) }.sortedByDescending { stampOf(it.name) }.drop(keep).forEach { dav.delete(it.name) }
+                        // The backup with the most finds is always kept (A4)
+                        val best = if (info.finds >= bestFinds) stamp else bestStamp
+                        SafeFiles.toPrune(files.map { it.name }.filter { OWN_FILE.matches(it) }, keep, best, ::stampOf).forEach { dav.delete(it) }
                     } else log.w("AutoBackup", "Finds fell from $previousFinds to ${info.finds}; keeping all backups")
                 }
                 else -> Unit
             }
-            prefs.edit().putLong(KEY_LAST, now).putInt(KEY_FINDS, info.finds).putBoolean(KEY_FAILED, false).remove(KEY_PROBLEM).apply()
+            saved(now, info.finds, stamp, reset = force)
             log.i("AutoBackup", "Saved to ${target?.name?.lowercase()}: ${info.finds} finds, ${info.items} items, ${info.photos} photos in ${System.currentTimeMillis() - t0} ms")
             return Outcome.Saved
         } catch (e: ServerError) {
@@ -213,6 +250,23 @@ class AutoBackup @Inject constructor(
         } finally {
             tmp.delete()
         }
+    }
+
+    /**
+     * Writes [tmp] over the one backup file [doc] and reads it back (A2). Android's file picker gives no way to
+     * write a new file and swap it in, so the copy is checked instead and, if it doesn't read back with the same
+     * finds, written once more. Null when it is good; an outcome to return when it isn't.
+     */
+    private suspend fun writeChecked(doc: Uri, tmp: File, finds: Int): Outcome? {
+        repeat(2) { attempt ->
+            val out = try { context.contentResolver.openOutputStream(doc, "wt") } catch (e: SecurityException) { null }
+                ?: return lost("No access to the backup file any more")
+            out.use { o -> tmp.inputStream().use { it.copyTo(o) } }
+            val back = runCatching { restore.inspect(doc).also { restore.discard(it) } }.getOrNull()
+            if (back != null && back.finds == finds) return null
+            log.w("AutoBackup", "The backup file didn't read back right (try ${attempt + 1})")
+        }
+        throw java.io.IOException("The backup file didn't read back right")
     }
 
     private fun lost(why: String): Outcome {
@@ -261,7 +315,7 @@ class AutoBackup @Inject constructor(
             val info = restore.inspect(file.uri)
             restore.discard(info)
             val previousFinds = prefs.getInt(KEY_FINDS, 0)
-            prefs.edit().putLong(KEY_LAST, now).putInt(KEY_FINDS, info.finds).putBoolean(KEY_FAILED, false).apply()
+            saved(now, info.finds, stampOf(file.name ?: name))
             // Fewer finds than last time may mean something went wrong: keep the older copies.
             if (info.finds >= previousFinds) prune(dir) else log.w("AutoBackup", "Finds fell from $previousFinds to ${info.finds}; keeping all backups")
             log.i("AutoBackup", "Saved ${file.name}: ${info.finds} finds, ${info.items} items, ${info.photos} photos in ${System.currentTimeMillis() - t0} ms")
@@ -274,11 +328,15 @@ class AutoBackup @Inject constructor(
         }
     }
 
+    /** Keeps the newest [keep] and, always, the backup with the most finds (A4). */
     private fun prune(dir: DocumentFile) {
-        dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }.sortedByDescending { stampOf(it.name ?: "") }.drop(keep).forEach { it.delete() }
+        val own = dir.listFiles().filter { OWN_FILE.matches(it.name ?: "") }
+        val drop = SafeFiles.toPrune(own.map { it.name ?: "" }, keep, bestStamp, ::stampOf).toSet()
+        own.filter { it.name in drop }.forEach { it.delete() }
     }
 
-    enum class Outcome { Saved, NoFolder, LostAccess, Failed }
+    /** Kept: the one backup file was left as it was, as the new backup had far fewer finds (A2). */
+    enum class Outcome { Saved, NoFolder, LostAccess, Failed, Kept }
 
     companion object {
         const val KEEP = 4
@@ -293,8 +351,11 @@ class AutoBackup @Inject constructor(
         private val STAMP = Regex("(\\d{8}-\\d{6})")
         /** The date and time in a backup's name, for newest-first order across old and new names. */
         fun stampOf(name: String) = STAMP.find(name)?.value ?: ""
-        val PREFIX = prefixFor(BuildConfig.DEBUG)
-        val OWN_FILE = ownFile(BuildConfig.DEBUG)
+        /** The dev copy, debug or devRelease (A7: devRelease is not a debug build, but it is the dev app). */
+        private val DEV = SafeFiles.devApp(BuildConfig.APPLICATION_ID, BuildConfig.DEBUG)
+        val PREFIX = prefixFor(DEV)
+        val OWN_FILE = ownFile(DEV)
+        const val FORCE = "force"
         private const val WORK_WEEKLY = "auto-backup-weekly"
         private const val WORK_NOW = "auto-backup-now"
         private const val KEY_FOLDER = "auto_folder"
@@ -306,6 +367,9 @@ class AutoBackup @Inject constructor(
         private const val KEY_FILE = "auto_file"
         private const val KEY_SERVER = "auto_server"
         private const val KEY_PROBLEM = "auto_problem"
+        private const val KEY_BEST_FINDS = "auto_best_finds"
+        private const val KEY_BEST_STAMP = "auto_best_stamp"
+        private val runLock = kotlinx.coroutines.sync.Mutex()
     }
 }
 
@@ -319,11 +383,11 @@ interface AutoBackupEntryPoint {
 class AutoBackupWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result {
         val auto = EntryPointAccessors.fromApplication(applicationContext, AutoBackupEntryPoint::class.java).autoBackup()
-        val outcome = auto.runOnce()
+        val outcome = auto.runOnce(force = inputData.getBoolean(AutoBackup.FORCE, false))
         EntryPointAccessors.fromApplication(applicationContext, AutoBackupEntryPoint::class.java).log()
             .d("AutoBackup", "Worker attempt ${runAttemptCount + 1}: $outcome")
         return when (outcome) {
-            AutoBackup.Outcome.Saved, AutoBackup.Outcome.NoFolder -> Result.success()
+            AutoBackup.Outcome.Saved, AutoBackup.Outcome.NoFolder, AutoBackup.Outcome.Kept -> Result.success()
             AutoBackup.Outcome.LostAccess -> Result.failure()
             AutoBackup.Outcome.Failed -> if (runAttemptCount < 2) Result.retry() else Result.failure()
         }

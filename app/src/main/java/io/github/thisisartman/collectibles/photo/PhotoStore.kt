@@ -29,13 +29,29 @@ object PhotoStore {
 
     fun dir(context: Context) = File(context.filesDir, DIR).apply { mkdirs() }
 
-    fun file(context: Context, uri: String): File = File(context.filesDir, uri.removePrefix(SCHEME))
+    /**
+     * The app file of an `app:` address. Only a plain name in the photos folder (A5): an address from a crafted
+     * backup such as `app:../databases/collectibles.db` gets a file that never exists, so reading, deleting or
+     * backing it up touches nothing else in the app.
+     */
+    fun file(context: Context, uri: String): File {
+        val f = File(context.filesDir, uri.removePrefix(SCHEME))
+        val photos = File(context.filesDir, DIR)
+        return if (PhotoNames.inPhotos(uri) && io.github.thisisartman.collectibles.data.SafeFiles.inside(photos, f)) f
+        else File(photos, NOWHERE)
+    }
+
+    /** What a bad address resolves to: a name no photo has, never created. */
+    private const val NOWHERE = ".not-a-photo"
 
     fun exists(context: Context, uri: String) = isApp(uri) && file(context, uri).let { it.isFile && it.length() > 0 }
 
-    fun open(context: Context, uri: String): InputStream? =
-        if (isApp(uri)) file(context, uri).takeIf { it.isFile }?.inputStream()
-        else context.contentResolver.openInputStream(Uri.parse(uri))
+    /** The picture at [uri]: the app's own file, or a content address from the gallery; nothing else (A5: no file://). */
+    fun open(context: Context, uri: String): InputStream? = when {
+        isApp(uri) -> file(context, uri).takeIf { it.isFile }?.inputStream()
+        uri.startsWith("content://") -> context.contentResolver.openInputStream(Uri.parse(uri))
+        else -> null
+    }
 
     /** A small bitmap for a tile or grid; null if the picture can't be read. */
     fun thumbnail(context: Context, uri: String, px: Int): Bitmap? = runCatching {
@@ -77,12 +93,13 @@ object PhotoStore {
         val decision = decide(whole)
         // A manhole cover is kept as the cover itself, cut out as a circle (owner, 2026-11-08); no clear circle, the whole photo.
         // A card is trimmed to the card (2026-11-27); no whole card found, the whole photo.
-        // A stamp photo from a photo file is cut to its stamp (#188); no stamp found, the whole photo.
+        // A stamp photo is cut to its stamp by its shape, a goshuin to its page (#221); unsure, the whole photo.
         // An Ekitag screenshot becomes its stamp on a titled square (owner, 2026-11-09); no stamp found, the screenshot.
         val cut: Bitmap? = when (decision.crop) {
             PhotoSort.Crop.CIRCLE -> runCatching { CoverCrop.crop(whole) }.getOrNull()
             PhotoSort.Crop.CARD -> runCatching { CardTrim.trim(whole).first }.getOrNull()
             PhotoSort.Crop.STAMP -> StampCrop.cut(whole)
+            PhotoSort.Crop.PAGE -> StampCrop.cut(whole, page = true)
             PhotoSort.Crop.EKITAG -> ekitagTitle?.let { t ->
                 runCatching {
                     // "first\nsecond": the station's name in the app's language first

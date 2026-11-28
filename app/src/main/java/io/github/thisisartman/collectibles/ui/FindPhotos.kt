@@ -216,7 +216,12 @@ fun ItemPhotos(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     // Card size, whole, with fullscreen a tap away (owner, 2026-11-08)
-                    LargePhoto(p.contentUri, onFullscreen = { fullscreen = p.contentUri })
+                    LargePhoto(
+                        p.contentUri,
+                        // Edit straight from here (owner, 2026-11-28); only for a photo the app has its own copy of
+                        onEdit = if (edit != null && io.github.thisisartman.collectibles.photo.PhotoStore.isApp(p.contentUri)) ({ cropping = p }) else null,
+                        onFullscreen = { fullscreen = p.contentUri },
+                    )
                     KindChips(type, kind) { kind = it }
                     if (kind == PhotoKind.OTHER) androidx.compose.material3.OutlinedTextField(
                         value = otherName, onValueChange = { otherName = it.take(40) },

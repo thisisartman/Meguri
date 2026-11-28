@@ -30,6 +30,7 @@
     <string name="auto_failed_login">Last weekly backup failed: wrong user name or password.</string>
     <string name="auto_failed_certificate">Last weekly backup failed: the server\'s certificate changed.</string>
     <string name="auto_failed_offline">Couldn\'t reach the server. Trying again later.</string>
+    <string name="auto_kept_fewer">Kept your last backup: the new one had far fewer finds. \"Run the weekly backup now\" replaces it.</string>
     <string name="restore_server">Restore from server</string>
     <string name="restore_server_sub">The newest backup on your server</string>
     <string name="restore_server_none">No backups on the server yet.</string>

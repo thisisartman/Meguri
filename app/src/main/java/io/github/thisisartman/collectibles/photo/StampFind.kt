@@ -72,8 +72,22 @@ object StampFind {
         return paper > argb.size * 0.35f
     }
 
+    /**
+     * A stamp as found: its padded [box], and the patch of ink itself for telling its shape ([StampShape]): its
+     * bounds in pixels ([x0]..[x1], [y0]..[y1], inclusive), the area inside its outline taken row by row ([area]),
+     * and how much of its four corner squares that fills ([corners], 0..1: a round stamp leaves them empty, a
+     * square one fills them).
+     */
+    data class Blob(val box: Box, val x0: Int, val y0: Int, val x1: Int, val y1: Int, val area: Int, val corners: Float) {
+        val width get() = x1 - x0 + 1
+        val height get() = y1 - y0 + 1
+    }
+
     /** The stamps on a page, biggest first. */
-    fun find(argb: IntArray, w: Int, h: Int): List<Box> {
+    fun find(argb: IntArray, w: Int, h: Int): List<Box> = blobs(argb, w, h).map { it.box }
+
+    /** The stamps on a page with their shapes' facts, biggest first. */
+    fun blobs(argb: IntArray, w: Int, h: Int): List<Blob> {
         val p = paper(argb, w, h)
         val ink = ink(argb, p)
         val paperish = BooleanArray(w * h) { p.l(it) > 150f }
@@ -85,8 +99,12 @@ object StampFind {
         val k = max(3, (min(w, h) * 0.02f).roundToInt())
         m = boxFilter(boxFilter(m, w, h, k) { it > 0 }, w, h, k) { it == (2 * k + 1) * (2 * k + 1) }
         m = fillHoles(m, w, h)
-        // Large, compact patches: writing is long and thin, specks are small
-        val out = ArrayList<Pair<Int, Box>>()
+        return patches(m, w, h)
+    }
+
+    /** The large, compact patches of [m]: writing is long and thin, specks are small. Biggest first. */
+    internal fun patches(m: BooleanArray, w: Int, h: Int): List<Blob> {
+        val out = ArrayList<Pair<Int, Blob>>()
         val label = IntArray(w * h); val queue = IntArray(w * h); var cur = 0
         for (s in 0 until w * h) {
             if (!m[s] || label[s] != 0) continue
@@ -106,16 +124,37 @@ object StampFind {
             if (fill < 0.45f || bw.toFloat() / bh !in 0.4f..2.5f) continue
             // A little margin, so the stamp's edge isn't cut
             val pad = 0.03f * max(bw, bh)
-            out += tail to Box(
+            val box = Box(
                 ((x0 - pad) / w).coerceIn(0f, 1f), ((y0 - pad) / h).coerceIn(0f, 1f),
                 ((x1 + 1 + pad) / w).coerceIn(0f, 1f), ((y1 + 1 + pad) / h).coerceIn(0f, 1f),
             )
+            // Its outline, filled row by row: a faint print's gaps inside don't count, its outer shape does
+            val from = IntArray(bh); val to = IntArray(bh)
+            var spans = 0
+            for (r in 0 until bh) {
+                val row = (y0 + r) * w
+                var a = -1; var b = -1
+                for (x in x0..x1) if (label[row + x] == cur) { if (a < 0) a = x; b = x }
+                from[r] = a; to[r] = b
+                if (a >= 0) spans += b - a + 1
+            }
+            // The four corner squares, an eighth of the shorter side each
+            val c = max(1, min(bw, bh) / 8)
+            var inCorners = 0
+            fun inside(x: Int, r: Int) = from[r] >= 0 && x in from[r]..to[r]
+            for (dy in 0 until c) for (dx in 0 until c) {
+                if (inside(x0 + dx, dy)) inCorners++
+                if (inside(x1 - dx, dy)) inCorners++
+                if (inside(x0 + dx, bh - 1 - dy)) inCorners++
+                if (inside(x1 - dx, bh - 1 - dy)) inCorners++
+            }
+            out += tail to Blob(box, x0, y0, x1, y1, spans, inCorners / (4f * c * c))
         }
         return out.sortedByDescending { it.first }.map { it.second }
     }
 
     /** Square window of radius [k] over [m]; [keep] decides from how many set pixels it holds. Summed-area table. */
-    private fun boxFilter(m: BooleanArray, w: Int, h: Int, k: Int, keep: (Int) -> Boolean): BooleanArray {
+    internal fun boxFilter(m: BooleanArray, w: Int, h: Int, k: Int, keep: (Int) -> Boolean): BooleanArray {
         val sat = IntArray((w + 1) * (h + 1))
         for (y in 0 until h) {
             var row = 0
@@ -131,7 +170,7 @@ object StampFind {
         }
     }
 
-    private fun fillHoles(m: BooleanArray, w: Int, h: Int): BooleanArray {
+    internal fun fillHoles(m: BooleanArray, w: Int, h: Int): BooleanArray {
         val outside = BooleanArray(w * h); val queue = IntArray(w * h); var head = 0; var tail = 0
         fun seed(i: Int) { if (!m[i] && !outside[i]) { outside[i] = true; queue[tail++] = i } }
         for (x in 0 until w) { seed(x); seed((h - 1) * w + x) }

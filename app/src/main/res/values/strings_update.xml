@@ -1,9 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Check for updates (#131) -->
+<!-- Check for updates (#131) and update from inside the app (#222) -->
 <resources>
     <string name="update_check">Check for updates</string>
     <string name="update_check_sub">Once a day, from GitHub</string>
     <string name="update_available">Update available: %1$s</string>
     <string name="update_button">Update</string>
-    <string name="privacy_updates">Check for updates, when the switch is on: once a day, the latest version number</string>
+    <string name="update_downloading">Downloading… %1$d%%</string>
+    <string name="update_checking">Checking the download…</string>
+    <string name="update_ready">%1$s is ready to install</string>
+    <string name="update_install">Install</string>
+    <string name="update_page">Release page</string>
+    <string name="update_failed_download">Couldn\'t download the update</string>
+    <string name="update_failed_check">The download didn\'t match the release, so it wasn\'t kept</string>
+    <string name="update_failed_signature">This update isn\'t signed like your app, so it can\'t install</string>
+    <string name="privacy_updates">Check for updates (on unless you turn it off): once a day, the latest version number. When you tap Update, that version\'s app file</string>
 </resources>

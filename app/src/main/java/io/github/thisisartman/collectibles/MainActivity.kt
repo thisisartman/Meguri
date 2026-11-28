@@ -12,6 +12,21 @@ import io.github.thisisartman.collectibles.ui.App
 import io.github.thisisartman.collectibles.ui.AppRequest
 import io.github.thisisartman.collectibles.ui.CollectiblesTheme
 
+/**
+ * A random token made once per install (A8), put on the app's own intents to [MainActivity] so their internal
+ * extras can be told from another app's. Kept in the app's private settings; never leaves the phone.
+ */
+object InternalToken {
+    @Volatile private var cached: String? = null
+
+    fun get(context: Context): String = cached ?: synchronized(this) {
+        cached ?: run {
+            val prefs = context.applicationContext.getSharedPreferences("internal", Context.MODE_PRIVATE)
+            prefs.getString("token", null) ?: java.util.UUID.randomUUID().toString().also { prefs.edit().putString("token", it).commit() }
+        }.also { cached = it }
+    }
+}
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     /** What a notification or the Trip mode tile asked for; the UI clears it once handled. */
@@ -21,7 +36,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         // A restored activity must not act on its old intent a second time
-        if (savedInstanceState == null) request.value = AppRequest.from(intent)
+        if (savedInstanceState == null) request.value = AppRequest.from(intent, InternalToken.get(this))
         setContent { CollectiblesTheme { App(request.value, onRequestHandled = { request.value = null }) } }
     }
 
@@ -35,7 +50,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        AppRequest.from(intent)?.let { request.value = it }
+        AppRequest.from(intent, InternalToken.get(this))?.let { request.value = it }
     }
 
     companion object {
@@ -49,8 +64,12 @@ class MainActivity : ComponentActivity() {
         /** The app shortcut's id (#205): the same name as the extra in res/xml/shortcuts.xml. */
         const val EXTRA_SHORTCUT = "shortcut"
 
+        /** Marks an intent as the app's own (A8): see [AppRequest.trusted]. */
+        const val EXTRA_TOKEN = "internal_token"
+
         fun launchIntent(context: Context) = Intent(context, MainActivity::class.java)
             .addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            .putExtra(EXTRA_TOKEN, InternalToken.get(context))
 
         fun openItemIntent(context: Context, itemId: String) = launchIntent(context).putExtra(EXTRA_OPEN_ITEM, itemId)
         /** The alert's Collect button: logs the find at the position that set off the alert, then opens the item. */
