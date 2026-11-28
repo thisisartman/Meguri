@@ -59,6 +59,7 @@ import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -139,6 +140,10 @@ fun HoldTileMockup() {
     // The ring (the tile's picture) of each tile: the fan's centre
     val ringBounds = remember { mutableStateMapOf<String, Rect>() }
     var rootSize by remember { mutableStateOf(IntSize.Zero) }
+    // The overlay's top-left in root coordinates: below the status bar, as the page sits inside the safe-area padding
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    // Where the bright copy of the held ring really landed, in root coordinates, to check it sits on the tile's ring
+    var copyCentre by remember { mutableStateOf<Offset?>(null) }
     val haptic = LocalHapticFeedback.current
     val density = LocalDensity.current
     val tileDp = 64.dp
@@ -152,11 +157,12 @@ fun HoldTileMockup() {
     val scope = rememberCoroutineScope()
 
     fun geometry(t: MockTile): Pair<Offset, List<Double>>? {
-        val c = Radial.centreOf(ringBounds[t.id] ?: return null)
+        val c = Radial.centreOf(ringBounds[t.id] ?: return null, origin)
         val f = Radial.fan(c.x, c.y, rootSize.width.toFloat(), radius, buttonPx)
         return c to Radial.angles(f, actionsOf(t).size)
     }
     fun close() {
+        copyCentre = null
         scope.launch {
             // Back in, the last out first in
             progress.indices.reversed().forEach { i -> launch { delay((progress.lastIndex - i) * 30L); progress[i].animateTo(0f, tween(160)) } }
@@ -195,7 +201,7 @@ fun HoldTileMockup() {
                             val b = tileBounds[t.id] ?: return@detectDragGesturesAfterLongPress
                             val (c, angles) = geometry(t) ?: return@detectDragGesturesAfterLongPress
                             // Hit by angle and distance from the tile's centre: the nearest button within the ring band
-                            val at = b.topLeft + change.position
+                            val at = b.topLeft + change.position - origin
                             val now = Radial.hit(at.x, at.y, c.x, c.y, angles, radius, band)
                             if (now != hovered) { hovered = now; if (now >= 0) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove) }
                         },
@@ -217,7 +223,7 @@ fun HoldTileMockup() {
         }
     }
 
-    Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }) {
+    Box(Modifier.fillMaxSize().onSizeChanged { rootSize = it }.onGloballyPositioned { origin = it.positionInRoot() }) {
         Column(Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             // A tile at the very top: its fan opens downward
             Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) { Tile(TOP, Modifier.width(96.dp)) }
@@ -259,7 +265,22 @@ fun HoldTileMockup() {
                     .then(if (variant == "A") Modifier.clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) { close() } else Modifier),
             )
             // The held tile's ring stays bright, over the dim
-            Box(Modifier.placedAt(c.x, c.y, Offset.Zero)) { TileMark(t) }
+            Box(Modifier.placedAt(c.x, c.y, Offset.Zero)) {
+                Box(Modifier.onGloballyPositioned { copyCentre = it.boundsInRoot().center }) { TileMark(t) }
+            }
+            // Dev check: the bright copy must sit on the tile's own ring, within 2 px
+            val real = ringBounds[t.id]?.center
+            val copy = copyCentre
+            if (real != null && copy != null) {
+                val off = (copy - real).getDistance()
+                LaunchedEffect(t.id, off > 2f) {
+                    android.util.Log.d("Mockup", "Held ring ${t.id}: tile ring at $real, copy at $copy, ${"%.1f".format(off)} px apart")
+                }
+                if (off > 2f) Text(
+                    "Ring copy is ${off.toInt()} px off", color = Color.Red,
+                    modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp),
+                )
+            }
             val screenW = rootSize.width.toFloat()
             val screenH = rootSize.height.toFloat()
             val spots = angles.map { Radial.position(c.x, c.y, radius, it, buttonPx / 2, screenW, screenH) }

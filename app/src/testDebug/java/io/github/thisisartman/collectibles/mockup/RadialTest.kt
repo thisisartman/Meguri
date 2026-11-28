@@ -61,6 +61,15 @@ class RadialTest {
         assertEquals(androidx.compose.ui.geometry.Offset(167f, 1700f), Radial.centreOf(ring))
     }
 
+    @Test fun `edge to edge, the status bar inset is taken off so the fan sits on the real ring`() {
+        // The Poco: ring centred at (167, 1760) in the window, the page starting 90 px down under the status bar
+        val ring = androidx.compose.ui.geometry.Rect(135f, 1728f, 199f, 1792f)
+        val c = Radial.centreOf(ring, androidx.compose.ui.geometry.Offset(0f, 90f))
+        assertEquals(androidx.compose.ui.geometry.Offset(167f, 1670f), c)
+        // Drawn in the overlay at c, it lands back on the ring in the window
+        assertEquals(1760f, c.y + 90f, 2f)
+    }
+
     @Test fun `every button sits at the same distance, symmetric about the open direction`() {
         for (f in Fan.entries) {
             val angles = Radial.angles(f, 3)

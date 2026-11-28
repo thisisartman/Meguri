@@ -60,8 +60,12 @@ object Radial {
         return if (bestDiff <= STEP_DEG / 2) best else -1
     }
 
-    /** The arc's centre: the centre of the tile's ring (its picture), never the tile with its name under it. */
-    fun centreOf(ring: Rect): Offset = ring.center
+    /**
+     * The arc's centre in the overlay's own coordinates: the centre of the tile's ring (its picture), never the tile
+     * with its name under it. Both rectangles are in root (window) coordinates; the overlay sits inside the safe-area
+     * padding (edge to edge, the status bar is above it), so its origin is taken off.
+     */
+    fun centreOf(ring: Rect, overlayOrigin: Offset = Offset.Zero): Offset = ring.center - overlayOrigin
 
     /**
      * Where a button's label pill goes, its top-left corner: outward along the button's own radius; if that would

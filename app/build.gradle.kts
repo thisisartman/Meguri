@@ -30,7 +30,8 @@ android {
         applicationId = "io.github.thisisartman.collectibles"
         minSdk = 29
         targetSdk = 37
-        versionCode = 16
+        // Prototype branch only: above the phone's 0.7.2 dev copy (17), so it installs over it
+        versionCode = 18
         versionName = appVersionName
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         manifestPlaceholders["appLabel"] = "Meguri"
