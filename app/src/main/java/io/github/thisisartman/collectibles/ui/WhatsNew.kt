@@ -34,20 +34,22 @@ object WhatsNew {
     /** Notes for this version; empty means nothing to show. */
     val current: List<Section> = listOf(
         Section(
-            "New in 0.7.0", "0.7.0の新機能",
+            "New in 0.7.1", "0.7.1の新機能",
             listOf(
-                "Ibaraki: download it in Settings, Catalogue, Regions" to "茨城県：設定 › カタログ › 地域からダウンロード",
-                "Ekitags can alert, at stations you get off at" to "エキタグも通知：降りる駅で",
-                "Check for updates, off unless you switch it on (Help and about)" to "アップデートの確認（オンにしたときだけ、ヘルプと情報）",
+                "Places on Nearby: one page per station or shrine, with a ring that fills as you collect" to "近くに「場所」：駅や神社ごとに1ページ、集めるほど埋まるリング",
+                "Edit a photo: crop, rotate, straighten" to "写真の編集：切り抜き、回転、傾き補正",
+                "Add photos from a file, without replacing anything" to "ファイルから写真を追加（何も置き換えません）",
+                "Cover directions, read off the manhole card" to "マンホールカードから蓋の場所へ道案内",
+                "Long-press the icon for Add, My book and Trip" to "アイコンの長押しで追加・コレクション・トリップ",
             ),
         ),
         Section(
             "Fixed", "修正",
             listOf(
-                "The first region you load comes in whole, with its offline map" to "最初に読み込む地域がすべて、オフライン地図と一緒に入ります",
-                "Maps open on your finds, not the whole world" to "地図は世界全体ではなく、記録の場所から開きます",
-                "Times follow your phone's 12 or 24-hour setting" to "時刻はスマホの12時間・24時間の設定に合わせます",
-                "Clearer words and counts on many screens" to "多くの画面で言葉と数をわかりやすく",
+                "Every find has the date it was added" to "すべての記録に追加した日付が入ります",
+                "Photos sort themselves: cards to the card, screenshots to the Ekitag" to "写真は自動で振り分け：カードはカードへ、スクリーンショットはエキタグへ",
+                "Alert distances: each category's distance in one list" to "通知の距離：カテゴリーごとの距離を1つの一覧に",
+                "Backups show their progress and when they finished" to "バックアップの進み具合と完了がわかります",
             ),
         ),
     )

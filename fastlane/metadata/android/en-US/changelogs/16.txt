@@ -1,0 +1,2 @@
+Places on Nearby: one page per station or shrine. Edit a photo: crop, rotate, straighten. Add photos from a file. Directions to the manhole cover, read off the card. Long-press the icon for Add, My book and Trip.
+Fixes: every find has the date it was added, photos sort themselves to the right slot, alert distances in one list, backups show their progress and when they finished.
