@@ -183,21 +183,56 @@ fun PrivacyPage() {
     ).forEach { CreditRow(it) }
 }
 
-/** "Update available: v0.7.0" with Update, which opens the release page (#131). Nothing when there is no newer release. */
+/**
+ * "Update available: v0.7.0" with Update (#131, #222): Update downloads the release's APK with its progress shown,
+ * checks it, then Install hands it to Android's installer. A release with no APK, or a check that fails, offers the
+ * release page instead. Nothing when there is no newer release.
+ */
 @Composable
 fun UpdateNote() {
     val release = io.github.thisisartman.collectibles.data.UpdateCheck.available.value ?: return
     val context = LocalContext.current
+    val install = io.github.thisisartman.collectibles.data.UpdateInstall
+    val state = install.state.value
     androidx.compose.material3.Surface(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
         shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.secondaryContainer,
     ) {
-        Row(Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                stringResource(R.string.update_available, release.tag), Modifier.weight(1f),
-                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
+        Column(Modifier.padding(start = 16.dp, end = 8.dp, top = 4.dp, bottom = 4.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val text = when (state) {
+                    is io.github.thisisartman.collectibles.data.UpdateInstall.State.Downloading ->
+                        stringResource(R.string.update_downloading, if (state.total > 0) (state.done * 100 / state.total).toInt() else 0)
+                    io.github.thisisartman.collectibles.data.UpdateInstall.State.Checking -> stringResource(R.string.update_checking)
+                    is io.github.thisisartman.collectibles.data.UpdateInstall.State.Ready -> stringResource(R.string.update_ready, release.tag)
+                    is io.github.thisisartman.collectibles.data.UpdateInstall.State.Failed -> stringResource(
+                        when (state.why) {
+                            io.github.thisisartman.collectibles.data.UpdateInstall.Why.DOWNLOAD -> R.string.update_failed_download
+                            io.github.thisisartman.collectibles.data.UpdateInstall.Why.CHECK -> R.string.update_failed_check
+                            io.github.thisisartman.collectibles.data.UpdateInstall.Why.NOT_THIS_APP -> R.string.update_failed_signature
+                        },
+                    )
+                    null -> stringResource(R.string.update_available, release.tag)
+                }
+                Text(
+                    text, Modifier.weight(1f).padding(vertical = 8.dp),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSecondaryContainer,
+                )
+                when {
+                    state is io.github.thisisartman.collectibles.data.UpdateInstall.State.Ready ->
+                        TextButton(onClick = { install.install(context) }) { Text(stringResource(R.string.update_install)) }
+                    state is io.github.thisisartman.collectibles.data.UpdateInstall.State.Failed ->
+                        TextButton(onClick = { install.clear(); openLink(context, release.url) }) { Text(stringResource(R.string.update_page)) }
+                    state != null -> Unit
+                    // No APK in this release (or not one named for it): its page, as before
+                    release.apk == null -> TextButton(onClick = { openLink(context, release.url) }) { Text(stringResource(R.string.update_button)) }
+                    else -> TextButton(onClick = { install.start(context, release) }) { Text(stringResource(R.string.update_button)) }
+                }
+            }
+            if (state is io.github.thisisartman.collectibles.data.UpdateInstall.State.Downloading) androidx.compose.material3.LinearProgressIndicator(
+                progress = { if (state.total > 0) (state.done.toFloat() / state.total).coerceIn(0f, 1f) else 0f },
+                modifier = Modifier.fillMaxWidth().padding(end = 8.dp, bottom = 8.dp),
             )
-            TextButton(onClick = { openLink(context, release.url) }) { Text(stringResource(R.string.update_button)) }
         }
     }
 }
