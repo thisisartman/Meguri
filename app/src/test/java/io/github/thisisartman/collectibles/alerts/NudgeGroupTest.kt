@@ -35,8 +35,8 @@ class NudgeGroupTest {
     }
 
     @Test fun `finds with no position group together, but not with a placed one`() {
-        val a = NudgeGroup.add(null, "Page 1", "f1", null, null, atMs = 0)
-        val b = NudgeGroup.add(a, "Page 2", "f2", null, null, atMs = 1_000)
+        val a = NudgeGroup.add(null, "Added 1", "f1", null, null, atMs = 0)
+        val b = NudgeGroup.add(a, "Added 2", "f2", null, null, atMs = 1_000)
         assertEquals(2, b.findIds.size)
         val c = NudgeGroup.add(b, "Urasa", "f3", lat, lng, atMs = 2_000)
         assertEquals(listOf("f3"), c.findIds)

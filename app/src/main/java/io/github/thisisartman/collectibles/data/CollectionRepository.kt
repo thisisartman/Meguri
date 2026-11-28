@@ -381,8 +381,6 @@ class CollectionRepository @Inject constructor(
         val findId = dao.latestFindId(itemId) ?: newId().also { f ->
             // A day without a time (a date given is stored at noon): BULK, like "Already went", so no time shows
             dao.insertFind(Acquisition(id = f, itemId = itemId, acquiredAt = acquiredAt ?: now(), via = Via.BULK, createdAt = now()))
-            // A notebook page collects too (#228); its stamps have no position of their own, so one page asks once
-            if (tag == "Notebook") scope.launch { nudge.collected(itemId, f, withPosition = false) }
         }
         val ok = attachFromGallery(context, findId, picture, kind, name, size, cutStamps)
         log.i(tag, "Old $kind photo for item $itemId (photo copied: $ok)")

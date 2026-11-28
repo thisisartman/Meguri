@@ -9,7 +9,7 @@ import javax.inject.Singleton
 
 /**
  * The photo suggestion after every collect (#228), wherever it happens: a tile's quick Collect, the place page,
- * Scan, an alert's Collect, a notebook page. Skipped when the thing already has a place photo, or when Suggestions
+ * Scan, an alert's Collect. Not after a notebook page, which is a bulk import (owner, 2026-11-28). Skipped when the thing already has a place photo, or when Suggestions
  * is off. Collects within a minute at one place share one notification ([NudgeGroup]).
  */
 @Singleton
@@ -21,15 +21,14 @@ class CollectNudge @Inject constructor(
 ) {
     private var current: Nudge? = null
 
-    suspend fun collected(itemId: String, findId: String, withPosition: Boolean = true) {
+    suspend fun collected(itemId: String, findId: String) {
         if (!notifier.canPost(NotifyCategory.SUGGESTIONS)) return
         val dao = db.dao()
         val item = dao.item(itemId) ?: return
         if (dao.placePhotoCount(itemId) > 0) { log.d("Nudge", "No photo suggestion for $itemId: it has a place photo"); return }
         val n = synchronized(this) {
             NudgeGroup.add(
-                current, notifier.nameOf(item), findId,
-                if (withPosition) item.lat else null, if (withPosition) item.lng else null, System.currentTimeMillis(),
+                current, notifier.nameOf(item), findId, item.lat, item.lng, System.currentTimeMillis(),
             ).also { current = it }
         }
         log.d("Nudge", "Photo suggestion for ${n.findIds.size} finds (newest $findId)")

@@ -68,7 +68,7 @@ object NudgeGroup {
     /** About the size of a station or a shrine's grounds. */
     const val SAME_PLACE_M = 150.0
 
-    /** Two spots are one place within [SAME_PLACE_M]; two finds with no position (a notebook page) count as one too. */
+    /** Two spots are one place within [SAME_PLACE_M]; two finds with no position (things added by hand before a fix) count as one too. */
     fun samePlace(aLat: Double?, aLng: Double?, bLat: Double?, bLng: Double?): Boolean = when {
         aLat == null || aLng == null || bLat == null || bLng == null -> aLat == null && bLat == null
         else -> distanceM(aLat, aLng, bLat, bLng) <= SAME_PLACE_M
